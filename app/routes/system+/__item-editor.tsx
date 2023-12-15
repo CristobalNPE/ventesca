@@ -117,6 +117,7 @@ export function ItemEditor({
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()
 
+	//here we have to make sure that the CODE is unique so prisma doesn't throw an error
 	const [form, fields] = useForm({
 		id: 'item-editor',
 		constraint: getFieldsetConstraint(ItemEditorSchema),
@@ -136,7 +137,7 @@ export function ItemEditor({
 	})
 
 	return (
-		<div className="mt-4 w-full">
+		<div className="mt-2 w-full">
 			<Form method="POST" className="flex  flex-col gap-y-3" {...form.props}>
 				<AuthenticityTokenInput />
 				{item ? <input type="hidden" name="id" value={item.id} /> : null}
