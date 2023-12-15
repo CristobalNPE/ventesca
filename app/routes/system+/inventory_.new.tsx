@@ -9,6 +9,7 @@ import { ItemEditor, action } from './__item-editor.tsx'
 
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
+import { set } from 'date-fns'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const providers = await prisma.provider.findMany({
@@ -44,19 +45,23 @@ export default function CreateItem() {
 	const [provider, setProvider] = useState<Provider | null>(null)
 	const [category, setCategory] = useState<Category | null>(null)
 
+	//Providers Logic
+	const [providerModalOpen, setProviderModalOpen] = useState(false)
 	const [providerFilter, setProviderFilter] = useState('')
 	const handleProviderFilterChange = (
 		e: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		setProviderFilter(e.target.value)
 	}
-
 	const filteredProviders = providers.filter(provider => {
 		return (
 			provider.name.toLowerCase().includes(providerFilter.toLowerCase()) ||
 			provider.rut.includes(providerFilter)
 		)
 	})
+
+	//Categories Logic
+	const [categoryModalOpen, setCategoryModalOpen] = useState(false)
 	const [categoryFilter, setCategoryFilter] = useState('')
 	const handleCategoryFilterChange = (
 		e: React.ChangeEvent<HTMLInputElement>,
@@ -80,9 +85,15 @@ export default function CreateItem() {
 				<Icon name="route" />
 				<h1>Ingreso de articulo</h1>
 			</div>
-			<div className="flex flex-col gap-4 p-4">
-				<SelectModal title="Proveedor" selected={provider?.name}>
+			<div className="flex flex-col gap-4 p-6">
+				<SelectModal
+					open={providerModalOpen}
+					onOpenChange={setProviderModalOpen}
+					title="Proveedor"
+					selected={provider?.name}
+				>
 					<Input
+						autoFocus
 						type="text"
 						className="mb-4 w-full"
 						onChange={handleProviderFilterChange}
@@ -93,7 +104,10 @@ export default function CreateItem() {
 							<div
 								key={provider.id}
 								className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-								onClick={() => setProvider(provider)}
+								onClick={() => {
+									setProvider(provider)
+									setProviderModalOpen(false)
+								}}
 							>
 								<span className="w-[7rem]">
 									{provider.rut}-{calculateDV(provider.rut)}
@@ -102,19 +116,15 @@ export default function CreateItem() {
 							</div>
 						))}
 					</div>
-					<div className="absolute bottom-7 left-7 mt-4  flex w-[20rem] items-center justify-between">
-						<span className="text-xl text-foreground">{provider?.name}</span>
-					{provider &&	<Button
-							onClick={() => setProvider(null)}
-							variant={'ghost'}
-							size={'icon'}
-						>
-							<Icon name="cross-1" />
-						</Button>}
-					</div>
 				</SelectModal>
-				<SelectModal title="Categoría" selected={category?.description}>
+				<SelectModal
+					open={categoryModalOpen}
+					onOpenChange={setCategoryModalOpen}
+					title="Categoría"
+					selected={category?.description}
+				>
 					<Input
+						autoFocus
 						type="text"
 						className="mb-4 w-full"
 						onChange={handleCategoryFilterChange}
@@ -125,24 +135,15 @@ export default function CreateItem() {
 							<div
 								key={category.id}
 								className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-								onClick={() => setCategory(category)}
+								onClick={() => {
+									setCategory(category)
+									setCategoryModalOpen(false)
+								}}
 							>
 								<span className="w-[7rem]">{category.code}</span>{' '}
 								<span className="border-l-2 pl-2">{category.description}</span>
 							</div>
 						))}
-					</div>
-					<div className="absolute bottom-7 left-7 mt-4  flex w-[20rem] items-center justify-between">
-						<span className="text-xl text-foreground">
-							{category?.description}
-						</span>
-						{category && <Button
-							onClick={() => setCategory(null)}
-							variant={'ghost'}
-							size={'icon'}
-						>
-							<Icon name="cross-1" />
-						</Button>}
 					</div>
 				</SelectModal>
 				{providerAndCategorySelected && (
