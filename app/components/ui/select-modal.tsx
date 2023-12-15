@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -16,14 +15,22 @@ type SelectModalProps = {
 	children?: React.ReactNode
 	title: string
 	selected?: string
+	open: boolean
+	onOpenChange: (open: boolean) => void
 }
 
-const SelectModal = ({ title, children, selected }: SelectModalProps) => {
+const SelectModal = ({
+	title,
+	children,
+	selected,
+	open,
+	onOpenChange,
+}: SelectModalProps) => {
 	return (
 		<div className="flex items-center gap-3">
-			<AlertDialog>
+			<AlertDialog open={open} onOpenChange={onOpenChange}>
 				<AlertDialogTrigger>
-					<Button variant={'outline'}>
+					<Button className="min-w-[12.5rem]" variant={'outline'}>
 						<Icon name="magnifying-glass" className="mr-2" />
 						{selected ? 'Cambiar' : 'Seleccionar'} {title}
 					</Button>
@@ -35,7 +42,7 @@ const SelectModal = ({ title, children, selected }: SelectModalProps) => {
 					</AlertDialogHeader>
 					<AlertDialogFooter className="mt-4">
 						<AlertDialogCancel>
-							Listo <Icon name="check" className="ml-2" />
+							Cancelar
 						</AlertDialogCancel>
 					</AlertDialogFooter>
 				</AlertDialogContent>
