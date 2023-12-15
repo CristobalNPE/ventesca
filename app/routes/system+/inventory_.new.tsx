@@ -104,13 +104,13 @@ export default function CreateItem() {
 					</div>
 					<div className="absolute bottom-7 left-7 mt-4  flex w-[20rem] items-center justify-between">
 						<span className="text-xl text-foreground">{provider?.name}</span>
-						<Button
+					{provider &&	<Button
 							onClick={() => setProvider(null)}
 							variant={'ghost'}
 							size={'icon'}
 						>
 							<Icon name="cross-1" />
-						</Button>
+						</Button>}
 					</div>
 				</SelectModal>
 				<SelectModal title="Categoría" selected={category?.description}>
@@ -136,13 +136,13 @@ export default function CreateItem() {
 						<span className="text-xl text-foreground">
 							{category?.description}
 						</span>
-						<Button
+						{category && <Button
 							onClick={() => setCategory(null)}
 							variant={'ghost'}
 							size={'icon'}
 						>
 							<Icon name="cross-1" />
-						</Button>
+						</Button>}
 					</div>
 				</SelectModal>
 				{providerAndCategorySelected && (
