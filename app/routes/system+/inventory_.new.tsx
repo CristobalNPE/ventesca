@@ -8,6 +8,33 @@ import { useState } from 'react'
 import { ItemEditor, action } from './__item-editor.tsx'
 import { SelectModal } from '#app/components/ui/select-modal.tsx'
 
+// export async function loader({ request }: LoaderFunctionArgs) {
+// 	const url = new URL(request.url)
+// 	const providerSearch = url.searchParams.get('provider')
+// 	const categorySearch = url.searchParams.get('category')
+
+// 	if (providerSearch) {
+// 		const providers = await prisma.provider.findMany({
+// 			select: { id: true, rut: true, name: true, fantasyName: true },
+// 			where: { rut: { contains: providerSearch } },
+// 		})
+
+// 		const categories = null
+// 		return json({ providers, categories })
+// 	}
+
+// 	if (categorySearch) {
+// 		const categories = await prisma.family.findMany({
+// 			select: { id: true, code: true, description: true },
+// 			where: { description: { contains: categorySearch } },
+// 		})
+// 		const providers = null
+// 		return json({ categories, providers })
+// 	}
+
+// 	return json({ providers: null, categories: null })
+// }
+
 export async function loader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url)
 	const providerSearch = url.searchParams.get('provider')
@@ -151,7 +178,7 @@ export default function CreateItem() {
 			</Stepper>
 
 			<SelectModal title='Proveedor'>
-				
+
 			</SelectModal>
 		</div>
 	)
