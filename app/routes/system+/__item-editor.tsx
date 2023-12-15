@@ -136,12 +136,8 @@ export function ItemEditor({
 	})
 
 	return (
-		<div className="w-[25rem] mt-4">
-			<Form
-				method="POST"
-				className="flex  flex-col gap-y-3"
-				{...form.props}
-			>
+		<div className="mt-4 w-full">
+			<Form method="POST" className="flex  flex-col gap-y-3" {...form.props}>
 				<AuthenticityTokenInput />
 				{item ? <input type="hidden" name="id" value={item.id} /> : null}
 
@@ -195,10 +191,10 @@ export function ItemEditor({
 				<StatusButton
 					form={form.id}
 					type="submit"
-					disabled={isPending}
+					disabled={isPending || providerId === '' || categoryId === ''}
 					status={isPending ? 'pending' : 'idle'}
 				>
-					<Icon name='check' className='mr-2' /> Crear Articulo
+					<Icon name="check" className="mr-2" /> Crear Articulo
 				</StatusButton>
 			</div>
 		</div>
