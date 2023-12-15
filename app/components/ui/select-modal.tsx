@@ -20,7 +20,7 @@ type SelectModalProps = {
 
 const SelectModal = ({ title, children, selected }: SelectModalProps) => {
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex items-center gap-3">
 			<AlertDialog>
 				<AlertDialogTrigger>
 					<Button variant={'outline'}>
