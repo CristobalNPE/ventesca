@@ -15,31 +15,32 @@ import { Icon } from './icon.tsx'
 type SelectModalProps = {
 	children?: React.ReactNode
 	title: string
+	selected?: string
 }
 
-const SelectModal = ({ title, children }: SelectModalProps) => {
-	const [selected, setSelected] = useState('Selected Test')
-
+const SelectModal = ({ title, children, selected }: SelectModalProps) => {
 	return (
 		<div className="flex items-center gap-2">
 			<AlertDialog>
 				<AlertDialogTrigger>
-					<Button variant={'secondary'}>
+					<Button variant={'outline'}>
 						<Icon name="magnifying-glass" className="mr-2" />
 						{selected ? 'Cambiar' : 'Seleccionar'} {title}
 					</Button>
 				</AlertDialogTrigger>
-				<AlertDialogContent>
+				<AlertDialogContent className="max-w-xl">
 					<AlertDialogHeader>
 						<AlertDialogTitle>Búsqueda de {title}</AlertDialogTitle>
 						<AlertDialogDescription>{children}</AlertDialogDescription>
 					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogFooter className="mt-4">
+						<AlertDialogCancel>
+							Listo <Icon name="check" className="ml-2" />
+						</AlertDialogCancel>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-			<span>{selected}</span>
+			<span className="font-bold tracking-wider">{selected}</span>
 		</div>
 	)
 }
