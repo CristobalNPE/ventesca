@@ -45,7 +45,7 @@ export default function SystemLayout() {
 
 	return (
 		<div className="flex h-screen ">
-			<div className="flex w-[20rem] flex-col border-r-[1px] border-foreground/5 bg-secondary/80 px-4 py-8">
+			<div className="flex w-[19rem] flex-col border-r-[1px] border-foreground/5 bg-secondary/80 px-4 py-8">
 				<h1 className="text-3xl font-bold">Sistema de Ventas</h1>
 				<nav className="mt-8 flex h-full flex-col gap-3">
 					{navigationLinks.map(link => {
