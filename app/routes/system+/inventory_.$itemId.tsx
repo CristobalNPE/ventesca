@@ -240,7 +240,7 @@ export default function ItemRoute() {
 						</AlertDialogContent>
 					</AlertDialog>
 					<Button variant={'default'} asChild>
-						<Link to={'..'} relative="path" className="flex items-center gap-2">
+						<Link to={'edit'} className="flex items-center gap-2">
 							<Icon name="update" />
 							<span>Editar</span>
 						</Link>
