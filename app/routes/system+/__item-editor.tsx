@@ -1,12 +1,3 @@
-import { ErrorList, Field } from '#app/components/forms.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { SelectModal } from '#app/components/ui/select-modal.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { calculateDV, useIsPending } from '#app/utils/misc.tsx'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { type Item } from '@prisma/client'
@@ -20,6 +11,15 @@ import { Form, useActionData } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
+import { ErrorList, Field } from '#app/components/forms.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
+import { SelectModal } from '#app/components/ui/select-modal.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { validateCSRF } from '#app/utils/csrf.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { calculateDV, useIsPending } from '#app/utils/misc.tsx'
 
 type Provider = {
 	id: string
@@ -34,16 +34,31 @@ type Category = {
 	description: string
 }
 
-const nameMinLength = 1
+const nameMinLength = 3
 const nameMaxLength = 100
 
 const ItemEditorSchema = z.object({
 	id: z.string().optional(),
-	code: z.number().min(1),
-	name: z.string().min(nameMinLength).max(nameMaxLength),
-	price: z.number().min(0),
-	sellingPrice: z.number().min(0),
-	stock: z.number().min(0),
+	code: z
+		.number({ required_error: 'Campo obligatorio' })
+		.min(1, { message: 'El código debe ser mayor a 0.' }),
+	name: z
+		.string({ required_error: 'Campo obligatorio' })
+		.min(nameMinLength, {
+			message: `Debe tener al menos ${nameMinLength} caracteres`,
+		})
+		.max(nameMaxLength, {
+			message: `Debe tener un máximo de ${nameMaxLength} caracteres`,
+		}),
+	price: z
+		.number({ required_error: 'Campo obligatorio' })
+		.min(0, { message: 'El valor no puede ser negativo.' }),
+	sellingPrice: z
+		.number({ required_error: 'Campo obligatorio' })
+		.min(0, { message: 'El valor debe ser mayor a 0.' }),
+	stock: z
+		.number({ required_error: 'Campo obligatorio' })
+		.min(0, { message: 'El stock no puede ser negativo.' }),
 	categoryId: z.string(),
 	providerId: z.string(),
 })
@@ -58,17 +73,20 @@ export async function action({ request }: ActionFunctionArgs) {
 		schema: ItemEditorSchema.superRefine(async (data, ctx) => {
 			if (!data.id) return
 
-			const item = await prisma.item.findUnique({
-				select: { id: true },
-				where: { id: data.id } /* we selected ownerId too here !! OMG*/,
+			const itemByCode = await prisma.item.findUnique({
+				select: { id: true, code: true },
+				where: { code: data.code },
 			})
-			if (!item) {
+
+			if (itemByCode && itemByCode.id !== data.id) {
 				ctx.addIssue({
+					path: ['code'],
 					code: z.ZodIssueCode.custom,
-					message: 'No se encuentra articulo.',
+					message: 'El código ya existe.',
 				})
 			}
 		}),
+
 		async: true,
 	})
 
@@ -90,8 +108,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		providerId,
 		categoryId,
 	} = submission.value
-
-	console.log({ submission })
 
 	const updatedItem = await prisma.item.upsert({
 		select: { id: true },
@@ -192,7 +208,7 @@ export function ItemEditor({
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()
 
-	//here we have to make sure that the CODE is unique so prisma doesn't throw an error
+	//! here we have to make sure that the CODE is unique so prisma doesn't throw an error
 	const [form, fields] = useForm({
 		id: 'item-editor',
 		constraint: getFieldsetConstraint(ItemEditorSchema),
@@ -352,7 +368,8 @@ export function ItemEditor({
 								disabled={isPending || provider.id === '' || category.id === ''}
 								status={isPending ? 'pending' : 'idle'}
 							>
-								<Icon name="check" className="mr-2" /> Guardar
+								<Icon name="check" className="mr-2" />{' '}
+								{item ? 'Actualizar' : 'Crear Articulo'}
 							</StatusButton>
 						</div>
 					</div>
