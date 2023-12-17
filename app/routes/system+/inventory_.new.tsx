@@ -1,14 +1,12 @@
-import { type LoaderFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
-import { useState } from 'react'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { SelectModal } from '#app/components/ui/select-modal.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-import { calculateDV } from '#app/utils/misc.tsx'
+import { json } from '@remix-run/node'
 import { ItemEditor, action } from './__item-editor.tsx'
+import { useLoaderData } from '@remix-run/react'
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export { action }
+
+export async function loader() {
 	const providers = await prisma.provider.findMany({
 		select: { id: true, rut: true, name: true, fantasyName: true },
 		orderBy: { name: 'asc' },
@@ -22,131 +20,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ providers, categories })
 }
 
-export { action }
-
-type Provider = {
-	id: string
-	rut: string
-	name: string
-	fantasyName: string
-}
-
-type Category = {
-	id: string
-	code: string
-	description: string
-}
-
 export default function CreateItem() {
 	const { providers, categories } = useLoaderData<typeof loader>()
-	const [provider, setProvider] = useState<Provider | null>(null)
-	const [category, setCategory] = useState<Category | null>(null)
-
-	//Providers Logic
-	const [providerModalOpen, setProviderModalOpen] = useState(false)
-	const [providerFilter, setProviderFilter] = useState('')
-	const handleProviderFilterChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setProviderFilter(e.target.value)
-	}
-	const filteredProviders = providers.filter(provider => {
-		return (
-			provider.name.toLowerCase().includes(providerFilter.toLowerCase()) ||
-			provider.rut.includes(providerFilter)
-		)
-	})
-
-	//Categories Logic
-	const [categoryModalOpen, setCategoryModalOpen] = useState(false)
-	const [categoryFilter, setCategoryFilter] = useState('')
-	const handleCategoryFilterChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setCategoryFilter(e.target.value)
-	}
-	const filteredCategories = categories.filter(category => {
-		return (
-			category.description
-				.toLowerCase()
-				.includes(categoryFilter.toLowerCase()) ||
-			category.code.includes(categoryFilter)
-		)
-	})
-
-	const providerAndCategorySelected = provider && category
 
 	return (
 		<div className="flex max-w-[35rem] flex-col  rounded-md bg-secondary">
-			<div className="flex gap-2 rounded-t-md bg-primary/50 p-3 text-2xl">
+			<div className="flex gap-4 rounded-t-md bg-primary/50 p-3 text-2xl">
 				<Icon name="route" />
-				<h1>Ingreso de articulo</h1>
+				<h1>Ingresar nuevo articulo</h1>
 			</div>
-			<div className="flex flex-col gap-4 p-6">
-				<SelectModal
-					open={providerModalOpen}
-					onOpenChange={setProviderModalOpen}
-					title="Proveedor"
-					selected={provider?.name}
-				>
-					<Input
-						autoFocus
-						type="text"
-						className="mb-4 w-full"
-						onChange={handleProviderFilterChange}
-						defaultValue={providerFilter}
-					/>
-					<div className="flex max-h-[15rem] flex-col gap-1 overflow-auto">
-						{filteredProviders.map(provider => (
-							<div
-								key={provider.id}
-								className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-								onClick={() => {
-									setProvider(provider)
-									setProviderModalOpen(false)
-								}}
-							>
-								<span className="w-[7rem]">
-									{provider.rut}-{calculateDV(provider.rut)}
-								</span>{' '}
-								<span className="border-l-2 pl-2">{provider.name}</span>
-							</div>
-						))}
-					</div>
-				</SelectModal>
-				<SelectModal
-					open={categoryModalOpen}
-					onOpenChange={setCategoryModalOpen}
-					title="Categoría"
-					selected={category?.description}
-				>
-					<Input
-						autoFocus
-						type="text"
-						className="mb-4 w-full"
-						onChange={handleCategoryFilterChange}
-						defaultValue={categoryFilter}
-					/>
-					<div className="flex max-h-[15rem] flex-col gap-1 overflow-auto">
-						{filteredCategories.map(category => (
-							<div
-								key={category.id}
-								className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-								onClick={() => {
-									setCategory(category)
-									setCategoryModalOpen(false)
-								}}
-							>
-								<span className="w-[7rem]">{category.code}</span>{' '}
-								<span className="border-l-2 pl-2">{category.description}</span>
-							</div>
-						))}
-					</div>
-				</SelectModal>
-				{providerAndCategorySelected && (
-					<ItemEditor providerId={provider.id} categoryId={category.id} />
-				)}
-			</div>
+			<ItemEditor providers={providers} categories={categories} />
 		</div>
 	)
 }
