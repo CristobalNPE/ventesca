@@ -1,9 +1,9 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse } from '#app/utils/misc.tsx'
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { useLoaderData } from '@remix-run/react'
-import { Icon } from '#app/components/ui/icon.tsx'
 import { ItemEditor, action } from './__item-editor.tsx'
 
 export { action }
