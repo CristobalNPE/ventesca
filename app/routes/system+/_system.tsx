@@ -52,6 +52,11 @@ export default function SystemLayout() {
 			path: 'providers',
 			icon: 'users',
 		},
+		{
+			name: 'Ajustes',
+			path: 'settings',
+			icon: 'settings',
+		},
 	]
 
 	return (

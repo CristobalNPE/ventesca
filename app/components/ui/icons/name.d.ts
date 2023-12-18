@@ -51,6 +51,7 @@ export type IconName =
 	| 'reset'
 	| 'route'
 	| 'scan-barcode'
+	| 'settings'
 	| 'shapes'
 	| 'sun'
 	| 'trash'

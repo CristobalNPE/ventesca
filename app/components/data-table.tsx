@@ -163,7 +163,7 @@ export function DataTablePagination<TData>({
 	table,
 }: DataTablePaginationProps<TData>) {
 	return (
-		<div className="flex items-center justify-between rounded-md bg-secondary p-2">
+		<div className="absolute bottom-5 right-8 flex items-center justify-between rounded-md bg-secondary/50 backdrop-blur-sm p-2">
 			<div className="flex items-center space-x-6 lg:space-x-8">
 				<div className="flex w-[150px] items-center justify-center text-sm font-medium">
 					Página {table.getState().pagination.pageIndex + 1} de{' '}
