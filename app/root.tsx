@@ -143,6 +143,7 @@ export async function loader({ request }: DataFunctionArgs) {
 				path: new URL(request.url).pathname,
 				userPrefs: {
 					theme: getTheme(request),
+					//save here the state of the sidebar.
 				},
 			},
 			ENV: getEnv(),
@@ -265,7 +266,7 @@ function App() {
 				<div className="flex-1 ">
 					<Outlet />
 				</div>
-				<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
+				{/* <ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} /> */}
 				{/* <div className="container flex justify-between pb-5">
 					<Link to="/">
 						<div className="font-light">epic</div>
