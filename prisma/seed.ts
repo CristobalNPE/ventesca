@@ -95,7 +95,7 @@ async function seed() {
 				venta,
 				rut,
 				dv,
-				promed,
+				promed, //Should not be needed anymroe
 				existencia,
 			] = row
 

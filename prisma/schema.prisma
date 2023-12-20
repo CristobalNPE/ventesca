@@ -20,7 +20,6 @@ model Family {
 model Provider {
   id          String   @id @default(cuid())
   rut         String   @unique
-  dv          String
   name        String
   address     String
   city        String

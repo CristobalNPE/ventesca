@@ -5,6 +5,28 @@ import { useSpinDelay } from 'spin-delay'
 import { extendTailwindMerge } from 'tailwind-merge'
 import { extendedTheme } from './extended-theme.ts'
 
+
+
+export function formatChileanRUT(rut: string | number): string {
+	// Convert the input to a string if it's not already
+	let rutStr = rut.toString();
+
+	// Remove any existing formatting
+	rutStr = rutStr.replace(/\D/g, '');
+
+	// Separate the last digit (verifier) from the rest of the RUT
+	const body = rutStr.slice(0, -1);
+	const dv = rutStr.slice(-1).toUpperCase();
+
+	// Format the body of the RUT with dots
+	const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+	// Combine the formatted body with the verifier
+	return `${formattedBody}-${dv}`;
+}
+
+
+
 export function formatCurrency(amountToFormat: number | null) {
 	const amount = amountToFormat ? amountToFormat : 0
 	const formatted = new Intl.NumberFormat('es-CL', {
