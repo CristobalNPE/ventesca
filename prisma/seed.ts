@@ -44,19 +44,17 @@ async function seed() {
 
 	console.time('🤼 Created providers...')
 
-	fs.createReadStream('./proveedores2.csv')
+	fs.createReadStream('./providers.csv')
 		.pipe(parse({ delimiter: ',', from_line: 2 }))
 		.on('data', async function (row) {
-			const [rut, dv, nombre, direccion, ciudad, fanta, telefono, fax] = row
+			const [rut, nombre, direccion, ciudad, fanta, telefono, fax] = row
 
 			// const parsedRUT = `${rut}${dv.trim() ? '-' + dv : ''}`
 			const providerRut = rut.trim() ? rut : `Desconocido-${cuid()}`
-			const providerDV = dv.trim() ? dv : ``
 
 			await prisma.provider.create({
 				data: {
 					rut: providerRut,
-					dv: providerDV,
 					name: nombre,
 					address: direccion,
 					city: ciudad,
@@ -70,7 +68,6 @@ async function seed() {
 	await prisma.provider.create({
 		data: {
 			rut: 'Desconocido',
-			dv: 'Desconocido',
 			name: 'Desconocido',
 			address: 'Desconocido',
 			city: 'Desconocido',
@@ -84,20 +81,10 @@ async function seed() {
 
 	console.time('🛒 Created products...')
 
-	fs.createReadStream('./producto2.csv')
+	fs.createReadStream('./items.csv')
 		.pipe(parse({ delimiter: ',', from_line: 2 }))
 		.on('data', async function (row) {
-			const [
-				codigo,
-				nombre,
-				precio,
-				familia,
-				venta,
-				rut,
-				dv,
-				promed, //Should not be needed anymroe
-				existencia,
-			] = row
+			const [codigo, nombre, precio, familia, venta, rut, existencia] = row
 
 			const existingProvider = await prisma.provider.findUnique({
 				where: { rut: rut.trim() },
@@ -111,7 +98,7 @@ async function seed() {
 					where: { rut: rut.trim() },
 					create: {
 						rut: rut.trim(),
-						dv: dv.trim(),
+
 						name: 'Sin Definir',
 						address: 'Sin Definir',
 						city: 'Sin Definir',
@@ -119,10 +106,7 @@ async function seed() {
 						phone: 'Sin Definir',
 						fax: 'Sin Definir',
 					},
-					update: {
-						dv: dv.trim(), // Update only the `dv` field if the record exists
-						// You can add other fields to be updated if needed
-					},
+					update: {},
 				})
 			}
 
