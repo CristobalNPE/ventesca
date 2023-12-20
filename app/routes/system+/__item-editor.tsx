@@ -71,8 +71,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const submission = await parse(formData, {
 		schema: ItemEditorSchema.superRefine(async (data, ctx) => {
-			if (!data.id) return
-
 			const itemByCode = await prisma.item.findUnique({
 				select: { id: true, code: true },
 				where: { code: data.code },
@@ -208,7 +206,6 @@ export function ItemEditor({
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()
 
-	//! here we have to make sure that the CODE is unique so prisma doesn't throw an error
 	const [form, fields] = useForm({
 		id: 'item-editor',
 		constraint: getFieldsetConstraint(ItemEditorSchema),
