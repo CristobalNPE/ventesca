@@ -1,10 +1,11 @@
-import { json } from '@remix-run/node'
+import { SerializeFrom, json } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
+import { Provider } from '@prisma/client'
 
 export async function loader() {
 	const providers = await prisma.provider
@@ -25,7 +26,9 @@ export async function loader() {
 	return json({ providers, totalProviders })
 }
 
-export const providerColumns: ColumnDef<{}>[] = [
+export const providerColumns: ColumnDef<
+	SerializeFrom<Pick<Provider, 'id' | 'rut' | 'name' | 'fantasyName'>>
+>[] = [
 	{
 		header: ({ column }) => {
 			return (
@@ -101,7 +104,7 @@ export default function ProvidersRoute() {
 				</div>
 				<div className="flex items-center gap-6">
 					<Button asChild className="flex items-center gap-2">
-						<Link to={"new"}>
+						<Link to={'new'}>
 							<Icon name="plus" size="md" />
 							<span>Registrar proveedor</span>
 						</Link>
