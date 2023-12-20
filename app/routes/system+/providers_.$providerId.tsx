@@ -43,7 +43,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		select: {
 			id: true,
 			rut: true,
-			dv: true,
+
 			name: true,
 			address: true,
 			phone: true,
@@ -62,7 +62,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	return json({
 		provider: {
 			...provider,
-			rut: `${provider.rut}-${provider.dv}`,
+
 			updatedAt: formatRelative(subDays(provider.updatedAt, 0), new Date(), {
 				locale: es,
 			}),

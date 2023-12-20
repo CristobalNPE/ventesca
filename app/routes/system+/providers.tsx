@@ -13,7 +13,7 @@ export async function loader() {
 			select: {
 				id: true,
 				rut: true,
-				dv: true,
+		
 				name: true,
 				fantasyName: true,
 			},
@@ -22,12 +22,9 @@ export async function loader() {
 
 	const totalProviders = await prisma.provider.count()
 
-	const formattedProviders = providers.map(provider => ({
-		...provider,
-		rut: `${provider.rut}-${provider.dv}`,
-	}))
+	
 
-	return json({ formattedProviders, totalProviders })
+	return json({ providers, totalProviders })
 }
 
 export const providerColumns: ColumnDef<{}>[] = [
@@ -94,7 +91,7 @@ export const providerColumns: ColumnDef<{}>[] = [
 ]
 
 export default function ProvidersRoute() {
-	const { formattedProviders, totalProviders } = useLoaderData<typeof loader>()
+	const {  providers, totalProviders } = useLoaderData<typeof loader>()
 	return (
 		<>
 			<div className="flex justify-between border-b-2 border-secondary pb-4">
@@ -114,7 +111,7 @@ export default function ProvidersRoute() {
 			<DataTable
 				withItemSearch={false}
 				columns={providerColumns}
-				data={formattedProviders}
+				data={providers}
 				searchFilter={{
 					description: 'RUT',
 					key: 'rut',
