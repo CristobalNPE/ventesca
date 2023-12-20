@@ -214,8 +214,12 @@ export default function ProviderRoute() {
 											}  ${providerItemsCount > 1 ? 'artículos' : 'articulo'} ${
 												providerItemsCount > 1 ? 'asociados' : 'asociado'
 											} a este proveedor.`}
-										<br />
-										<br />
+										{providerItemsCount !== 0 && (
+											<>
+												<br />
+												<br />
+											</>
+										)}
 										Esta acción no se puede deshacer. Por favor confirme que
 										desea eliminar el proveedor y su(s) artículo(s) asociado(s).
 									</AlertDialogDescription>
@@ -229,7 +233,7 @@ export default function ProviderRoute() {
 						</AlertDialog>
 						<Button variant={'default'} asChild>
 							<Link
-								to={'..'}
+								to={'edit'}
 								relative="path"
 								className="flex items-center gap-2"
 							>
@@ -324,8 +328,8 @@ export function InfoCard({
 				<Icon name={icon} className="scale-[3.5] opacity-5" />
 			</div>
 			<div className="flex w-full flex-col">
-				<p className="text-lg capitalize text-foreground/60">{title}</p>
-				<p className="text-lg capitalize">{data}</p>
+				<p className="text-lg uppercase text-foreground/60">{title}</p>
+				<p className="text-lg uppercase">{data}</p>
 			</div>
 		</div>
 	)
