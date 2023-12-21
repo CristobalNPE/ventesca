@@ -6,6 +6,7 @@ import {
 } from '@remix-run/node'
 import { Form, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import {
@@ -240,6 +241,7 @@ export default function CategoryRoute() {
 							<AlertDialogFooter className="mt-8">
 								{destinationCategory && confirmTransfer ? (
 									<Form className="flex gap-4 " method="POST">
+										<AuthenticityTokenInput />
 										<input
 											type="hidden"
 											value={selectedItemsIds.join(',')}
