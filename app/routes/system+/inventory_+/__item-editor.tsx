@@ -12,27 +12,20 @@ import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
+import {
+	SelectCategory,
+	type Category,
+} from '#app/components/select-category.tsx'
+import {
+	type Provider,
+	SelectProvider,
+} from '#app/components/select-provider.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { SelectModal } from '#app/components/ui/select-modal.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { calculateDV, useIsPending } from '#app/utils/misc.tsx'
-
-type Provider = {
-	id: string
-	rut: string
-	name: string
-	fantasyName: string
-}
-
-type Category = {
-	id: string
-	code: string
-	description: string
-}
+import { useIsPending } from '#app/utils/misc.tsx'
 
 const nameMinLength = 3
 const nameMaxLength = 100
@@ -168,38 +161,6 @@ export function ItemEditor({
 		setCategory(currentCategory)
 	}
 
-	//Providers Logic
-	const [providerModalOpen, setProviderModalOpen] = useState(false)
-	const [providerFilter, setProviderFilter] = useState('')
-	const handleProviderFilterChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setProviderFilter(e.target.value)
-	}
-	const filteredProviders = providers.filter(provider => {
-		return (
-			provider.name.toLowerCase().includes(providerFilter.toLowerCase()) ||
-			provider.rut.includes(providerFilter)
-		)
-	})
-
-	//Categories Logic
-	const [categoryModalOpen, setCategoryModalOpen] = useState(false)
-	const [categoryFilter, setCategoryFilter] = useState('')
-	const handleCategoryFilterChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setCategoryFilter(e.target.value)
-	}
-	const filteredCategories = categories.filter(category => {
-		return (
-			category.description
-				.toLowerCase()
-				.includes(categoryFilter.toLowerCase()) ||
-			category.code.includes(categoryFilter)
-		)
-	})
-
 	const providerAndCategorySelected = provider && category
 
 	///////////////////////
@@ -228,66 +189,17 @@ export function ItemEditor({
 	return (
 		<>
 			<div className="flex flex-col gap-4 p-6">
-				<SelectModal
-					open={providerModalOpen}
-					onOpenChange={setProviderModalOpen}
-					title="Proveedor"
-					selected={provider?.name}
-				>
-					<Input
-						autoFocus
-						type="text"
-						className="mb-4 w-full"
-						onChange={handleProviderFilterChange}
-						defaultValue={providerFilter}
-					/>
-					<div className="flex max-h-[15rem] flex-col gap-1 overflow-auto">
-						{filteredProviders.map(provider => (
-							<div
-								key={provider.id}
-								className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-								onClick={() => {
-									setProvider(provider)
-									setProviderModalOpen(false)
-								}}
-							>
-								<span className="w-[7rem]">
-									{provider.rut}-{calculateDV(provider.rut)}
-								</span>{' '}
-								<span className="border-l-2 pl-2">{provider.name}</span>
-							</div>
-						))}
-					</div>
-				</SelectModal>
-				<SelectModal
-					open={categoryModalOpen}
-					onOpenChange={setCategoryModalOpen}
-					title="Categoría"
-					selected={category?.description}
-				>
-					<Input
-						autoFocus
-						type="text"
-						className="mb-4 w-full"
-						onChange={handleCategoryFilterChange}
-						defaultValue={categoryFilter}
-					/>
-					<div className="flex max-h-[15rem] flex-col gap-1 overflow-auto">
-						{filteredCategories.map(category => (
-							<div
-								key={category.id}
-								className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-								onClick={() => {
-									setCategory(category)
-									setCategoryModalOpen(false)
-								}}
-							>
-								<span className="w-[7rem]">{category.code}</span>{' '}
-								<span className="border-l-2 pl-2">{category.description}</span>
-							</div>
-						))}
-					</div>
-				</SelectModal>
+				<SelectProvider
+					providers={providers}
+					selectedProvider={provider}
+					setSelectedProvider={setProvider}
+				/>
+
+				<SelectCategory
+					categories={categories}
+					selectedCategory={category}
+					setSelectedCategory={setCategory}
+				/>
 
 				{providerAndCategorySelected && (
 					<div className="mt-2 w-full">
