@@ -12,7 +12,7 @@ datasource db {
 
 model Family {
   id          String @id @default(cuid())
-  code        String @unique
+  code        Int @unique
   description String
   items       Item[]
 }

@@ -1,6 +1,6 @@
 import { type Family } from '@prisma/client'
 import { type SerializeFrom, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -105,9 +105,11 @@ export default function CategoriesRoute() {
 					</h1>
 				</div>
 				<div className="flex items-center gap-6">
-					<Button className="flex items-center gap-2">
-						<Icon name="plus" size="md" />
-						<span>Ingresar categoría</span>
+					<Button asChild className="flex items-center gap-2">
+						<Link to="new">
+							<Icon name="plus" size="md" />
+							<span>Ingresar categoría</span>
+						</Link>
 					</Button>
 				</div>
 			</div>
