@@ -4,7 +4,7 @@ import {
 	redirect,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Form, useLoaderData } from '@remix-run/react'
+import { Form, Link, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
@@ -292,9 +292,11 @@ export default function CategoryRoute() {
 						</AlertDialogContent>
 					</AlertDialog>
 				)}
-				<Button className="w-[14rem]" size={'lg'}>
-					<Icon name="update" className="mr-2" />
-					Editar Categoría
+				<Button className="w-[14rem]" size={'lg'} asChild>
+					<Link to={'edit'}>
+						<Icon name="update" className="mr-2" />
+						Editar Categoría
+					</Link>
 				</Button>
 				{itemsIds.length === 0 && (
 					<Button variant="outline" className="w-[14rem]" size={'lg'}>
