@@ -1,7 +1,7 @@
 import {
-	type ActionFunctionArgs,
 	json,
 	redirect,
+	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import { Form, Link, useLoaderData } from '@remix-run/react'
@@ -30,8 +30,9 @@ import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, invariantResponse, useIsPending } from '#app/utils/misc.tsx'
+import { DeleteCategory } from './$categoryId_.delete.tsx'
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
 	const category = await prisma.family.findUnique({
 		where: { id: params.categoryId },
 		select: {
@@ -299,16 +300,40 @@ export default function CategoryRoute() {
 					</Link>
 				</Button>
 				{itemsIds.length === 0 && (
-					<Button variant="outline" className="w-[14rem]" size={'lg'}>
-						<Icon name="trash" className="mr-2" />
-						Eliminar Categoría
-					</Button>
+					<ConfirmDeleteDialog id={category.id} name={category.description} />
 				)}
 			</div>
 		</div>
 	)
 }
 
+function ConfirmDeleteDialog({ id, name }: { id: string; name?: string }) {
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger>
+				<Button variant={'outline'} className="w-[14rem]" size={'lg'}>
+					<Icon className="mr-2" name="trash" />
+					<span>Eliminar Categoría</span>
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>
+						Confirmar eliminación de categoría {name}
+					</AlertDialogTitle>
+					<AlertDialogDescription>
+						Esta acción no se puede deshacer. Por favor confirme que desea
+						eliminar la categoría.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter className="flex gap-6">
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<DeleteCategory id={id} />
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
 export function ErrorBoundary() {
 	return (
 		<GeneralErrorBoundary
