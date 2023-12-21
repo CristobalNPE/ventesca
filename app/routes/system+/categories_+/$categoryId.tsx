@@ -1,4 +1,17 @@
+import {
+	type ActionFunctionArgs,
+	json,
+	redirect,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, useLoaderData } from '@remix-run/react'
+import { useState } from 'react'
+import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import {
+	SelectCategory,
+	type Category,
+} from '#app/components/select-category.tsx'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -13,19 +26,9 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { SelectModal } from '#app/components/ui/select-modal.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, invariantResponse, useIsPending } from '#app/utils/misc.tsx'
-import {
-	ActionFunctionArgs,
-	json,
-	redirect,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, useLoaderData } from '@remix-run/react'
-import { useState } from 'react'
-import { z } from 'zod'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const category = await prisma.family.findUnique({
@@ -299,70 +302,6 @@ export default function CategoryRoute() {
 				)}
 			</div>
 		</div>
-	)
-}
-
-type Category = {
-	id: string
-	code: string
-	description: string
-}
-//! SHOULD THIS BE ITS OWN 		COMPONENT?
-function SelectCategory({
-	categories,
-	selectedCategory,
-	setSelectedCategory,
-}: {
-	categories: Category[]
-	selectedCategory: Category | null
-	setSelectedCategory: React.Dispatch<React.SetStateAction<Category | null>>
-}) {
-	const [categoryModalOpen, setCategoryModalOpen] = useState(false)
-	const [categoryFilter, setCategoryFilter] = useState('')
-	const handleCategoryFilterChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setCategoryFilter(e.target.value)
-	}
-	const filteredCategories = categories.filter(category => {
-		return (
-			category.description
-				.toLowerCase()
-				.includes(categoryFilter.toLowerCase()) ||
-			category.code.includes(categoryFilter)
-		)
-	})
-
-	return (
-		<SelectModal
-			open={categoryModalOpen}
-			onOpenChange={setCategoryModalOpen}
-			title="Categoría"
-			selected={selectedCategory?.description}
-		>
-			<Input
-				autoFocus
-				type="text"
-				className="mb-4 w-full"
-				onChange={handleCategoryFilterChange}
-				defaultValue={categoryFilter}
-			/>
-			<div className="flex max-h-[15rem] flex-col gap-1 overflow-auto">
-				{filteredCategories.map(category => (
-					<div
-						key={category.id}
-						className="flex cursor-pointer items-center gap-2 rounded-sm p-1 hover:bg-primary/50"
-						onClick={() => {
-							setSelectedCategory(category)
-							setCategoryModalOpen(false)
-						}}
-					>
-						<span className="w-[7rem]">{category.code}</span>{' '}
-						<span className="border-l-2 pl-2">{category.description}</span>
-					</div>
-				))}
-			</div>
-		</SelectModal>
 	)
 }
 
