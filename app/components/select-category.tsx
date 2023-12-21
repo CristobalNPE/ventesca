@@ -4,7 +4,7 @@ import { SelectModal } from './ui/select-modal.tsx'
 
 export type Category = {
 	id: string
-	code: string
+	code: number
 	description: string
 }
 
@@ -29,7 +29,7 @@ export function SelectCategory({
 			category.description
 				.toLowerCase()
 				.includes(categoryFilter.toLowerCase()) ||
-			category.code.includes(categoryFilter)
+			category.code.toString().includes(categoryFilter)
 		)
 	})
 
