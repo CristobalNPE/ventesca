@@ -54,6 +54,7 @@ export type IconName =
 	| 'settings'
 	| 'shapes'
 	| 'sun'
+	| 'transfer'
 	| 'trash'
 	| 'update'
 	| 'user'
