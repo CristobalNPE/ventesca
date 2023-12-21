@@ -40,7 +40,7 @@ model Item {
   stock        Int
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  family       Family?   @relation(fields: [familyId], references: [id])
+  family       Family?   @relation(fields: [familyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   familyId     String
   provider     Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   providerId   String?
