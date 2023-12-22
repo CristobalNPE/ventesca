@@ -36,6 +36,8 @@ import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { format } from '@validatecl/rut'
+
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const provider = await prisma.provider.findUnique({
@@ -100,7 +102,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.provider.delete({ where: { id: provider.id } })
 
-	return redirectWithToast(`/system/inventory`, {
+	return redirectWithToast(`/system/providers`, {
 		type: 'success',
 		title: 'Proveedor eliminado',
 		description: `El proveedor ${provider.name} ha sido eliminado con éxito.`,
@@ -169,7 +171,7 @@ export default function ProviderRoute() {
 						</div>
 					</Link>
 					<div className="flex flex-1 flex-col gap-4">
-						<InfoCard title="RUT" data={provider.rut} icon="id" />
+						<InfoCard title="RUT" data={format(provider.rut)} icon="id" />
 						<InfoCard title="Teléfono" data={phone} icon="phone" />
 					</div>
 				</div>
