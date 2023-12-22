@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Input } from './ui/input.tsx'
 import { SelectModal } from './ui/select-modal.tsx'
+import { format } from '@validatecl/rut'
 
 export type Provider = {
 	id: string
@@ -56,7 +57,7 @@ export function SelectProvider({
 							setProviderModalOpen(false)
 						}}
 					>
-						<span className="w-[7rem]">{provider.rut}</span>{' '}
+						<span className="w-[7rem]">{format(provider.rut)}</span>{' '}
 						<span className="border-l-2 pl-2">{provider.name}</span>
 					</div>
 				))}
