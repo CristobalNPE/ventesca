@@ -2,11 +2,11 @@ import { type Provider } from '@prisma/client'
 import { type SerializeFrom, json } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
+import { format } from '@validatecl/rut'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-
 export async function loader() {
 	const providers = await prisma.provider
 		.findMany({
@@ -41,6 +41,13 @@ export const providerColumns: ColumnDef<
 				</Button>
 			)
 		},
+		cell: ({ row }) => {
+			return (
+				<div className="tracking-wider  text-foreground">
+					{format(row.getValue('rut'))}
+				</div>
+			)
+		},
 
 		accessorKey: 'rut',
 	},
@@ -59,7 +66,7 @@ export const providerColumns: ColumnDef<
 		},
 		cell: ({ row }) => {
 			return (
-				<div className="font-bold tracking-wider  text-foreground">
+				<div className="font-bold uppercase tracking-wider  text-foreground">
 					{row.getValue('name')}
 				</div>
 			)
@@ -74,7 +81,7 @@ export const providerColumns: ColumnDef<
 					variant="ghost"
 					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
 				>
-					Empresa
+					Nombre Empresa
 					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
 				</Button>
 			)
