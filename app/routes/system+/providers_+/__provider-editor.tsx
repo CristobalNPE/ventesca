@@ -16,6 +16,7 @@ import {
 	type SerializeFrom,
 } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
+import { clean, validate } from '@validatecl/rut'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 
@@ -23,7 +24,7 @@ const undefinedDataText = 'Sin datos'
 
 const ProviderEditorSchema = z.object({
 	id: z.string().optional(),
-	rut: z.string({ required_error: 'Campo obligatorio' }), //TODO: Custom RUT validation
+	rut: z.string({ required_error: 'Campo obligatorio' }), 
 	name: z.string({ required_error: 'Campo obligatorio' }),
 	address: z.string().optional(),
 	city: z.string().optional(),
@@ -52,6 +53,14 @@ export async function action({ request }: ActionFunctionArgs) {
 					message: 'Ya existe un proveedor con este RUT.',
 				})
 			}
+
+			if (!validate(data.rut)) {
+				ctx.addIssue({
+					path: ['rut'],
+					code: z.ZodIssueCode.custom,
+					message: 'RUT inválido.',
+				})
+			}
 		}),
 
 		async: true,
@@ -76,11 +85,13 @@ export async function action({ request }: ActionFunctionArgs) {
 		fax,
 	} = submission.value
 
+	const cleanedRut = clean(rut)
+
 	const updatedProvider = await prisma.provider.upsert({
 		select: { id: true },
 		where: { id: providerId ?? '__new_provider__' },
 		create: {
-			rut,
+			rut: cleanedRut ?? rut,
 			name,
 			address: address ?? undefinedDataText,
 			city: city ?? undefinedDataText,
@@ -89,7 +100,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			fax: fax ?? undefinedDataText,
 		},
 		update: {
-			rut,
+			rut: cleanedRut ?? rut,
 			name,
 			address,
 			city,
@@ -153,6 +164,7 @@ export function ProviderEditor({
 						labelProps={{ children: 'RUT' }}
 						inputProps={{
 							autoFocus: true,
+
 							...conform.input(fields.rut, { ariaAttributes: true }),
 						}}
 						errors={fields.rut.errors}
