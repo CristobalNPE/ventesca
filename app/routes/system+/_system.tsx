@@ -17,7 +17,6 @@ type NavigationLink = {
 	main?: boolean
 }
 
-
 export default function SystemLayout() {
 	// want to save this option
 	const [shrinkSidebar, setShrinkSidebar] = useState(false)
