@@ -105,7 +105,7 @@ export default function SystemLayout() {
 								<NavLink
 									className={({ isActive }) =>
 										cn(
-											'flex items-center gap-3 rounded-sm p-3 text-lg transition-colors hover:bg-primary/10',
+											'flex items-center gap-3 rounded-sm p-3 text-lg transition-colors hover:bg-primary/10 select-none',
 											isActive && ' bg-primary/30 hover:bg-primary/30',
 											link.main && 'text-primary ',
 										)

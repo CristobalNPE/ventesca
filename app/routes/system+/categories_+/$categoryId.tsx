@@ -111,7 +111,7 @@ export default function CategoryRoute() {
 	}
 
 	const filteredItems = category.items.filter(item => {
-		return item.name ? item.name.toLowerCase().includes(itemsFilter) : false
+		return item.name ? item.name.toLowerCase().includes(itemsFilter.toLowerCase()) : false
 	})
 
 	function isSelected(id: string) {
