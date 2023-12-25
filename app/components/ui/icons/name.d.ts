@@ -38,6 +38,7 @@ export type IconName =
 	| 'magnifying-glass'
 	| 'map-pin-filled'
 	| 'map'
+	| 'minus'
 	| 'moon'
 	| 'more-horizontal'
 	| 'package'
