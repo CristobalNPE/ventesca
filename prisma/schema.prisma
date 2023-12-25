@@ -12,7 +12,7 @@ datasource db {
 
 model Family {
   id          String @id @default(cuid())
-  code        Int @unique
+  code        Int    @unique
   description String
   items       Item[]
 }
@@ -32,18 +32,44 @@ model Provider {
 }
 
 model Item {
-  id           String    @id @default(cuid())
-  code         Int       @unique
+  id           String     @id @default(cuid())
+  code         Int        @unique
   name         String?
   sellingPrice Float?
   price        Float?
   stock        Int
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  family       Family?   @relation(fields: [familyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  family       Family?    @relation(fields: [familyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   familyId     String
-  provider     Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  provider     Provider?  @relation(fields: [providerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   providerId   String?
+  sales        ItemSale[]
+}
+
+model Sale {
+  id        String     @id @default(cuid())
+  status    String // e.g. pending, cancled, completed
+  subtotal  Int
+  total     Int
+  discount  Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     ItemSale[]
+  seller    User?      @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId  String?
+}
+
+model ItemSale {
+  id         String   @id @default(cuid())
+  quantity   Int
+  totalPrice Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  item       Item?    @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId     String?
+  sale       Sale?    @relation(fields: [saleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  saleId     String?
 }
 
 model User {
@@ -58,6 +84,7 @@ model User {
   roles       Role[]
   sessions    Session[]
   connections Connection[]
+  Sale        Sale[]
 }
 
 model UserImage {
