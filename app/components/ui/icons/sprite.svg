@@ -207,6 +207,7 @@
 </symbol>
 <symbol class="icon icon-tabler icon-tabler-map-pin-filled" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="map-pin-filled"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M18.364 4.636a9 9 0 0 1 .203 12.519l-.203 .21l-4.243 4.242a3 3 0 0 1 -4.097 .135l-.144 -.135l-4.244 -4.243a9 9 0 0 1 12.728 -12.728zm-6.364 3.364a3 3 0 1 0 0 6a3 3 0 0 0 0 -6z" stroke-width="0" fill="currentColor" ></path></symbol>
 <symbol class="icon icon-tabler icon-tabler-map" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="map"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13" ></path><path d="M9 4v13" ></path><path d="M15 7v13" ></path></symbol>
+<symbol class="icon icon-tabler icon-tabler-minus" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="minus"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 12l14 0" ></path></symbol>
 <symbol viewBox="0 0 15 15" fill="none" id="moon">
   <path     fill-rule="evenodd"
     clip-rule="evenodd"
