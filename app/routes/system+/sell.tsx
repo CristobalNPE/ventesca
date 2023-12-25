@@ -1,7 +1,9 @@
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
+import { Label } from '#app/components/ui/label.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
 	Table,
 	TableBody,
@@ -11,18 +13,34 @@ import {
 	TableRow,
 } from '#app/components/ui/table.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import {
+	cn,
+	formatCurrency,
+	useDebounce,
+	useIsPending,
+} from '#app/utils/misc.tsx'
 import { Item } from '@prisma/client'
-import { LoaderFunctionArgs, SerializeFrom, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { ActionFunctionArgs, LoaderFunctionArgs, SerializeFrom, json } from '@remix-run/node'
+import {
+	useFetcher,
+	useLoaderData,
+	useSubmit
+} from '@remix-run/react'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
-export async function loader({request}:LoaderFunctionArgs) {
+//We could create a Database object with the current sale, and then we could use it to add items, remove items, etc.
+//action should add an remove items from the sale
+//loader should return the current sale, and the items in it.
+//we should define what data is important to have in a sale
+//there should be STATUS for the sale, that can be PENDING/ CANCELED/ COMPLETED.
+//all of these should be shown later in the "reporte de ventas" section
+//important data for this entity would be: date, total, status, items. Also the user that created it, and the user that completed it.
+
+
+export async function loader({ request }: LoaderFunctionArgs) {
 	// const url = new URL(request.url)
 	// const code = url.searchParams.get('code')
-
-
 
 	const testItem = await prisma.item.findUnique({
 		where: { code: 3424 },
@@ -35,7 +53,15 @@ export async function loader({request}:LoaderFunctionArgs) {
 		},
 	})
 
-	return json({ item: testItem } )
+	return json({ item: testItem })
+}
+
+
+export async function action({request}:ActionFunctionArgs){
+		const formData = await request.formData()
+		const search = formData.get('search')
+		console.log(search)
+		return null;
 }
 
 export default function SellRoute() {
@@ -45,11 +71,13 @@ export default function SellRoute() {
 	const { item } = useLoaderData<typeof loader>()
 	// const [subtotal, setSubtotal] = useState(0)
 
+	//we need to programmatically set focus to the last row of the table
 	return (
 		<>
 			<h1 className="text-2xl">Venta de artículos</h1>
 			<div className="mt-4 flex justify-between">
-				<Input className=" w-[20rem]" />
+				{/* <Input className=" w-[20rem]" /> */}
+				<ItemReader status={'idle'} />
 				<div className="flex gap-4">
 					<Button variant={'outline'}>
 						<Icon className="mr-2" name="banknote" /> Descargar Cotización
@@ -65,11 +93,9 @@ export default function SellRoute() {
 						<TableRow className="">
 							<TableHead>Código</TableHead>
 							<TableHead>V/P/D</TableHead>
-							<TableHead className="min-w-[25rem]">
-								Descripción Articulo
-							</TableHead>
+							<TableHead className="">Descripción Articulo</TableHead>
 							<TableHead>Precio</TableHead>
-							<TableHead>Cantidad</TableHead>
+							<TableHead className="">Cantidad</TableHead>
 
 							<TableHead className="text-right">Total</TableHead>
 						</TableRow>
@@ -117,13 +143,16 @@ export default function SellRoute() {
 
 const SellRow = ({
 	item,
-	transactionType,
 }: {
-	item: SerializeFrom<Pick<Item, 'id' | 'code' | 'name' | 'sellingPrice' | 'stock'>>
+	item: SerializeFrom<
+		Pick<Item, 'id' | 'code' | 'name' | 'sellingPrice' | 'stock'>
+	>
 	transactionType: StateType
 }) => {
 	const [totalPrice, setTotalPrice] = useState(item.sellingPrice)
+	const [isFocused, setIsFocused] = useState(false)
 	const [quantity, setQuantity] = useState(1)
+	const [transactionType, setTransactionType] = useState<StateType>('VENTA')
 
 	useEffect(() => {
 		if (item.sellingPrice) {
@@ -131,11 +160,66 @@ const SellRow = ({
 		}
 	}, [quantity, item.sellingPrice])
 
+	//If user presses a number, it should change the quantity or focus the input?
+	//Maybe I want arrow up and down to switch the focus between rows instead of increasing stock
+
+	const rowRef = useRef<HTMLTableRowElement>(null)
+	const handleKeyDown = (event: KeyboardEvent) => {
+		switch (event.key) {
+			case 'ArrowUp':
+			case 'ArrowRight':
+				event.preventDefault()
+				setQuantity(q => (q < item.stock ? q + 1 : q))
+				break
+			case 'ArrowDown':
+			case 'ArrowLeft':
+				event.preventDefault()
+				setQuantity(q => (q > 1 ? q - 1 : q))
+				break
+			case 'V':
+			case 'v':
+				setTransactionType('VENTA')
+				break
+			case 'D':
+			case 'd':
+				setTransactionType('DEVOL')
+				break
+			case 'P':
+			case 'p':
+				setTransactionType('PREST')
+				break
+		}
+	}
+
+	useEffect(() => {
+		const row = rowRef.current
+		if (row) {
+			row.addEventListener('keydown', handleKeyDown)
+		}
+		return () => {
+			if (row) {
+				row.removeEventListener('keydown', handleKeyDown)
+			}
+		}
+	}, [rowRef, item.stock])
+
 	return (
-		<TableRow className="uppercase">
+		<TableRow
+			ref={rowRef}
+			className={cn(
+				'uppercase',
+				isFocused && 'bg-primary/10 hover:bg-primary/10',
+			)}
+			tabIndex={0}
+			onBlur={() => setIsFocused(false)}
+			onFocus={() => setIsFocused(true)}
+		>
 			<TableCell className="font-bold">{item.code}</TableCell>
 			<TableCell className="font-medium">
-				<TransactionType initialType={transactionType} />
+				<TransactionType
+					initialType={transactionType}
+					setType={setTransactionType}
+				/>
 			</TableCell>
 			<TableCell className="font-medium tracking-wider">{item.name}</TableCell>
 			<TableCell className="font-medium">
@@ -156,70 +240,43 @@ const SellRow = ({
 	)
 }
 
-//Component can have 3 states: VENTA, DEVOL, PREST, and the color of the background will change depending on the state
-//The state will be passed as a prop to the component
-//Clicking on the component will change the state, cycling through the 3 states
-//Clicking on the component will also change the background color, cycling through the 3 colors
-//Component can be focused, and when focused it will listen to the keyboard events for the letters V, D, P, and will change the state accordingly
-
 type StateType = 'VENTA' | 'DEVOL' | 'PREST'
 
-const TransactionType = ({ initialType }: { initialType: StateType }) => {
-	const [state, setState] = useState<StateType>(initialType)
-
+const TransactionType = ({
+	initialType,
+	setType,
+}: {
+	initialType: StateType
+	setType: (value: StateType) => void
+}) => {
 	const componentRef = useRef<HTMLDivElement>(null)
 
 	const cycleState = () => {
 		const nextState =
-			state === 'VENTA' ? 'DEVOL' : state === 'DEVOL' ? 'PREST' : 'VENTA'
-		setState(nextState)
+			initialType === 'VENTA'
+				? 'DEVOL'
+				: initialType === 'DEVOL'
+				  ? 'PREST'
+				  : 'VENTA'
+		setType(nextState)
 	}
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		switch (event.key.toUpperCase()) {
-			case 'V':
-				setState('VENTA')
-				break
-			case 'D':
-				setState('DEVOL')
-				break
-			case 'P':
-				setState('PREST')
-				break
-		}
-	}
-
-	useEffect(() => {
-		const currentRef = componentRef.current
-		if (currentRef) {
-			currentRef.addEventListener('keydown', handleKeyDown)
-		}
-		return () => {
-			if (currentRef) {
-				currentRef.removeEventListener('keydown', handleKeyDown)
-			}
-		}
-	}, [])
 	return (
 		<div
 			className={cn(
-				'flex w-[4rem] cursor-pointer select-none items-center justify-center rounded-md uppercase',
-				state === 'VENTA' && 'bg-primary',
-				state === 'DEVOL' && 'bg-orange-500',
-				state === 'PREST' && 'bg-blue-500',
+				'flex w-[4rem] cursor-pointer select-none items-center justify-center rounded-md uppercase text-background',
+				initialType === 'VENTA' && 'bg-primary',
+				initialType === 'DEVOL' && 'bg-orange-500',
+				initialType === 'PREST' && 'bg-blue-500',
 			)}
 			onClick={cycleState}
-			tabIndex={0}
+			tabIndex={-1}
 			ref={componentRef}
 		>
-			{state}
+			{initialType}
 		</div>
 	)
 }
-
-//Component will have an numbers only input and two buttons, one to increase the value and one to decrease it
-//Component will have a min and max value, and will not allow the user to go below or above those values
-//Component will have a prop to set the initial value
 
 const QuantitySelector = ({
 	min,
@@ -233,9 +290,6 @@ const QuantitySelector = ({
 	setQuantity: (value: number) => void
 }) => {
 	const componentRef = useRef<HTMLDivElement>(null)
-	console.log(quantity)
-	console.log(min)
-	console.log(max)
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = parseInt(event.target.value, 10)
@@ -254,28 +308,6 @@ const QuantitySelector = ({
 		setQuantity(newValue)
 	}
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
-			event.preventDefault()
-			increaseValue()
-		} else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
-			event.preventDefault()
-			decreaseValue()
-		}
-	}
-
-	useEffect(() => {
-		const currentRef = componentRef.current
-		if (currentRef) {
-			currentRef.addEventListener('keydown', handleKeyDown)
-		}
-		return () => {
-			if (currentRef) {
-				currentRef.removeEventListener('keydown', handleKeyDown)
-			}
-		}
-	}, [quantity])
-
 	return (
 		<div ref={componentRef} className="flex">
 			<Button
@@ -285,11 +317,11 @@ const QuantitySelector = ({
 				onClick={decreaseValue}
 				disabled={quantity <= min}
 			>
-				<Icon size="lg" name="chevron-down" />
+				<Icon size="lg" name="minus" />
 			</Button>
 			<Input
 				className="w-[3rem] [&::-webkit-inner-spin-button]:appearance-none"
-				tabIndex={0}
+				tabIndex={-1}
 				type="number"
 				value={quantity}
 				onChange={handleInputChange}
@@ -304,5 +336,66 @@ const QuantitySelector = ({
 				<Icon size="lg" name="plus" />
 			</Button>
 		</div>
+	)
+}
+
+///////////////////////////TEST SEARCH BAR //////////////////////////////////
+function ItemReader({
+	status,
+	onFocus,
+	autoFocus = false,
+	autoSubmit = false,
+}: {
+	status: 'idle' | 'pending' | 'success' | 'error'
+	onFocus?: () => void
+	autoFocus?: boolean
+	autoSubmit?: boolean
+}) {
+	const id = useId()
+
+	const submit = useSubmit()
+	const isSubmitting = useIsPending({
+		formMethod: 'POST',
+		formAction: '/system/sell',
+	})
+	const fetcher = useFetcher({ key: 'add-item' })
+
+	const handleFormChange = useDebounce((form: HTMLFormElement) => {
+		submit(form)
+	}, 400)
+
+	return (
+		<fetcher.Form
+			method="POST"
+			action="/system/sell"
+			className="flex flex-wrap items-center justify-center gap-2"
+			onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
+		>
+			<div className="flex-1">
+				<Label htmlFor={id} className="sr-only">
+					Search
+				</Label>
+				<Input
+					onFocus={onFocus}
+					type="number"
+					name="search"
+					id={id}
+					placeholder="Búsqueda Código"
+					className="w-[10rem] sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
+					autoFocus={autoFocus}
+				/>
+			</div>
+			<div>
+				<StatusButton
+					type="submit"
+					status={isSubmitting ? 'pending' : status}
+					className="flex w-full items-center justify-center"
+					size="sm"
+				>
+					<Icon name="scan-barcode" size="md" />
+					<span className="sr-only">Buscar</span>
+				</StatusButton>
+			</div>
+		</fetcher.Form>
 	)
 }
