@@ -31,13 +31,14 @@ async function seed() {
 		.pipe(parse({ delimiter: ',', from_line: 2 }))
 		.on('data', async function (row) {
 			const [code, description] = row
+			const codeAsInt = parseInt(code)
 			await prisma.family.create({
-				data: { code, description },
+				data: { code: codeAsInt, description },
 			})
 		})
 
 	await prisma.family.create({
-		data: { code: '99', description: 'SIN CLASIFICAR' },
+		data: { code: 99, description: 'SIN CLASIFICAR' },
 	})
 
 	console.timeEnd('☺ Created families...')
