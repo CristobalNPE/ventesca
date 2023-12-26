@@ -50,7 +50,6 @@ model Item {
 model Transaction {
   id        String            @id @default(cuid())
   status    String // e.g. pending, cancled, completed
-  type      String // e.g. sale, loan, return
   subtotal  Int
   total     Int
   discount  Int
@@ -64,6 +63,7 @@ model Transaction {
 model ItemTransaction {
   id            String       @id @default(cuid())
   quantity      Int
+  type          String // e.g. sale, loan, return
   totalPrice    Int
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
