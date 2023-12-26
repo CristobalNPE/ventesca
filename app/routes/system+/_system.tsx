@@ -6,8 +6,12 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
-import { cn } from '#app/utils/misc.tsx'
-import { NavLink, Outlet } from '@remix-run/react'
+import { requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, invariantResponse } from '#app/utils/misc.tsx'
+import { LoaderFunctionArgs, json } from '@remix-run/node'
+import { NavLink, Outlet, useLoaderData } from '@remix-run/react'
+
 import { useState } from 'react'
 
 type NavigationLink = {
@@ -17,9 +21,20 @@ type NavigationLink = {
 	main?: boolean
 }
 
+export async function loader({ request }: LoaderFunctionArgs) {
+	const userId = await requireUserId(request)
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { username: true },
+	})
+	invariantResponse(user, 'User not found', { status: 404 })
+	return json({ user })
+}
+
 export default function SystemLayout() {
 	// want to save this option
 	const [shrinkSidebar, setShrinkSidebar] = useState(false)
+	const { user } = useLoaderData<typeof loader>()
 
 	const navigationLinks: NavigationLink[] = [
 		{
@@ -105,7 +120,7 @@ export default function SystemLayout() {
 								<NavLink
 									className={({ isActive }) =>
 										cn(
-											'flex items-center gap-3 rounded-sm p-3 text-lg transition-colors hover:bg-primary/10 select-none',
+											'flex select-none items-center gap-3 rounded-sm p-3 text-lg transition-colors hover:bg-primary/10',
 											isActive && ' bg-primary/30 hover:bg-primary/30',
 											link.main && 'text-primary ',
 										)
@@ -127,7 +142,7 @@ export default function SystemLayout() {
 			<div className="flex-1 overflow-auto ">
 				<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-end border-b-[1px] border-foreground/5 bg-secondary p-8">
 					<h1>
-						Vendedor : <span className="font-bold">Jhon Doe</span>
+						Vendedor : <span className="font-bold">{user.username}</span>
 					</h1>
 				</header>
 				<main className="p-8">
