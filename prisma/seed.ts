@@ -118,7 +118,7 @@ async function seed() {
 						name: nombre,
 						sellingPrice: parseFloat(venta),
 						price: parseFloat(precio),
-						family: { connect: { code: familia } },
+						family: { connect: { code: parseInt(familia) } },
 						provider: { connect: { rut: rut } },
 						stock: parseInt(existencia) > 0 ? parseInt(existencia) : 0,
 					},
