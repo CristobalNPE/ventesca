@@ -27,7 +27,6 @@ import { getTransactionId } from '#app/utils/transaction.server.ts'
 export async function loader({ request }: LoaderFunctionArgs) {
 	throw redirect('/system/sell')
 }
-
 const SearchSchema = z.object({
 	search: z.number(),
 })
@@ -56,10 +55,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		where: { code: search },
 		select: {
 			id: true,
-			code: true,
-			name: true,
 			sellingPrice: true,
-			stock: true,
 		},
 	})
 	if (!item) return null
