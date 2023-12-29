@@ -2,7 +2,7 @@ import { Button } from '#app/components/ui/button.tsx'
 import { type MetaFunction } from '@remix-run/node'
 import { Link } from '@remix-run/react'
 
-export const meta: MetaFunction = () => [{ title: 'Epic Notes' }]
+export const meta: MetaFunction = () => [{ title: 'Sistema de Ventas' }]
 
 export default function Index() {
 	return (
