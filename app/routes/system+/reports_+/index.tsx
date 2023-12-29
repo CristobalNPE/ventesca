@@ -1,6 +1,15 @@
-import { type LoaderFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '#app/components/ui/table.tsx'
 import { prisma } from '#app/utils/db.server.ts'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { useLoaderData, useNavigate } from '@remix-run/react'
+import { formatRelative } from 'date-fns'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const transactions = await prisma.transaction.findMany({
@@ -11,6 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			total: true,
 			seller: { select: { name: true } },
 		},
+		orderBy: { createdAt: 'desc' },
 	})
 
 	return json({ transactions })
@@ -18,6 +28,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function ReportsRoute() {
 	const { transactions } = useLoaderData<typeof loader>()
+	const navigate = useNavigate()
+
+	// Seller should only see their own transactions
+	// Admin should see all transactions
 
 	return (
 		<>
@@ -32,7 +46,37 @@ export default function ReportsRoute() {
 					{/* possible buttons here */}
 				</div>
 			</div>
-			{JSON.stringify(transactions)}
+			<Table>
+				<TableHeader className="bg-secondary ">
+					<TableRow>
+						<TableHead>ID</TableHead>
+						<TableHead>Estado</TableHead>
+						<TableHead>Total</TableHead>
+						<TableHead>Vendedor</TableHead>
+						<TableHead>Creado en</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{transactions.map(transaction => (
+						<TableRow key={transaction.id}>
+							<TableCell
+								className="uppercase hover:bg-secondary"
+								onClick={() => navigate(transaction.id)}
+							>
+								{transaction.id}
+							</TableCell>
+							<TableCell>{transaction.status}</TableCell>
+							<TableCell>{transaction.total}</TableCell>
+							<TableCell>
+								{transaction.seller ? transaction.seller.name : 'Desconocido'}
+							</TableCell>
+							<TableCell>
+								{formatRelative(new Date(transaction.createdAt), new Date())}
+							</TableCell>
+						</TableRow>
+					))}
+				</TableBody>
+			</Table>
 		</>
 	)
 }
