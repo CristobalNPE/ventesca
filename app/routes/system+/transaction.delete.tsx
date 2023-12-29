@@ -1,10 +1,6 @@
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
 
-import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
-import { Form, useActionData } from '@remix-run/react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
@@ -14,7 +10,14 @@ import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { destroyCurrentTransaction } from '#app/utils/transaction.server.ts'
+import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
+import { Form, useActionData } from '@remix-run/react'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 
+
+
+//! ONLY ADMIN SHOULD BE ABLE TO ACTUALLY DELETE THE TRANSACTION. WHEN TRANSACTION IS DISCARDED FROM THE SALES PAGE, IT SHOULD BE ONLY FLAGGED AS DISCARDED.
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-transaction'),
 	transactionId: z.string(),
@@ -53,11 +56,11 @@ export async function action({ request }: ActionFunctionArgs) {
 	await prisma.transaction.delete({ where: { id: transaction.id } })
 
 	return redirectWithToast(
-		`/system/sell`,
+		`/system/reports`,
 		{
 			type: 'success',
-			title: 'Transacción Descartada',
-			description: `Transacción ${transaction.id} ha sido descartada .`,
+			title: 'Transacción Eliminada',
+			description: `Transacción ${transaction.id} ha sido eliminada permanentemente .`,
 		},
 		{
 			headers: {
@@ -67,7 +70,13 @@ export async function action({ request }: ActionFunctionArgs) {
 	)
 }
 
-export function DeleteTransaction({ id }: { id: string }) {
+export function DeleteTransaction({
+	id,
+
+}: {
+	id: string
+	
+}) {
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
@@ -79,7 +88,12 @@ export function DeleteTransaction({ id }: { id: string }) {
 	})
 
 	return (
-		<Form method="POST" action="/system/transaction/delete" {...form.props}>
+		<Form
+			method="POST"
+			action="/system/transaction/delete"
+			{...form.props}
+	
+		>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="transactionId" value={id} />
 
@@ -93,7 +107,7 @@ export function DeleteTransaction({ id }: { id: string }) {
 			>
 				<div className="flex items-center gap-2 ">
 					<Icon name="trash" />
-					<span>Descartar Venta</span>
+					<span>Eliminar Transacción</span>
 				</div>
 			</StatusButton>
 			<ErrorList errors={form.errors} id={form.errorId} />
