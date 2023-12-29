@@ -10,10 +10,7 @@ import {
 } from '#app/components/ui/table.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import {
-	formatCurrency,
-	invariantResponse
-} from '#app/utils/misc.tsx'
+import { formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
 import {
 	getTransactionId,
 	transactionKey,
@@ -22,10 +19,19 @@ import {
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
+import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
-	ItemTransactionRow
-} from '#app/components/item-transaction-row.tsx'
-import { ItemReader } from './transaction.new.tsx'
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog.tsx'
+import { DeleteTransaction } from './transaction.delete.tsx'
+import { ItemReader } from './item-transaction.new.tsx'
 
 //We could create a Database object with the current sale, and then we could use it to add items, remove items, etc.
 //action should add an remove items from the sale
@@ -127,9 +133,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ transaction: currentTransaction })
 }
 
-
 export async function action({ request }: ActionFunctionArgs) {
-
 	return json({ status: 'success' } as const)
 }
 
@@ -171,9 +175,8 @@ export default function SellRoute() {
 					<Button variant={'outline'}>
 						<Icon className="mr-2" name="banknote" /> Descargar Cotización
 					</Button>
-					<Button variant={'destructive'}>
-						<Icon name="trash" className="mr-2" /> Descartar Venta
-					</Button>
+
+					<ConfirmDeleteTransaction transactionId={transaction.id} />
 				</div>
 			</div>
 			<ScrollArea className="my-4 h-[29rem] ">
@@ -249,3 +252,31 @@ export default function SellRoute() {
 	)
 }
 
+const ConfirmDeleteTransaction = ({
+	transactionId,
+}: {
+	transactionId: string
+}) => {
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger>
+				<Button variant={'destructive'}>
+					<Icon name="trash" className="mr-2" /> Descartar Venta
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Confirmar descarte de venta</AlertDialogTitle>
+					<AlertDialogDescription>
+						Esta acción no se puede deshacer. Por favor confirme que desea
+						descartar esta venta
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter className="flex gap-6">
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<DeleteTransaction id={transactionId} />
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
