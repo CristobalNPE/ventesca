@@ -30,8 +30,9 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '#app/components/ui/alert-dialog.tsx'
-import { DeleteTransaction } from './transaction.delete.tsx'
 import { ItemReader } from './item-transaction.new.tsx'
+import { DeleteTransaction } from './transaction.delete.tsx'
+import { DiscardTransaction } from './transaction.discard.tsx'
 
 //We could create a Database object with the current sale, and then we could use it to add items, remove items, etc.
 //action should add an remove items from the sale
@@ -268,13 +269,12 @@ const ConfirmDeleteTransaction = ({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Confirmar descarte de venta</AlertDialogTitle>
 					<AlertDialogDescription>
-						Esta acción no se puede deshacer. Por favor confirme que desea
-						descartar esta venta
+						Por favor confirme que desea descartar esta venta
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<DeleteTransaction id={transactionId} />
+					<DiscardTransaction id={transactionId} />
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
