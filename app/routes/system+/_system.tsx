@@ -25,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
-		select: { username: true },
+		select: { username: true, name:true },
 	})
 	invariantResponse(user, 'User not found', { status: 404 })
 	return json({ user })
@@ -57,6 +57,11 @@ export default function SystemLayout() {
 			name: 'Inventario',
 			path: 'inventory',
 			icon: 'package',
+		},
+		{
+			name: 'Promociones',
+			path: 'discounts',
+			icon: 'tag',
 		},
 		{
 			name: 'Categorías',
@@ -142,7 +147,7 @@ export default function SystemLayout() {
 			<div className="flex-1 overflow-auto ">
 				<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-end border-b-[1px] border-foreground/5 bg-secondary p-8">
 					<h1>
-						Vendedor : <span className="font-bold">{user.username}</span>
+						Vendedor : <span className="font-bold">{user.name}</span>
 					</h1>
 				</header>
 				<main className="p-8">
