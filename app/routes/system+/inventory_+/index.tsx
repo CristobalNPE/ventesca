@@ -96,7 +96,7 @@ const columns: ColumnDef<{}>[] = [
 		},
 		cell: ({ row }) => {
 			return (
-				<div className="font-bold tracking-wider uppercase text-foreground">
+				<div className="font-bold uppercase tracking-wider text-foreground">
 					{row.getValue('name')}
 				</div>
 			)
@@ -190,7 +190,8 @@ const columns: ColumnDef<{}>[] = [
 	},
 ]
 
-export default function NeoInventoryRoute() {
+export default function InventoryRoute() {
+	const isAdmin = true
 	const { items, totalItems } = useLoaderData<typeof loader>()
 
 	return (
@@ -202,18 +203,20 @@ export default function NeoInventoryRoute() {
 						[{totalItems} artículos]
 					</h1>
 				</div>
-				<div className="flex items-center gap-6">
-					<Button asChild className="flex items-center gap-2">
-						<Link to="new">
-							<Icon name="plus" size="md" />
-							<span>Agregar articulo</span>
-						</Link>
-					</Button>
-					<Button variant={'secondary'} className="flex items-center gap-2">
-						<Icon name="file-text" size="md" />
-						<span>Descargar reporte</span>
-					</Button>
-				</div>
+				{isAdmin && (
+					<div className="flex items-center gap-6">
+						<Button asChild className="flex items-center gap-2">
+							<Link to="new">
+								<Icon name="plus" size="md" />
+								<span>Agregar articulo</span>
+							</Link>
+						</Button>
+						<Button variant={'secondary'} className="flex items-center gap-2">
+							<Icon name="file-text" size="md" />
+							<span>Descargar reporte</span>
+						</Button>
+					</div>
+				)}
 			</div>
 			<Suspense fallback={<DataTableSkeleton />}>
 				<Await resolve={items}>
