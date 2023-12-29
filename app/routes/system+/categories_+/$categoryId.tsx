@@ -91,6 +91,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function CategoryRoute() {
+	const isAdmin = true
 	const { category, allCategories } = useLoaderData<typeof loader>()
 	const [selectedItemsIds, setSelectedItemsIds] = useState<string[]>([])
 	const [destinationCategory, setDestinationCategory] =
@@ -111,7 +112,9 @@ export default function CategoryRoute() {
 	}
 
 	const filteredItems = category.items.filter(item => {
-		return item.name ? item.name.toLowerCase().includes(itemsFilter.toLowerCase()) : false
+		return item.name
+			? item.name.toLowerCase().includes(itemsFilter.toLowerCase())
+			: false
 	})
 
 	function isSelected(id: string) {
@@ -152,27 +155,30 @@ export default function CategoryRoute() {
 								className="w-1/2"
 								placeholder="Filtrar por nombre"
 							/>
-
-							{allSelected ? (
-								<Button
-									size={'sm'}
-									className="w-[11rem]"
-									variant={'destructive'}
-									onClick={() => setSelectedItemsIds([])}
-								>
-									<Icon name={'cross-1'} className="mr-2" />
-									Quitar Selección
-								</Button>
-							) : (
-								<Button
-									size={'sm'}
-									className="w-[11rem]"
-									variant={'secondary'}
-									onClick={() => setSelectedItemsIds(itemsIds)}
-								>
-									<Icon name={'plus'} className="mr-2" />
-									Seleccionar Todos
-								</Button>
+							{isAdmin && (
+								<>
+									{allSelected ? (
+										<Button
+											size={'sm'}
+											className="w-[11rem]"
+											variant={'destructive'}
+											onClick={() => setSelectedItemsIds([])}
+										>
+											<Icon name={'cross-1'} className="mr-2" />
+											Quitar Selección
+										</Button>
+									) : (
+										<Button
+											size={'sm'}
+											className="w-[11rem]"
+											variant={'secondary'}
+											onClick={() => setSelectedItemsIds(itemsIds)}
+										>
+											<Icon name={'plus'} className="mr-2" />
+											Seleccionar Todos
+										</Button>
+									)}
+								</>
 							)}
 						</div>
 						{filteredItems.length > 0 ? (
@@ -200,109 +206,111 @@ export default function CategoryRoute() {
 					</>
 				)}
 			</div>
-			<div className="relative bottom-0 right-0 flex h-fit flex-col justify-end gap-4 rounded-md bg-secondary p-4">
-				<span className=" text-sm text-foreground/80">
-					<span className="font-bold">{selectedItemsIds.length}</span> de{' '}
-					{category._count.items} seleccionados
-				</span>
-				{selectedItemsIds.length > 0 && (
-					<AlertDialog
-						open={openTransferModal}
-						onOpenChange={setOpenTransferModal}
-					>
-						<AlertDialogTrigger>
-							<Button className="w-[14rem]" size={'lg'}>
-								<Icon name="transfer" className="mr-2" />
-								Transferir artículos
-							</Button>
-						</AlertDialogTrigger>
-						<AlertDialogContent
-							onEscapeKeyDown={() => {
-								setDestinationCategory(null)
-								setConfirmTransfer(false)
-							}}
+			{isAdmin && (
+				<div className="relative bottom-0 right-0 flex h-fit flex-col justify-end gap-4 rounded-md bg-secondary p-4">
+					<span className=" text-sm text-foreground/80">
+						<span className="font-bold">{selectedItemsIds.length}</span> de{' '}
+						{category._count.items} seleccionados
+					</span>
+					{selectedItemsIds.length > 0 && (
+						<AlertDialog
+							open={openTransferModal}
+							onOpenChange={setOpenTransferModal}
 						>
-							<AlertDialogHeader>
-								<AlertDialogTitle>
-									Transferencia de Categoría - {selectedItemsIds.length}{' '}
-									articulo(s)
-								</AlertDialogTitle>
-								<AlertDialogDescription>
-									<div className="mb-4">
-										Seleccione la categoría de destino:
-									</div>
+							<AlertDialogTrigger>
+								<Button className="w-[14rem]" size={'lg'}>
+									<Icon name="transfer" className="mr-2" />
+									Transferir artículos
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent
+								onEscapeKeyDown={() => {
+									setDestinationCategory(null)
+									setConfirmTransfer(false)
+								}}
+							>
+								<AlertDialogHeader>
+									<AlertDialogTitle>
+										Transferencia de Categoría - {selectedItemsIds.length}{' '}
+										articulo(s)
+									</AlertDialogTitle>
+									<AlertDialogDescription>
+										<div className="mb-4">
+											Seleccione la categoría de destino:
+										</div>
 
-									<SelectCategory
-										categories={allCategoriesFiltered}
-										selectedCategory={destinationCategory}
-										setSelectedCategory={setDestinationCategory}
-									/>
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className="mt-8">
-								{destinationCategory && confirmTransfer ? (
-									<Form className="flex gap-4 " method="POST">
-										<AuthenticityTokenInput />
-										<input
-											type="hidden"
-											value={selectedItemsIds.join(',')}
-											name="itemsIds"
+										<SelectCategory
+											categories={allCategoriesFiltered}
+											selectedCategory={destinationCategory}
+											setSelectedCategory={setDestinationCategory}
 										/>
-										<input
-											type="hidden"
-											value={destinationCategory.id}
-											name="destinationCategory"
-										/>
-										<AlertDialogCancel
-											onClick={() => {
-												setDestinationCategory(null)
-												setConfirmTransfer(false)
-											}}
-										>
-											Cancelar
-										</AlertDialogCancel>
-										<StatusButton
-											type="submit"
-											disabled={isPending}
-											status={isPending ? 'pending' : 'idle'}
-											onClick={() => setOpenTransferModal(false)}
-										>
-											<Icon className="mr-2" name="transfer" /> Confirmar
-											Transferencia de Categoría
-										</StatusButton>
-									</Form>
-								) : (
-									<div className="flex gap-4">
-										<AlertDialogCancel
-											onClick={() => {
-												setDestinationCategory(null)
-												setConfirmTransfer(false)
-											}}
-										>
-											Cancelar
-										</AlertDialogCancel>
-										<Button
-											onClick={() => setConfirmTransfer(true)}
-											disabled={!destinationCategory}
-										>
-											Continuar
-										</Button>
-									</div>
-								)}
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
-				)}
-				<Button className="w-[14rem]" size={'lg'} asChild>
-					<Link to={'edit'}>
-						<Icon name="update" className="mr-2" />
-						Editar Categoría
-					</Link>
-				</Button>
-				{itemsIds.length === 0 && (
-					<ConfirmDeleteDialog id={category.id} name={category.description} />
-				)}
-			</div>
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter className="mt-8">
+									{destinationCategory && confirmTransfer ? (
+										<Form className="flex gap-4 " method="POST">
+											<AuthenticityTokenInput />
+											<input
+												type="hidden"
+												value={selectedItemsIds.join(',')}
+												name="itemsIds"
+											/>
+											<input
+												type="hidden"
+												value={destinationCategory.id}
+												name="destinationCategory"
+											/>
+											<AlertDialogCancel
+												onClick={() => {
+													setDestinationCategory(null)
+													setConfirmTransfer(false)
+												}}
+											>
+												Cancelar
+											</AlertDialogCancel>
+											<StatusButton
+												type="submit"
+												disabled={isPending}
+												status={isPending ? 'pending' : 'idle'}
+												onClick={() => setOpenTransferModal(false)}
+											>
+												<Icon className="mr-2" name="transfer" /> Confirmar
+												Transferencia de Categoría
+											</StatusButton>
+										</Form>
+									) : (
+										<div className="flex gap-4">
+											<AlertDialogCancel
+												onClick={() => {
+													setDestinationCategory(null)
+													setConfirmTransfer(false)
+												}}
+											>
+												Cancelar
+											</AlertDialogCancel>
+											<Button
+												onClick={() => setConfirmTransfer(true)}
+												disabled={!destinationCategory}
+											>
+												Continuar
+											</Button>
+										</div>
+									)}
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					)}
+					<Button className="w-[14rem]" size={'lg'} asChild>
+						<Link to={'edit'}>
+							<Icon name="update" className="mr-2" />
+							Editar Categoría
+						</Link>
+					</Button>
+					{itemsIds.length === 0 && (
+						<ConfirmDeleteDialog id={category.id} name={category.description} />
+					)}
+				</div>
+			)}
 		</div>
 	)
 }
