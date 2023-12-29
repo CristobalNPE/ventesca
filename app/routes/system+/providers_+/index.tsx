@@ -99,6 +99,7 @@ export const providerColumns: ColumnDef<
 ]
 
 export default function ProvidersRoute() {
+	const isAdmin = true
 	const { providers, totalProviders } = useLoaderData<typeof loader>()
 	return (
 		<>
@@ -109,14 +110,16 @@ export default function ProvidersRoute() {
 						[{totalProviders} registrados]
 					</h1>
 				</div>
-				<div className="flex items-center gap-6">
-					<Button asChild className="flex items-center gap-2">
-						<Link to={'new'}>
-							<Icon name="plus" size="md" />
-							<span>Registrar proveedor</span>
-						</Link>
-					</Button>
-				</div>
+				{isAdmin && (
+					<div className="flex items-center gap-6">
+						<Button asChild className="flex items-center gap-2">
+							<Link to={'new'}>
+								<Icon name="plus" size="md" />
+								<span>Registrar proveedor</span>
+							</Link>
+						</Button>
+					</div>
+				)}
 			</div>
 			<DataTable
 				withItemSearch={false}
