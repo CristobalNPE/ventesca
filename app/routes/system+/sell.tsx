@@ -17,7 +17,7 @@ import {
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { useFetchers, useLoaderData } from '@remix-run/react'
 
 import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
@@ -116,12 +116,20 @@ export async function action({ request }: ActionFunctionArgs) {
 	return json({ status: 'success' } as const)
 }
 
+
+type ItemTransactionRow = {
+	crsf: string
+	id:string
+	type: string
+	quantity: number
+	totalPrice: number
+}
 export default function SellRoute() {
 	//! CHECK OTHER FILTERS AND ADD THE TOLOWERCASE() WHERE NEEDED.
 
 	const { transaction } = useLoaderData<typeof loader>()
 
-	const allItemTransactions = transaction.items
+	let allItemTransactions = transaction.items
 
 	//We might need to use a state for allItemTransactions, so we can add and remove items from it and apply some optimistic UI.
 
@@ -130,6 +138,18 @@ export default function SellRoute() {
 	// 	 setItems(newItems)
 
 	// }
+	let fetchers = useFetchers()
+	let optimisticTransactions = fetchers.reduce<ItemTransactionRow[]>((memo,f) => {
+		if (f.formData) {
+			let data = Object.fromEntries(f.formData)
+			memo.push(data)
+		}
+		return memo
+	},[])
+	console.log(optimisticTransactions)
+
+	allItemTransactions = [...allItemTransactions, ...optimisticTransactions]
+
 
 	const subtotal = allItemTransactions
 		.map(itemTransaction => itemTransaction.totalPrice)
