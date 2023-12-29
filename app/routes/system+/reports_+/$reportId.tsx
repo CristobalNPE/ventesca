@@ -77,7 +77,7 @@ export default function ReportRoute() {
 				</div>
 				<div className="flex flex-col">
 					<span>Estado: {transactionReport.status}</span>
-					<span>Total: {transactionReport.total}</span>
+					<span>Ingreso Total: {formatCurrency(transactionReport.total)}</span>
 					<span>
 						Vendedor:{' '}
 						{transactionReport.seller
