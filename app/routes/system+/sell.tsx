@@ -1,9 +1,6 @@
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { Label } from '#app/components/ui/label.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
 	Table,
 	TableBody,
@@ -12,13 +9,10 @@ import {
 	TableRow,
 } from '#app/components/ui/table.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
 	formatCurrency,
-	invariantResponse,
-	useDebounce,
-	useIsPending,
+	invariantResponse
 } from '#app/utils/misc.tsx'
 import {
 	getTransactionId,
@@ -26,15 +20,12 @@ import {
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
-import { useFetcher, useLoaderData, useSubmit } from '@remix-run/react'
+import { useLoaderData } from '@remix-run/react'
 
 import {
-	ItemTransactionRow,
-	TYPE_SELL,
+	ItemTransactionRow
 } from '#app/components/item-transaction-row.tsx'
-import { useId, useRef, useState } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
+import { ItemReader } from './transaction.new.tsx'
 
 //We could create a Database object with the current sale, and then we could use it to add items, remove items, etc.
 //action should add an remove items from the sale
@@ -136,66 +127,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ transaction: currentTransaction })
 }
 
-const SearchSchema = z.object({
-	search: z.number(),
-})
 
 export async function action({ request }: ActionFunctionArgs) {
-	//will get an item code, search the item in the db, create a ItemTransaction for it, and add it to the current transaction.
-	const transactionId = await getTransactionId(request)
-
-	invariantResponse(transactionId, 'Debe haber una venta en progreso.')
-
-	const formData = await request.formData()
-	await validateCSRF(formData, request.headers)
-
-	const result = SearchSchema.safeParse({
-		search: Number(formData.get('search')),
-	})
-
-	if (!result.success) {
-		return json({ status: 'error', errors: result.error.flatten() } as const, {
-			status: 400,
-		})
-	}
-	const { search } = result.data
-
-	const item = await prisma.item.findUnique({
-		where: { code: search },
-		select: {
-			id: true,
-			code: true,
-			name: true,
-			sellingPrice: true,
-			stock: true,
-		},
-	})
-	if (!item) return null
-
-	//Create the default ItemTransaction
-	await prisma.itemTransaction.create({
-		data: {
-			type: TYPE_SELL,
-			item: { connect: { id: item.id } },
-			transaction: { connect: { id: transactionId } },
-			quantity: 1,
-			totalPrice: item.sellingPrice ?? 0, //Can be null because of bad DB data, but we don't want to crash the app.
-		},
-		select: {
-			id: true,
-			type: true,
-			quantity: true,
-			item: {
-				select: {
-					id: true,
-					code: true,
-					name: true,
-					sellingPrice: true,
-					stock: true,
-				},
-			},
-		},
-	})
 
 	return json({ status: 'success' } as const)
 }
@@ -316,69 +249,3 @@ export default function SellRoute() {
 	)
 }
 
-function ItemReader({
-	status,
-	onFocus,
-	autoFocus = false,
-	autoSubmit = false,
-}: {
-	status: 'idle' | 'pending' | 'success' | 'error'
-	onFocus?: () => void
-	autoFocus?: boolean
-	autoSubmit?: boolean
-}) {
-	const id = useId()
-	const inputRef = useRef<HTMLInputElement>(null)
-	const submit = useSubmit()
-	const isSubmitting = useIsPending({
-		formMethod: 'POST',
-		formAction: '/system/sell',
-	})
-	const [value, setValue] = useState('')
-	const fetcher = useFetcher({ key: 'add-item' })
-
-	const handleFormChange = useDebounce((form: HTMLFormElement) => {
-		submit(form)
-		setValue('')
-	}, 400)
-
-	return (
-		<fetcher.Form
-			method="POST"
-			action="/system/sell"
-			className="flex flex-wrap items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
-			onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
-		>
-			<AuthenticityTokenInput />
-			<div className="flex-1">
-				<Label htmlFor={id} className="sr-only">
-					Search
-				</Label>
-				<Input
-					value={value}
-					onChange={e => setValue(e.target.value)}
-					ref={inputRef}
-					onFocus={onFocus}
-					type="number"
-					name="search"
-					id={id}
-					placeholder="Búsqueda Código"
-					className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
-					autoFocus={autoFocus}
-				/>
-			</div>
-			<div>
-				<StatusButton
-					type="submit"
-					status={isSubmitting ? 'pending' : status}
-					className="flex w-full items-center justify-center border-none"
-					variant={'outline'}
-					size="sm"
-				>
-					<Icon name="scan-barcode" size="md" />
-					<span className="sr-only">Buscar</span>
-				</StatusButton>
-			</div>
-		</fetcher.Form>
-	)
-}
