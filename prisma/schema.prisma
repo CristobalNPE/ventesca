@@ -53,6 +53,7 @@ model Transaction {
   subtotal    Int
   total       Int
   discount    Int
+  isDiscarded Boolean           @default(false)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   completedAt DateTime?
