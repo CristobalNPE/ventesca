@@ -6,6 +6,7 @@ import {
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { format } from '@validatecl/rut'
 import { formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -36,8 +37,6 @@ import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { format } from '@validatecl/rut'
-
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const provider = await prisma.provider.findUnique({
@@ -110,6 +109,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ProviderRoute() {
+	const isAdmin = true
 	const { provider, providerItemsCount } = useLoaderData<typeof loader>()
 	const address = provider.address
 		? provider.address
@@ -188,62 +188,67 @@ export default function ProviderRoute() {
 						</Link>
 					</Button>
 
-					<div className="flex gap-4">
-						<AlertDialog>
-							<AlertDialogTrigger>
-								<Button
-									variant={'secondary'}
+					{isAdmin && (
+						<div className="flex gap-4">
+							<AlertDialog>
+								<AlertDialogTrigger>
+									<Button
+										variant={'secondary'}
+										className="flex items-center gap-2"
+									>
+										<Icon name="trash" />
+										<span>Eliminar</span>
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>
+											Confirmar eliminación de proveedor
+										</AlertDialogTitle>
+										<AlertDialogDescription>
+											<br />
+											{providerItemsCount !== 0 &&
+												`Eliminar a ${
+													provider.name
+												} del registro también eliminara  ${
+													providerItemsCount > 1
+														? `los ${providerItemsCount}`
+														: 'el'
+												}  ${
+													providerItemsCount > 1 ? 'artículos' : 'articulo'
+												} ${
+													providerItemsCount > 1 ? 'asociados' : 'asociado'
+												} a este proveedor.`}
+											{providerItemsCount !== 0 && (
+												<>
+													<br />
+													<br />
+												</>
+											)}
+											Esta acción no se puede deshacer. Por favor confirme que
+											desea eliminar el proveedor y su(s) artículo(s)
+											asociado(s).
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter className="flex gap-6">
+										<AlertDialogCancel>Cancelar</AlertDialogCancel>
+
+										<DeleteProvider id={provider.id} />
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+							<Button variant={'default'} asChild>
+								<Link
+									to={'edit'}
+									relative="path"
 									className="flex items-center gap-2"
 								>
-									<Icon name="trash" />
-									<span>Eliminar</span>
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>
-										Confirmar eliminación de proveedor
-									</AlertDialogTitle>
-									<AlertDialogDescription>
-										<br />
-										{providerItemsCount !== 0 &&
-											`Eliminar a ${
-												provider.name
-											} del registro también eliminara  ${
-												providerItemsCount > 1
-													? `los ${providerItemsCount}`
-													: 'el'
-											}  ${providerItemsCount > 1 ? 'artículos' : 'articulo'} ${
-												providerItemsCount > 1 ? 'asociados' : 'asociado'
-											} a este proveedor.`}
-										{providerItemsCount !== 0 && (
-											<>
-												<br />
-												<br />
-											</>
-										)}
-										Esta acción no se puede deshacer. Por favor confirme que
-										desea eliminar el proveedor y su(s) artículo(s) asociado(s).
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter className="flex gap-6">
-									<AlertDialogCancel>Cancelar</AlertDialogCancel>
-
-									<DeleteProvider id={provider.id} />
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-						<Button variant={'default'} asChild>
-							<Link
-								to={'edit'}
-								relative="path"
-								className="flex items-center gap-2"
-							>
-								<Icon name="update" />
-								<span>Editar</span>
-							</Link>
-						</Button>
-					</div>
+									<Icon name="update" />
+									<span>Editar</span>
+								</Link>
+							</Button>
+						</div>
+					)}
 				</div>
 			</div>
 		</>
