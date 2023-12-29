@@ -143,7 +143,7 @@ const SearchSchema = z.object({
 export async function action({ request }: ActionFunctionArgs) {
 	//will get an item code, search the item in the db, create a ItemTransaction for it, and add it to the current transaction.
 	const transactionId = await getTransactionId(request)
-	console.log(transactionId)
+
 	invariantResponse(transactionId, 'Debe haber una venta en progreso.')
 
 	const formData = await request.formData()
@@ -172,7 +172,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 	if (!item) return null
 
-	//We create the default ItemTransaction
+	//Create the default ItemTransaction
 	await prisma.itemTransaction.create({
 		data: {
 			type: TYPE_SELL,
