@@ -22,7 +22,6 @@ export const ItemTransactionRow = ({
 		Pick<ItemTransaction, 'id' | 'quantity' | 'type' | 'totalPrice'>
 	>
 }) => {
-	//We handle the deletion in state so we can do optimistic UI
 
 	const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
 	const [isFocused, setIsFocused] = useState(false)
