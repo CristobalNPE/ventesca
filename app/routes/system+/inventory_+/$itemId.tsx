@@ -107,6 +107,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ItemRoute() {
+	const isAdmin = true
 	const { item } = useLoaderData<typeof loader>()
 
 	return (
@@ -214,37 +215,42 @@ export default function ItemRoute() {
 					</Link>
 				</Button>
 
-				<div className="flex gap-4">
-					<AlertDialog>
-						<AlertDialogTrigger>
-							<Button variant={'secondary'} className="flex items-center gap-2">
-								<Icon name="trash" />
-								<span>Eliminar</span>
-							</Button>
-						</AlertDialogTrigger>
-						<AlertDialogContent>
-							<AlertDialogHeader>
-								<AlertDialogTitle>
-									Confirmar eliminación de articulo
-								</AlertDialogTitle>
-								<AlertDialogDescription>
-									Esta acción no se puede deshacer. Por favor confirme que desea
-									eliminar el articulo.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className="flex gap-6">
-								<AlertDialogCancel>Cancelar</AlertDialogCancel>
-								<DeleteItem id={item.id} />
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
-					<Button variant={'default'} asChild>
-						<Link to={'edit'} className="flex items-center gap-2">
-							<Icon name="update" />
-							<span>Editar</span>
-						</Link>
-					</Button>
-				</div>
+				{isAdmin && (
+					<div className="flex gap-4">
+						<AlertDialog>
+							<AlertDialogTrigger>
+								<Button
+									variant={'secondary'}
+									className="flex items-center gap-2"
+								>
+									<Icon name="trash" />
+									<span>Eliminar</span>
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>
+										Confirmar eliminación de articulo
+									</AlertDialogTitle>
+									<AlertDialogDescription>
+										Esta acción no se puede deshacer. Por favor confirme que
+										desea eliminar el articulo.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter className="flex gap-6">
+									<AlertDialogCancel>Cancelar</AlertDialogCancel>
+									<DeleteItem id={item.id} />
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+						<Button variant={'default'} asChild>
+							<Link to={'edit'} className="flex items-center gap-2">
+								<Icon name="update" />
+								<span>Editar</span>
+							</Link>
+						</Button>
+					</div>
+				)}
 			</div>
 		</>
 	)
