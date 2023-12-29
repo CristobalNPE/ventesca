@@ -93,6 +93,7 @@ const columns: ColumnDef<
 ]
 
 export default function CategoriesRoute() {
+	const isAdmin = true
 	const { categories, totalCategories } = useLoaderData<typeof loader>()
 
 	return (
@@ -104,14 +105,16 @@ export default function CategoriesRoute() {
 						[{totalCategories} registradas]
 					</h1>
 				</div>
-				<div className="flex items-center gap-6">
-					<Button asChild className="flex items-center gap-2">
-						<Link to="new">
-							<Icon name="plus" size="md" />
-							<span>Ingresar categoría</span>
-						</Link>
-					</Button>
-				</div>
+				{isAdmin && (
+					<div className="flex items-center gap-6">
+						<Button asChild className="flex items-center gap-2">
+							<Link to="new">
+								<Icon name="plus" size="md" />
+								<span>Ingresar categoría</span>
+							</Link>
+						</Button>
+					</div>
+				)}
 			</div>
 			<DataTable
 				withItemSearch={false}
