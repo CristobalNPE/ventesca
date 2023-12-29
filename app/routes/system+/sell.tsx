@@ -31,31 +31,9 @@ import {
 	AlertDialogTrigger,
 } from '#app/components/ui/alert-dialog.tsx'
 import { ItemReader } from './item-transaction.new.tsx'
-import { DeleteTransaction } from './transaction.delete.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
 
-//We could create a Database object with the current sale, and then we could use it to add items, remove items, etc.
-//action should add an remove items from the sale
-//loader should return the current sale, and the items in it.
-//we should define what data is important to have in a sale
-//there should be STATUS for the sale, that can be PENDING/ CANCELED/ COMPLETED.
-//all of these should be shown later in the "reporte de ventas" section
-//important data for this entity would be: date, total, status, items. Also the user that created it, and the user that completed it.
-//how to set the current transaction so the user doesn't lose it if he refreshes the page??
-//seller can only have one sale in progress at a time, so we can use that to set the current sale.
-//to get rid of it, user has to complete the sale, or discard it.
-//if user discards it, we should ask for confirmation, and then delete it from the database.
-//if user completes it, we should ask for confirmation, and then change the status to completed.
-//if user tries to create a new sale, we should check if there is one in progress, and ask for confirmation to discard it.
-//? I need to handle users first.
-//!Should delete ItemTransactions when?
-
-//Maybe when the ItemTransaction is focused, then onBlur, we should save the changes to the database.
-
 export async function loader({ request }: LoaderFunctionArgs) {
-	//check if there is a transaction in progress, if there is, load it, else create a new one.
-	//return the current transaction, with the items in it.
-
 	const transactionId = await getTransactionId(request)
 	const userId = await requireUserId(request)
 	if (!transactionId) {
@@ -213,7 +191,6 @@ export default function SellRoute() {
 				</Table>
 			</ScrollArea>
 
-			{/* <div className="relative  -bottom-3 mx-auto flex h-[12rem] w-fit justify-between gap-16 rounded-md  bg-secondary py-4 pl-4 pr-6"> */}
 			<div className="mx-auto flex h-[10.5rem] w-fit justify-between gap-16 rounded-md  bg-secondary py-4 pl-4 pr-6">
 				<div className="flex flex-col justify-between gap-2">
 					<div className="flex items-center text-2xl text-foreground/80">
