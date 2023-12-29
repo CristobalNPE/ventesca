@@ -1,7 +1,7 @@
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
 
-import { type ActionFunctionArgs, json } from '@remix-run/node'
+import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
@@ -12,14 +12,19 @@ import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { requireUserId } from '#app/utils/auth.server.ts'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-category'),
 	categoryId: z.string(),
 })
 
+export async function loader() {
+	throw redirect('/system/categories')
+}
+
 export async function action({ request }: ActionFunctionArgs) {
-	// const userId = await requireUserId(request)
+	await requireUserId(request)
 	const formData = await request.formData()
 	await validateCSRF(formData, request.headers)
 	const submission = parse(formData, {
@@ -69,7 +74,7 @@ export function DeleteCategory({ id }: { id: string }) {
 				status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 				disabled={isPending}
 			>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2 ">
 					<Icon name="trash" />
 					<span>Eliminar</span>
 				</div>
