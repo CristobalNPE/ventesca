@@ -48,16 +48,17 @@ model Item {
 }
 
 model Transaction {
-  id        String            @id @default(cuid())
-  status    String // e.g. pending, cancled, completed
-  subtotal  Int
-  total     Int
-  discount  Int
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  items     ItemTransaction[]
-  seller    User?             @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  sellerId  String?
+  id          String            @id @default(cuid())
+  status      String // e.g. pending, cancled, completed
+  subtotal    Int
+  total       Int
+  discount    Int
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  completedAt DateTime?
+  items       ItemTransaction[]
+  seller      User?             @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId    String?
 }
 
 model ItemTransaction {
@@ -70,7 +71,7 @@ model ItemTransaction {
   item          Item?        @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   itemId        String?
   transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  transactionId String?      @map("saleId")
+  transactionId String?
 }
 
 model User {
