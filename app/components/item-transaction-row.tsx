@@ -2,14 +2,22 @@ import { type Item, type ItemTransaction } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { useFetcher, useSubmit } from '@remix-run/react'
 
-import { useEffect, useRef, useState } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { TableCell, TableRow } from '#app/components/ui/table.tsx'
 import { DeleteItemTransaction } from '#app/routes/system+/item-transaction.delete.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import { useEffect, useRef, useState } from 'react'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+
+
+
+export const TYPE_SELL = 'VENTA'
+export const TYPE_RETURN = 'DEVOL' //Returns subtract their price instead of adding it.
+export const TYPE_PROMO = 'PROMO' //User is shown available discounts in sell panel. If he wants to apply them he must change the transaction type to promo
+//? it should only allow to change to promo if there are available discounts
+
 
 export const ItemTransactionRow = ({
 	item,
@@ -29,6 +37,15 @@ export const ItemTransactionRow = ({
 	const [transactionType, setTransactionType] = useState<StateType>(
 		itemTransaction.type as StateType,
 	)
+
+	//If the transaction type is "DEVOL" then the price should be negative
+	useEffect(() => {
+		if (transactionType === TYPE_RETURN) {
+			setTotalPrice(item.sellingPrice ? item.sellingPrice * -1 : 0)
+		} else {
+			setTotalPrice(item.sellingPrice || 0)
+		}
+	}, [item.sellingPrice, transactionType]);
 
 	const submit = useSubmit()
 	const fetcher = useFetcher({ key: 'upsert-item-transaction' })
@@ -75,15 +92,15 @@ export const ItemTransactionRow = ({
 				break
 			case 'V':
 			case 'v':
-				setTransactionType('VENTA')
+				setTransactionType(TYPE_SELL)
 				break
 			case 'D':
 			case 'd':
-				setTransactionType('DEVOL')
+				setTransactionType(TYPE_RETURN)
 				break
 			case 'P':
 			case 'p':
-				setTransactionType('PREST')
+				setTransactionType(TYPE_PROMO)
 				break
 		}
 	}
@@ -156,11 +173,9 @@ export const ItemTransactionRow = ({
 	)
 }
 
-export const TYPE_SELL = 'VENTA'
-export const TYPE_RETURN = 'DEVOL'
-export const TYPE_LOAN = 'PREST'
 
-export type StateType = typeof TYPE_SELL | typeof TYPE_RETURN | typeof TYPE_LOAN
+
+export type StateType = typeof TYPE_SELL | typeof TYPE_RETURN | typeof TYPE_PROMO
 
 const TransactionType = ({
 	initialType,
@@ -176,7 +191,7 @@ const TransactionType = ({
 			initialType === TYPE_SELL
 				? TYPE_RETURN
 				: initialType === TYPE_RETURN
-				  ? TYPE_LOAN
+				  ? TYPE_PROMO
 				  : TYPE_SELL
 		setType(nextState)
 	}
@@ -187,7 +202,7 @@ const TransactionType = ({
 				'flex w-[4rem] cursor-pointer select-none items-center justify-center rounded-md text-xs font-bold uppercase tracking-wider text-background',
 				initialType === TYPE_SELL && 'bg-primary/80',
 				initialType === TYPE_RETURN && 'bg-orange-500/80',
-				initialType === TYPE_LOAN && 'bg-blue-500/80',
+				initialType === TYPE_PROMO && 'bg-blue-500/80',
 			)}
 			onClick={cycleState}
 			tabIndex={-1}
