@@ -116,10 +116,9 @@ export async function action({ request }: ActionFunctionArgs) {
 	return json({ status: 'success' } as const)
 }
 
-
 type ItemTransactionRow = {
 	crsf: string
-	id:string
+	id: string
 	type: string
 	quantity: number
 	totalPrice: number
@@ -138,18 +137,20 @@ export default function SellRoute() {
 	// 	 setItems(newItems)
 
 	// }
-	let fetchers = useFetchers()
-	let optimisticTransactions = fetchers.reduce<ItemTransactionRow[]>((memo,f) => {
-		if (f.formData) {
-			let data = Object.fromEntries(f.formData)
-			memo.push(data)
-		}
-		return memo
-	},[])
-	console.log(optimisticTransactions)
+	// let fetchers = useFetchers()
+	// let optimisticTransactions = fetchers.reduce<ItemTransactionRow[]>(
+	// 	(memo, f) => {
+	// 		if (f.formData) {
+	// 			let data = Object.fromEntries(f.formData)
+	// 			memo.push(data)
+	// 		}
+	// 		return memo
+	// 	},
+	// 	[],
+	// )
+	// console.log(optimisticTransactions)
 
-	allItemTransactions = [...allItemTransactions, ...optimisticTransactions]
-
+	// allItemTransactions = [...allItemTransactions, ...optimisticTransactions]
 
 	const subtotal = allItemTransactions
 		.map(itemTransaction => itemTransaction.totalPrice)
@@ -211,7 +212,8 @@ export default function SellRoute() {
 				</Table>
 			</ScrollArea>
 
-			<div className="mx-auto flex h-[10.5rem] w-fit justify-between gap-16 rounded-md  bg-secondary py-4 pl-4 pr-6">
+			<div className="mx-auto flex h-[11rem] w-fit justify-between gap-10 rounded-md  bg-secondary py-4 pl-4 pr-6">
+				<DiscountsPanel />
 				<div className="flex flex-col justify-between gap-2">
 					<div className="flex items-center text-2xl text-foreground/80">
 						<span className="w-[12rem] pl-2">Subtotal:</span>
@@ -233,12 +235,13 @@ export default function SellRoute() {
 					</div>
 				</div>
 				<div className="flex flex-col items-center justify-between">
-					<Button className="w-full " variant={'outline'}>
-						<Icon className="mr-2" name="tag" /> Aplicar Descuento
-						{/* Abre un modal con selección de descuentos creados en las sección de Promociones
-							También permite aplicar Descuentos directos en porcentaje o monto fijo
-						*/}
-					</Button>
+					<OptionsToggle
+						name={'paymentMethod'}
+						firstValue={'contado'}
+						secondValue={'credito'}
+						firstLabel={'Contado'}
+						secondLabel={'Crédito'}
+					/>
 
 					<Button size={'lg'} className="flex w-full  gap-2 ">
 						<Icon name="check" size="lg" />
@@ -275,5 +278,69 @@ const ConfirmDeleteTransaction = ({
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
+	)
+}
+
+const DiscountsPanel = () => {
+	return (
+		<div className="flex w-[17rem] flex-col gap-1">
+			<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md   bg-background/30 p-1">
+				<span className="select-none text-lg text-foreground/50">
+					Sin promociones aplicables
+				</span>
+			</div>
+
+			<div>
+				{/* This will be its own component that opens a modal and changes to say the current direct discount */}
+				<Button className="h-8 w-full " variant={'outline'}>
+					<Icon className="mr-2" name="tag" /> Descuento Directo
+				</Button>
+			</div>
+		</div>
+	)
+}
+
+const OptionsToggle = ({
+	name,
+	firstValue,
+	secondValue,
+	firstLabel,
+	secondLabel,
+}: {
+	name: string
+	firstValue: string
+	secondValue: string
+	firstLabel: string
+	secondLabel: string
+}) => {
+	return (
+		<div className="flex w-full rounded-md border-2 border-foreground/5 p-[2px] has:[:checked]:bg-background">
+			<label
+				className="w-1/2  rounded-md bg-secondary p-2 text-center cursor-pointer "
+				htmlFor="id"
+			>
+				<input
+					className="appearance-none "
+					id="id"
+					type="radio"
+					name={name}
+					value={firstValue}
+				/>
+				{firstLabel}
+			</label>
+			<label
+				className="w-1/2 rounded-md bg-secondary  p-2 text-center cursor-pointer "
+				htmlFor="id2"
+			>
+				<input
+					className="appearance-none "
+					id="id2"
+					type="radio"
+					name={name}
+					value={secondValue}
+				/>
+				{secondLabel}
+			</label>
+		</div>
 	)
 }
