@@ -1,8 +1,7 @@
-import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
-import { z } from 'zod'
 import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
+import { z } from 'zod'
 
 
 const ItemTransactionSchema = z.object({
@@ -19,7 +18,7 @@ export async function loader(){
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
 	const formData = await request.formData()
-	await validateCSRF(formData, request.headers)
+
 
 	const result = ItemTransactionSchema.safeParse({
 		id: formData.get('it-id'),
