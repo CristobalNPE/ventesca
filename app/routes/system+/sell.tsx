@@ -1,3 +1,22 @@
+import {
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+	json,
+} from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+
+import React, { createRef, useEffect, useRef } from 'react'
+import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
+import {
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
@@ -16,20 +35,6 @@ import {
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
-import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
-import { useFetchers, useLoaderData } from '@remix-run/react'
-
-import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
-import {
-	AlertDialog,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '#app/components/ui/alert-dialog.tsx'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
 
@@ -116,47 +121,51 @@ export async function action({ request }: ActionFunctionArgs) {
 	return json({ status: 'success' } as const)
 }
 
-type ItemTransactionRow = {
-	crsf: string
-	id: string
-	type: string
-	quantity: number
-	totalPrice: number
-}
 export default function SellRoute() {
 	//! CHECK OTHER FILTERS AND ADD THE TOLOWERCASE() WHERE NEEDED.
 
 	const { transaction } = useLoaderData<typeof loader>()
 
 	let allItemTransactions = transaction.items
+	const discount = 0
 
-	//We might need to use a state for allItemTransactions, so we can add and remove items from it and apply some optimistic UI.
+	// This is so we can focus the last element in the array automatically
+	const itemRefs = useRef<React.RefObject<HTMLTableRowElement>[]>([])
 
-	// const removeItemTransactionFromStateById = (id: string) => {
-	// 	 const newItems = items.filter(item => item.id !== id)
-	// 	 setItems(newItems)
+	itemRefs.current = allItemTransactions.map(
+		(_, i) => itemRefs.current[i] ?? createRef(),
+	)
 
-	// }
-	// let fetchers = useFetchers()
-	// let optimisticTransactions = fetchers.reduce<ItemTransactionRow[]>(
-	// 	(memo, f) => {
-	// 		if (f.formData) {
-	// 			let data = Object.fromEntries(f.formData)
-	// 			memo.push(data)
-	// 		}
-	// 		return memo
-	// 	},
-	// 	[],
-	// )
-	// console.log(optimisticTransactions)
+	// This is so we can focus the ItemReader after pressing Enter on a row
+	const itemReaderRef = useRef<HTMLInputElement>(null)
 
-	// allItemTransactions = [...allItemTransactions, ...optimisticTransactions]
+	useEffect(() => {
+		// Focus the last element in the array
+		const lastItemRef = itemRefs.current[allItemTransactions.length - 1]
+		if (lastItemRef) {
+			lastItemRef.current?.focus()
+		}
+	}, [allItemTransactions.length])
 
 	const subtotal = allItemTransactions
 		.map(itemTransaction => itemTransaction.totalPrice)
 		.reduce((a, b) => a + b, 0)
 
-	const discount = 0
+	// Key navigation for the ItemTransactionRows
+	const handleArrowKeyPress = (
+		key: 'ArrowUp' | 'ArrowDown',
+		itemTransactionId: string,
+	) => {
+		const currentIndex = allItemTransactions.findIndex(
+			itemTransaction => itemTransaction.id === itemTransactionId,
+		)
+		let nextIndex = key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
+
+		//Ensure nextIndex is within bounds
+		nextIndex = Math.max(0, Math.min(nextIndex, allItemTransactions.length))
+		const nextItemRef = itemRefs.current[nextIndex]
+		nextItemRef.current?.focus()
+	}
 
 	return (
 		<>
@@ -170,7 +179,7 @@ export default function SellRoute() {
 				</h1>
 			</div>
 			<div className="mt-4 flex justify-between">
-				<ItemReader autoFocus autoSubmit status={'idle'} />
+				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
 				<div className="flex gap-4">
 					<Button variant={'outline'}>
 						<Icon className="mr-2" name="banknote" /> Descargar Cotización
@@ -197,10 +206,13 @@ export default function SellRoute() {
 					</TableHeader>
 					<TableBody className=" bg-background/60">
 						{transaction &&
-							allItemTransactions.map(itemTransaction => {
+							allItemTransactions.map((itemTransaction, index) => {
 								if (itemTransaction.item) {
 									return (
 										<ItemTransactionRow
+											onArrowKeyPress={handleArrowKeyPress}
+											itemReaderRef={itemReaderRef}
+											ref={itemRefs.current[index]}
 											itemTransaction={itemTransaction}
 											key={itemTransaction.item.id}
 											item={itemTransaction.item}
@@ -314,9 +326,9 @@ const OptionsToggle = ({
 	secondLabel: string
 }) => {
 	return (
-		<div className="flex w-full rounded-md border-2 border-foreground/5 p-[2px] has:[:checked]:bg-background">
+		<div className="has:[:checked]:bg-background flex w-full rounded-md border-2 border-foreground/5 p-[2px]">
 			<label
-				className="w-1/2  rounded-md bg-secondary p-2 text-center cursor-pointer "
+				className="w-1/2  cursor-pointer rounded-md bg-secondary p-2 text-center "
 				htmlFor="id"
 			>
 				<input
@@ -329,7 +341,7 @@ const OptionsToggle = ({
 				{firstLabel}
 			</label>
 			<label
-				className="w-1/2 rounded-md bg-secondary  p-2 text-center cursor-pointer "
+				className="w-1/2 cursor-pointer rounded-md  bg-secondary p-2 text-center "
 				htmlFor="id2"
 			>
 				<input
