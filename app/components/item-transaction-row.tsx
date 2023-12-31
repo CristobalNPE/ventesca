@@ -1,6 +1,6 @@
 import { type Item, type ItemTransaction } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
-import { useFetcher, useSubmit } from '@remix-run/react'
+import { Link, useFetcher, useSubmit } from '@remix-run/react'
 
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -8,29 +8,36 @@ import { Input } from '#app/components/ui/input.tsx'
 import { TableCell, TableRow } from '#app/components/ui/table.tsx'
 import { DeleteItemTransaction } from '#app/routes/system+/item-transaction.delete.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { useEffect, useRef, useState } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-
-
+import { forwardRef, useEffect, useRef, useState } from 'react'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from './ui/dropdown-menu.tsx'
 
 export const TYPE_SELL = 'VENTA'
 export const TYPE_RETURN = 'DEVOL' //Returns subtract their price instead of adding it.
 export const TYPE_PROMO = 'PROMO' //User is shown available discounts in sell panel. If he wants to apply them he must change the transaction type to promo
 //? it should only allow to change to promo if there are available discounts
 
-
-export const ItemTransactionRow = ({
-	item,
-	itemTransaction,
-}: {
+type ItemTransactionRowProps = {
 	item: SerializeFrom<
 		Pick<Item, 'id' | 'code' | 'name' | 'sellingPrice' | 'stock'>
 	>
 	itemTransaction: SerializeFrom<
 		Pick<ItemTransaction, 'id' | 'quantity' | 'type' | 'totalPrice'>
 	>
-}) => {
+	itemReaderRef: React.RefObject<HTMLInputElement>
+	onArrowKeyPress: (
+		key: 'ArrowUp' | 'ArrowDown',
+		itemTransactionId: string,
+	) => void
+}
 
+export const ItemTransactionRow = forwardRef<
+	HTMLTableRowElement,
+	ItemTransactionRowProps
+>(({ item, itemTransaction, itemReaderRef, onArrowKeyPress }, ref) => {
 	const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
 	const [isFocused, setIsFocused] = useState(false)
 	const [quantity, setQuantity] = useState(itemTransaction.quantity)
@@ -38,14 +45,13 @@ export const ItemTransactionRow = ({
 		itemTransaction.type as StateType,
 	)
 
-	//If the transaction type is "DEVOL" then the price should be negative
 	useEffect(() => {
 		if (transactionType === TYPE_RETURN) {
 			setTotalPrice(item.sellingPrice ? item.sellingPrice * -1 : 0)
 		} else {
 			setTotalPrice(item.sellingPrice || 0)
 		}
-	}, [item.sellingPrice, transactionType]);
+	}, [item.sellingPrice, transactionType])
 
 	const submit = useSubmit()
 	const fetcher = useFetcher({ key: 'upsert-item-transaction' })
@@ -62,11 +68,6 @@ export const ItemTransactionRow = ({
 			})
 		}
 	}
-	// We may want to apply this on 'Enter'
-	const submitAndFocusNext = () => {
-		submitForm()
-		//focus next row
-	}
 
 	useEffect(() => {
 		if (item.sellingPrice) {
@@ -74,18 +75,15 @@ export const ItemTransactionRow = ({
 		}
 	}, [quantity, item.sellingPrice])
 
-	//If user presses a number, it should change the quantity or focus the input?
-	//Maybe I want arrow up and down to switch the focus between rows instead of increasing stock
+	const rowRef = ref
 
-	const rowRef = useRef<HTMLTableRowElement>(null)
 	const handleKeyDown = (event: KeyboardEvent) => {
 		switch (event.key) {
-			case 'ArrowUp':
 			case 'ArrowRight':
 				event.preventDefault()
 				setQuantity(q => (q < item.stock ? q + 1 : q))
 				break
-			case 'ArrowDown':
+
 			case 'ArrowLeft':
 				event.preventDefault()
 				setQuantity(q => (q > 1 ? q - 1 : q))
@@ -102,17 +100,28 @@ export const ItemTransactionRow = ({
 			case 'p':
 				setTransactionType(TYPE_PROMO)
 				break
+			case 'Enter':
+				event.preventDefault()
+				itemReaderRef.current?.focus()
+				break
+			case 'ArrowUp':
+			case 'ArrowDown':
+				event.preventDefault()
+				onArrowKeyPress(event.key, itemTransaction.id)
+				break
 		}
 	}
 
 	useEffect(() => {
-		const row = rowRef.current
-		if (row) {
-			row.addEventListener('keydown', handleKeyDown)
-		}
-		return () => {
+		if (rowRef && typeof rowRef === 'object') {
+			const row = rowRef.current
 			if (row) {
-				row.removeEventListener('keydown', handleKeyDown)
+				row.addEventListener('keydown', handleKeyDown)
+			}
+			return () => {
+				if (row) {
+					row.removeEventListener('keydown', handleKeyDown)
+				}
 			}
 		}
 	}, [rowRef, item.stock])
@@ -124,25 +133,30 @@ export const ItemTransactionRow = ({
 				method="POST"
 				action="/system/item-transaction/edit"
 			>
-				<AuthenticityTokenInput />
 				<input type="hidden" name="it-id" value={itemTransaction.id} />
 				<input type="hidden" name="it-vpd" value={transactionType} />
 				<input type="hidden" name="it-quantity" value={quantity} />
 				<input type="hidden" name="it-total-price" value={totalPrice} />
 			</fetcher.Form>
 			<TableRow
-				onBlurCapture={() => submitForm()}
+				// onBlurCapture={}
 				ref={rowRef}
 				className={cn(
-					'uppercase',
+					'uppercase ',
 					isFocused && 'bg-primary/10 hover:bg-primary/10',
 				)}
 				tabIndex={0}
-				onBlur={() => setIsFocused(false)}
+				onBlur={() => {
+					setIsFocused(false)
+					submitForm()
+				}}
 				onFocus={() => setIsFocused(true)}
 			>
 				<TableCell className="flex items-center justify-center">
-					<DeleteItemTransaction id={itemTransaction.id} />
+					<ItemTransactionRowActions
+						itemId={item.id}
+						itemTransactionId={itemTransaction.id}
+					/>
 				</TableCell>
 				<TableCell className="font-bold">{item.code}</TableCell>
 				<TableCell className="font-medium">
@@ -171,11 +185,13 @@ export const ItemTransactionRow = ({
 			</TableRow>
 		</>
 	)
-}
+})
+ItemTransactionRow.displayName = 'ItemTransactionRow'
 
-
-
-export type StateType = typeof TYPE_SELL | typeof TYPE_RETURN | typeof TYPE_PROMO
+export type StateType =
+	| typeof TYPE_SELL
+	| typeof TYPE_RETURN
+	| typeof TYPE_PROMO
 
 const TransactionType = ({
 	initialType,
@@ -271,5 +287,39 @@ const QuantitySelector = ({
 				<Icon size="lg" name="plus" />
 			</Button>
 		</div>
+	)
+}
+
+const ItemTransactionRowActions = ({
+	itemTransactionId,
+	itemId,
+}: {
+	itemTransactionId: string
+	itemId: string
+}) => {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger
+				tabIndex={-1}
+				className="focus-within:ring-0  focus-visible:ring-0"
+			>
+				<Button
+					tabIndex={-1}
+					variant={'link'}
+					className="relative left-2 top-2 h-2 w-5 p-0   focus-within:ring-0  focus-visible:ring-0"
+				>
+					<Icon size="lg" name="dots-horizontal" />
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent className="flex flex-col gap-2">
+				<DeleteItemTransaction id={itemTransactionId} />
+				<Button asChild variant={'outline'}>
+					<Link to={`/system/inventory/${itemId}`}>
+						<Icon className="mr-2" name="file-text" />
+						Detalles
+					</Link>
+				</Button>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	)
 }
