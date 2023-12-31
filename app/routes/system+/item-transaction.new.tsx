@@ -1,14 +1,11 @@
 import {
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
 	json,
 	redirect,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import { useFetcher, useSubmit } from '@remix-run/react'
 
-import { useId, useRef, useState } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
 import { TYPE_SELL } from '#app/components/item-transaction-row.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
@@ -23,6 +20,9 @@ import {
 	useIsPending,
 } from '#app/utils/misc.tsx'
 import { getTransactionId } from '#app/utils/transaction.server.ts'
+import { forwardRef, useId, useState } from 'react'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	throw redirect('/system/sell')
@@ -88,70 +88,69 @@ export async function action({ request }: ActionFunctionArgs) {
 	return json({ status: 'success' } as const)
 }
 
-export function ItemReader({
-	status,
-	onFocus,
-	autoFocus = false,
-	autoSubmit = false,
-}: {
+type ItemReaderProps = {
 	status: 'idle' | 'pending' | 'success' | 'error'
 	onFocus?: () => void
 	autoFocus?: boolean
 	autoSubmit?: boolean
-}) {
-	const id = useId()
-	const inputRef = useRef<HTMLInputElement>(null)
-	const submit = useSubmit()
-	const isSubmitting = useIsPending({
-		formMethod: 'POST',
-		formAction: '/system/item-transaction/new',
-	})
-	const [value, setValue] = useState('')
-	const fetcher = useFetcher({ key: 'add-item-transaction' })
-
-	const handleFormChange = useDebounce((form: HTMLFormElement) => {
-		submit(form)
-		setValue('')
-	}, 400)
-
-	return (
-		<fetcher.Form
-			method="POST"
-			action="/system/item-transaction/new"
-			className="flex flex-wrap items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
-			onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
-		>
-			<AuthenticityTokenInput />
-			<div className="flex-1">
-				<Label htmlFor={id} className="sr-only">
-					Search
-				</Label>
-				<Input
-					value={value}
-					onChange={e => setValue(e.target.value)}
-					ref={inputRef}
-					onFocus={onFocus}
-					type="number"
-					name="search"
-					id={id}
-					placeholder="Búsqueda Código"
-					className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
-					autoFocus={autoFocus}
-					disabled={isSubmitting}
-				/>
-			</div>
-			<div>
-				<StatusButton
-					type="submit"
-					status={isSubmitting ? 'pending' : status}
-					className="flex w-full items-center justify-center border-none"
-					variant={'outline'}
-					size="sm"
-				>
-					<Icon name="scan-barcode" size="md" />
-					<span className="sr-only">Buscar</span>
-				</StatusButton>
-			</div>
-		</fetcher.Form>
-	)
 }
+
+export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
+	({ status, onFocus, autoFocus = false, autoSubmit = false }, ref) => {
+		const id = useId()
+		// const inputRef = useRef<HTMLInputElement>(null)
+		const submit = useSubmit()
+		const isSubmitting = useIsPending({
+			formMethod: 'POST',
+			formAction: '/system/item-transaction/new',
+		})
+		const [value, setValue] = useState('')
+		const fetcher = useFetcher({ key: 'add-item-transaction' })
+
+		const handleFormChange = useDebounce((form: HTMLFormElement) => {
+			submit(form)
+			setValue('')
+		}, 400)
+
+		return (
+			<fetcher.Form
+				method="POST"
+				action="/system/item-transaction/new"
+				className="flex flex-wrap items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
+				onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
+			>
+				<AuthenticityTokenInput />
+				<div className="flex-1">
+					<Label htmlFor={id} className="sr-only">
+						Search
+					</Label>
+					<Input
+						value={value}
+						onChange={e => setValue(e.target.value)}
+						ref={ref}
+						onFocus={onFocus}
+						type="number"
+						name="search"
+						id={id}
+						placeholder="Búsqueda Código"
+						className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
+						autoFocus={autoFocus}
+						disabled={isSubmitting}
+					/>
+				</div>
+				<div>
+					<StatusButton
+						type="submit"
+						status={isSubmitting ? 'pending' : status}
+						className="flex w-full items-center justify-center border-none"
+						variant={'outline'}
+						size="sm"
+					>
+						<Icon name="scan-barcode" size="md" />
+						<span className="sr-only">Buscar</span>
+					</StatusButton>
+				</div>
+			</fetcher.Form>
+		)
+	},
+)
