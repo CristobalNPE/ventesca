@@ -5,7 +5,13 @@ import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import {
+	Form,
+	Link,
+	useActionData,
+	useLoaderData,
+	useNavigate,
+} from '@remix-run/react'
 import { formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -109,7 +115,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function ItemRoute() {
 	const isAdmin = true
 	const { item } = useLoaderData<typeof loader>()
-
+	const navigate = useNavigate()
 	return (
 		<>
 			<div className="my-4 flex flex-col gap-4 text-2xl">
@@ -208,11 +214,13 @@ export default function ItemRoute() {
 			</div>
 
 			<div className="mt-8 flex max-w-[40rem] justify-between">
-				<Button variant={'ghost'} asChild>
-					<Link to={'..'} relative="path" className="flex items-center gap-2">
-						<Icon name="arrow-left" />
-						<span>Volver al Inventario</span>
-					</Link>
+				<Button
+					variant={'ghost'}
+					onClick={() => navigate(-1)}
+					className="flex items-center gap-2"
+				>
+					<Icon name="arrow-left" />
+					<span>Atrás</span>
 				</Button>
 
 				{isAdmin && (
