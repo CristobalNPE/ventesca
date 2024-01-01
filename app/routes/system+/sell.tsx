@@ -5,7 +5,7 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
-import React, { createRef, useEffect, useRef } from 'react'
+import React, { createRef, useEffect, useRef, useState } from 'react'
 import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
 	AlertDialog,
@@ -29,7 +29,7 @@ import {
 } from '#app/components/ui/table.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
+import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
 import {
 	getTransactionId,
 	transactionKey,
@@ -37,6 +37,25 @@ import {
 } from '#app/utils/transaction.server.ts'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
+import { z } from 'zod'
+
+export const TRANSACTION_STATUS_PENDING = 'Pendiente'
+export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
+export const TRANSACTION_STATUS_DISCARDED = 'Cancelada'
+
+const transactionTypes = [
+	TRANSACTION_STATUS_PENDING,
+	TRANSACTION_STATUS_COMPLETED,
+	TRANSACTION_STATUS_DISCARDED,
+] as const
+const TransactionStatusSchema = z.enum(transactionTypes)
+export type TransactionStatus = z.infer<typeof TransactionStatusSchema>
+
+export const PAYMENT_METHOD_CASH = 'Contado'
+export const PAYMENT_METHOD_CREDIT = 'Crédito'
+const paymentMethodTypes = [PAYMENT_METHOD_CASH, PAYMENT_METHOD_CREDIT] as const
+const PaymentMethodSchema = z.enum(paymentMethodTypes)
+export type PaymentMethod = z.infer<typeof PaymentMethodSchema>
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const transactionId = await getTransactionId(request)
@@ -49,7 +68,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		const newTransaction = await prisma.transaction.create({
 			data: {
 				seller: { connect: { id: userId } },
-				status: 'PENDIENTE',
+				status: TRANSACTION_STATUS_PENDING,
+				paymentMethod: PAYMENT_METHOD_CASH,
 				subtotal: 0,
 				total: 0,
 				discount: 0,
@@ -58,6 +78,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				id: true,
 				status: true,
 				createdAt: true,
+				paymentMethod: true,
 				total: true,
 				seller: { select: { name: true } },
 				items: {
@@ -65,6 +86,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 						id: true,
 						type: true,
 						item: true,
+
 						quantity: true,
 						totalPrice: true,
 					},
@@ -90,6 +112,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			id: true,
 			status: true,
 			createdAt: true,
+			paymentMethod: true,
 			total: true,
 			seller: { select: { name: true } },
 			items: {
@@ -118,6 +141,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+	await requireUserId(request)
+
 	return json({ status: 'success' } as const)
 }
 
@@ -127,7 +152,17 @@ export default function SellRoute() {
 	const { transaction } = useLoaderData<typeof loader>()
 
 	let allItemTransactions = transaction.items
+
+	const [paymentMethod, setPaymentMethod] =
+		useState<PaymentMethod>(PAYMENT_METHOD_CASH)
+
 	const discount = 0
+
+	const subtotal = allItemTransactions
+		.map(itemTransaction => itemTransaction.totalPrice)
+		.reduce((a, b) => a + b, 0)
+
+	const total = subtotal - discount
 
 	// This is so we can focus the last element in the array automatically
 	const itemRefs = useRef<React.RefObject<HTMLTableRowElement>[]>([])
@@ -146,10 +181,6 @@ export default function SellRoute() {
 			lastItemRef.current?.focus()
 		}
 	}, [allItemTransactions.length])
-
-	const subtotal = allItemTransactions
-		.map(itemTransaction => itemTransaction.totalPrice)
-		.reduce((a, b) => a + b, 0)
 
 	// Key navigation for the ItemTransactionRows
 	const handleArrowKeyPress = (
@@ -180,6 +211,7 @@ export default function SellRoute() {
 			</div>
 			<div className="mt-4 flex justify-between">
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
+
 				<div className="flex gap-4">
 					<Button variant={'outline'}>
 						<Icon className="mr-2" name="banknote" /> Descargar Cotización
@@ -199,7 +231,7 @@ export default function SellRoute() {
 							</TableHead>
 							<TableHead className="">Descripción Articulo</TableHead>
 							<TableHead>Precio</TableHead>
-							<TableHead className="">Cantidad</TableHead>
+							<TableHead>Cantidad</TableHead>
 
 							<TableHead className="text-right">Total</TableHead>
 						</TableRow>
@@ -224,7 +256,7 @@ export default function SellRoute() {
 				</Table>
 			</ScrollArea>
 
-			<div className="mx-auto flex h-[11rem] w-fit justify-between gap-10 rounded-md  bg-secondary py-4 pl-4 pr-6">
+			<div className="mx-auto flex h-[11rem] w-fit gap-10 rounded-md  bg-secondary py-4 pl-4 pr-6">
 				<DiscountsPanel />
 				<div className="flex flex-col justify-between gap-2">
 					<div className="flex items-center text-2xl text-foreground/80">
@@ -242,20 +274,17 @@ export default function SellRoute() {
 					<div className="flex items-center rounded-md bg-background/20 text-2xl font-bold">
 						<span className="w-[12rem] pl-2">Total:</span>
 						<span className="w-[12rem] rounded-md bg-background/50 p-1">
-							{formatCurrency(subtotal - discount)}
+							{formatCurrency(total)}
 						</span>
 					</div>
 				</div>
 				<div className="flex flex-col items-center justify-between">
-					<OptionsToggle
-						name={'paymentMethod'}
-						firstValue={'contado'}
-						secondValue={'credito'}
-						firstLabel={'Contado'}
-						secondLabel={'Crédito'}
+					<PaymentSelection
+						selectedPaymentMethod={paymentMethod}
+						setPaymentMethod={setPaymentMethod}
 					/>
 
-					<Button size={'lg'} className="flex w-full  gap-2 ">
+					<Button size={'lg'} className="flex w-full h-full mt-6 gap-2 text-md font-semibold">
 						<Icon name="check" size="lg" />
 						<span className="">Ingresar Venta</span>
 					</Button>
@@ -312,47 +341,27 @@ const DiscountsPanel = () => {
 	)
 }
 
-const OptionsToggle = ({
-	name,
-	firstValue,
-	secondValue,
-	firstLabel,
-	secondLabel,
+const PaymentSelection = ({
+	selectedPaymentMethod,
+	setPaymentMethod,
 }: {
-	name: string
-	firstValue: string
-	secondValue: string
-	firstLabel: string
-	secondLabel: string
+	selectedPaymentMethod: PaymentMethod
+	setPaymentMethod: (paymentMethod: PaymentMethod) => void
 }) => {
 	return (
-		<div className="has:[:checked]:bg-background flex w-full rounded-md border-2 border-foreground/5 p-[2px]">
-			<label
-				className="w-1/2  cursor-pointer rounded-md bg-secondary p-2 text-center "
-				htmlFor="id"
-			>
-				<input
-					className="appearance-none "
-					id="id"
-					type="radio"
-					name={name}
-					value={firstValue}
-				/>
-				{firstLabel}
-			</label>
-			<label
-				className="w-1/2 cursor-pointer rounded-md  bg-secondary p-2 text-center "
-				htmlFor="id2"
-			>
-				<input
-					className="appearance-none "
-					id="id2"
-					type="radio"
-					name={name}
-					value={secondValue}
-				/>
-				{secondLabel}
-			</label>
+		<div className="flex w-full rounded-md bg-background p-1">
+			{paymentMethodTypes.map((paymentMethod, index) => (
+				<div
+					onClick={() => setPaymentMethod(paymentMethod)}
+					className={cn(
+						'w-full cursor-pointer rounded-md p-2 text-center',
+						paymentMethod === selectedPaymentMethod && 'bg-primary/50',
+					)}
+					key={index}
+				>
+					{paymentMethod}
+				</div>
+			))}
 		</div>
 	)
 }
