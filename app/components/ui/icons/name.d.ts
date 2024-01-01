@@ -19,6 +19,7 @@ export type IconName =
 	| 'clock'
 	| 'cross-1'
 	| 'dots-horizontal'
+	| 'dots-vertical'
 	| 'double-arrow-down'
 	| 'double-arrow-left'
 	| 'double-arrow-right'
