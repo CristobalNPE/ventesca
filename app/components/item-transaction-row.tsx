@@ -46,12 +46,13 @@ export const ItemTransactionRow = forwardRef<
 	)
 
 	useEffect(() => {
-		if (transactionType === TYPE_RETURN) {
-			setTotalPrice(item.sellingPrice ? item.sellingPrice * -1 : 0)
-		} else {
-			setTotalPrice(item.sellingPrice || 0)
+		if (transactionType === TYPE_RETURN && totalPrice > 0) {
+			setTotalPrice(totalPrice * -1)
 		}
-	}, [item.sellingPrice, transactionType])
+		if (transactionType !== TYPE_RETURN && totalPrice < 0) {
+			setTotalPrice(totalPrice * -1)
+		}
+	}, [transactionType, totalPrice])
 
 	const submit = useSubmit()
 	const fetcher = useFetcher({ key: 'upsert-item-transaction' })
@@ -171,7 +172,7 @@ export const ItemTransactionRow = forwardRef<
 				<TableCell className="font-medium">
 					{formatCurrency(item.sellingPrice)}
 				</TableCell>
-				<TableCell className="">
+				<TableCell>
 					<QuantitySelector
 						min={1}
 						max={item.stock}
@@ -306,9 +307,9 @@ const ItemTransactionRowActions = ({
 				<Button
 					tabIndex={-1}
 					variant={'link'}
-					className="relative left-2 top-2 h-2 w-5 p-0   focus-within:ring-0  focus-visible:ring-0"
+					className="relative left-2 top-2 h-1 w-5 p-0   focus-within:ring-0  focus-visible:ring-0"
 				>
-					<Icon size="lg" name="dots-horizontal" />
+					<Icon size="lg" name="dots-vertical" />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="flex flex-col gap-2">
