@@ -1,3 +1,7 @@
+import { type LoaderFunctionArgs, json } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+import { format, formatDistance, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Icon } from '#app/components/ui/icon.tsx'
 import {
 	Table,
@@ -10,10 +14,6 @@ import {
 } from '#app/components/ui/table.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
-import { LoaderFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
-import { format, formatDistance, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const transactionReport = await prisma.transaction.findUnique({
@@ -21,6 +21,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		select: {
 			id: true,
 			status: true,
+			paymentMethod: true,
 			createdAt: true,
 			total: true,
 			seller: { select: { name: true } },
@@ -78,6 +79,7 @@ export default function ReportRoute() {
 				<div className="flex flex-col">
 					<span>Estado: {transactionReport.status}</span>
 					<span>Ingreso Total: {formatCurrency(transactionReport.total)}</span>
+					<span>Tipo de pago: {transactionReport.paymentMethod}</span>
 					<span>
 						Vendedor:{' '}
 						{transactionReport.seller
