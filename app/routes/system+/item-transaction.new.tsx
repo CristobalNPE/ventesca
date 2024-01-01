@@ -56,9 +56,24 @@ export async function action({ request }: ActionFunctionArgs) {
 		select: {
 			id: true,
 			sellingPrice: true,
+			stock: true,
 		},
 	})
 	if (!item) return null
+
+	//Check if there is an itemTransaction with that item already
+	const itemTransaction = await prisma.itemTransaction.findFirst({
+		where: {
+			transactionId,
+			itemId: item.id,
+		},
+	})
+
+	if (itemTransaction) {
+
+		//consider sending a message to the user that the item is already in the transaction
+		return json({ status: 'success' } as const)
+	}
 
 	//Create the default ItemTransaction
 	await prisma.itemTransaction.create({
@@ -98,7 +113,6 @@ type ItemReaderProps = {
 export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 	({ status, onFocus, autoFocus = false, autoSubmit = false }, ref) => {
 		const id = useId()
-		// const inputRef = useRef<HTMLInputElement>(null)
 		const submit = useSubmit()
 		const isSubmitting = useIsPending({
 			formMethod: 'POST',
@@ -114,6 +128,10 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 
 		return (
 			<fetcher.Form
+				onSubmit={(e)=>{
+					e.preventDefault()
+					handleFormChange(e.currentTarget)
+				}}
 				method="POST"
 				action="/system/item-transaction/new"
 				className="flex flex-wrap items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
