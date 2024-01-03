@@ -121,6 +121,7 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 		const [value, setValue] = useState('')
 		const fetcher = useFetcher({ key: 'add-item-transaction' })
 
+
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
 			submit(form)
 			setValue('')
