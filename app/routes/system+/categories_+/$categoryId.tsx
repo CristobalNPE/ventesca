@@ -217,7 +217,7 @@ export default function CategoryRoute() {
 							open={openTransferModal}
 							onOpenChange={setOpenTransferModal}
 						>
-							<AlertDialogTrigger>
+							<AlertDialogTrigger asChild>
 								<Button className="w-[14rem]" size={'lg'}>
 									<Icon name="transfer" className="mr-2" />
 									Transferir artículos
