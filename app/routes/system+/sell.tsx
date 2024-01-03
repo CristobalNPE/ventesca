@@ -194,6 +194,9 @@ export default function SellRoute() {
 
 		//Ensure nextIndex is within bounds
 		nextIndex = Math.max(0, Math.min(nextIndex, allItemTransactions.length))
+		if (nextIndex === allItemTransactions.length) {
+			nextIndex = 0
+		}
 		const nextItemRef = itemRefs.current[nextIndex]
 		nextItemRef.current?.focus()
 	}
@@ -284,7 +287,10 @@ export default function SellRoute() {
 						setPaymentMethod={setPaymentMethod}
 					/>
 
-					<Button size={'lg'} className="flex w-full h-full mt-6 gap-2 text-md font-semibold">
+					<Button
+						size={'lg'}
+						className="text-md mt-6 flex h-full w-full gap-2 font-semibold"
+					>
 						<Icon name="check" size="lg" />
 						<span className="">Ingresar Venta</span>
 					</Button>
