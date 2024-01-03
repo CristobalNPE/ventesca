@@ -2,11 +2,10 @@ import {
 	AlertDialog,
 	AlertDialogCancel,
 	AlertDialogContent,
-	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogTrigger,
+	AlertDialogTrigger
 } from './alert-dialog.tsx'
 import { Button } from './button.tsx'
 import { Icon } from './icon.tsx'
@@ -29,7 +28,7 @@ const SelectModal = ({
 	return (
 		<div className="flex items-center gap-3">
 			<AlertDialog open={open} onOpenChange={onOpenChange}>
-				<AlertDialogTrigger>
+				<AlertDialogTrigger asChild>
 					<Button className="min-w-[12.5rem]" variant={'outline'}>
 						<Icon name="magnifying-glass" className="mr-2" />
 						{selected ? 'Cambiar' : 'Seleccionar'} {title}
@@ -38,12 +37,10 @@ const SelectModal = ({
 				<AlertDialogContent className="max-w-xl">
 					<AlertDialogHeader>
 						<AlertDialogTitle>Búsqueda de {title}</AlertDialogTitle>
-						<AlertDialogDescription>{children}</AlertDialogDescription>
 					</AlertDialogHeader>
+					{children}
 					<AlertDialogFooter className="mt-4">
-						<AlertDialogCancel>
-							Cancelar
-						</AlertDialogCancel>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
@@ -53,3 +50,4 @@ const SelectModal = ({
 }
 
 export { SelectModal }
+
