@@ -251,11 +251,11 @@ export function ItemEditor({
 									errors={fields.stock.errors}
 								/>
 								<input
-									value={provider.id}
+									// value={provider.id}
 									{...conform.input(fields.providerId, { type: 'hidden' })}
 								/>
 								<input
-									value={category.id}
+									// value={category.id}
 									{...conform.input(fields.categoryId, { type: 'hidden' })}
 								/>
 							</div>
