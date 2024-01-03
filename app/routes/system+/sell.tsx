@@ -307,7 +307,7 @@ const ConfirmDeleteTransaction = ({
 }) => {
 	return (
 		<AlertDialog>
-			<AlertDialogTrigger>
+			<AlertDialogTrigger asChild>
 				<Button variant={'destructive'}>
 					<Icon name="trash" className="mr-2" /> Descartar Venta
 				</Button>
