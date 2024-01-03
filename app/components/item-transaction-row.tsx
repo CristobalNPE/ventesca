@@ -54,18 +54,26 @@ export const ItemTransactionRow = forwardRef<
 		}
 	}, [transactionType, totalPrice])
 
+	const fetcherKey = `it-${itemTransaction.id}`
 	const submit = useSubmit()
-	const fetcher = useFetcher({ key: 'upsert-item-transaction' })
+	const fetcher = useFetcher({ key: fetcherKey })
+	const isLoading = fetcher.state !== 'idle'
 
 	// const handleFormChange = useDebounce((form: HTMLFormElement) => {
 	// 	submit(form)
 	// }, 400) //May need to use this if there are errors when posting?
 	const formRef = useRef<HTMLFormElement>(null)
+
+	const quantityChanged = itemTransaction.quantity !== quantity
+	const typeChanged = itemTransaction.type !== transactionType
+
 	const submitForm = () => {
+		if (isLoading) return
+		if (!quantityChanged && !typeChanged) return
 		if (formRef.current) {
 			submit(formRef.current, {
 				navigate: false,
-				fetcherKey: 'upsert-item-transaction',
+				fetcherKey: fetcherKey,
 			})
 		}
 	}
@@ -140,11 +148,11 @@ export const ItemTransactionRow = forwardRef<
 				<input type="hidden" name="it-total-price" value={totalPrice} />
 			</fetcher.Form>
 			<TableRow
-				// onBlurCapture={}
 				ref={rowRef}
 				className={cn(
 					'uppercase ',
 					isFocused && 'bg-primary/10 hover:bg-primary/10',
+					isLoading && 'pointer-events-none opacity-30',
 				)}
 				tabIndex={0}
 				onBlur={() => {
@@ -154,10 +162,19 @@ export const ItemTransactionRow = forwardRef<
 				onFocus={() => setIsFocused(true)}
 			>
 				<TableCell className="flex items-center justify-center">
-					<ItemTransactionRowActions
-						itemId={item.id}
-						itemTransactionId={itemTransaction.id}
-					/>
+					{isLoading ? (
+						<Icon
+							size="md"
+							className="relative bottom-0 left-2 animate-spin blur-0"
+							name="circle-dot-dashed"
+						/>
+					) : (
+						<ItemTransactionRowActions
+							itemId={item.id}
+							itemTransactionId={itemTransaction.id}
+						/>
+					)}
+					
 				</TableCell>
 				<TableCell className="font-bold">{item.code}</TableCell>
 				<TableCell className="font-medium">
