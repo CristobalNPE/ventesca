@@ -191,7 +191,7 @@ export default function ProviderRoute() {
 					{isAdmin && (
 						<div className="flex gap-4">
 							<AlertDialog>
-								<AlertDialogTrigger>
+								<AlertDialogTrigger asChild>
 									<Button
 										variant={'secondary'}
 										className="flex items-center gap-2"
