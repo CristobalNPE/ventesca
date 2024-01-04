@@ -34,16 +34,10 @@ import {
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
-import React, {
-	createRef,
-	useEffect,
-	useRef,
-	useState
-} from 'react'
+import React, { createRef, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
-
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
 export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
 export const TRANSACTION_STATUS_DISCARDED = 'Cancelada'
@@ -169,9 +163,6 @@ export default function SellRoute() {
 
 	const total = subtotal - discount
 
-	// const fetchers = useFetchers()
-	// console.log(fetchers)
-
 	// This is so we can focus the last element in the array automatically
 	const itemRefs = useRef<React.RefObject<HTMLTableRowElement>[]>([])
 
@@ -217,8 +208,6 @@ export default function SellRoute() {
 		}
 	}, [allItemTransactions.length])
 
-
-
 	return (
 		<>
 			<div className="flex flex-col items-center justify-between md:flex-row">
@@ -235,7 +224,8 @@ export default function SellRoute() {
 
 				<div className="flex justify-between gap-4 md:justify-normal">
 					<Button variant={'outline'}>
-						<Icon className="mr-2" name="banknote" /> Descargar Cotización
+						<Icon className="mr-2 flex-none" name="banknote" /> Descargar
+						Cotización
 					</Button>
 
 					<ConfirmDeleteTransaction transactionId={transaction.id} />
@@ -262,7 +252,7 @@ export default function SellRoute() {
 							allItemTransactions.map((itemTransaction, index) => {
 								if (itemTransaction.item) {
 									return (
-										<ItemTransactionRow											
+										<ItemTransactionRow
 											itemReaderRef={itemReaderRef}
 											ref={itemRefs.current[index]}
 											itemTransaction={itemTransaction}
@@ -326,7 +316,7 @@ const ConfirmDeleteTransaction = ({
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
 				<Button variant={'destructive'}>
-					<Icon name="trash" className="mr-2" /> Descartar Venta
+					<Icon name="trash" className="mr-2 flex-none" /> Descartar Venta
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>
