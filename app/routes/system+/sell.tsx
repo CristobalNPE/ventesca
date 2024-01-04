@@ -36,15 +36,13 @@ import {
 } from '#app/utils/transaction.server.ts'
 import React, {
 	createRef,
-	useCallback,
 	useEffect,
 	useRef,
-	useState,
+	useState
 } from 'react'
 import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
-import { set } from 'date-fns'
 
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
 export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
@@ -159,7 +157,6 @@ export default function SellRoute() {
 	const { transaction } = useLoaderData<typeof loader>()
 
 	let allItemTransactions = transaction.items
-	console.log(allItemTransactions.length)
 
 	const [paymentMethod, setPaymentMethod] =
 		useState<PaymentMethod>(PAYMENT_METHOD_CASH)
@@ -178,6 +175,33 @@ export default function SellRoute() {
 	// This is so we can focus the last element in the array automatically
 	const itemRefs = useRef<React.RefObject<HTMLTableRowElement>[]>([])
 
+	const [focusedRowIndex, setFocusedRowIndex] = useState<number>(0)
+
+	//Keyboard navigation for the ItemTransactionRows
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'ArrowDown') {
+				event.preventDefault()
+				setFocusedRowIndex(prev =>
+					prev === allItemTransactions.length - 1
+						? 0
+						: Math.min(prev + 1, allItemTransactions.length - 1),
+				)
+			} else if (event.key === 'ArrowUp') {
+				event.preventDefault()
+				setFocusedRowIndex(prev =>
+					prev === 0 ? allItemTransactions.length - 1 : Math.max(prev - 1, 0),
+				)
+			}
+		}
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [allItemTransactions.length])
+
+	useEffect(() => {
+		itemRefs.current[focusedRowIndex]?.current?.focus()
+	}, [focusedRowIndex])
+
 	itemRefs.current = allItemTransactions.map(
 		(_, i) => itemRefs.current[i] ?? createRef(),
 	)
@@ -193,30 +217,7 @@ export default function SellRoute() {
 		}
 	}, [allItemTransactions.length])
 
-	// Key navigation for the ItemTransactionRows
-	const handleArrowKeyPress = (
-		key: 'ArrowUp' | 'ArrowDown',
-		itemTransactionId: string,
-	) => {
-		const currentIndex = allItemTransactions.findIndex(
-			itemTransaction => itemTransaction.id === itemTransactionId,
-		)
-		let nextIndex
-		if (key === 'ArrowUp') {
-			nextIndex =
-				currentIndex === 0 ? allItemTransactions.length - 1 : currentIndex - 1
-		} else {
-			// ArrowDown
-			nextIndex =
-				currentIndex === allItemTransactions.length - 1 ? 0 : currentIndex + 1
-		}
 
-		console.log('currentIndex', currentIndex)
-		console.log('nextIndex', nextIndex)
-
-		const nextItemRef = itemRefs.current[nextIndex]
-		nextItemRef.current?.focus()
-	}
 
 	return (
 		<>
@@ -261,17 +262,13 @@ export default function SellRoute() {
 							allItemTransactions.map((itemTransaction, index) => {
 								if (itemTransaction.item) {
 									return (
-										<>
-											<span>Index: {index}</span>
-											<ItemTransactionRow
-												onArrowKeyPress={handleArrowKeyPress}
-												itemReaderRef={itemReaderRef}
-												ref={itemRefs.current[index]}
-												itemTransaction={itemTransaction}
-												key={itemTransaction.item.id}
-												item={itemTransaction.item}
-											/>
-										</>
+										<ItemTransactionRow											
+											itemReaderRef={itemReaderRef}
+											ref={itemRefs.current[index]}
+											itemTransaction={itemTransaction}
+											key={itemTransaction.item.id}
+											item={itemTransaction.item}
+										/>
 									)
 								} else return null
 							})}
