@@ -142,8 +142,8 @@ export const ItemTransactionRow = forwardRef<
 				ref={rowRef}
 				className={cn(
 					'uppercase ',
-					isFocused && 'bg-primary/10 hover:bg-primary/10',
-					isLoading && 'pointer-events-none opacity-30',
+					isFocused && 'bg-primary/10 hover:bg-primary/10 scale-[1.01] ',
+					isLoading && 'pointer-events-none opacity-30 ',
 				)}
 				tabIndex={0}
 				onBlur={() => {
