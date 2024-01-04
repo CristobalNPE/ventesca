@@ -28,16 +28,12 @@ type ItemTransactionRowProps = {
 		Pick<ItemTransaction, 'id' | 'quantity' | 'type' | 'totalPrice'>
 	>
 	itemReaderRef: React.RefObject<HTMLInputElement>
-	onArrowKeyPress: (
-		key: 'ArrowUp' | 'ArrowDown',
-		itemTransactionId: string,
-	) => void
 }
 
 export const ItemTransactionRow = forwardRef<
 	HTMLTableRowElement,
 	ItemTransactionRowProps
->(({ item, itemTransaction, itemReaderRef, onArrowKeyPress }, ref) => {
+>(({ item, itemTransaction, itemReaderRef }, ref) => {
 	const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
 	const [isFocused, setIsFocused] = useState(false)
 	const [quantity, setQuantity] = useState(itemTransaction.quantity)
@@ -113,11 +109,6 @@ export const ItemTransactionRow = forwardRef<
 				event.preventDefault()
 				itemReaderRef.current?.focus()
 				break
-			case 'ArrowUp':
-			case 'ArrowDown':
-				event.preventDefault()
-				onArrowKeyPress(event.key, itemTransaction.id)
-				break
 		}
 	}
 
@@ -174,7 +165,6 @@ export const ItemTransactionRow = forwardRef<
 							itemTransactionId={itemTransaction.id}
 						/>
 					)}
-					
 				</TableCell>
 				<TableCell className="font-bold">{item.code}</TableCell>
 				<TableCell className="font-medium">
