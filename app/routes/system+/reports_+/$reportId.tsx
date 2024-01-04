@@ -14,6 +14,7 @@ import {
 } from '#app/components/ui/table.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
+import { TRANSACTION_STATUS_COMPLETED } from '../sell.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const transactionReport = await prisma.transaction.findUnique({
@@ -78,7 +79,15 @@ export default function ReportRoute() {
 				</div>
 				<div className="flex flex-col">
 					<span>Estado: {transactionReport.status}</span>
-					<span>Ingreso Total: {formatCurrency(transactionReport.total)}</span>
+					<span>
+						Ingreso Total: {formatCurrency(transactionReport.total)}{' '}
+						<span className='tracking-wider'>
+							[
+							{transactionReport.status !== TRANSACTION_STATUS_COMPLETED &&
+								'Sin Completar'}
+							]
+						</span>
+					</span>
 					<span>Tipo de pago: {transactionReport.paymentMethod}</span>
 					<span>
 						Vendedor:{' '}
@@ -95,8 +104,8 @@ export default function ReportRoute() {
 							<TableHead className="w-[100px]">Código</TableHead>
 							<TableHead>Nombre / Descripción</TableHead>
 							<TableHead>Cantidad</TableHead>
-							<TableHead>Precio Total</TableHead>
-							<TableHead>Tipo Transacción</TableHead>
+							<TableHead className="w-[150px]">Tipo Transacción</TableHead>
+							<TableHead className="text-right">Valor Total</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -107,10 +116,10 @@ export default function ReportRoute() {
 								</TableCell>
 								<TableCell>{itemTransaction.item?.name}</TableCell>
 								<TableCell>{itemTransaction.quantity}</TableCell>
-								<TableCell>
+								<TableCell>{itemTransaction.type}</TableCell>
+								<TableCell className="text-right">
 									{formatCurrency(itemTransaction.totalPrice)}
 								</TableCell>
-								<TableCell>{itemTransaction.type}</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
