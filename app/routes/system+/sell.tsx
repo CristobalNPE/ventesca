@@ -1,11 +1,10 @@
 import {
+	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
-	json,
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
-import React, { createRef, useEffect, useRef, useState } from 'react'
 import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
 	AlertDialog,
@@ -35,9 +34,17 @@ import {
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
+import React, {
+	createRef,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from 'react'
+import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
-import { z } from 'zod'
+import { set } from 'date-fns'
 
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
 export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
@@ -152,6 +159,7 @@ export default function SellRoute() {
 	const { transaction } = useLoaderData<typeof loader>()
 
 	let allItemTransactions = transaction.items
+	console.log(allItemTransactions.length)
 
 	const [paymentMethod, setPaymentMethod] =
 		useState<PaymentMethod>(PAYMENT_METHOD_CASH)
@@ -163,6 +171,9 @@ export default function SellRoute() {
 		.reduce((a, b) => a + b, 0)
 
 	const total = subtotal - discount
+
+	// const fetchers = useFetchers()
+	// console.log(fetchers)
 
 	// This is so we can focus the last element in the array automatically
 	const itemRefs = useRef<React.RefObject<HTMLTableRowElement>[]>([])
@@ -190,20 +201,26 @@ export default function SellRoute() {
 		const currentIndex = allItemTransactions.findIndex(
 			itemTransaction => itemTransaction.id === itemTransactionId,
 		)
-		let nextIndex = key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
-
-		//Ensure nextIndex is within bounds
-		nextIndex = Math.max(0, Math.min(nextIndex, allItemTransactions.length))
-		if (nextIndex === allItemTransactions.length) {
-			nextIndex = 0
+		let nextIndex
+		if (key === 'ArrowUp') {
+			nextIndex =
+				currentIndex === 0 ? allItemTransactions.length - 1 : currentIndex - 1
+		} else {
+			// ArrowDown
+			nextIndex =
+				currentIndex === allItemTransactions.length - 1 ? 0 : currentIndex + 1
 		}
+
+		console.log('currentIndex', currentIndex)
+		console.log('nextIndex', nextIndex)
+
 		const nextItemRef = itemRefs.current[nextIndex]
 		nextItemRef.current?.focus()
 	}
 
 	return (
 		<>
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col items-center justify-between md:flex-row">
 				<h1 className="text-2xl">Venta de artículos</h1>
 				<h1 className="text-md text-foreground/80">
 					ID Transacción:{' '}
@@ -212,10 +229,10 @@ export default function SellRoute() {
 					</span>
 				</h1>
 			</div>
-			<div className="mt-4 flex justify-between">
+			<div className="mt-4 flex flex-col justify-between gap-2 md:flex-row">
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
 
-				<div className="flex gap-4">
+				<div className="flex justify-between gap-4 md:justify-normal">
 					<Button variant={'outline'}>
 						<Icon className="mr-2" name="banknote" /> Descargar Cotización
 					</Button>
@@ -244,14 +261,17 @@ export default function SellRoute() {
 							allItemTransactions.map((itemTransaction, index) => {
 								if (itemTransaction.item) {
 									return (
-										<ItemTransactionRow
-											onArrowKeyPress={handleArrowKeyPress}
-											itemReaderRef={itemReaderRef}
-											ref={itemRefs.current[index]}
-											itemTransaction={itemTransaction}
-											key={itemTransaction.item.id}
-											item={itemTransaction.item}
-										/>
+										<>
+											<span>Index: {index}</span>
+											<ItemTransactionRow
+												onArrowKeyPress={handleArrowKeyPress}
+												itemReaderRef={itemReaderRef}
+												ref={itemRefs.current[index]}
+												itemTransaction={itemTransaction}
+												key={itemTransaction.item.id}
+												item={itemTransaction.item}
+											/>
+										</>
 									)
 								} else return null
 							})}
@@ -338,7 +358,7 @@ const DiscountsPanel = () => {
 			</div>
 
 			<div>
-				{/* This will be its own component that opens a modal and changes to say the current direct discount */}
+				{/* This will be its own component that opens a modal and changes to set the current direct discount */}
 				<Button className="h-8 w-full " variant={'outline'}>
 					<Icon className="mr-2" name="tag" /> Descuento Directo
 				</Button>
