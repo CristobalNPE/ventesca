@@ -4,7 +4,7 @@ import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { useFetcher, useSubmit } from '@remix-run/react'
+import { useFetcher } from '@remix-run/react'
 
 import { TYPE_SELL } from '#app/components/item-transaction-row.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -14,13 +14,16 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import {
-	invariantResponse,
-	useDebounce,
-	useIsPending,
-} from '#app/utils/misc.tsx'
+import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
 import { getTransactionId } from '#app/utils/transaction.server.ts'
-import { forwardRef, useId, useState } from 'react'
+import {
+	forwardRef,
+	useEffect,
+	useId,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 
@@ -59,7 +62,9 @@ export async function action({ request }: ActionFunctionArgs) {
 			stock: true,
 		},
 	})
-	if (!item) return null
+	if (!item) {
+		return json({ status: 'not-found' } as const)
+	}
 
 	//Check if there is an itemTransaction with that item already
 	const itemTransaction = await prisma.itemTransaction.findFirst({
@@ -70,9 +75,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 
 	if (itemTransaction) {
-
 		//consider sending a message to the user that the item is already in the transaction
-		return json({ status: 'success' } as const)
+		return json({ status: 'duplicated' } as const)
 	}
 
 	//Create the default ItemTransaction
@@ -113,63 +117,96 @@ type ItemReaderProps = {
 export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 	({ status, onFocus, autoFocus = false, autoSubmit = false }, ref) => {
 		const id = useId()
-		const submit = useSubmit()
-		const isSubmitting = useIsPending({
-			formMethod: 'POST',
-			formAction: '/system/item-transaction/new',
-		})
-		const [value, setValue] = useState('')
-		const fetcher = useFetcher({ key: 'add-item-transaction' })
 
+		const [value, setValue] = useState('')
+		const fetcher = useFetcher<typeof action>({ key: 'add-item-transaction' })
+		const data = fetcher.data
+		const isSubmitting = fetcher.state !== 'idle'
+
+		const [message, setMessage] = useState<string | null>(null)
+
+		const innerRef = useRef<HTMLInputElement>(null)
+		useImperativeHandle(ref, () => innerRef.current!)
+
+		useEffect(() => {
+			if (data?.status === 'success') setMessage(null)
+			if (data?.status === 'not-found') setMessage('Artículo no registrado.')
+			if (data?.status === 'duplicated')
+				setMessage('Artículo ya está en la lista.')
+		}, [data?.status])
 
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
-			submit(form)
-			setValue('')
+			fetcher.submit(form)
+			// setValue('')
 		}, 400)
 
+		useEffect(() => {
+			setMessage(null)
+		}, [value])
+
+		useEffect(() => {
+			if (data?.status === 'success' && fetcher.state === 'idle') {
+				setValue('')
+			} else {
+				const input = innerRef.current
+				if (input) {
+					input.focus()
+					input.select()
+				}
+			}
+		}, [data?.status, fetcher.state])
+
 		return (
-			<fetcher.Form
-				onSubmit={(e)=>{
-					e.preventDefault()
-					handleFormChange(e.currentTarget)
-				}}
-				method="POST"
-				action="/system/item-transaction/new"
-				className="flex flex-wrap items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
-				onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
-			>
-				<AuthenticityTokenInput />
-				<div className="flex-1">
-					<Label htmlFor={id} className="sr-only">
-						Search
-					</Label>
-					<Input
-						value={value}
-						onChange={e => setValue(e.target.value)}
-						ref={ref}
-						onFocus={onFocus}
-						type="number"
-						name="search"
-						id={id}
-						placeholder="Búsqueda Código"
-						className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
-						autoFocus={autoFocus}
-						disabled={isSubmitting}
-					/>
-				</div>
-				<div>
-					<StatusButton
-						type="submit"
-						status={isSubmitting ? 'pending' : status}
-						className="flex w-full items-center justify-center border-none"
-						variant={'outline'}
-						size="sm"
-					>
-						<Icon name="scan-barcode" size="md" />
-						<span className="sr-only">Buscar</span>
-					</StatusButton>
-				</div>
-			</fetcher.Form>
+			<div className="relative ">
+				<fetcher.Form
+					onSubmit={e => {
+						e.preventDefault()
+						handleFormChange(e.currentTarget)
+					}}
+					method="POST"
+					action="/system/item-transaction/new"
+					className="flex  items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
+					onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
+				>
+					<AuthenticityTokenInput />
+					<div className="flex-1">
+						<Label htmlFor={id} className="sr-only">
+							Search
+						</Label>
+						<Input
+							value={value}
+							onChange={e => setValue(e.target.value)}
+							ref={innerRef}
+							type="number"
+							name="search"
+							id={id}
+							placeholder="Búsqueda Código"
+							className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
+							autoFocus={autoFocus}
+							disabled={isSubmitting}
+						/>
+					</div>
+					<div>
+						<StatusButton
+							type="submit"
+							status={isSubmitting ? 'pending' : status}
+							className="flex w-full items-center justify-center border-none"
+							variant={'outline'}
+							size="sm"
+						>
+							<Icon name="scan-barcode" size="md" />
+							<span className="sr-only">Buscar</span>
+						</StatusButton>
+					</div>
+				</fetcher.Form>
+
+				{message && (
+					<div className="absolute right-14 top-[10px] flex select-none items-center gap-1 rounded-md bg-destructive/30 p-1 text-xs text-foreground">
+						<Icon name="exclamation-circle" size="sm" className="flex-none" />
+						<span>{message}</span>
+					</div>
+				)}
+			</div>
 		)
 	},
 )
