@@ -88,8 +88,8 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return [
-		{ title: data ? 'Epic Notes' : 'Error | Epic Notes' },
-		{ name: 'description', content: `Your own captain's log` },
+		{ title: data ? 'Sistema de ventas' : 'Error | Sistema de ventas' },
+		{ name: 'description', content: `Sistema de ventas S3l1m` },
 	]
 }
 
