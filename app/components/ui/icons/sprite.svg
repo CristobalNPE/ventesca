@@ -147,6 +147,7 @@
     fill="currentColor"
   ></path>
 </symbol>
+<symbol class="icon icon-tabler icon-tabler-exclamation-circle" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="exclamation-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" ></path><path d="M12 9v4" ></path><path d="M12 16v.01" ></path></symbol>
 <symbol viewBox="0 0 15 15" fill="none" id="exit">
   <path     fill-rule="evenodd"
     clip-rule="evenodd"

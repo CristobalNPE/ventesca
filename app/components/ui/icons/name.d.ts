@@ -26,6 +26,7 @@ export type IconName =
 	| 'double-arrow-up'
 	| 'download'
 	| 'envelope-closed'
+	| 'exclamation-circle'
 	| 'exit'
 	| 'file-bar-chart'
 	| 'file-text'
