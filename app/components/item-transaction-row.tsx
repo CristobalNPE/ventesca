@@ -1,8 +1,8 @@
 import { type Item, type ItemTransaction } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Link, useFetcher, useSubmit } from '@remix-run/react'
-
 import { forwardRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
@@ -15,9 +15,15 @@ import {
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu.tsx'
 
-export const TYPE_SELL = 'VENTA'
-export const TYPE_RETURN = 'DEVOL' //Returns subtract their price instead of adding it.
-export const TYPE_PROMO = 'PROMO' //User is shown available discounts in sell panel. If he wants to apply them he must change the transaction type to promo
+export const TYPE_SELL = 'Venta'
+export const TYPE_RETURN = 'Devolución' //Returns subtract their price instead of adding it.
+export const TYPE_PROMO = 'Promoción'
+
+const itemTransactionTypes = [TYPE_SELL, TYPE_RETURN, TYPE_PROMO] as const
+export const ItemTransactionTypeSchema = z.enum(itemTransactionTypes)
+export type ItemTransactionType = z.infer<typeof ItemTransactionTypeSchema>
+
+//User is shown available discounts in sell panel. If he wants to apply them he must change the transaction type to promo
 //? it should only allow to change to promo if there are available discounts
 
 type ItemTransactionRowProps = {
@@ -37,8 +43,8 @@ export const ItemTransactionRow = forwardRef<
 	const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
 	const [isFocused, setIsFocused] = useState(false)
 	const [quantity, setQuantity] = useState(itemTransaction.quantity)
-	const [transactionType, setTransactionType] = useState<StateType>(
-		itemTransaction.type as StateType,
+	const [transactionType, setTransactionType] = useState<ItemTransactionType>(
+		itemTransaction.type as ItemTransactionType,
 	)
 
 	useEffect(() => {
@@ -197,17 +203,12 @@ export const ItemTransactionRow = forwardRef<
 })
 ItemTransactionRow.displayName = 'ItemTransactionRow'
 
-export type StateType =
-	| typeof TYPE_SELL
-	| typeof TYPE_RETURN
-	| typeof TYPE_PROMO
-
 const TransactionType = ({
 	initialType,
 	setType,
 }: {
-	initialType: StateType
-	setType: (value: StateType) => void
+	initialType: ItemTransactionType
+	setType: (value: ItemTransactionType) => void
 }) => {
 	const componentRef = useRef<HTMLDivElement>(null)
 
@@ -233,7 +234,7 @@ const TransactionType = ({
 			tabIndex={-1}
 			ref={componentRef}
 		>
-			{initialType}
+			{initialType.substring(0, 5)}
 		</div>
 	)
 }
