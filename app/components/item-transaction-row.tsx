@@ -2,13 +2,13 @@ import { type Item, type ItemTransaction } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Link, useFetcher, useSubmit } from '@remix-run/react'
 
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { TableCell, TableRow } from '#app/components/ui/table.tsx'
 import { DeleteItemTransaction } from '#app/routes/system+/item-transaction.delete.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { forwardRef, useEffect, useRef, useState } from 'react'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -124,6 +124,7 @@ export const ItemTransactionRow = forwardRef<
 				}
 			}
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [rowRef, item.stock])
 
 	return (
@@ -142,7 +143,7 @@ export const ItemTransactionRow = forwardRef<
 				ref={rowRef}
 				className={cn(
 					'uppercase ',
-					isFocused && 'bg-primary/10 hover:bg-primary/10 scale-[1.01] ',
+					isFocused && 'scale-[1.01] bg-primary/10 hover:bg-primary/10 ',
 					isLoading && 'pointer-events-none opacity-30 ',
 				)}
 				tabIndex={0}
