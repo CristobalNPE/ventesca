@@ -1,3 +1,7 @@
+import { type LoaderFunctionArgs, json } from '@remix-run/node'
+import { NavLink, Outlet, useLoaderData } from '@remix-run/react'
+
+import { useState } from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import {
@@ -9,10 +13,6 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, invariantResponse } from '#app/utils/misc.tsx'
-import { LoaderFunctionArgs, json } from '@remix-run/node'
-import { NavLink, Outlet, useLoaderData } from '@remix-run/react'
-
-import { useState } from 'react'
 
 type NavigationLink = {
 	name: string
@@ -25,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
-		select: { username: true, name:true },
+		select: { username: true, name: true },
 	})
 	invariantResponse(user, 'User not found', { status: 404 })
 	return json({ user })
@@ -44,8 +44,8 @@ export default function SystemLayout() {
 			main: true,
 		},
 		{
-			name: 'Panel de Control',
-			path: 'control-panel',
+			name: 'Centro de Control',
+			path: 'control-center',
 			icon: 'circle-dot-dashed',
 		},
 		{
