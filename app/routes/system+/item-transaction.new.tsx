@@ -6,16 +6,6 @@ import {
 } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 
-import { TYPE_SELL } from '#app/components/item-transaction-row.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { Label } from '#app/components/ui/label.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
-import { getTransactionId } from '#app/utils/transaction.server.ts'
 import {
 	forwardRef,
 	useEffect,
@@ -26,6 +16,16 @@ import {
 } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
+import { TYPE_SELL } from '#app/components/item-transaction-row.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
+import { Label } from '#app/components/ui/label.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
+import { validateCSRF } from '#app/utils/csrf.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
+import { getTransactionId } from '#app/utils/transaction.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	throw redirect('/system/sell')
@@ -137,7 +137,6 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
 			fetcher.submit(form)
-			// setValue('')
 		}, 400)
 
 		useEffect(() => {
