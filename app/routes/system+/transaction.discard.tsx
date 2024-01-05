@@ -1,6 +1,10 @@
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
 
+import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
+import { Form, useActionData } from '@remix-run/react'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
@@ -10,10 +14,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { destroyCurrentTransaction } from '#app/utils/transaction.server.ts'
-import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
-import { Form, useActionData } from '@remix-run/react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
+import { TRANSACTION_STATUS_DISCARDED } from './sell.tsx'
 
 //! ONLY ADMIN SHOULD BE ABLE TO ACTUALLY DELETE THE TRANSACTION. WHEN TRANSACTION IS DISCARDED FROM THE SALES PAGE, IT SHOULD BE ONLY FLAGGED AS DISCARDED.
 const DeleteFormSchema = z.object({
@@ -53,7 +54,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.transaction.update({
 		where: { id: transaction.id },
-		data: { isDiscarded: true, status: 'Cancelada' },
+		data: { isDiscarded: true, status: TRANSACTION_STATUS_DISCARDED },
 	})
 
 	return redirectWithToast(
