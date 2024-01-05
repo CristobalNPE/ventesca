@@ -5,6 +5,8 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
+import React, { createRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
 	AlertDialog,
@@ -34,8 +36,6 @@ import {
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
-import React, { createRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
