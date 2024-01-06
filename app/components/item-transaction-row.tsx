@@ -1,6 +1,6 @@
 import { type Item, type ItemTransaction } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
-import { Link, useFetcher, useSubmit } from '@remix-run/react'
+import { Link, useFetcher } from '@remix-run/react'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
@@ -57,27 +57,27 @@ export const ItemTransactionRow = forwardRef<
 	}, [transactionType, totalPrice])
 
 	const fetcherKey = `it-${itemTransaction.id}`
-	const submit = useSubmit()
+
 	const fetcher = useFetcher({ key: fetcherKey })
 	const isLoading = fetcher.state !== 'idle'
-
-	// const handleFormChange = useDebounce((form: HTMLFormElement) => {
-	// 	submit(form)
-	// }, 400) //May need to use this if there are errors when posting?
-	const formRef = useRef<HTMLFormElement>(null)
 
 	const quantityChanged = itemTransaction.quantity !== quantity
 	const typeChanged = itemTransaction.type !== transactionType
 
+	const formData = new FormData()
+	formData.append('it-id', itemTransaction.id)
+	formData.append('it-vpd', transactionType)
+	formData.append('it-quantity', quantity.toString())
+	formData.append('it-total-price', totalPrice.toString())
+
 	const submitForm = () => {
 		if (isLoading) return
 		if (!quantityChanged && !typeChanged) return
-		if (formRef.current) {
-			submit(formRef.current, {
-				navigate: false,
-				fetcherKey: fetcherKey,
-			})
-		}
+
+		fetcher.submit(formData, {
+			method: 'POST',
+			action: '/system/item-transaction/edit',
+		})
 	}
 
 	useEffect(() => {
@@ -134,71 +134,57 @@ export const ItemTransactionRow = forwardRef<
 	}, [rowRef, item.stock])
 
 	return (
-		<>
-			<fetcher.Form
-				ref={formRef}
-				method="POST"
-				action="/system/item-transaction/edit"
-			>
-				<input type="hidden" name="it-id" value={itemTransaction.id} />
-				<input type="hidden" name="it-vpd" value={transactionType} />
-				<input type="hidden" name="it-quantity" value={quantity} />
-				<input type="hidden" name="it-total-price" value={totalPrice} />
-			</fetcher.Form>
-			<TableRow
-				ref={rowRef}
-				className={cn(
-					'uppercase ',
-					isFocused && 'scale-[1.01] bg-primary/10 hover:bg-primary/10 ',
-					isLoading && 'pointer-events-none opacity-30 ',
+		<TableRow
+			ref={rowRef}
+			className={cn(
+				'uppercase ',
+				isFocused && 'scale-[1.01] bg-primary/10 hover:bg-primary/10 ',
+				isLoading && 'pointer-events-none opacity-30 ',
+			)}
+			tabIndex={0}
+			onBlur={() => {
+				setIsFocused(false)
+				submitForm()
+			}}
+			onFocus={() => setIsFocused(true)}
+		>
+			<TableCell className="flex items-center justify-center">
+				{isLoading ? (
+					<Icon
+						size="md"
+						className="relative bottom-0 left-2 animate-spin blur-0"
+						name="circle-dot-dashed"
+					/>
+				) : (
+					<ItemTransactionRowActions
+						itemId={item.id}
+						itemTransactionId={itemTransaction.id}
+					/>
 				)}
-				tabIndex={0}
-				onBlur={() => {
-					setIsFocused(false)
-					submitForm()
-				}}
-				onFocus={() => setIsFocused(true)}
-			>
-				<TableCell className="flex items-center justify-center">
-					{isLoading ? (
-						<Icon
-							size="md"
-							className="relative bottom-0 left-2 animate-spin blur-0"
-							name="circle-dot-dashed"
-						/>
-					) : (
-						<ItemTransactionRowActions
-							itemId={item.id}
-							itemTransactionId={itemTransaction.id}
-						/>
-					)}
-				</TableCell>
-				<TableCell className="font-bold">{item.code}</TableCell>
-				<TableCell className="font-medium">
-					<TransactionType
-						initialType={transactionType}
-						setType={setTransactionType}
-					/>
-				</TableCell>
-				<TableCell className="font-medium tracking-wider">
-					{item.name}
-				</TableCell>
-				<TableCell className="font-medium">
-					{formatCurrency(item.sellingPrice)}
-				</TableCell>
-				<TableCell>
-					<QuantitySelector
-						min={1}
-						max={item.stock}
-						quantity={quantity}
-						setQuantity={setQuantity}
-					/>
-				</TableCell>
-				<TableCell className="text-right font-bold">
-					{formatCurrency(totalPrice)}
-				</TableCell>
-			</TableRow>
-		</>
+			</TableCell>
+			<TableCell className="font-bold">{item.code}</TableCell>
+			<TableCell className="font-medium">
+				<TransactionType
+					initialType={transactionType}
+					setType={setTransactionType}
+				/>
+			</TableCell>
+			<TableCell className="font-medium tracking-wider">{item.name}</TableCell>
+			<TableCell className="font-medium">
+				{formatCurrency(item.sellingPrice)}
+			</TableCell>
+			<TableCell>
+				<QuantitySelector
+					min={1}
+					max={item.stock}
+					quantity={quantity}
+					setQuantity={setQuantity}
+				/>
+			</TableCell>
+			<TableCell className="text-right font-bold">
+				{formatCurrency(totalPrice)}
+			</TableCell>
+		</TableRow>
 	)
 })
 ItemTransactionRow.displayName = 'ItemTransactionRow'
@@ -310,6 +296,7 @@ const ItemTransactionRowActions = ({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
+				asChild
 				tabIndex={-1}
 				className="focus-within:ring-0  focus-visible:ring-0"
 			>
