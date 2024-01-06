@@ -10,6 +10,7 @@ export type IconName =
 	| 'banknote'
 	| 'camera'
 	| 'check'
+	| 'checks'
 	| 'chevron-down'
 	| 'chevron-left'
 	| 'chevron-right'
