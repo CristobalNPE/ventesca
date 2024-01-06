@@ -1,12 +1,11 @@
 import {
+	SerializeFrom,
 	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { useFetcher, useLoaderData } from '@remix-run/react'
 
-import React, { createRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
 	AlertDialog,
@@ -31,11 +30,17 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.ts'
 import {
+	destroyCurrentTransaction,
 	getTransactionId,
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
+import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
@@ -47,13 +52,13 @@ const transactionTypes = [
 	TRANSACTION_STATUS_COMPLETED,
 	TRANSACTION_STATUS_DISCARDED,
 ] as const
-const TransactionStatusSchema = z.enum(transactionTypes)
+export const TransactionStatusSchema = z.enum(transactionTypes)
 export type TransactionStatus = z.infer<typeof TransactionStatusSchema>
 
 export const PAYMENT_METHOD_CASH = 'Contado'
 export const PAYMENT_METHOD_CREDIT = 'Crédito'
 const paymentMethodTypes = [PAYMENT_METHOD_CASH, PAYMENT_METHOD_CREDIT] as const
-const PaymentMethodSchema = z.enum(paymentMethodTypes)
+export const PaymentMethodSchema = z.enum(paymentMethodTypes)
 export type PaymentMethod = z.infer<typeof PaymentMethodSchema>
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -139,10 +144,99 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ transaction: currentTransaction })
 }
 
+const SetPaymentMethodSchema = z.object({
+	intent: z.string(),
+	paymentMethod: PaymentMethodSchema,
+})
+
+const CompleteTransactionSchema = z.object({
+	intent: z.string(),
+	total: z.coerce.number(),
+})
+
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+	const transactionId = await getTransactionId(request)
+	invariantResponse(transactionId, 'No es posible cargar la transacción.')
 
-	return json({ status: 'success' } as const)
+	switch (intent) {
+		case 'set-payment-method':
+			const setPaymentResult = SetPaymentMethodSchema.safeParse({
+				intent: formData.get('intent'),
+				paymentMethod: formData.get('payment-method'),
+			})
+			if (!setPaymentResult.success) {
+				return json(
+					{
+						status: 'error',
+						errors: setPaymentResult.error.flatten(),
+					} as const,
+					{
+						status: 400,
+					},
+				)
+			}
+			const { paymentMethod } = setPaymentResult.data
+
+			await prisma.transaction.update({
+				where: { id: transactionId },
+				data: { paymentMethod },
+			})
+
+			return json({ status: 'success' } as const)
+
+		case 'complete-transaction':
+			const completeTransactionResult = CompleteTransactionSchema.safeParse({
+				intent: formData.get('intent'),
+				total: formData.get('total'),
+			})
+
+			if (!completeTransactionResult.success) {
+				return json(
+					{
+						status: 'error',
+						errors: completeTransactionResult.error.flatten(),
+					} as const,
+					{
+						status: 400,
+					},
+				)
+			}
+			const { total } = completeTransactionResult.data
+			await prisma.transaction.update({
+				where: { id: transactionId },
+				data: {
+					status: TRANSACTION_STATUS_COMPLETED,
+					total,
+					completedAt: new Date(),
+				},
+			})
+
+			return redirectWithToast(
+				`/system/reports/${transactionId}`,
+				{
+					type: 'success',
+					title: 'Transacción Completa',
+					description: `Venta completada bajo ID de transacción: [${transactionId.toUpperCase()}].`,
+				},
+				{
+					headers: {
+						'Set-Cookie': await destroyCurrentTransaction(request),
+					},
+				},
+			)
+			break
+
+		default:
+			return json(
+				{ status: 'error', errors: ['Not a Valid Intent'] } as const,
+				{
+					status: 400,
+				},
+			)
+	}
 }
 
 export default function SellRoute() {
@@ -150,10 +244,11 @@ export default function SellRoute() {
 
 	const { transaction } = useLoaderData<typeof loader>()
 
-	let allItemTransactions = transaction.items
+	const currentPaymentMethod = PaymentMethodSchema.parse(
+		transaction.paymentMethod,
+	)
 
-	const [paymentMethod, setPaymentMethod] =
-		useState<PaymentMethod>(PAYMENT_METHOD_CASH)
+	let allItemTransactions = transaction.items
 
 	const discount = 0
 
@@ -289,18 +384,13 @@ export default function SellRoute() {
 					</div>
 				</div>
 				<div className="flex flex-col items-center justify-between">
-					<PaymentSelection
-						selectedPaymentMethod={paymentMethod}
-						setPaymentMethod={setPaymentMethod}
-					/>
-
-					<Button
-						size={'lg'}
-						className="text-md mt-6 flex h-full w-full gap-2 font-semibold"
-					>
-						<Icon name="check" size="lg" />
-						<span className="">Ingresar Venta</span>
-					</Button>
+					<PaymentSelection currentPaymentMethod={currentPaymentMethod} />
+					{transaction && (
+						<ConfirmFinishTransaction
+							transaction={{ transaction }}
+							total={total}
+						/>
+					)}
 				</div>
 			</div>
 		</>
@@ -355,26 +445,153 @@ const DiscountsPanel = () => {
 }
 
 const PaymentSelection = ({
-	selectedPaymentMethod,
-	setPaymentMethod,
+	currentPaymentMethod,
 }: {
-	selectedPaymentMethod: PaymentMethod
-	setPaymentMethod: (paymentMethod: PaymentMethod) => void
+	currentPaymentMethod: PaymentMethod
 }) => {
+	const [paymentMethod, setPaymentMethod] =
+		useState<PaymentMethod>(currentPaymentMethod)
+
+	const fetcher = useFetcher({ key: 'set-paymentMethod' })
+	const isSubmitting = fetcher.state !== 'idle'
+
+	const formData = useMemo(() => {
+		const fd = new FormData()
+		fd.append('intent', 'set-payment-method')
+		fd.append('payment-method', paymentMethod)
+		return fd
+	}, [paymentMethod])
+
+	useEffect(() => {
+		fetcher.submit(formData, { method: 'POST' })
+	}, [formData])
+
 	return (
-		<div className="flex w-full rounded-md bg-background p-1">
-			{paymentMethodTypes.map((paymentMethod, index) => (
+		<div
+			className={cn(
+				'flex w-full rounded-md bg-background p-1',
+				isSubmitting && 'pointer-events-none cursor-not-allowed opacity-50',
+			)}
+		>
+			{paymentMethodTypes.map((paymentMethodType, index) => (
 				<div
-					onClick={() => setPaymentMethod(paymentMethod)}
+					onClick={() => setPaymentMethod(paymentMethodType)}
 					className={cn(
 						'w-full cursor-pointer rounded-md p-2 text-center',
-						paymentMethod === selectedPaymentMethod && 'bg-primary/80',
+						paymentMethodType === paymentMethod && 'bg-primary/80',
 					)}
 					key={index}
 				>
-					{paymentMethod}
+					{paymentMethodType}
 				</div>
 			))}
 		</div>
+	)
+}
+
+const ConfirmFinishTransaction = ({
+	transaction,
+	total,
+}: {
+	transaction: SerializeFrom<typeof loader>
+	total: number
+}) => {
+	const { transaction: finishedTransaction } = transaction
+	const fetcher = useFetcher({ key: 'complete-transaction' })
+	const isSubmitting = fetcher.state !== 'idle'
+
+	const formData = new FormData()
+	formData.append('intent', 'complete-transaction')
+	formData.append('total', total.toString())
+
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild>
+				<Button
+					disabled={finishedTransaction.items.length === 0}
+					size={'lg'}
+					className="text-md mt-6 flex h-full w-full gap-2 font-semibold"
+				>
+					<Icon name="check" size="lg" />
+					<span className="">Ingresar Venta</span>
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle className="flex items-center gap-4">
+						Confirmar Transacción{' '}
+						<span className="rounded-md bg-primary/10 p-1 text-sm uppercase">
+							{finishedTransaction.id}
+						</span>
+					</AlertDialogTitle>
+					<AlertDialogDescription>
+						Confirme los datos de la venta para ingreso:
+						<div className="fex mt-4 flex-col gap-1">
+							{finishedTransaction.items.map(itemTransaction => {
+								if (itemTransaction.item) {
+									return (
+										<div className="flex gap-4" key={itemTransaction.id}>
+											<div className="flex flex-1 gap-2 overflow-clip ">
+												<span className="font-bold">
+													{itemTransaction.quantity}x
+												</span>
+												<span className="uppercase">
+													{itemTransaction.item.name}
+												</span>
+											</div>
+											<span className="w-[4rem] text-right">
+												{formatCurrency(itemTransaction.totalPrice)}
+											</span>
+										</div>
+									)
+								}
+								return null
+							})}
+						</div>
+						<div className="mt-4 flex flex-col gap-1 ">
+							<div className="flex gap-4">
+								<span className="w-[9rem] font-bold">Vendedor:</span>
+								<span>{finishedTransaction.seller?.name}</span>
+							</div>
+							<div className="flex gap-4">
+								<span className="w-[9rem] font-bold">Fecha:</span>
+								<span>
+									{format(
+										new Date(finishedTransaction.createdAt),
+										"d 'de' MMMM 'del' yyyy'",
+										{ locale: es },
+									)}
+								</span>
+							</div>
+							<div className="flex gap-4">
+								<span className="w-[9rem] font-bold">Método de Pago:</span>
+								<span>{finishedTransaction.paymentMethod}</span>
+							</div>
+							<div className="flex gap-4">
+								<span className="w-[9rem] font-bold">Total:</span>
+								<span>{formatCurrency(total)}</span>
+							</div>
+						</div>
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter className="mt-4 flex gap-6">
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					{isSubmitting ? (
+						<Button className="w-[13rem]" disabled>
+							<Icon name="update" className="mr-2 animate-spin opacity-80" />
+							Confirmando Transacción
+						</Button>
+					) : (
+						<Button
+							className="w-[13rem]"
+							onClick={() => fetcher.submit(formData, { method: 'POST' })}
+						>
+							<Icon name="checks" className="mr-2" />
+							Confirmar y Finalizar
+						</Button>
+					)}
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	)
 }
