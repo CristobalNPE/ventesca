@@ -68,3 +68,13 @@
 		@apply bg-background text-foreground;
 	}
 }
+/* This is to remove the arrows from native number inputs in Chrome/Firefox */
+@layer base {
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number'] {
+    -webkit-appearance: none;
+    margin: 0;
+    -moz-appearance: textfield !important;
+  }
+}
