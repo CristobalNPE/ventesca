@@ -4,7 +4,7 @@ import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { Link, useFetcher, useLoaderData } from '@remix-run/react'
 
 import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
 import {
@@ -161,82 +161,79 @@ export async function action({ request }: ActionFunctionArgs) {
 	const transactionId = await getTransactionId(request)
 	invariantResponse(transactionId, 'No es posible cargar la transacción.')
 
-	switch (intent) {
-		case 'set-payment-method':
-			const setPaymentResult = SetPaymentMethodSchema.safeParse({
-				intent: formData.get('intent'),
-				paymentMethod: formData.get('payment-method'),
-			})
-			if (!setPaymentResult.success) {
-				return json(
-					{
-						status: 'error',
-						errors: setPaymentResult.error.flatten(),
-					} as const,
-					{
-						status: 400,
-					},
-				)
-			}
-			const { paymentMethod } = setPaymentResult.data
 
-			await prisma.transaction.update({
-				where: { id: transactionId },
-				data: { paymentMethod },
-			})
 
-			return json({ status: 'success' } as const)
-
-		case 'complete-transaction':
-			const completeTransactionResult = CompleteTransactionSchema.safeParse({
-				intent: formData.get('intent'),
-				total: formData.get('total'),
-			})
-
-			if (!completeTransactionResult.success) {
-				return json(
-					{
-						status: 'error',
-						errors: completeTransactionResult.error.flatten(),
-					} as const,
-					{
-						status: 400,
-					},
-				)
-			}
-			const { total } = completeTransactionResult.data
-			await prisma.transaction.update({
-				where: { id: transactionId },
-				data: {
-					status: TRANSACTION_STATUS_COMPLETED,
-					total,
-					completedAt: new Date(),
-				},
-			})
-
-			return redirectWithToast(
-				`/system/reports/${transactionId}`,
-				{
-					type: 'success',
-					title: 'Transacción Completa',
-					description: `Venta completada bajo ID de transacción: [${transactionId.toUpperCase()}].`,
-				},
-				{
-					headers: {
-						'Set-Cookie': await destroyCurrentTransaction(request),
-					},
-				},
-			)
-			break
-
-		default:
+	if (intent === 'set-payment-method') {
+		const setPaymentResult = SetPaymentMethodSchema.safeParse({
+			intent: formData.get('intent'),
+			paymentMethod: formData.get('payment-method'),
+		})
+		if (!setPaymentResult.success) {
 			return json(
-				{ status: 'error', errors: ['Not a Valid Intent'] } as const,
+				{
+					status: 'error',
+					errors: setPaymentResult.error.flatten(),
+				} as const,
 				{
 					status: 400,
 				},
 			)
+		}
+		const { paymentMethod } = setPaymentResult.data
+
+		await prisma.transaction.update({
+			where: { id: transactionId },
+			data: { paymentMethod },
+		})
+
+		return json({ status: 'success' } as const)
 	}
+
+	if (intent === 'complete-transaction') {
+		const completeTransactionResult = CompleteTransactionSchema.safeParse({
+			intent: formData.get('intent'),
+			total: formData.get('total'),
+		})
+
+		if (!completeTransactionResult.success) {
+			return json(
+				{
+					status: 'error',
+					errors: completeTransactionResult.error.flatten(),
+				} as const,
+				{
+					status: 400,
+				},
+			)
+		}
+		const { total } = completeTransactionResult.data
+		await prisma.transaction.update({
+			where: { id: transactionId },
+			data: {
+				status: TRANSACTION_STATUS_COMPLETED,
+				total,
+				completedAt: new Date(),
+			},
+		})
+
+		return redirectWithToast(
+			`/system/reports/${transactionId}`,
+			{
+				type: 'success',
+				title: 'Transacción Completa',
+				description: `Venta completada bajo ID de transacción: [${transactionId.toUpperCase()}].`,
+			},
+			{
+				headers: {
+					'Set-Cookie': await destroyCurrentTransaction(request),
+				},
+			},
+		)
+	}
+
+	return json({ status: 'error', errors: ['Not a Valid Intent'] } as const, {
+		status: 400,
+	})
 }
 
 export default function SellRoute() {
@@ -318,9 +315,15 @@ export default function SellRoute() {
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
 
 				<div className="flex justify-between gap-4 md:justify-normal">
-					<Button variant={'outline'}>
-						<Icon className="mr-2 flex-none" name="banknote" /> Descargar
-						Cotización
+					<Button variant={'outline'} asChild>
+						<Link
+							target="_blank"
+							reloadDocument
+							to={`/system/reports/${transaction.id}/report-pdf`}
+						>
+							<Icon className="mr-2 flex-none" name="banknote" /> Descargar
+							Cotización
+						</Link>
 					</Button>
 
 					<ConfirmDeleteTransaction transactionId={transaction.id} />
