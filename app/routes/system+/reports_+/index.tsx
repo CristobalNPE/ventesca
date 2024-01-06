@@ -7,11 +7,22 @@ import {
 	TableRow,
 } from '#app/components/ui/table.tsx'
 import { prisma } from '#app/utils/db.server.ts'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { formatRelative } from 'date-fns'
+import {
+	TRANSACTION_STATUS_COMPLETED,
+	TRANSACTION_STATUS_DISCARDED,
+	TRANSACTION_STATUS_PENDING,
+} from '../sell.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
+	const userId = await requireUserId(request)
+
+	//If user is admin, gets all, otherwise only gets their own
+
 	const transactions = await prisma.transaction.findMany({
 		select: {
 			id: true,
@@ -20,6 +31,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			total: true,
 			seller: { select: { name: true } },
 		},
+		// where: { sellerId: userId },
 		orderBy: { createdAt: 'desc' },
 	})
 
@@ -27,6 +39,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function ReportsRoute() {
+	const isAdmin = true
 	const { transactions } = useLoaderData<typeof loader>()
 	const navigate = useNavigate()
 
@@ -50,28 +63,42 @@ export default function ReportsRoute() {
 				<TableHeader className="bg-secondary ">
 					<TableRow>
 						<TableHead>ID</TableHead>
-						<TableHead>Estado</TableHead>
-						<TableHead>Total</TableHead>
-						<TableHead>Vendedor</TableHead>
 						<TableHead>Creado en</TableHead>
+						{isAdmin && <TableHead>Vendedor</TableHead>}
+						<TableHead>Total</TableHead>
+						<TableHead>Estado</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{transactions.map(transaction => (
 						<TableRow key={transaction.id}>
 							<TableCell
-								className="uppercase hover:bg-secondary"
+								className="cursor-pointer uppercase hover:bg-secondary"
 								onClick={() => navigate(transaction.id)}
 							>
 								{transaction.id}
 							</TableCell>
-							<TableCell>{transaction.status}</TableCell>
-							<TableCell>{transaction.total}</TableCell>
-							<TableCell>
-								{transaction.seller ? transaction.seller.name : 'Desconocido'}
-							</TableCell>
 							<TableCell>
 								{formatRelative(new Date(transaction.createdAt), new Date())}
+							</TableCell>
+							{isAdmin && (
+								<TableCell>
+									{transaction.seller ? transaction.seller.name : 'Desconocido'}
+								</TableCell>
+							)}
+							<TableCell>{formatCurrency(transaction.total)}</TableCell>
+							<TableCell
+								className={cn(
+									'',
+									transaction.status === TRANSACTION_STATUS_PENDING &&
+										'bg-orange-400/10',
+									transaction.status === TRANSACTION_STATUS_COMPLETED &&
+										'bg-primary/10',
+									transaction.status === TRANSACTION_STATUS_DISCARDED &&
+										'bg-destructive/10',
+								)}
+							>
+								{transaction.status}
 							</TableCell>
 						</TableRow>
 					))}
