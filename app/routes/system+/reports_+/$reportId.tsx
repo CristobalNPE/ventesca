@@ -1,5 +1,5 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import { format, formatDistance, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -23,6 +23,7 @@ import {
 	type TransactionStatus,
 	TransactionStatusSchema,
 } from '../sell.tsx'
+import { Button } from '#app/components/ui/button.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const transactionReport = await prisma.transaction.findUnique({
@@ -158,6 +159,12 @@ export default function ReportRoute() {
 					))}
 				</TableBody>
 			</Table>
+			<Button asChild variant={'outline'}>
+				<Link target='_blank' reloadDocument to={'report-pdf'}>
+					<Icon name="report-money" className="mr-2" />
+					Descargar Reporte
+				</Link>
+			</Button>
 		</div>
 	)
 }
@@ -208,7 +215,9 @@ const TransactionTotalCard = ({ total }: { total: number }) => {
 		<div className="flex w-fit items-center justify-center gap-2  text-lg">
 			<Icon className="flex-none" size="lg" name="circle-dollar-sign" />
 			<div className="flex gap-2">
-				<span className="w-[10rem]">Ingreso Total:</span>
+				<span className="w-[10rem]">
+					{total >= 0 ? 'Ingreso Total:' : 'Devolución Total:'}
+				</span>
 				<span className="font-bold ">{formatCurrency(total)}</span>{' '}
 			</div>
 		</div>
