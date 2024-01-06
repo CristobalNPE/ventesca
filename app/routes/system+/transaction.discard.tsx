@@ -54,7 +54,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.transaction.update({
 		where: { id: transaction.id },
-		data: { isDiscarded: true, status: TRANSACTION_STATUS_DISCARDED },
+		data: {
+			isDiscarded: true,
+			status: TRANSACTION_STATUS_DISCARDED,
+			completedAt: new Date(),
+		},
 	})
 
 	return redirectWithToast(
