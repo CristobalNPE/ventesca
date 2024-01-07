@@ -324,8 +324,8 @@ export default function SellRoute() {
 								reloadDocument
 								to={`/system/reports/${transaction.id}/report-pdf`}
 							>
-								<Icon className="mr-2 flex-none" name="banknote" /> Descargar
-								Cotización
+								<Icon className="mr-2 flex-none" name="report-money" /> Generar
+								Reporte
 							</Link>
 						</Button>
 						<ConfirmDeleteTransaction transactionId={transaction.id} />
