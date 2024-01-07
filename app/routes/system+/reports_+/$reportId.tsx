@@ -62,6 +62,7 @@ export default function ReportRoute() {
 		transactionReport.paymentMethod,
 	)
 
+	const shouldShowCompletedAt = transactionReport.completedAt !== transactionReport.createdAt
 	return (
 		<div>
 			<div className="flex max-w-[40rem] flex-col">
@@ -77,9 +78,9 @@ export default function ReportRoute() {
 						name="clock"
 						className={cn(
 							'absolute left-3 top-4',
-							!transactionReport.completedAt && 'top-2',
+							!shouldShowCompletedAt && 'top-2',
 						)}
-						size={transactionReport.completedAt ? 'xl' : 'lg'}
+						size={shouldShowCompletedAt ? 'xl' : 'lg'}
 					/>
 					<div className="flex items-center gap-2">
 						<span className="">
@@ -103,7 +104,7 @@ export default function ReportRoute() {
 							)
 						</span>
 					</div>
-					{transactionReport.completedAt && (
+					{shouldShowCompletedAt && (
 						<span className="font-bold">
 							{transactionReport.status === TRANSACTION_STATUS_DISCARDED
 								? 'Cancelada el  '
