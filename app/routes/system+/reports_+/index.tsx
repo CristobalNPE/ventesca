@@ -64,17 +64,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			seller: { select: { name: true } },
 		},
 		where: { createdAt: { gte: sinceDate } },
-		//first order by completedAt, then by createdAt
-		// orderBy: { completedAt: 'desc', createdAt: 'desc' },
+
+		//order by completedAt if not null, else by createdAt
 		orderBy: { createdAt: 'desc' },
 	})
 
-	return json({ transactions })
+	const totalTransactions = await prisma.transaction.count({
+		where: { createdAt: { gte: sinceDate } },
+	})
+
+	return json({ transactions, totalTransactions })
 }
 
 export default function ReportsRoute() {
 	const isAdmin = true
-	const { transactions } = useLoaderData<typeof loader>()
+	const { transactions, totalTransactions } = useLoaderData<typeof loader>()
 	const navigate = useNavigate()
 
 	// Seller should only see their own transactions
@@ -103,23 +107,25 @@ export default function ReportsRoute() {
 	const since = new URLSearchParams(search).get('since')
 
 	return (
-		<div className='max-w-[90rem]'>
+		<div className="max-w-[90rem]">
 			<div className="flex justify-between border-b-2 border-secondary pb-4">
-				<div className="flex items-center gap-4">
+				<div className="flex flex-col ">
 					<h1 className="text-2xl">Reportes de Transacciones</h1>
-					{/* <h1 className="text-xl text-foreground/70">
-						[{totalItems} artículos]
-					</h1> */}
+					<h1 className="text-lg text-foreground/70">
+						Mostrando {totalTransactions}{' '}
+						{totalTransactions !== 1 ? 'transacciones' : 'transacción'}
+					</h1>
 				</div>
 				<div className="flex items-center gap-6">
-					{/* possible buttons here */}
 					{filters.map(filter => (
 						<NavLink
 							key={filter.query}
 							className={({ isActive }) =>
 								cn(
 									'rounded-md px-2 py-1 text-foreground/70 hover:text-foreground/100 ',
-									isActive && since === filter.query && 'bg-primary/70 text-foreground ',
+									isActive &&
+										since === filter.query &&
+										'bg-primary/70 text-foreground ',
 								)
 							}
 							to={`?since=${filter.query}`}
