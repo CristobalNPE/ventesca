@@ -161,8 +161,6 @@ export async function action({ request }: ActionFunctionArgs) {
 	const transactionId = await getTransactionId(request)
 	invariantResponse(transactionId, 'No es posible cargar la transacción.')
 
-
-
 	if (intent === 'set-payment-method') {
 		const setPaymentResult = SetPaymentMethodSchema.safeParse({
 			intent: formData.get('intent'),
@@ -301,70 +299,74 @@ export default function SellRoute() {
 	}, [allItemTransactions.length])
 
 	return (
-		<>
-			<div className="flex flex-col items-center justify-between md:flex-row">
-				<h1 className="text-2xl">Venta de artículos</h1>
-				<h1 className="text-md text-foreground/80">
-					ID Transacción:{' '}
-					<span className="cursor-pointer rounded-md p-1 uppercase text-foreground hover:bg-secondary">
-						{transaction?.id}
-					</span>
-				</h1>
-			</div>
-			<div className="mt-4 flex flex-col justify-between gap-2 md:flex-row">
-				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
-
-				<div className="flex justify-between gap-4 md:justify-normal">
-					<Button variant={'outline'} asChild>
-						<Link
-							target="_blank"
-							reloadDocument
-							to={`/system/reports/${transaction.id}/report-pdf`}
-						>
-							<Icon className="mr-2 flex-none" name="banknote" /> Descargar
-							Cotización
-						</Link>
-					</Button>
-
-					<ConfirmDeleteTransaction transactionId={transaction.id} />
+		<div className="flex h-full flex-col">
+			<div className="flex-1">
+				<div className="flex flex-col items-center justify-between md:flex-row">
+					<h1 className="text-2xl">Venta de artículos</h1>
+					<h1 className="text-md text-foreground/80">
+						ID Transacción:{' '}
+						<span className="cursor-pointer rounded-md p-1 uppercase text-foreground hover:bg-secondary">
+							{transaction?.id}
+						</span>
+					</h1>
 				</div>
+				<div className="mt-4 flex flex-col justify-between gap-2 md:flex-row">
+					<ItemReader
+						ref={itemReaderRef}
+						autoFocus
+						autoSubmit
+						status={'idle'}
+					/>
+					<div className="flex justify-between gap-4 md:justify-normal">
+						<Button variant={'outline'} asChild>
+							<Link
+								target="_blank"
+								reloadDocument
+								to={`/system/reports/${transaction.id}/report-pdf`}
+							>
+								<Icon className="mr-2 flex-none" name="banknote" /> Descargar
+								Cotización
+							</Link>
+						</Button>
+						<ConfirmDeleteTransaction transactionId={transaction.id} />
+					</div>
+				</div>
+				<ScrollArea className="my-4 h-[29rem] ">
+					<Table className="min-w-full overflow-clip rounded-md ">
+						<TableHeader className="  bg-secondary uppercase  ">
+							<TableRow className="">
+								<TableHead className="w-[50px]"></TableHead>
+								<TableHead className="w-[100px]">Código</TableHead>
+								<TableHead className="w-[100px]">
+									<span className="tracking-widest">V/P/D</span>
+								</TableHead>
+								<TableHead className="">Descripción Articulo</TableHead>
+								<TableHead>Precio</TableHead>
+								<TableHead>Cantidad</TableHead>
+								<TableHead className="text-right">Total</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody className=" bg-background/60">
+							{transaction &&
+								allItemTransactions.map((itemTransaction, index) => {
+									if (itemTransaction.item) {
+										return (
+											<ItemTransactionRow
+												itemReaderRef={itemReaderRef}
+												ref={itemRefs.current[index]}
+												itemTransaction={itemTransaction}
+												key={itemTransaction.item.id}
+												item={itemTransaction.item}
+											/>
+										)
+									} else return null
+								})}
+						</TableBody>
+					</Table>
+				</ScrollArea>
 			</div>
-			<ScrollArea className="my-4 h-[29rem] ">
-				<Table className="min-w-full overflow-clip rounded-md ">
-					<TableHeader className="  bg-secondary uppercase  ">
-						<TableRow className="">
-							<TableHead className="w-[50px]"></TableHead>
-							<TableHead className="w-[100px]">Código</TableHead>
-							<TableHead className="w-[100px]">
-								<span className="tracking-widest">V/P/D</span>
-							</TableHead>
-							<TableHead className="">Descripción Articulo</TableHead>
-							<TableHead>Precio</TableHead>
-							<TableHead>Cantidad</TableHead>
 
-							<TableHead className="text-right">Total</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody className=" bg-background/60">
-						{transaction &&
-							allItemTransactions.map((itemTransaction, index) => {
-								if (itemTransaction.item) {
-									return (
-										<ItemTransactionRow
-											itemReaderRef={itemReaderRef}
-											ref={itemRefs.current[index]}
-											itemTransaction={itemTransaction}
-											key={itemTransaction.item.id}
-											item={itemTransaction.item}
-										/>
-									)
-								} else return null
-							})}
-					</TableBody>
-				</Table>
-			</ScrollArea>
-
-			<div className="mx-auto flex h-[11rem] w-fit gap-10 rounded-md  bg-secondary py-4 pl-4 pr-6">
+			<div className="mx-auto mt-auto flex h-[11rem] w-fit gap-10  rounded-md bg-secondary py-4 pl-4 pr-6">
 				<DiscountsPanel />
 				<div className="flex flex-col justify-between gap-2">
 					<div className="flex items-center text-2xl text-foreground/80">
@@ -396,7 +398,7 @@ export default function SellRoute() {
 					)}
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 
@@ -430,7 +432,7 @@ const ConfirmDeleteTransaction = ({
 
 const DiscountsPanel = () => {
 	return (
-		<div className="flex w-[17rem] flex-col gap-1">
+		<div className="flex h-[10rem] w-full flex-col gap-1 md:h-auto md:w-[17rem]">
 			<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md   bg-background/30 p-1">
 				<span className="select-none text-lg text-foreground/50">
 					Sin promociones aplicables
@@ -513,7 +515,7 @@ const ConfirmFinishTransaction = ({
 				<Button
 					disabled={finishedTransaction.items.length === 0}
 					size={'lg'}
-					className="text-md mt-6 flex h-full w-full gap-2 font-semibold"
+					className="text-md mt-6 flex h-[5rem] w-full gap-2 font-semibold md:h-full"
 				>
 					<Icon name="check" size="lg" />
 					<span className="">Ingresar Venta</span>
