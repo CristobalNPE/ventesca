@@ -6,6 +6,8 @@ export type IconName =
 	| 'arrow-right'
 	| 'arrow-up-down'
 	| 'arrow-up'
+	| 'arrows-maximize'
+	| 'arrows-minimize'
 	| 'avatar'
 	| 'banknote'
 	| 'camera'
