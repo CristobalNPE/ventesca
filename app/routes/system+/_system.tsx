@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
 import { NavLink, Outlet, useLoaderData } from '@remix-run/react'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import {
@@ -146,14 +146,52 @@ export default function SystemLayout() {
 			)}
 			<div className="flex-1 overflow-auto ">
 				<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-end border-b-[1px] border-foreground/5 bg-secondary p-8">
+					{/* <FullScreenToggle /> */}
 					<h1>
 						Vendedor : <span className="font-bold">{user.name}</span>
 					</h1>
 				</header>
-				<main className="p-8">
+				<main className="h-[calc(99%-4rem)] p-8">
 					<Outlet />
 				</main>
 			</div>
 		</div>
+	)
+}
+
+function FullScreenToggle() {
+	const [isFullScreen, setIsFullScreen] = useState(false)
+	useEffect(() => {
+		function onFullscreenChange() {
+			setIsFullScreen(Boolean(document.fullscreenElement))
+		}
+
+		document.addEventListener('fullscreenchange', onFullscreenChange)
+
+		return () =>
+			document.removeEventListener('fullscreenchange', onFullscreenChange)
+	}, [])
+	return (
+		<>
+			{isFullScreen ? (
+				<Button
+					className=""
+					variant={'outline'}
+					onClick={() => document.exitFullscreen()}
+				>
+					<Icon size="lg" name="arrows-minimize" className='mr-2' />
+					Pantalla Normal
+				</Button>
+			) : (
+				<Button
+					className=""
+					variant={'outline'}
+					onClick={() => document.body.requestFullscreen()}
+				>
+					<Icon size="lg" name="arrows-maximize" className='mr-2' />
+					Pantalla Completa
+				</Button>
+			)}
+		</>
 	)
 }
