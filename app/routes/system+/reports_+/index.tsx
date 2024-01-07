@@ -66,7 +66,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { createdAt: { gte: sinceDate } },
 
 		//order by completedAt if not null, else by createdAt
-		orderBy: { createdAt: 'desc' },
+		orderBy: { completedAt: 'desc' },
 	})
 
 	const totalTransactions = await prisma.transaction.count({
@@ -139,8 +139,8 @@ export default function ReportsRoute() {
 				<TableHeader className="bg-secondary ">
 					<TableRow>
 						<TableHead className="w-[20rem]">ID</TableHead>
-						<TableHead className="w-[13rem]">Fecha Inicio</TableHead>
-						{isAdmin && <TableHead>Vendedor</TableHead>}
+						<TableHead className="w-[10rem]">Fecha Inicio</TableHead>
+						{isAdmin && <TableHead className='w-[20rem]'>Vendedor</TableHead>}
 						<TableHead className="w-[10rem]">Total</TableHead>
 						<TableHead className="w-[12rem]">Estado</TableHead>
 					</TableRow>
@@ -157,11 +157,11 @@ export default function ReportsRoute() {
 							<TableCell>
 								{format(
 									new Date(transaction.createdAt),
-									"dd/MM/yyyy HH:mm' hrs.'",
+									"dd/MM/yyyy",
 								)}
 							</TableCell>
 							{isAdmin && (
-								<TableCell>
+								<TableCell className='text-ellipsis overflow-hidden'>
 									{transaction.seller ? transaction.seller.name : 'Desconocido'}
 								</TableCell>
 							)}
