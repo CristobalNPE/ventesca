@@ -163,7 +163,7 @@ export default function ReportRoute() {
 			<Button asChild variant={'outline'}>
 				<Link target='_blank' reloadDocument to={'report-pdf'}>
 					<Icon name="report-money" className="mr-2" />
-					Descargar Reporte
+					Generar Reporte
 				</Link>
 			</Button>
 		</div>
