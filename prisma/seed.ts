@@ -160,7 +160,7 @@ async function seed() {
 		data: {
 			email: 'admin@admin.dev',
 			username: 'admin',
-			name: 'Administrator',
+			name: 'Administrador Sistema Ventas',
 			password: { create: createPassword('admin123') },
 
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
@@ -172,7 +172,7 @@ async function seed() {
 		data: {
 			email: 'cristobal@dev.com',
 			username: 'cris',
-			name: 'Cristobal',
+			name: 'Cristobal Pulgar Estay',
 			password: { create: createPassword('cris123') },
 
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
