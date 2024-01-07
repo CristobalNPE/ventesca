@@ -1,10 +1,10 @@
 import {
-  Document,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-  renderToStream,
+	Document,
+	Page,
+	StyleSheet,
+	Text,
+	View,
+	renderToStream,
 } from '@react-pdf/renderer'
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { TYPE_RETURN } from '#app/components/item-transaction-row.tsx'
@@ -98,6 +98,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 const styles = StyleSheet.create({
 	page: {
 		padding: 30,
+		fontFamily: 'Helvetica',
 	},
 	title: {
 		marginBottom: 20,
@@ -105,6 +106,7 @@ const styles = StyleSheet.create({
 	},
 	titleText: {
 		marginBottom: 4,
+		fontFamily: 'Helvetica-Bold',
 		fontSize: 24,
 		textAlign: 'center',
 		fontWeight: 'black',
@@ -112,9 +114,20 @@ const styles = StyleSheet.create({
 	header: {
 		marginBottom: 20,
 	},
+	headerSection: {
+		display: 'flex',
+		flexDirection: 'row',
+		marginBottom: 4,
+	},
 	headerText: {
 		fontSize: 12,
+		textTransform: 'uppercase',
+	},
+	headerTextTitle: {
+		width: 160,
+		fontSize: 12,
 		marginBottom: 4,
+		fontFamily: 'Helvetica-Bold',
 	},
 	footer: {
 		marginVertical: 40,
@@ -124,6 +137,7 @@ const styles = StyleSheet.create({
 	},
 	footerText: {
 		fontSize: 18,
+		fontFamily: 'Helvetica-Bold'
 	},
 	table: {
 		display: 'flex',
@@ -137,7 +151,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 	},
 	tableCol: {
-		width: '20%',
+		width: '15%',
 		borderStyle: 'solid',
 		borderWidth: 1,
 		borderLeftWidth: 0,
@@ -145,12 +159,13 @@ const styles = StyleSheet.create({
 		padding: 5,
 	},
 	mainTableCol: {
-		width: '40%',
+		width: '55%',
 		borderStyle: 'solid',
 		borderWidth: 1,
 		borderLeftWidth: 0,
 		borderTopWidth: 0,
 		padding: 5,
+		textTransform: 'uppercase',
 	},
 	tableCell: {
 		fontSize: 10,
@@ -177,23 +192,36 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 			<Page size="A4" style={styles.page}>
 				{/* Title Section */}
 				<View style={styles.title}>
+					<Text style={styles.titleText}>SELIM AMAR Y CIA LIMITADA</Text>
 					<Text style={styles.titleText}>Reporte de Transacción</Text>
-					<Text style={styles.titleText}>Selim Amar y Cia Limitada</Text>
 				</View>
 				{/* Header Section */}
 				<View style={styles.header}>
-					<Text style={styles.headerText}>
-						Código de la transacción: {data.id.toUpperCase()}
-					</Text>
-					<Text style={styles.headerText}>Estado: {data.status}</Text>
-					<Text style={styles.headerText}>
-						Método de Pago: {data.paymentMethod}
-					</Text>
-					<Text style={styles.headerText}>
-						Fecha de creación: {data.createdAt.toLocaleDateString()}
-					</Text>
+					<View style={styles.headerSection}>
+						<Text style={styles.headerTextTitle}>
+							Código de la transacción:
+						</Text>{' '}
+						<Text style={styles.headerText}>{data.id.toUpperCase()}</Text>
+					</View>
+					<View style={styles.headerSection}>
+						<Text style={styles.headerTextTitle}>Estado:</Text>{' '}
+						<Text style={styles.headerText}>{data.status}</Text>
+					</View>
+					<View style={styles.headerSection}>
+						<Text style={styles.headerTextTitle}>Método de Pago:</Text>{' '}
+						<Text style={styles.headerText}>{data.paymentMethod}</Text>
+					</View>
 
-					<Text style={styles.headerText}>Vendedor: {data.seller.name}</Text>
+					<View style={styles.headerSection}>
+						<Text style={styles.headerTextTitle}>Fecha de creación:</Text>{' '}
+						<Text style={styles.headerText}>
+							{data.createdAt.toLocaleDateString()}
+						</Text>
+					</View>
+					<View style={styles.headerSection}>
+						<Text style={styles.headerTextTitle}>Vendedor:</Text>{' '}
+						<Text style={styles.headerText}>{data.seller.name}</Text>
+					</View>
 				</View>
 
 				{/* Table for Items */}
@@ -210,7 +238,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 							</View>
 							<View style={styles.tableCol}>
 								<Text style={styles.tableCell}>
-									{formatCurrency(item.item.sellingPrice)}
+									{formatCurrency(item.item.sellingPrice * item.quantity)}
 								</Text>
 							</View>
 							<View style={styles.tableCol}>
@@ -225,6 +253,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 						{shouldUsePreTotal
 							? formatCurrency(calculatePreTotal(data.items))
 							: formatCurrency(data.total)}
+							{' '}CLP
 					</Text>
 				</View>
 			</Page>
