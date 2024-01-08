@@ -22,6 +22,7 @@ import {
 	TRANSACTION_STATUS_PENDING,
 	type TransactionStatus,
 	TransactionStatusSchema,
+	ConfirmDeleteTransaction,
 } from '../sell.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 
@@ -62,7 +63,8 @@ export default function ReportRoute() {
 		transactionReport.paymentMethod,
 	)
 
-	const shouldShowCompletedAt = transactionReport.completedAt !== transactionReport.createdAt
+	const shouldShowCompletedAt =
+		transactionReport.completedAt !== transactionReport.createdAt
 	return (
 		<div>
 			<div className="flex max-w-[40rem] flex-col">
@@ -160,12 +162,17 @@ export default function ReportRoute() {
 					))}
 				</TableBody>
 			</Table>
-			<Button asChild variant={'outline'}>
-				<Link target='_blank' reloadDocument to={'report-pdf'}>
-					<Icon name="report-money" className="mr-2" />
-					Generar Reporte
-				</Link>
-			</Button>
+			<div className="mt-4 flex justify-end gap-4">
+				{transactionReport.status === TRANSACTION_STATUS_PENDING && (
+					<ConfirmDeleteTransaction transactionId={transactionReport.id} />
+				)}
+				<Button asChild variant={'outline'}>
+					<Link target="_blank" reloadDocument to={'report-pdf'}>
+						<Icon name="report-money" className="mr-2" />
+						Generar Reporte
+					</Link>
+				</Button>
+			</div>
 		</div>
 	)
 }
