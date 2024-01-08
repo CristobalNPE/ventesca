@@ -76,7 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				paymentMethod: PAYMENT_METHOD_CASH,
 				subtotal: 0,
 				total: 0,
-				discount: 0,
+				
 			},
 			select: {
 				id: true,
@@ -402,7 +402,7 @@ export default function SellRoute() {
 	)
 }
 
-const ConfirmDeleteTransaction = ({
+export const ConfirmDeleteTransaction = ({
 	transactionId,
 }: {
 	transactionId: string
@@ -411,14 +411,14 @@ const ConfirmDeleteTransaction = ({
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
 				<Button variant={'destructive'}>
-					<Icon name="trash" className="mr-2 flex-none" /> Descartar Venta
+					<Icon name="trash" className="mr-2 flex-none" /> Descartar Transacción
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Confirmar descarte de venta</AlertDialogTitle>
+					<AlertDialogTitle>Confirmar descarte de transacción</AlertDialogTitle>
 					<AlertDialogDescription>
-						Por favor confirme que desea descartar esta venta
+						Por favor confirme que desea descartar esta transacción
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
