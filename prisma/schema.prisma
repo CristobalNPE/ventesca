@@ -11,10 +11,12 @@ datasource db {
 }
 
 model Family {
-  id          String @id @default(cuid())
-  code        Int    @unique
+  id          String    @id @default(cuid())
+  code        Int       @unique
   description String
   items       Item[]
+  discount    Discount? @relation(fields: [discountId], references: [id])
+  discountId  String?
 }
 
 model Provider {
@@ -45,6 +47,8 @@ model Item {
   provider     Provider?         @relation(fields: [providerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   providerId   String?
   transactions ItemTransaction[]
+  discount     Discount?         @relation(fields: [discountId], references: [id])
+  discountId   String?
 }
 
 model Transaction {
@@ -53,7 +57,7 @@ model Transaction {
   paymentMethod String // e.g. cash, credit, debit
   subtotal      Int
   total         Int
-  discount      Int
+  discounts     Discount[]
   isDiscarded   Boolean           @default(false)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
@@ -76,6 +80,21 @@ model ItemTransaction {
   transactionId String?
 
   @@unique([itemId, transactionId])
+}
+
+model Discount {
+  id           String        @id @default(cuid())
+  type         String // e.g. percentage, fixed_amount
+  value        Float
+  description  String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  validFrom    DateTime?
+  validUntil   DateTime?
+  isActive     Boolean       @default(true)
+  items        Item[]
+  families     Family[]
+  transactions Transaction[]
 }
 
 model User {
