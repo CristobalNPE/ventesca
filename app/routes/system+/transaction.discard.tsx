@@ -102,7 +102,7 @@ export function DiscardTransaction({ id }: { id: string }) {
 			>
 				<div className="flex items-center gap-2 ">
 					<Icon name="trash" />
-					<span>Descartar Venta</span>
+					<span>Descartar Transacción</span>
 				</div>
 			</StatusButton>
 			<ErrorList errors={form.errors} id={form.errorId} />
