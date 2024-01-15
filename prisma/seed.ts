@@ -1,5 +1,6 @@
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
+import { faker } from '@faker-js/faker'
 import { parse } from 'csv-parse'
 import cuid from 'cuid'
 import fs from 'fs'
@@ -155,7 +156,7 @@ async function seed() {
 
 	console.time(`🐨 Created admin user "admin"`)
 
-	await prisma.user.create({
+	const adminUser = await prisma.user.create({
 		select: { id: true },
 		data: {
 			email: 'admin@admin.dev',
@@ -180,6 +181,93 @@ async function seed() {
 	})
 	console.timeEnd(`🐨 Created admin user "admin"`)
 
+	console.time('💰 Created transactions...')
+
+	const totalTransactions = 10000
+	const statuses = ['Finalizada','Finalizada','Finalizada', 'Cancelada']
+	const paymentMethods = ['Contado', 'Crédito']
+
+	for (let index = 0; index < totalTransactions; index++) {
+		const creationDate = getRandomDateWithinTwoYears()
+		const status = getRandomValue(statuses)
+		
+		const createdTransaction = await prisma.transaction.create({
+			data: {
+				status: status,
+				paymentMethod: getRandomValue(paymentMethods),
+				subtotal: 0,
+				total: 0,
+				isDiscarded: status === 'Cancelada',
+				createdAt: subtractMinutes(creationDate, 10),
+				updatedAt: creationDate,
+				completedAt: creationDate,
+				seller: { connect: { id: adminUser.id } },
+			},
+		})
+
+		
+		const totalItemTransactions = faker.number.int({ min: 1, max: 10 })
+		let totalItemPrice = 0
+
+		for (let index = 0; index < totalItemTransactions; index++) {
+
+
+			const itemForTransaction = await prisma.item.findFirst({
+				where: { code: faker.number.int({ min: 1, max: 5000 }) },
+				select: { code: true },
+			})	
+
+			if (!itemForTransaction) continue
+
+
+			const createdItemTransaction = await prisma.itemTransaction
+				.create({
+					data: {
+						quantity: faker.number.int({ min: 1, max: 5 }),
+						type: 'Venta',
+						totalPrice: 0,
+						item: {
+							connect: {
+								code: itemForTransaction.code,
+							},
+						},
+						transaction: {
+							connect: { id: createdTransaction.id },
+						},
+					},
+					select: { id: true, quantity: true, item: true },
+				})
+				.catch(e => null)
+
+			// update totalPrice of the transaction to be the sum of all item multiplied by their quantity
+			if (createdItemTransaction) {
+				const priceOfItem = createdItemTransaction.item?.sellingPrice ?? 0;
+				totalItemPrice = createdItemTransaction.quantity * priceOfItem;
+			}
+
+			if (totalItemPrice > 0 && createdItemTransaction) {
+				await prisma.itemTransaction.update({
+					where: { id: createdItemTransaction.id },
+					data: { totalPrice: totalItemPrice },
+				})
+			}
+
+		}
+		const transactionTotal = await prisma.itemTransaction.aggregate({
+			where: { transactionId: createdTransaction.id },
+			_sum: { totalPrice: true },
+		})
+		await prisma.transaction.update({
+			where: { id: createdTransaction.id },
+			data: {
+				subtotal: transactionTotal._sum.totalPrice ?? 0,
+				total: transactionTotal._sum.totalPrice ?? 0,
+			},
+		})
+	}
+
+	console.timeEnd('💰 Created transactions...')
+
 	console.timeEnd(`🌱 Database has been seeded`)
 }
 
@@ -191,3 +279,33 @@ seed()
 	.finally(async () => {
 		await prisma.$disconnect()
 	})
+
+function getRandomDateWithinTwoYears(): Date {
+	const now = new Date()
+	const twoYearsAgo = new Date(
+		now.getFullYear() - 2,
+		now.getMonth(),
+		now.getDate(),
+	)
+
+	const randomTime = randomDateInRange(twoYearsAgo.getTime(), now.getTime())
+	return new Date(randomTime)
+}
+
+function randomDateInRange(start: number, end: number): number {
+	return start + Math.random() * (end - start)
+}
+function getRandomValue(array: string[]): string {
+	const randomIndex = Math.floor(Math.random() * array.length)
+	return array[randomIndex]
+}
+// function subtractDays(date: Date, daysToSubtract: number): Date {
+// 	const result = new Date(date)
+// 	result.setDate(result.getDate() - daysToSubtract)
+// 	return result
+// }
+function subtractMinutes(date: Date, minutesToSubtract: number): Date {
+	const result = new Date(date)
+	result.setMinutes(result.getMinutes() - minutesToSubtract)
+	return result
+}
