@@ -76,7 +76,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				paymentMethod: PAYMENT_METHOD_CASH,
 				subtotal: 0,
 				total: 0,
-				
 			},
 			select: {
 				id: true,
@@ -529,52 +528,54 @@ const ConfirmFinishTransaction = ({
 							{finishedTransaction.id}
 						</span>
 					</AlertDialogTitle>
-					<AlertDialogDescription>
-						Confirme los datos de la venta para ingreso:
-						<div className="fex mt-4 flex-col gap-1">
-							{finishedTransaction.items.map(itemTransaction => {
-								if (itemTransaction.item) {
-									return (
-										<div className="flex gap-4" key={itemTransaction.id}>
-											<div className="flex flex-1 gap-2 overflow-clip ">
-												<span className="font-bold">
-													{itemTransaction.quantity}x
-												</span>
-												<span className="uppercase">
-													{itemTransaction.item.name}
+					<AlertDialogDescription asChild>
+						<div>
+							Confirme los datos de la venta para ingreso:
+							<div className="fex mt-4 flex-col gap-1">
+								{finishedTransaction.items.map(itemTransaction => {
+									if (itemTransaction.item) {
+										return (
+											<div className="flex gap-4" key={itemTransaction.id}>
+												<div className="flex flex-1 gap-2 overflow-clip ">
+													<span className="font-bold">
+														{itemTransaction.quantity}x
+													</span>
+													<span className="uppercase">
+														{itemTransaction.item.name}
+													</span>
+												</div>
+												<span className="w-[4rem] text-right">
+													{formatCurrency(itemTransaction.totalPrice)}
 												</span>
 											</div>
-											<span className="w-[4rem] text-right">
-												{formatCurrency(itemTransaction.totalPrice)}
-											</span>
-										</div>
-									)
-								}
-								return null
-							})}
-						</div>
-						<div className="mt-4 flex flex-col gap-1 ">
-							<div className="flex gap-4">
-								<span className="w-[9rem] font-bold">Vendedor:</span>
-								<span>{finishedTransaction.seller?.name}</span>
+										)
+									}
+									return null  
+								})}
 							</div>
-							<div className="flex gap-4">
-								<span className="w-[9rem] font-bold">Fecha:</span>
-								<span>
-									{format(
-										new Date(finishedTransaction.createdAt),
-										"d 'de' MMMM 'del' yyyy'",
-										{ locale: es },
-									)}
-								</span>
-							</div>
-							<div className="flex gap-4">
-								<span className="w-[9rem] font-bold">Método de Pago:</span>
-								<span>{finishedTransaction.paymentMethod}</span>
-							</div>
-							<div className="flex gap-4">
-								<span className="w-[9rem] font-bold">Total:</span>
-								<span>{formatCurrency(total)}</span>
+							<div className="mt-4 flex flex-col gap-1 ">
+								<div className="flex gap-4">
+									<span className="w-[9rem] font-bold">Vendedor:</span>
+									<span>{finishedTransaction.seller?.name}</span>
+								</div>
+								<div className="flex gap-4">
+									<span className="w-[9rem] font-bold">Fecha:</span>
+									<span>
+										{format(
+											new Date(),
+											"d 'de' MMMM 'del' yyyy'",
+											{ locale: es },
+										)}
+									</span>
+								</div>
+								<div className="flex gap-4">
+									<span className="w-[9rem] font-bold">Método de Pago:</span>
+									<span>{finishedTransaction.paymentMethod}</span>
+								</div>
+								<div className="flex gap-4">
+									<span className="w-[9rem] font-bold">Total:</span>
+									<span>{formatCurrency(total)}</span>
+								</div>
 							</div>
 						</div>
 					</AlertDialogDescription>
