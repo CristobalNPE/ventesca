@@ -1,21 +1,17 @@
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '#app/components/ui/table.tsx'
+import { DataTable, DataTableSkeleton } from '#app/components/data-table.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import {
 	NavLink,
 	useLoaderData,
 	useLocation,
-	useNavigate,
+	useNavigation,
 } from '@remix-run/react'
+import { ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
 import {
 	TRANSACTION_STATUS_COMPLETED,
@@ -25,12 +21,13 @@ import {
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
+	console.log(userId)
 
 	const url = new URL(request.url)
 	let since = url.searchParams.get('since')
 
 	if (!since) {
-		since = 'today'
+		throw redirect('/system/reports?since=today')
 	}
 
 	// map since to date
@@ -55,19 +52,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	//If user is admin, gets all, otherwise only gets their own
 
-	const transactions = await prisma.transaction.findMany({
-		select: {
-			id: true,
-			status: true,
-			createdAt: true,
-			total: true,
-			seller: { select: { name: true } },
-		},
-		where: { createdAt: { gte: sinceDate } },
+	const transactions = await prisma.transaction
+		.findMany({
+			select: {
+				id: true,
+				status: true,
+				createdAt: true,
+				total: true,
+				seller: { select: { name: true } },
+			},
+			where: { completedAt: { gte: sinceDate } },
 
-		//order by completedAt if not null, else by createdAt
-		orderBy: { completedAt: 'desc' },
-	})
+			//order by completedAt if not null, else by createdAt
+			orderBy: { completedAt: 'desc' },
+		})
+		.then(u => u)
 
 	const totalTransactions = await prisma.transaction.count({
 		where: { createdAt: { gte: sinceDate } },
@@ -76,13 +75,132 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ transactions, totalTransactions })
 }
 
-export default function ReportsRoute() {
-	const isAdmin = true
-	const { transactions, totalTransactions } = useLoaderData<typeof loader>()
-	const navigate = useNavigate()
+const columns: ColumnDef<{}>[] = [
+	{
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					ID
+					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
+				</Button>
+			)
+		},
+		cell: ({ row }) => {
+			return <div className="uppercase">{row.getValue('id')}</div>
+		},
 
-	// Seller should only see their own transactions
-	// Admin should see all transactions
+		accessorKey: 'id',
+	},
+
+	{
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Fecha creación
+					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
+				</Button>
+			)
+		},
+		cell: ({ row }) => {
+			return (
+				<div className="">
+					{format(new Date(row.getValue('createdAt')), 'dd/MM/yyyy')}
+				</div>
+			)
+		},
+
+		accessorKey: 'createdAt',
+	},
+
+	{
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					className=" text-right"
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Vendedor
+					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
+				</Button>
+			)
+		},
+
+		accessorKey: 'seller.name',
+	},
+	{
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					className=" text-right"
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Total
+					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
+				</Button>
+			)
+		},
+		cell: ({ row }) => {
+			const shouldShowTotal =
+				row.getValue('status') === TRANSACTION_STATUS_COMPLETED
+			return (
+				<div className="text-left font-bold">
+					{shouldShowTotal && formatCurrency(row.getValue('total'))}
+				</div>
+			)
+		},
+
+		accessorKey: 'total',
+	},
+
+	//
+	{
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					className="flex w-full justify-end px-2 text-right"
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Estado
+					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
+				</Button>
+			)
+		},
+
+		cell: ({ row }) => {
+			return (
+				<div
+					className={cn(
+						'',
+						row.getValue('status') === TRANSACTION_STATUS_PENDING &&
+							'text-orange-400',
+						row.getValue('status') === TRANSACTION_STATUS_COMPLETED &&
+							'text-primary',
+						row.getValue('status') === TRANSACTION_STATUS_DISCARDED &&
+							'text-destructive',
+					)}
+				>
+					{row.getValue('status')}
+				</div>
+			)
+		},
+
+		accessorKey: 'status',
+	},
+	//
+]
+
+export default function ReportsRoute() {
+	const isAdmin = false
+	const { transactions, totalTransactions } = useLoaderData<typeof loader>()
 
 	const filters = [
 		{
@@ -105,6 +223,8 @@ export default function ReportsRoute() {
 
 	const { search } = useLocation()
 	const since = new URLSearchParams(search).get('since')
+	const navigation = useNavigation()
+	const isLoadingAll = navigation.state === 'loading'
 
 	return (
 		<div className="max-w-[90rem]">
@@ -135,58 +255,19 @@ export default function ReportsRoute() {
 					))}
 				</div>
 			</div>
-			<Table>
-				<TableHeader className="bg-secondary ">
-					<TableRow>
-						<TableHead className="w-[20rem]">ID</TableHead>
-						<TableHead className="w-[10rem]">Fecha Inicio</TableHead>
-						{isAdmin && <TableHead className='w-[20rem]'>Vendedor</TableHead>}
-						<TableHead className="w-[10rem]">Total</TableHead>
-						<TableHead className="w-[12rem]">Estado</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{transactions.map(transaction => (
-						<TableRow key={transaction.id}>
-							<TableCell
-								className="cursor-pointer uppercase hover:bg-secondary"
-								onClick={() => navigate(transaction.id)}
-							>
-								{transaction.id}
-							</TableCell>
-							<TableCell>
-								{format(
-									new Date(transaction.createdAt),
-									"dd/MM/yyyy",
-								)}
-							</TableCell>
-							{isAdmin && (
-								<TableCell className='text-ellipsis overflow-hidden'>
-									{transaction.seller ? transaction.seller.name : 'Desconocido'}
-								</TableCell>
-							)}
-							<TableCell className="font-bold">
-								{transaction.status === TRANSACTION_STATUS_COMPLETED
-									? formatCurrency(transaction.total)
-									: null}
-							</TableCell>
-							<TableCell
-								className={cn(
-									'',
-									transaction.status === TRANSACTION_STATUS_PENDING &&
-										'bg-orange-400/10',
-									transaction.status === TRANSACTION_STATUS_COMPLETED &&
-										'bg-primary/10',
-									transaction.status === TRANSACTION_STATUS_DISCARDED &&
-										'bg-destructive/10',
-								)}
-							>
-								{transaction.status}
-							</TableCell>
-						</TableRow>
-					))}
-				</TableBody>
-			</Table>
+			{isLoadingAll ? (
+				<DataTableSkeleton />
+			) : (
+				<DataTable
+					withItemSearch={false}
+					columns={columns}
+					data={transactions}
+					searchFilter={{
+						description: 'ID',
+						key: 'id',
+					}}
+				/>
+			)}
 		</div>
 	)
 }
