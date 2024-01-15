@@ -19,14 +19,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const now = new Date()
 	const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-	
+
 	const startOfWeek = new Date(
 		now.getFullYear(),
 		now.getMonth(),
 		now.getDate() - now.getDay(),
-		)
-		console.log(startOfWeek)
-	
+	)
+	console.log(startOfWeek)
+
 	const endOfWeek = new Date(
 		startOfWeek.getFullYear(),
 		startOfWeek.getMonth(),
@@ -37,25 +37,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 	const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
 
-
 	console.log(startOfDay)
 	console.log(startOfWeek)
 	console.log(endOfWeek)
 	console.log(startOfMonth)
 	console.log(endOfMonth)
-
-	const earnings = await prisma.transaction.aggregate({
-		where: {
-			status: TRANSACTION_STATUS_COMPLETED,
-			completedAt: {
-				gte: startOfDay,
-				lt: new Date(),
-			},
-		},
-		_sum: {
-			total: true,
-		},
-	})
 
 	const dailyEarnings = await prisma.transaction.groupBy({
 		by: ['completedAt'],
@@ -110,13 +96,10 @@ export default function ControlCenter() {
 	const isAdmin = true
 
 	const { itemsWithZeroStock, dailyEarnings, weeklyEarnings, monthlyEarnings } =
-	
-	useLoaderData<typeof loader>()
-	
+		useLoaderData<typeof loader>()
+
 	// sum total of all finished transactions
 
-	
-	
 	const totalDailyEarnings = dailyEarnings.reduce(
 		(acc, curr) => acc + curr._sum.total!,
 		0,
@@ -129,9 +112,9 @@ export default function ControlCenter() {
 		(acc, curr) => acc + curr._sum.total!,
 		0,
 	)
-	console.log(totalDailyEarnings);
-	console.log(totalWeeklyEarnings);
-	console.log(totalMonthlyEarnings);
+	console.log(totalDailyEarnings)
+	console.log(totalWeeklyEarnings)
+	console.log(totalMonthlyEarnings)
 
 	return (
 		<>
