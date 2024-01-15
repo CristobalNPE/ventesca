@@ -6,6 +6,15 @@ import {
 } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 
+import { TYPE_SELL } from '#app/components/item-transaction-row.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
+import { Label } from '#app/components/ui/label.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
+import { getTransactionId } from '#app/utils/transaction.server.ts'
 import {
 	forwardRef,
 	useEffect,
@@ -14,18 +23,7 @@ import {
 	useRef,
 	useState,
 } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
-import { TYPE_SELL } from '#app/components/item-transaction-row.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { Label } from '#app/components/ui/label.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
-import { getTransactionId } from '#app/utils/transaction.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	throw redirect('/system/sell')
@@ -41,7 +39,6 @@ export async function action({ request }: ActionFunctionArgs) {
 	invariantResponse(transactionId, 'Debe haber una venta en progreso.')
 
 	const formData = await request.formData()
-	await validateCSRF(formData, request.headers)
 
 	const result = SearchSchema.safeParse({
 		search: Number(formData.get('search')),
@@ -167,7 +164,6 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 					className="flex  items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
 					onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
 				>
-					<AuthenticityTokenInput />
 					<div className="flex-1">
 						<Label htmlFor={id} className="sr-only">
 							Search
