@@ -183,7 +183,7 @@ async function seed() {
 
 	console.time('💰 Created transactions...')
 
-	const totalTransactions = 10000
+	const totalTransactions = 100
 	const statuses = ['Finalizada','Finalizada','Finalizada', 'Cancelada']
 	const paymentMethods = ['Contado', 'Crédito']
 
