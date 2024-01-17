@@ -7,6 +7,25 @@ import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
+import { z } from 'zod'
+
+export const DISCOUNT_TYPE_PERCENTAGE = 'PERCENTAGE'
+export const DISCOUNT_TYPE_FIXED = 'FIXED'
+const discountTypes = [DISCOUNT_TYPE_PERCENTAGE, DISCOUNT_TYPE_FIXED] as const
+export const DiscountTypeSchema = z.enum(discountTypes)
+export type DiscountType = z.infer<typeof DiscountTypeSchema>
+
+export const DISCOUNT_TARGET_UNIT = 'BY-UNIT'
+export const DISCOUNT_TARGET_TOTAL = 'BY-TOTAL'
+const discountTargets = [DISCOUNT_TARGET_UNIT, DISCOUNT_TARGET_TOTAL] as const
+export const DiscountTargetSchema = z.enum(discountTargets)
+export type DiscountTarget = z.infer<typeof DiscountTargetSchema>
+
+export const DISCOUNT_REACH_ITEM = 'BY-ITEM'
+export const DISCOUNT_REACH_CATEGORY = 'BY-CATEGORY'
+const discountReaches = [DISCOUNT_REACH_ITEM, DISCOUNT_REACH_CATEGORY] as const
+export const DiscountReachSchema = z.enum(discountReaches)
+export type DiscountReach = z.infer<typeof DiscountReachSchema>
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
