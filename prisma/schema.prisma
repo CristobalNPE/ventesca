@@ -85,8 +85,11 @@ model ItemTransaction {
 model Discount {
   id           String        @id @default(cuid())
   type         String // e.g. percentage, fixed_amount
+  target       String // e.g. unit, total
+  reach        String // e.g. item,category(family)
   value        Float
   description  String
+  minQuantity  Int
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   validFrom    DateTime?
