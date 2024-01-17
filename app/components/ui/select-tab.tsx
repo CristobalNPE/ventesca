@@ -14,6 +14,7 @@ export const SelectTab = ({
 	selected: string
 	setSelected: (value: string) => void
 }) => {
+
 	return (
 		<div className="flex w-full select-none  justify-between rounded-md bg-background p-1 text-sm">
 			{options.map((option, index) => (
@@ -23,7 +24,7 @@ export const SelectTab = ({
 					htmlFor={option.value}
 				>
 					<input
-						defaultChecked={index === 0}
+						defaultChecked={selected === option.value}
 						className="appearance-none"
 						type="radio"
 						name={name}
