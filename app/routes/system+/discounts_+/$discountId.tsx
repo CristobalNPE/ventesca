@@ -4,6 +4,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse } from '#app/utils/misc.tsx'
 import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
+import { DISCOUNT_REACH_ITEM } from './index.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -50,7 +51,7 @@ export default function DiscountRoute() {
       <p>{discount.validUntil}</p>
       <p>{discount.isActive?"true":"false"}</p>
 
-			{discount.reach === 'by-item' ? (
+			{discount.reach === DISCOUNT_REACH_ITEM ? (
 				<div className='bg-secondary mt-5'>
 					<h2>Items asociados</h2>
 					<ul>
