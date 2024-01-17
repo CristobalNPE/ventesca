@@ -13,9 +13,9 @@ import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { Discount } from '@prisma/client'
 import {
 	json,
+	redirect,
 	type ActionFunctionArgs,
 	type SerializeFrom,
-	redirect,
 } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
 import { addDays } from 'date-fns'
@@ -24,6 +24,17 @@ import { DateRange } from 'react-day-picker'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { CategoryPicker } from './category-picker.tsx'
+import {
+	DISCOUNT_REACH_CATEGORY,
+	DISCOUNT_REACH_ITEM,
+	DISCOUNT_TARGET_TOTAL,
+	DISCOUNT_TARGET_UNIT,
+	DISCOUNT_TYPE_FIXED,
+	DISCOUNT_TYPE_PERCENTAGE,
+	DiscountReachSchema,
+	DiscountTargetSchema,
+	DiscountTypeSchema,
+} from './index.tsx'
 import { ItemPicker } from './item-picker.tsx'
 
 const descriptionMinLength = 3
@@ -55,13 +66,11 @@ const DiscountEditorSchema = z.object({
 		.max(100, { message: 'El máximo aplicable es 100.' })
 		.optional(),
 
-	discountType: z.string(),
-	discountReach: z.string(),
-	discountTarget: z.string(),
+	discountType: DiscountTypeSchema,
+	discountReach: DiscountReachSchema,
+	discountTarget: DiscountTargetSchema,
 	validFrom: z.coerce.date(),
 	validUntil: z.coerce.date(),
-	// validFrom: z.string().datetime(),
-	// validUntil: z.string().datetime(),
 	itemIds: z.string().optional(),
 	categoryIds: z.string().optional(),
 })
@@ -119,9 +128,9 @@ export async function action({ request }: ActionFunctionArgs) {
 	} = submission.value
 
 	const isCategoryDiscount =
-		discountReach === 'by-category' && categoryIds !== undefined
+		discountReach === DISCOUNT_REACH_CATEGORY && categoryIds !== undefined
 
-	const isFixedDiscount = discountType === 'fixed'
+	const isFixedDiscount = discountType === DISCOUNT_TYPE_FIXED
 
 	const value = isFixedDiscount ? fixedValue : porcentualValue
 	invariant(value !== undefined, 'value should be defined')
@@ -140,6 +149,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				type: discountType,
 				validFrom,
 				validUntil,
+				isActive: true,
 				families: {
 					connect: categoryIdsArray.map(id => ({ id })),
 				},
@@ -152,6 +162,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				target: discountTarget,
 				type: discountType,
 				validFrom,
+				isActive: true,
 				validUntil,
 				families: {
 					connect: categoryIdsArray.map(id => ({ id })),
@@ -232,11 +243,15 @@ export function DiscountsEditor({
 		},
 	})
 
-	const [selectedDiscountType, setSelectedDiscountType] = useState('percentage')
-	const [selectedDiscountReach, setSelectedDiscountReach] =
-		useState('by-category')
-	const [selectedDiscountTarget, setSelectedDiscountTarget] =
-		useState('by-unit')
+	const [selectedDiscountType, setSelectedDiscountType] = useState(
+		DISCOUNT_TYPE_PERCENTAGE,
+	)
+	const [selectedDiscountReach, setSelectedDiscountReach] = useState(
+		DISCOUNT_REACH_CATEGORY,
+	)
+	const [selectedDiscountTarget, setSelectedDiscountTarget] = useState(
+		DISCOUNT_TARGET_TOTAL,
+	)
 
 	const [addedItemsIds, setAddedItemsIds] = useState<string>('')
 	const [addedCategoriesIds, setAddedCategoriesIds] = useState<string>('')
@@ -257,8 +272,8 @@ export function DiscountsEditor({
 					selected={selectedDiscountType}
 					setSelected={setSelectedDiscountType}
 					options={[
-						{ label: 'Porcentaje', value: 'percentage' },
-						{ label: 'Fijo', value: 'fixed' },
+						{ label: 'Porcentaje', value: DISCOUNT_TYPE_PERCENTAGE },
+						{ label: 'Fijo', value: DISCOUNT_TYPE_FIXED },
 					]}
 				/>
 				<SelectTab
@@ -266,8 +281,8 @@ export function DiscountsEditor({
 					selected={selectedDiscountTarget}
 					setSelected={setSelectedDiscountTarget}
 					options={[
-						{ label: 'Por Unidad', value: 'by-unit' },
-						{ label: 'Al Total', value: 'by-total' },
+						{ label: 'Por Unidad', value: DISCOUNT_TARGET_UNIT },
+						{ label: 'Al Total', value: DISCOUNT_TARGET_TOTAL },
 					]}
 				/>
 			</div>
@@ -276,12 +291,12 @@ export function DiscountsEditor({
 				selected={selectedDiscountReach}
 				setSelected={setSelectedDiscountReach}
 				options={[
-					{ label: 'Por Categoría', value: 'by-category' },
-					{ label: 'Por Artículo(s)', value: 'by-item' },
+					{ label: 'Por Categoría', value: DISCOUNT_REACH_CATEGORY },
+					{ label: 'Por Artículo(s)', value: DISCOUNT_REACH_ITEM },
 				]}
 			/>
 
-			{selectedDiscountReach === 'by-item' ? (
+			{selectedDiscountReach === DISCOUNT_REACH_ITEM ? (
 				<ItemPicker setAddedItemsIds={setAddedItemsIds} />
 			) : (
 				<CategoryPicker setAddedCategoriesIds={setAddedCategoriesIds} />
@@ -313,12 +328,12 @@ export function DiscountsEditor({
 					name="validUntil"
 					value={discountPeriod?.to?.toISOString()}
 				/>
-				{selectedDiscountReach === 'by-item' ? (
+				{selectedDiscountReach === DISCOUNT_REACH_ITEM ? (
 					<input type="hidden" name="itemIds" value={addedItemsIds} />
 				) : (
 					<input type="hidden" name="categoryIds" value={addedCategoriesIds} />
 				)}
-				{selectedDiscountType === 'fixed' ? (
+				{selectedDiscountType === DISCOUNT_TYPE_FIXED ? (
 					<Field
 						labelProps={{ children: 'Valor descuento fijo' }}
 						inputProps={{
