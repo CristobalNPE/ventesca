@@ -10,6 +10,7 @@ export type IconName =
 	| 'arrows-minimize'
 	| 'avatar'
 	| 'banknote'
+	| 'calendar'
 	| 'camera'
 	| 'check'
 	| 'checks'
