@@ -181,7 +181,7 @@ export default function DiscountsPage() {
 						<Button asChild>
 							<Link to="new">
 								<Icon name="plus" className="mr-2" />
-								Crear Promoción
+								Ingresar Promoción
 							</Link>
 						</Button>
 					</div>
