@@ -84,11 +84,13 @@ export async function action({ request }: ActionFunctionArgs) {
 			transaction: { connect: { id: transactionId } },
 			quantity: 1,
 			totalPrice: item.sellingPrice ?? 0, //Can be null because of bad DB data, but we don't want to crash the app.
+			totalDiscount: 0,
 		},
 		select: {
 			id: true,
 			type: true,
 			quantity: true,
+			totalDiscount: true,
 			item: {
 				select: {
 					id: true,
