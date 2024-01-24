@@ -7,7 +7,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { invariant, useIsPending } from '#app/utils/misc.tsx'
+import { formatCurrency, invariant, useIsPending } from '#app/utils/misc.tsx'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { Discount } from '@prisma/client'
@@ -37,22 +37,19 @@ import {
 } from './index.tsx'
 import { ItemPicker } from './item-picker.tsx'
 
-const descriptionMinLength = 3
-const descriptionMaxLength = 100
-
 const DiscountEditorSchema = z.object({
 	id: z.string().optional(),
 	minQuantity: z
 		.number({ required_error: 'Campo obligatorio' })
 		.min(1, { message: 'El mínimo aplicable es 1.' }),
-	description: z
-		.string({ required_error: 'Campo obligatorio' })
-		.min(descriptionMinLength, {
-			message: `Debe tener al menos ${descriptionMinLength} caracteres`,
-		})
-		.max(descriptionMaxLength, {
-			message: `Debe tener un máximo de ${descriptionMaxLength} caracteres`,
-		}),
+	// description: z
+	// 	.string({ required_error: 'Campo obligatorio' })
+	// 	.min(descriptionMinLength, {
+	// 		message: `Debe tener al menos ${descriptionMinLength} caracteres`,
+	// 	})
+	// 	.max(descriptionMaxLength, {
+	// 		message: `Debe tener un máximo de ${descriptionMaxLength} caracteres`,
+	// 	}),
 
 	fixedValue: z
 		.number({ required_error: 'Campo obligatorio' })
@@ -114,7 +111,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const {
 		minQuantity,
-		description,
+
 		discountReach,
 		discountTarget,
 		discountType,
@@ -134,6 +131,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const value = isFixedDiscount ? fixedValue : porcentualValue
 	invariant(value !== undefined, 'value should be defined')
+
+	///
+	const parsedValue =
+		discountType === DISCOUNT_TYPE_PERCENTAGE
+			? `${porcentualValue}%`
+			: `${formatCurrency(fixedValue ?? 0)}`
+
+	const parsedReach =
+		discountReach === DISCOUNT_REACH_ITEM
+			? 'artículos asociados'
+			: 'categorías asociadas'
+	const parsedTarget =
+		discountTarget === DISCOUNT_TARGET_TOTAL ? 'AL TOTAL' : 'P/ART'
+
+	const description = `${parsedValue} DESC. ${parsedTarget} ${parsedReach} MIN ${minQuantity}. `
+	///
 
 	if (isCategoryDiscount) {
 		const categoryIdsArray = categoryIds.split(',')
@@ -366,7 +379,7 @@ export function DiscountsEditor({
 					}}
 					errors={fields.minQuantity.errors}
 				/>
-				<Field
+				{/* <Field
 					labelProps={{ children: 'Nombre / Descripción' }}
 					inputProps={{
 						...conform.input(fields.description, {
@@ -374,7 +387,7 @@ export function DiscountsEditor({
 						}),
 					}}
 					errors={fields.description.errors}
-				/>
+				/> */}
 			</Form>
 
 			<DatePickerWithRange
