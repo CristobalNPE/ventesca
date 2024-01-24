@@ -16,6 +16,7 @@
     "prisma:studio": "prisma studio",
     "format": "prettier --write .",
     "lint": "eslint .",
+    "cook": "npx prisma generate && npx prisma db push --force-reset && npx prisma db seed && npm run dev",
     "setup": "npm run build && prisma generate && prisma migrate deploy && prisma db seed && playwright install",
     "start": "cross-env NODE_ENV=production node .",
     "start:mocks": "cross-env NODE_ENV=production MOCKS=true tsx .",
