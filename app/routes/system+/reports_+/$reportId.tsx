@@ -152,7 +152,7 @@ export default function ReportRoute() {
 							<TableCell className="font-medium">
 								{itemTransaction.item?.code}
 							</TableCell>
-							<TableCell>{itemTransaction.item?.name}</TableCell>
+							<TableCell className='uppercase'>{itemTransaction.item?.name}</TableCell>
 							<TableCell>{itemTransaction.quantity}</TableCell>
 							<TableCell>{itemTransaction.type}</TableCell>
 							<TableCell className="text-right">
