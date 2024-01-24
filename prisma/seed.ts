@@ -197,6 +197,7 @@ async function seed() {
 				paymentMethod: getRandomValue(paymentMethods),
 				subtotal: 0,
 				total: 0,
+				totalDiscount:0,
 				isDiscarded: status === 'Cancelada',
 				createdAt: subtractMinutes(creationDate, 10),
 				updatedAt: creationDate,
@@ -226,6 +227,7 @@ async function seed() {
 						quantity: faker.number.int({ min: 1, max: 5 }),
 						type: 'Venta',
 						totalPrice: 0,
+						totalDiscount: 0,
 						item: {
 							connect: {
 								code: itemForTransaction.code,
