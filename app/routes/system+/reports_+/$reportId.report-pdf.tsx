@@ -15,6 +15,8 @@ export type TransactionReportDataType = {
 	id: string
 	status: string
 	createdAt: Date
+	totalDiscount: number
+	subtotal: number
 	total: number
 	paymentMethod: string
 	seller: {
@@ -24,12 +26,15 @@ export type TransactionReportDataType = {
 		id: string
 		quantity: number
 		type: string
+		totalPrice: number
+		totalDiscount: number
 		item: {
 			id: string
 			name: string
 			price: number
 			stock: number
 			sellingPrice: number
+
 			family: {
 				description: string
 				id: string
@@ -42,7 +47,7 @@ export type TransactionReportDataType = {
 	}>
 }
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
 	const transactionReportData = await prisma.transaction.findUnique({
 		where: { id: params.reportId },
 		select: {
@@ -50,6 +55,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			status: true,
 			createdAt: true,
 			total: true,
+			subtotal: true,
+			totalDiscount: true,
 			paymentMethod: true,
 			seller: { select: { name: true } },
 			items: {
@@ -57,7 +64,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 					id: true,
 					quantity: true,
 					type: true,
-
+					totalDiscount: true,
+					totalPrice: true,
 					item: {
 						select: {
 							id: true,
@@ -132,12 +140,24 @@ const styles = StyleSheet.create({
 	footer: {
 		marginVertical: 40,
 		display: 'flex',
-		justifyContent: 'flex-end',
+		gap: 4,
 		alignItems: 'flex-end',
 	},
-	footerText: {
+	footerTextTitle: {
+	
+		fontFamily: 'Helvetica-Bold',
+	},
+
+	footerSection: {
+		display: 'flex',
+		flexDirection: 'row',
 		fontSize: 18,
-		fontFamily: 'Helvetica-Bold'
+		fontFamily: 'Helvetica',
+	},
+	footerText: {
+		width: 150,
+		fontFamily: 'Helvetica',
+		textAlign: 'right',
 	},
 	table: {
 		display: 'flex',
@@ -238,7 +258,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 							</View>
 							<View style={styles.tableCol}>
 								<Text style={styles.tableCell}>
-									{formatCurrency(item.item.sellingPrice * item.quantity)}
+									{formatCurrency(item.totalPrice)}
 								</Text>
 							</View>
 							<View style={styles.tableCol}>
@@ -248,13 +268,31 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 					))}
 				</View>
 				<View style={styles.footer}>
-					<Text style={styles.footerText}>
-						Total:{' '}
-						{shouldUsePreTotal
-							? formatCurrency(calculatePreTotal(data.items))
-							: formatCurrency(data.total)}
-							{' '}CLP
-					</Text>
+					{data.status === TRANSACTION_STATUS_COMPLETED && (
+						<>
+							<View style={styles.footerSection}>
+								<Text style={styles.footerTextTitle}>Subtotal:</Text>{' '}
+								<Text style={styles.footerText}>
+									{formatCurrency(data.subtotal)} CLP
+								</Text>
+							</View>
+							<View style={styles.footerSection}>
+								<Text style={styles.footerTextTitle}>Descuentos:</Text>{' '}
+								<Text style={styles.footerText}>
+									{formatCurrency(data.totalDiscount)} CLP
+								</Text>
+							</View>
+						</>
+					)}
+					<View style={styles.footerSection}>
+						<Text style={styles.footerTextTitle}>Total:</Text>
+						<Text style={styles.footerText}>
+							{shouldUsePreTotal
+								? formatCurrency(calculatePreTotal(data.items))
+								: formatCurrency(data.total)}{' '}
+							CLP
+						</Text>
+					</View>
 				</View>
 			</Page>
 		</Document>
