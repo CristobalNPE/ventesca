@@ -1,12 +1,15 @@
 import {
-	SerializeFrom,
+	type SerializeFrom,
 	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Link, useFetcher, useLoaderData } from '@remix-run/react'
+import { Link, useFetcher, useLoaderData, useNavigate } from '@remix-run/react'
 
-import { ItemTransactionRow } from '#app/components/item-transaction-row.tsx'
+import {
+	ItemProps,
+	ItemTransactionRow,
+} from '#app/components/item-transaction-row.tsx'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -43,6 +46,7 @@ import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
+import { Discount } from '@prisma/client'
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
 export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
 export const TRANSACTION_STATUS_DISCARDED = 'Cancelada'
@@ -74,6 +78,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				seller: { connect: { id: userId } },
 				status: TRANSACTION_STATUS_PENDING,
 				paymentMethod: PAYMENT_METHOD_CASH,
+				totalDiscount: 0,
 				subtotal: 0,
 				total: 0,
 			},
@@ -88,7 +93,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					select: {
 						id: true,
 						type: true,
-						item: true,
+						totalDiscount: true,
+						item: {
+							select: {
+								id: true,
+								code: true,
+								name: true,
+								sellingPrice: true,
+								stock: true,
+								discount: true,
+								family: { select: { discount: true } },
+							},
+						},
 
 						quantity: true,
 						totalPrice: true,
@@ -116,6 +132,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			status: true,
 			createdAt: true,
 			paymentMethod: true,
+			totalDiscount: true,
 			total: true,
 			seller: { select: { name: true } },
 			items: {
@@ -124,6 +141,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					type: true,
 					quantity: true,
 					totalPrice: true,
+					totalDiscount: true,
 					item: {
 						select: {
 							id: true,
@@ -131,6 +149,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 							name: true,
 							sellingPrice: true,
 							stock: true,
+							discount: true,
+							family: { select: { discount: true } },
 						},
 					},
 				},
@@ -151,6 +171,8 @@ const SetPaymentMethodSchema = z.object({
 const CompleteTransactionSchema = z.object({
 	intent: z.string(),
 	total: z.coerce.number(),
+	subtotal: z.coerce.number(),
+	totalDiscount: z.coerce.number(),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -190,6 +212,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		const completeTransactionResult = CompleteTransactionSchema.safeParse({
 			intent: formData.get('intent'),
 			total: formData.get('total'),
+			subtotal: formData.get('subtotal'),
+			totalDiscount: formData.get('totalDiscount'),
 		})
 
 		if (!completeTransactionResult.success) {
@@ -203,12 +227,15 @@ export async function action({ request }: ActionFunctionArgs) {
 				},
 			)
 		}
-		const { total } = completeTransactionResult.data
+		const { total, subtotal, totalDiscount } = completeTransactionResult.data
 		await prisma.transaction.update({
 			where: { id: transactionId },
 			data: {
 				status: TRANSACTION_STATUS_COMPLETED,
 				total,
+				subtotal,
+				totalDiscount,
+
 				completedAt: new Date(),
 			},
 		})
@@ -244,13 +271,49 @@ export default function SellRoute() {
 
 	let allItemTransactions = transaction.items
 
-	const discount = 0
+	function hasMinQuantity(
+		discount: SerializeFrom<Discount> | null | undefined,
+	): discount is SerializeFrom<Discount> {
+		return discount?.minQuantity !== undefined
+	}
 
-	const subtotal = allItemTransactions
+	const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
+		const familyDiscount = itemTransaction.item?.family?.discount
+		const itemDiscount = itemTransaction.item?.discount
+
+		const isValidFamilyDiscount =
+			hasMinQuantity(familyDiscount) &&
+			familyDiscount.minQuantity <= itemTransaction.quantity
+		const isValidItemDiscount =
+			hasMinQuantity(itemDiscount) &&
+			itemDiscount.minQuantity <= itemTransaction.quantity
+
+		const allDiscounts: SerializeFrom<Discount>[] = []
+		if (isValidFamilyDiscount) {
+			allDiscounts.push(familyDiscount)
+		}
+		if (isValidItemDiscount) {
+			allDiscounts.push(itemDiscount)
+		}
+
+		const validDiscounts = allDiscounts.filter(Boolean)
+		return validDiscounts
+	})
+
+	const discounts = validDiscounts.filter(
+		(discount, index, discounts) =>
+			discounts.findIndex(d => d.id === discount.id) === index,
+	)
+
+	const discount = allItemTransactions
+		.map(itemTransaction => itemTransaction.totalDiscount)
+		.reduce((a, b) => a + b, 0)
+
+	const total = allItemTransactions
 		.map(itemTransaction => itemTransaction.totalPrice)
 		.reduce((a, b) => a + b, 0)
 
-	const total = subtotal - discount
+	const subtotal = total + discount
 
 	// This is so we can focus the last element in the array automatically
 	const itemRefs = useRef<React.RefObject<HTMLTableRowElement>[]>([])
@@ -355,7 +418,7 @@ export default function SellRoute() {
 												ref={itemRefs.current[index]}
 												itemTransaction={itemTransaction}
 												key={itemTransaction.item.id}
-												item={itemTransaction.item}
+												item={itemTransaction.item as SerializeFrom<ItemProps>}
 											/>
 										)
 									} else return null
@@ -365,8 +428,8 @@ export default function SellRoute() {
 				</ScrollArea>
 			</div>
 
-			<div className="mx-auto mt-auto flex h-[11rem] w-fit gap-10  rounded-md bg-secondary py-4 pl-4 pr-6">
-				<DiscountsPanel />
+			<div className="mx-auto mt-auto flex h-[11rem] w-fit gap-8  rounded-md bg-secondary py-4 pl-4 pr-6">
+				<DiscountsPanel activeDiscounts={discounts} />
 				<div className="flex flex-col justify-between gap-2">
 					<div className="flex items-center text-2xl text-foreground/80">
 						<span className="w-[12rem] pl-2">Subtotal:</span>
@@ -393,6 +456,8 @@ export default function SellRoute() {
 						<ConfirmFinishTransaction
 							transaction={{ transaction }}
 							total={total}
+							subtotal={subtotal}
+							totalDiscount={discount}
 						/>
 					)}
 				</div>
@@ -429,14 +494,41 @@ export const ConfirmDeleteTransaction = ({
 	)
 }
 
-const DiscountsPanel = () => {
+const DiscountsPanel = ({
+	activeDiscounts,
+}: {
+	activeDiscounts: SerializeFrom<Discount>[]
+}) => {
+	const navigate = useNavigate()
+
 	return (
-		<div className="flex h-[10rem] w-full flex-col gap-1 md:h-auto md:w-[17rem]">
-			<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md   bg-background/30 p-1">
-				<span className="select-none text-lg text-foreground/50">
-					Sin promociones aplicables
-				</span>
-			</div>
+		<div className="relative flex h-[10rem] w-full min-w-[20rem] flex-col gap-1 md:h-auto md:w-[20rem]">
+			{activeDiscounts.length === 0 ? (
+				<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md  bg-background/30 p-1">
+					<span className="select-none text-lg text-foreground/50">
+						Sin promociones aplicables
+					</span>
+				</div>
+			) : (
+				<ScrollArea className="flex h-full flex-col  gap-1 rounded-md bg-background/30   text-sm ">
+					<div className="text-md sticky top-0 z-40 flex h-[1.5rem] w-[inherit] select-none items-center justify-center bg-background/70 text-center text-foreground/90">
+						Promociones aplicables ({activeDiscounts.length})
+					</div>
+					<ul className="mt-1 flex flex-col font-semibold tracking-tight">
+						{activeDiscounts.map(discount => {
+							return (
+								<li
+									key={discount.id}
+									className="w-full cursor-pointer select-none px-1 hover:bg-secondary "
+									onClick={() => navigate(`/system/discounts/${discount.id}`)}
+								>
+									{discount.description}
+								</li>
+							)
+						})}
+					</ul>
+				</ScrollArea>
+			)}
 
 			<div>
 				{/* This will be its own component that opens a modal and changes to set the current direct discount */}
@@ -496,9 +588,13 @@ const PaymentSelection = ({
 const ConfirmFinishTransaction = ({
 	transaction,
 	total,
+	subtotal,
+	totalDiscount,
 }: {
 	transaction: SerializeFrom<typeof loader>
 	total: number
+	subtotal: number
+	totalDiscount: number
 }) => {
 	const { transaction: finishedTransaction } = transaction
 	const fetcher = useFetcher({ key: 'complete-transaction' })
@@ -507,6 +603,8 @@ const ConfirmFinishTransaction = ({
 	const formData = new FormData()
 	formData.append('intent', 'complete-transaction')
 	formData.append('total', total.toString())
+	formData.append('subtotal', subtotal.toString())
+	formData.append('totalDiscount', totalDiscount.toString())
 
 	return (
 		<AlertDialog>
@@ -550,7 +648,7 @@ const ConfirmFinishTransaction = ({
 											</div>
 										)
 									}
-									return null  
+									return null
 								})}
 							</div>
 							<div className="mt-4 flex flex-col gap-1 ">
@@ -561,11 +659,9 @@ const ConfirmFinishTransaction = ({
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Fecha:</span>
 									<span>
-										{format(
-											new Date(),
-											"d 'de' MMMM 'del' yyyy'",
-											{ locale: es },
-										)}
+										{format(new Date(), "d 'de' MMMM 'del' yyyy'", {
+											locale: es,
+										})}
 									</span>
 								</div>
 								<div className="flex gap-4">
