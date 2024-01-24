@@ -1,14 +1,20 @@
-import { type Item, type ItemTransaction } from '@prisma/client'
-import { type SerializeFrom } from '@remix-run/node'
-import { Link, useFetcher } from '@remix-run/react'
-import { forwardRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { TableCell, TableRow } from '#app/components/ui/table.tsx'
+import {
+	DISCOUNT_TARGET_TOTAL,
+	DISCOUNT_TARGET_UNIT,
+	DISCOUNT_TYPE_FIXED,
+	DISCOUNT_TYPE_PERCENTAGE,
+} from '#app/routes/system+/discounts_+/index.tsx'
 import { DeleteItemTransaction } from '#app/routes/system+/item-transaction.delete.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import { Discount, type ItemTransaction } from '@prisma/client'
+import { type SerializeFrom } from '@remix-run/node'
+import { Link, useFetcher } from '@remix-run/react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,20 +22,33 @@ import {
 } from './ui/dropdown-menu.tsx'
 
 export const TYPE_SELL = 'Venta'
-export const TYPE_RETURN = 'Devolución' //Returns subtract their price instead of adding it.
+export const TYPE_RETURN = 'Devolución'
 export const TYPE_PROMO = 'Promoción'
 
 const itemTransactionTypes = [TYPE_SELL, TYPE_RETURN, TYPE_PROMO] as const
 export const ItemTransactionTypeSchema = z.enum(itemTransactionTypes)
 export type ItemTransactionType = z.infer<typeof ItemTransactionTypeSchema>
 
-//User is shown available discounts in sell panel. If he wants to apply them he must change the transaction type to promo
 //? it should only allow to change to promo if there are available discounts
 
+type FamilyProps = {
+	id: string
+	name: string
+	discount: Discount | null
+}
+
+export type ItemProps = {
+	id: string
+	code: number
+	name: string | null
+	sellingPrice: number | null
+	stock: number
+	discount: Discount | null
+	family: FamilyProps
+}
+
 type ItemTransactionRowProps = {
-	item: SerializeFrom<
-		Pick<Item, 'id' | 'code' | 'name' | 'sellingPrice' | 'stock'>
-	>
+	item: SerializeFrom<ItemProps>
 	itemTransaction: SerializeFrom<
 		Pick<ItemTransaction, 'id' | 'quantity' | 'type' | 'totalPrice'>
 	>
@@ -46,6 +65,81 @@ export const ItemTransactionRow = forwardRef<
 	const [transactionType, setTransactionType] = useState<ItemTransactionType>(
 		itemTransaction.type as ItemTransactionType,
 	)
+
+	function hasMinQuantity(
+		discount: SerializeFrom<Discount> | null | undefined,
+	): discount is SerializeFrom<Discount> {
+		return discount?.minQuantity !== undefined
+	}
+
+	function isValidDiscount(
+		discount: SerializeFrom<Discount> | null | undefined,
+	): discount is SerializeFrom<Discount> {
+		return (
+			hasMinQuantity(discount) &&
+			discount.minQuantity <= itemTransaction.quantity
+		)
+	}
+
+	const isItemDiscountApplicable =
+		Boolean(item.discount) && isValidDiscount(item.discount)
+
+	const isFamilyDiscountApplicable =
+		Boolean(item.family?.discount) && isValidDiscount(item.family?.discount)
+
+	const isAnyDiscountApplicable =
+		isItemDiscountApplicable || isFamilyDiscountApplicable
+
+	function calculateDiscounts() {
+		if (!isAnyDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
+
+		const familyDiscount = item.family?.discount
+		const itemDiscount = item.discount
+		const sellingPrice = item.sellingPrice ?? 0
+
+		let totalFamilyDiscount = 0
+		let totalItemDiscount = 0
+
+		if (familyDiscount) {
+			totalFamilyDiscount = calculateDiscount(
+				familyDiscount,
+				sellingPrice,
+				quantity,
+			)
+		}
+
+		if (itemDiscount) {
+			totalItemDiscount = calculateDiscount(
+				itemDiscount,
+				sellingPrice,
+				quantity,
+			)
+		}
+
+		return {
+			familyDiscount: totalFamilyDiscount,
+			itemDiscount: totalItemDiscount,
+		}
+	}
+
+	const { familyDiscount, itemDiscount } = calculateDiscounts() ?? {}
+
+	const applicableFamilyDiscounts = isFamilyDiscountApplicable
+		? familyDiscount ?? 0
+		: 0
+	const applicableItemDiscounts = isItemDiscountApplicable
+		? itemDiscount ?? 0
+		: 0
+	const totalDiscounts =
+		transactionType === TYPE_PROMO
+			? applicableFamilyDiscounts + applicableItemDiscounts
+			: 0
+
+	useEffect(() => {
+		if (transactionType === TYPE_PROMO && !isAnyDiscountApplicable) {
+			setTransactionType(TYPE_SELL)
+		}
+	}, [isAnyDiscountApplicable, transactionType])
 
 	useEffect(() => {
 		if (transactionType === TYPE_RETURN && totalPrice > 0) {
@@ -69,6 +163,7 @@ export const ItemTransactionRow = forwardRef<
 	formData.append('it-vpd', transactionType)
 	formData.append('it-quantity', quantity.toString())
 	formData.append('it-total-price', totalPrice.toString())
+	formData.append('it-total-discount', totalDiscounts.toString())
 
 	const submitForm = () => {
 		if (isLoading) return
@@ -81,10 +176,22 @@ export const ItemTransactionRow = forwardRef<
 	}
 
 	useEffect(() => {
-		if (item.sellingPrice) {
+		if (item.sellingPrice && transactionType === TYPE_SELL) {
 			setTotalPrice(item.sellingPrice * quantity)
 		}
-	}, [quantity, item.sellingPrice])
+
+		if (item.sellingPrice && transactionType === TYPE_PROMO) {
+			let priceAfterDiscounts = item.sellingPrice * quantity
+			if (isFamilyDiscountApplicable) {
+				priceAfterDiscounts = priceAfterDiscounts - familyDiscount!
+			}
+
+			if (isItemDiscountApplicable) {
+				priceAfterDiscounts = priceAfterDiscounts - itemDiscount!
+			}
+			setTotalPrice(priceAfterDiscounts)
+		}
+	}, [quantity, item.sellingPrice, transactionType])
 
 	const rowRef = ref
 
@@ -109,6 +216,7 @@ export const ItemTransactionRow = forwardRef<
 				break
 			case 'P':
 			case 'p':
+				event.preventDefault()
 				setTransactionType(TYPE_PROMO)
 				break
 			case 'Enter':
@@ -134,57 +242,83 @@ export const ItemTransactionRow = forwardRef<
 	}, [rowRef, item.stock])
 
 	return (
-		<TableRow
-			ref={rowRef}
-			className={cn(
-				'uppercase ',
-				isFocused && 'scale-[1.01] bg-primary/10 hover:bg-primary/10 ',
-				isLoading && 'pointer-events-none opacity-30 ',
-			)}
-			tabIndex={0}
-			onBlur={() => {
-				setIsFocused(false)
-				submitForm()
-			}}
-			onFocus={() => setIsFocused(true)}
-		>
-			<TableCell className="flex items-center justify-center">
-				{isLoading ? (
-					<Icon
-						size="md"
-						className="relative bottom-0 left-2 animate-spin blur-0"
-						name="circle-dot-dashed"
-					/>
-				) : (
-					<ItemTransactionRowActions
-						itemId={item.id}
-						itemTransactionId={itemTransaction.id}
-					/>
+		<>
+			<div className="flex gap-4">
+				<div className="text-xs">
+					{isAnyDiscountApplicable && (
+						<div className="flex flex-col">
+							{isItemDiscountApplicable && (
+								<div className="flex  gap-2">
+									<p>{item.discount?.value}</p>
+									<p>{calculateDiscounts()?.itemDiscount}</p>
+								</div>
+							)}
+							{isFamilyDiscountApplicable && (
+								<div className="flex  gap-2">
+									<p>{item.family.discount?.value}</p>
+									<p>{calculateDiscounts()?.familyDiscount}</p>
+								</div>
+							)}
+						</div>
+					)}
+					<p className="text-destructive">${totalDiscounts}</p>
+				</div>
+			</div>
+			<TableRow
+				ref={rowRef}
+				className={cn(
+					'uppercase ',
+					isFocused && 'scale-[1.01] bg-primary/10 hover:bg-primary/10 ',
+					isLoading && 'pointer-events-none opacity-30 ',
 				)}
-			</TableCell>
-			<TableCell className="font-bold">{item.code}</TableCell>
-			<TableCell className="font-medium">
-				<TransactionType
-					initialType={transactionType}
-					setType={setTransactionType}
-				/>
-			</TableCell>
-			<TableCell className="font-medium tracking-wider">{item.name}</TableCell>
-			<TableCell className="font-medium">
-				{formatCurrency(item.sellingPrice)}
-			</TableCell>
-			<TableCell>
-				<QuantitySelector
-					min={1}
-					max={item.stock}
-					quantity={quantity}
-					setQuantity={setQuantity}
-				/>
-			</TableCell>
-			<TableCell className="text-right font-bold">
-				{formatCurrency(totalPrice)}
-			</TableCell>
-		</TableRow>
+				tabIndex={0}
+				onBlur={() => {
+					setIsFocused(false)
+					submitForm()
+				}}
+				onFocus={() => setIsFocused(true)}
+			>
+				<TableCell className="flex items-center justify-center">
+					{isLoading ? (
+						<Icon
+							size="md"
+							className="relative bottom-0 left-2 animate-spin blur-0"
+							name="circle-dot-dashed"
+						/>
+					) : (
+						<ItemTransactionRowActions
+							itemId={item.id}
+							itemTransactionId={itemTransaction.id}
+						/>
+					)}
+				</TableCell>
+				<TableCell className="font-bold">{item.code}</TableCell>
+				<TableCell className="font-medium">
+					<TransactionType
+						isPromoApplicable={isAnyDiscountApplicable}
+						initialType={transactionType}
+						setType={setTransactionType}
+					/>
+				</TableCell>
+				<TableCell className="font-medium tracking-wider">
+					{item.name}
+				</TableCell>
+				<TableCell className="font-medium">
+					{formatCurrency(item.sellingPrice)}
+				</TableCell>
+				<TableCell>
+					<QuantitySelector
+						min={1}
+						max={item.stock}
+						quantity={quantity}
+						setQuantity={setQuantity}
+					/>
+				</TableCell>
+				<TableCell className="text-right font-bold">
+					{formatCurrency(totalPrice)}
+				</TableCell>
+			</TableRow>
+		</>
 	)
 })
 ItemTransactionRow.displayName = 'ItemTransactionRow'
@@ -192,19 +326,25 @@ ItemTransactionRow.displayName = 'ItemTransactionRow'
 const TransactionType = ({
 	initialType,
 	setType,
+	isPromoApplicable,
 }: {
 	initialType: ItemTransactionType
 	setType: (value: ItemTransactionType) => void
+	isPromoApplicable: boolean
 }) => {
 	const componentRef = useRef<HTMLDivElement>(null)
 
 	const cycleState = () => {
-		const nextState =
-			initialType === TYPE_SELL
-				? TYPE_RETURN
-				: initialType === TYPE_RETURN
-				  ? TYPE_PROMO
-				  : TYPE_SELL
+		let nextState: ItemTransactionType
+
+		if (initialType === TYPE_SELL) {
+			nextState = TYPE_RETURN
+		} else if (initialType === TYPE_RETURN) {
+			nextState = isPromoApplicable ? TYPE_PROMO : TYPE_SELL
+		} else {
+			nextState = isPromoApplicable ? TYPE_SELL : TYPE_RETURN
+		}
+
 		setType(nextState)
 	}
 
@@ -319,4 +459,28 @@ const ItemTransactionRowActions = ({
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
+}
+
+const calculateDiscount = (
+	discount: SerializeFrom<Discount>,
+	itemPrice: number,
+	quantity: number,
+) => {
+	if (discount.target === DISCOUNT_TARGET_UNIT) {
+		if (discount.type === DISCOUNT_TYPE_FIXED) {
+			return discount.value * quantity
+		}
+		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
+			return ((itemPrice * discount.value) / 100) * quantity
+		}
+	}
+	if (discount.target === DISCOUNT_TARGET_TOTAL) {
+		if (discount.type === DISCOUNT_TYPE_FIXED) {
+			return discount.value
+		}
+		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
+			return (itemPrice * quantity * discount.value) / 100
+		}
+	}
+	return 0
 }
