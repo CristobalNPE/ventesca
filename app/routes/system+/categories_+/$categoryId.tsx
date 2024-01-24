@@ -4,7 +4,7 @@ import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Form, Link, useLoaderData } from '@remix-run/react'
+import { Form, Link, useLoaderData, useNavigate } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
@@ -91,6 +91,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function CategoryRoute() {
+	const navigate = useNavigate()
 	const isAdmin = true
 	const { category, allCategories } = useLoaderData<typeof loader>()
 	const [selectedItemsIds, setSelectedItemsIds] = useState<string[]>([])
@@ -205,6 +206,14 @@ export default function CategoryRoute() {
 						)}
 					</>
 				)}
+				<Button
+					variant={'ghost'}
+					onClick={() => navigate(-1)}
+					className="mt-2 flex items-center gap-2"
+				>
+					<Icon name="arrow-left" />
+					<span>Atrás</span>
+				</Button>
 			</div>
 			{isAdmin && (
 				<div className="relative bottom-0 right-0 flex h-fit flex-col justify-end gap-4 rounded-md bg-secondary p-4">
