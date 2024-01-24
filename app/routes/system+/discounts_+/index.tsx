@@ -3,6 +3,7 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { cn } from '#app/utils/misc.tsx'
 import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { ColumnDef } from '@tanstack/react-table'
@@ -149,7 +150,12 @@ const columns: ColumnDef<DiscountColumns>[] = [
 			const isActive = row.getValue('isActive')
 			const status = isActive ? 'Activo' : 'Inactivo'
 			return (
-				<div className="font-bold tracking-wider  text-foreground">
+				<div
+					className={cn(
+						'font-bold tracking-wider',
+						isActive ? 'text-primary' : 'text-destructive',
+					)}
+				>
 					{status}
 				</div>
 			)
