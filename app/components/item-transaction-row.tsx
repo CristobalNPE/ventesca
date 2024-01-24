@@ -243,7 +243,7 @@ export const ItemTransactionRow = forwardRef<
 
 	return (
 		<>
-			<div className="flex gap-4">
+			{/* <div className="flex gap-4">
 				<div className="text-xs">
 					{isAnyDiscountApplicable && (
 						<div className="flex flex-col">
@@ -263,7 +263,7 @@ export const ItemTransactionRow = forwardRef<
 					)}
 					<p className="text-destructive">${totalDiscounts}</p>
 				</div>
-			</div>
+			</div> */}
 			<TableRow
 				ref={rowRef}
 				className={cn(
