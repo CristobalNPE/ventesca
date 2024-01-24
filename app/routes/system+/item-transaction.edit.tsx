@@ -9,6 +9,7 @@ const ItemTransactionSchema = z.object({
 	type: ItemTransactionTypeSchema,
 	quantity: z.coerce.number(),
 	totalPrice: z.coerce.number(),
+	totalDiscount: z.coerce.number(),
 })
 
 export async function loader() {
@@ -24,6 +25,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		type: formData.get('it-vpd'),
 		quantity: formData.get('it-quantity'),
 		totalPrice: formData.get('it-total-price'),
+		totalDiscount: formData.get('it-total-discount'),
 	})
 
 	if (!result.success) {
@@ -32,7 +34,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	}
 
-	const { id, type, quantity, totalPrice } = result.data
+	const { id, type, quantity, totalPrice, totalDiscount } = result.data
 
 	await prisma.itemTransaction.upsert({
 		where: { id },
@@ -41,11 +43,13 @@ export async function action({ request }: ActionFunctionArgs) {
 			type,
 			quantity,
 			totalPrice,
+			totalDiscount,
 		},
 		update: {
 			type,
 			quantity,
 			totalPrice,
+			totalDiscount,
 		},
 	})
 
