@@ -1,15 +1,17 @@
-import { json, type DataFunctionArgs } from '@remix-run/node'
-import { Form, Link, useLoaderData, type MetaFunction } from '@remix-run/react'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { getUserImgSrc, invariantResponse } from '#app/utils/misc.tsx'
-import { useOptionalUser } from '#app/utils/user.ts'
+import { json, type DataFunctionArgs } from '@remix-run/node'
+import { Form, Link, useLoaderData, type MetaFunction } from '@remix-run/react'
 
-export async function loader({ params }: DataFunctionArgs) {
-	const user = await prisma.user.findFirst({
+export async function loader({ params, request }: DataFunctionArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
 		select: {
 			id: true,
 			name: true,
@@ -18,11 +20,11 @@ export async function loader({ params }: DataFunctionArgs) {
 			image: { select: { id: true } },
 		},
 		where: {
-			username: params.username,
+			id: userId,
 		},
 	})
 
-	invariantResponse(user, 'User not found', { status: 404 })
+	invariantResponse(user, 'No se encuentra el usuario', { status: 404 })
 
 	return json({ user, userJoinedDisplay: user.createdAt.toLocaleDateString() })
 }
@@ -31,8 +33,6 @@ export default function ProfileRoute() {
 	const data = useLoaderData<typeof loader>()
 	const user = data.user
 	const userDisplayName = user.name ?? user.username
-	const loggedInUser = useOptionalUser()
-	const isLoggedInUser = data.user.id === loggedInUser?.id
 
 	return (
 		<div className="container mb-48 mt-36 flex flex-col items-center justify-center">
@@ -60,36 +60,26 @@ export default function ProfileRoute() {
 					<p className="mt-2 text-center text-muted-foreground">
 						Joined {data.userJoinedDisplay}
 					</p>
-					{isLoggedInUser ? (
-						<Form action="/logout" method="POST" className="mt-3">
-							<Button type="submit" variant="link" size="pill">
-								<Icon name="exit" className="scale-125 max-md:scale-150">
-									Logout
-								</Icon>
-							</Button>
-						</Form>
-					) : null}
+
+					<Form action="/logout" method="POST" className="mt-3">
+						<Button type="submit" variant="link" size="pill">
+							<Icon name="exit" className="scale-125 max-md:scale-150">
+								Cerrar Sesión
+							</Icon>
+						</Button>
+					</Form>
+
 					<div className="mt-10 flex gap-4">
-						{isLoggedInUser ? (
-							<>
-								<Button asChild>
-									<Link to="notes" prefetch="intent">
-										My notes
-									</Link>
-								</Button>
-								<Button asChild>
-									<Link to="/settings/profile" prefetch="intent">
-										Edit profile
-									</Link>
-								</Button>
-							</>
-						) : (
-							<Button asChild>
-								<Link to="notes" prefetch="intent">
-									{userDisplayName}'s notes
-								</Link>
-							</Button>
-						)}
+						<Button asChild>
+							<Link to="notes" prefetch="intent">
+								Mis Estadísticas
+							</Link>
+						</Button>
+						<Button asChild>
+							<Link to="/settings/profile" prefetch="intent">
+								Editar perfil
+							</Link>
+						</Button>
 					</div>
 				</div>
 			</div>
