@@ -47,7 +47,7 @@ export default function EditUserProfile() {
 		.filter(Boolean)
 
 	return (
-		<div className="m-auto mb-24 mt-16 max-w-3xl">
+		<div className="m-auto max-w-3xl">
 			<div className="container">
 				<ul className="flex gap-3">
 					<li>
@@ -70,7 +70,7 @@ export default function EditUserProfile() {
 					))}
 				</ul>
 			</div>
-			<Spacer size="xs" />
+			<Spacer size="4xs" />
 			<main className="mx-auto bg-muted px-6 py-8 md:container md:rounded-3xl">
 				<Outlet />
 			</main>
