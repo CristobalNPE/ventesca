@@ -574,7 +574,7 @@ const PaymentSelection = ({
 					onClick={() => setPaymentMethod(paymentMethodType)}
 					className={cn(
 						'w-full cursor-pointer rounded-md p-2 text-center',
-						paymentMethodType === paymentMethod && 'bg-primary/80',
+						paymentMethodType === paymentMethod && 'bg-primary/50  ring-1 ring-offset-0 ring-primary ',
 					)}
 					key={index}
 				>
