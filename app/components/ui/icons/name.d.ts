@@ -40,6 +40,8 @@ export type IconName =
 	| 'github-logo'
 	| 'id'
 	| 'laptop'
+	| 'layout-sidebar-left-collapse'
+	| 'layout-sidebar-left-expand'
 	| 'link-2'
 	| 'lock-closed'
 	| 'lock-open-1'
