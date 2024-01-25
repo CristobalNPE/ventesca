@@ -27,7 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	let since = url.searchParams.get('since')
 
 	if (!since) {
-		throw redirect('/system/reports?since=today')
+		throw redirect('/reports?since=today')
 	}
 
 	// map since to date

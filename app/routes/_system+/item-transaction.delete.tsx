@@ -16,7 +16,7 @@ const DeleteFormSchema = z.object({
 })
 
 export async function loader() {
-	throw redirect('/system/sell')
+	throw redirect('/sell')
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -69,7 +69,7 @@ export function DeleteItemTransaction({
 	return (
 		<fetcher.Form
 			method="POST"
-			action="/system/item-transaction/delete"
+			action="/item-transaction/delete"
 			{...form.props}
 		>
 			<input type="hidden" name="itemTransactionId" value={id} />

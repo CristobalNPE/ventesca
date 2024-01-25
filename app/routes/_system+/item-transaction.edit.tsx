@@ -13,7 +13,7 @@ const ItemTransactionSchema = z.object({
 })
 
 export async function loader() {
-	return redirect('/system/sell')
+	return redirect('/sell')
 }
 
 export async function action({ request }: ActionFunctionArgs) {

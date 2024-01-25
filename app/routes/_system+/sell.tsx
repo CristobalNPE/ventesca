@@ -241,7 +241,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 
 		return redirectWithToast(
-			`/system/reports/${transactionId}`,
+			`/reports/${transactionId}`,
 			{
 				type: 'success',
 				title: 'Transacción Completa',
@@ -384,7 +384,7 @@ export default function SellRoute() {
 							<Link
 								target="_blank"
 								reloadDocument
-								to={`/system/reports/${transaction.id}/report-pdf`}
+								to={`/reports/${transaction.id}/report-pdf`}
 							>
 								<Icon className="mr-2 flex-none" name="report-money" /> Generar
 								Reporte
@@ -520,7 +520,7 @@ const DiscountsPanel = ({
 								<li
 									key={discount.id}
 									className="w-full cursor-pointer select-none px-1 hover:bg-secondary "
-									onClick={() => navigate(`/system/discounts/${discount.id}`)}
+									onClick={() => navigate(`/discounts/${discount.id}`)}
 								>
 									{discount.description}
 								</li>

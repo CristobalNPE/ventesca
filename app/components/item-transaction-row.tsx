@@ -7,8 +7,8 @@ import {
 	DISCOUNT_TARGET_UNIT,
 	DISCOUNT_TYPE_FIXED,
 	DISCOUNT_TYPE_PERCENTAGE,
-} from '#app/routes/system+/discounts_+/index.tsx'
-import { DeleteItemTransaction } from '#app/routes/system+/item-transaction.delete.tsx'
+} from '#app/routes/_system+/discounts_+/index.tsx'
+import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Discount, type ItemTransaction } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
@@ -171,7 +171,7 @@ export const ItemTransactionRow = forwardRef<
 
 		fetcher.submit(formData, {
 			method: 'POST',
-			action: '/system/item-transaction/edit',
+			action: '/item-transaction/edit',
 		})
 	}
 
@@ -451,7 +451,7 @@ const ItemTransactionRowActions = ({
 			<DropdownMenuContent className="flex flex-col gap-2">
 				<DeleteItemTransaction id={itemTransactionId} />
 				<Button asChild variant={'outline'}>
-					<Link to={`/system/inventory/${itemId}`}>
+					<Link to={`/inventory/${itemId}`}>
 						<Icon className="mr-2" name="file-text" />
 						Detalles
 					</Link>

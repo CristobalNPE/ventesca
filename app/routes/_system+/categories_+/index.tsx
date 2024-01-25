@@ -1,33 +1,36 @@
-import { type Provider } from '@prisma/client'
-import { type SerializeFrom, json } from '@remix-run/node'
+import { type Family } from '@prisma/client'
+import { type SerializeFrom, json, LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
-import { format } from '@validatecl/rut'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-export async function loader() {
-	const providers = await prisma.provider
-		.findMany({
-			orderBy: { name: 'asc' },
-			select: {
-				id: true,
-				rut: true,
+import { requireUserId } from '#app/utils/auth.server.ts'
 
-				name: true,
-				fantasyName: true,
-			},
-		})
-		.then(u => u)
+export async function loader({ request }: LoaderFunctionArgs) {
+	await requireUserId(request)
+	const categories = await prisma.family.findMany({
+		select: {
+			id: true,
+			code: true,
+			description: true,
+			_count: { select: { items: true } },	
+		},
+	})
 
-	const totalProviders = await prisma.provider.count()
+	const formatted = categories.map(category => ({
+		...category,
+		totalItems: category._count.items,
+	}))
 
-	return json({ providers, totalProviders })
+	const totalCategories = await prisma.family.count()
+
+	return json({ categories: formatted, totalCategories })
 }
 
-export const providerColumns: ColumnDef<
-	SerializeFrom<Pick<Provider, 'id' | 'rut' | 'name' | 'fantasyName'>>
+const columns: ColumnDef<
+	SerializeFrom<Pick<Family, 'code' | 'description' | 'id'>>
 >[] = [
 	{
 		header: ({ column }) => {
@@ -36,20 +39,13 @@ export const providerColumns: ColumnDef<
 					variant="ghost"
 					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
 				>
-					RUT
+					Código
 					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
 				</Button>
 			)
 		},
-		cell: ({ row }) => {
-			return (
-				<div className="tracking-wider  text-foreground">
-					{format(row.getValue('rut'))}
-				</div>
-			)
-		},
 
-		accessorKey: 'rut',
+		accessorKey: 'code',
 	},
 
 	{
@@ -59,29 +55,7 @@ export const providerColumns: ColumnDef<
 					variant="ghost"
 					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
 				>
-					Nombre Proveedor
-					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
-				</Button>
-			)
-		},
-		cell: ({ row }) => {
-			return (
-				<div className="font-bold uppercase tracking-wider  text-foreground">
-					{row.getValue('name')}
-				</div>
-			)
-		},
-
-		accessorKey: 'name',
-	},
-	{
-		header: ({ column }) => {
-			return (
-				<Button
-					variant="ghost"
-					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-				>
-					Nombre Empresa
+					Descripción
 					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
 				</Button>
 			)
@@ -89,33 +63,56 @@ export const providerColumns: ColumnDef<
 		cell: ({ row }) => {
 			return (
 				<div className="font-bold tracking-wider  text-foreground">
-					{row.getValue('fantasyName')}
+					{row.getValue('description')}
 				</div>
 			)
 		},
 
-		accessorKey: 'fantasyName',
+		accessorKey: 'description',
+	},
+	{
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Artículos en categoría
+					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
+				</Button>
+			)
+		},
+		cell: ({ row }) => {
+			return (
+				<div className="font-bold tracking-wider  text-foreground">
+					{row.getValue('totalItems')}
+				</div>
+			)
+		},
+
+		accessorKey: 'totalItems',
 	},
 ]
 
-export default function ProvidersRoute() {
+export default function CategoriesRoute() {
 	const isAdmin = true
-	const { providers, totalProviders } = useLoaderData<typeof loader>()
+	const { categories, totalCategories } = useLoaderData<typeof loader>()
+
 	return (
 		<>
 			<div className="flex justify-between border-b-2 border-secondary pb-4">
 				<div className="flex items-center gap-4">
-					<h1 className="text-2xl">Proveedores</h1>
+					<h1 className="text-2xl">Categorías</h1>
 					<h1 className="text-xl text-foreground/70">
-						[{totalProviders} registrados]
+						[{totalCategories} registradas]
 					</h1>
 				</div>
 				{isAdmin && (
 					<div className="flex items-center gap-6">
 						<Button asChild className="flex items-center gap-2">
-							<Link to={'new'}>
+							<Link to="new">
 								<Icon name="plus" size="md" />
-								<span>Registrar proveedor</span>
+								<span>Ingresar categoría</span>
 							</Link>
 						</Button>
 					</div>
@@ -123,11 +120,11 @@ export default function ProvidersRoute() {
 			</div>
 			<DataTable
 				withItemSearch={false}
-				columns={providerColumns}
-				data={providers}
+				columns={columns}
+				data={categories}
 				searchFilter={{
-					description: 'RUT',
-					key: 'rut',
+					description: 'descripción',
+					key: 'description',
 				}}
 			/>
 		</>

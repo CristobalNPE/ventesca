@@ -23,7 +23,7 @@ const DeleteFormSchema = z.object({
 })
 
 export async function loader() {
-	throw redirect('/system/sell')
+	throw redirect('/sell')
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -62,7 +62,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 
 	return redirectWithToast(
-		`/system/reports`,
+		`/reports`,
 		{
 			type: 'success',
 			title: 'Transacción Descartada',
@@ -80,7 +80,7 @@ export function DiscardTransaction({ id }: { id: string }) {
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
-		formAction: '/system/transaction/discard',
+		formAction: '/transaction/discard',
 	})
 	const [form] = useForm({
 		id: 'discard-transaction',
@@ -88,7 +88,7 @@ export function DiscardTransaction({ id }: { id: string }) {
 	})
 
 	return (
-		<Form method="POST" action="/system/transaction/discard" {...form.props}>
+		<Form method="POST" action="/transaction/discard" {...form.props}>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="transactionId" value={id} />
 

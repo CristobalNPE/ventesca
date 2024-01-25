@@ -123,7 +123,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/system/inventory/${updatedItem.id}`)
+	return redirect(`/inventory/${updatedItem.id}`)
 }
 
 export function ItemEditor({

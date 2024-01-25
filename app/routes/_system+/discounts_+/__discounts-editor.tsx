@@ -183,7 +183,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				value,
 			},
 		})
-		return redirect(`/system/discounts/${discount.id}`)
+		return redirect(`/discounts/${discount.id}`)
 	}
 	invariant(itemIds !== undefined, 'item Ids should be defined')
 	const itemIdsArray = itemIds.split(',')
@@ -218,7 +218,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/system/discounts/${discount.id}`)
+	return redirect(`/discounts/${discount.id}`)
 }
 
 export function DiscountsEditor({

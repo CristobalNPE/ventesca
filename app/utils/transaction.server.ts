@@ -7,7 +7,7 @@ export const transactionSessionStorage = createCookieSessionStorage({
 	cookie: {
 		name: 'sv_transaction',
 		sameSite: 'lax',
-		path: '/system',
+		path: '/',
 		httpOnly: true,
 		secrets: process.env.SESSION_SECRET.split(','),
 		secure: process.env.NODE_ENV === 'production',
@@ -28,7 +28,7 @@ export async function getTransactionId(request: Request) {
 		where: { id: transactionId },
 	})
 	if (!transaction) {
-		throw redirect('/system/sell', {
+		throw redirect('/sell', {
 			headers: {
 				'set-cookie':
 					await transactionSessionStorage.destroySession(transactionSession),

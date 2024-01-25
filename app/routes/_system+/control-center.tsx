@@ -8,9 +8,11 @@ import { prisma } from '#app/utils/db.server.ts'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { TRANSACTION_STATUS_COMPLETED } from './sell.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	//Count items with 0 stock
+	await requireUserId(request)
 	const itemsWithZeroStock = await prisma.item.count({
 		where: {
 			stock: 0,

@@ -105,7 +105,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.item.delete({ where: { id: item.id } })
 
-	return redirectWithToast(`/system/inventory`, {
+	return redirectWithToast(`/inventory`, {
 		type: 'success',
 		title: 'Articulo eliminado',
 		description: `Articulo ${item.name} ha sido eliminado con éxito.`,
@@ -173,7 +173,7 @@ export default function ItemRoute() {
 				</div>
 				<div className="flex flex-col gap-4 ">
 					<Link
-						to={item.provider ? `/system/providers/${item.provider.id}` : '#'}
+						to={item.provider ? `/providers/${item.provider.id}` : '#'}
 						className="flex min-h-[6rem] w-[26rem] cursor-pointer rounded-md bg-secondary p-4"
 					>
 						<div className="mr-4 grid w-[5rem] place-items-center">

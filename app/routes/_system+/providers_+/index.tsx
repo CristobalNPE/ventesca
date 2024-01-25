@@ -1,34 +1,35 @@
-import { type Family } from '@prisma/client'
-import { type SerializeFrom, json } from '@remix-run/node'
+import { type Provider } from '@prisma/client'
+import { type SerializeFrom, json, LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
+import { format } from '@validatecl/rut'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
+import { requireUserId } from '#app/utils/auth.server.ts'
+export async function loader({ request }: LoaderFunctionArgs) {
+	await requireUserId(request)
+	const providers = await prisma.provider
+		.findMany({
+			orderBy: { name: 'asc' },
+			select: {
+				id: true,
+				rut: true,
 
-export async function loader() {
-	const categories = await prisma.family.findMany({
-		select: {
-			id: true,
-			code: true,
-			description: true,
-			_count: { select: { items: true } },
-		},
-	})
+				name: true,
+				fantasyName: true,
+			},
+		})
+		.then(u => u)
 
-	const formatted = categories.map(category => ({
-		...category,
-		totalItems: category._count.items,
-	}))
+	const totalProviders = await prisma.provider.count()
 
-	const totalCategories = await prisma.family.count()
-
-	return json({ categories: formatted, totalCategories })
+	return json({ providers, totalProviders })
 }
 
-const columns: ColumnDef<
-	SerializeFrom<Pick<Family, 'code' | 'description' | 'id'>>
+export const providerColumns: ColumnDef<
+	SerializeFrom<Pick<Provider, 'id' | 'rut' | 'name' | 'fantasyName'>>
 >[] = [
 	{
 		header: ({ column }) => {
@@ -37,13 +38,20 @@ const columns: ColumnDef<
 					variant="ghost"
 					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
 				>
-					Código
+					RUT
 					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
 				</Button>
 			)
 		},
+		cell: ({ row }) => {
+			return (
+				<div className="tracking-wider  text-foreground">
+					{format(row.getValue('rut'))}
+				</div>
+			)
+		},
 
-		accessorKey: 'code',
+		accessorKey: 'rut',
 	},
 
 	{
@@ -53,20 +61,20 @@ const columns: ColumnDef<
 					variant="ghost"
 					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
 				>
-					Descripción
+					Nombre Proveedor
 					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
 				</Button>
 			)
 		},
 		cell: ({ row }) => {
 			return (
-				<div className="font-bold tracking-wider  text-foreground">
-					{row.getValue('description')}
+				<div className="font-bold uppercase tracking-wider  text-foreground">
+					{row.getValue('name')}
 				</div>
 			)
 		},
 
-		accessorKey: 'description',
+		accessorKey: 'name',
 	},
 	{
 		header: ({ column }) => {
@@ -75,7 +83,7 @@ const columns: ColumnDef<
 					variant="ghost"
 					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
 				>
-					Artículos en categoría
+					Nombre Empresa
 					<Icon name="arrow-up-down" className="ml-2 h-4 w-4" />
 				</Button>
 			)
@@ -83,34 +91,33 @@ const columns: ColumnDef<
 		cell: ({ row }) => {
 			return (
 				<div className="font-bold tracking-wider  text-foreground">
-					{row.getValue('totalItems')}
+					{row.getValue('fantasyName')}
 				</div>
 			)
 		},
 
-		accessorKey: 'totalItems',
+		accessorKey: 'fantasyName',
 	},
 ]
 
-export default function CategoriesRoute() {
+export default function ProvidersRoute() {
 	const isAdmin = true
-	const { categories, totalCategories } = useLoaderData<typeof loader>()
-
+	const { providers, totalProviders } = useLoaderData<typeof loader>()
 	return (
 		<>
 			<div className="flex justify-between border-b-2 border-secondary pb-4">
 				<div className="flex items-center gap-4">
-					<h1 className="text-2xl">Categorías</h1>
+					<h1 className="text-2xl">Proveedores</h1>
 					<h1 className="text-xl text-foreground/70">
-						[{totalCategories} registradas]
+						[{totalProviders} registrados]
 					</h1>
 				</div>
 				{isAdmin && (
 					<div className="flex items-center gap-6">
 						<Button asChild className="flex items-center gap-2">
-							<Link to="new">
+							<Link to={'new'}>
 								<Icon name="plus" size="md" />
-								<span>Ingresar categoría</span>
+								<span>Registrar proveedor</span>
 							</Link>
 						</Button>
 					</div>
@@ -118,11 +125,11 @@ export default function CategoriesRoute() {
 			</div>
 			<DataTable
 				withItemSearch={false}
-				columns={columns}
-				data={categories}
+				columns={providerColumns}
+				data={providers}
 				searchFilter={{
-					description: 'descripción',
-					key: 'description',
+					description: 'RUT',
+					key: 'rut',
 				}}
 			/>
 		</>

@@ -14,13 +14,13 @@ import {
 	Links,
 	LiveReload,
 	Meta,
-	NavLink,
 	Outlet,
 	Scripts,
 	ScrollRestoration,
 	useFetcher,
 	useFetchers,
 	useLoaderData,
+	useMatches,
 	useSubmit,
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
@@ -31,6 +31,7 @@ import { z } from 'zod'
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
 import { ErrorList } from './components/forms.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
+import { SearchBar } from './components/search-bar.tsx'
 import { EpicToaster } from './components/toaster.tsx'
 import { Button } from './components/ui/button.tsx'
 import {
@@ -52,27 +53,10 @@ import { honeypot } from './utils/honeypot.server.ts'
 import { combineHeaders, getDomainUrl, getUserImgSrc } from './utils/misc.tsx'
 import { useNonce } from './utils/nonce-provider.ts'
 import { useRequestInfo } from './utils/request-info.ts'
-import { getTheme, setTheme, type Theme } from './utils/theme.server.ts'
+import { type Theme, setTheme, getTheme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, useUser } from './utils/user.ts'
-
-import { type IconName } from '#app/components/ui/icon.tsx'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '#app/components/ui/tooltip.tsx'
-import { cn } from '#app/utils/misc.tsx'
-import { useState } from 'react'
-
-type NavigationLink = {
-	name: string
-	path: string
-	icon: IconName
-	main?: boolean
-}
 
 export const links: LinksFunction = () => {
 	return [
@@ -248,140 +232,48 @@ function App() {
 	const nonce = useNonce()
 	const user = useOptionalUser()
 	const theme = useTheme()
-
-	const [shrinkSidebar, setShrinkSidebar] = useState(false)
-	// const { user } = useLoaderData<typeof loader>()
-
-	const navigationLinks: NavigationLink[] = [
-		{
-			name: 'Punto de Venta',
-			path: 'sell',
-			icon: 'circle-dollar-sign',
-			main: true,
-		},
-		{
-			name: 'Centro de Control',
-			path: 'control-center',
-			icon: 'circle-dot-dashed',
-		},
-		{
-			name: 'Reportes de Ventas',
-			path: 'reports',
-			icon: 'file-bar-chart',
-		},
-		{
-			name: 'Inventario',
-			path: 'inventory',
-			icon: 'package',
-		},
-		{
-			name: 'Promociones',
-			path: 'discounts',
-			icon: 'tag',
-		},
-		{
-			name: 'Categorías',
-			path: 'categories',
-			icon: 'shapes',
-		},
-		{
-			name: 'Proveedores',
-			path: 'providers',
-			icon: 'users',
-		},
-		{
-			name: 'Ajustes',
-			path: 'settings',
-			icon: 'settings',
-		},
-	]
+	const matches = useMatches()
+	const isOnSearchPage = matches.find(m => m.id === 'routes/users+/index')
+	const searchBar = isOnSearchPage ? null : <SearchBar status="idle" />
 
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
-			<div className="flex h-screen ">
-				{user && (
-					<>
-						{shrinkSidebar ? (
-							<div className="flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-2 py-8">
-								<h1 className="text-3xl font-bold">SV</h1>
-								<nav className="mt-8 flex h-full flex-col gap-3">
-									{navigationLinks.map(link => {
-										return (
-											<TooltipProvider delayDuration={100} key={link.name}>
-												<Tooltip>
-													<TooltipTrigger>
-														<NavLink
-															className={({ isActive }) =>
-																cn(
-																	'flex items-center gap-3 rounded-sm p-3 text-3xl transition-colors hover:bg-primary/10',
-																	isActive &&
-																		' bg-primary/30 hover:bg-primary/30',
-																	link.main && 'text-primary ',
-																)
-															}
-															to={link.path}
-														>
-															<Icon className="" name={link.icon} />
-														</NavLink>
-													</TooltipTrigger>
-													<TooltipContent side="right">
-														<p>{link.name}</p>
-													</TooltipContent>
-												</Tooltip>
-											</TooltipProvider>
-										)
-									})}
-								</nav>
-								<Button
-									variant={'outline'}
-									onClick={() => setShrinkSidebar(false)}
-								>
-									<Icon name="arrow-right" />
-								</Button>
+			<div className="flex h-screen flex-col justify-between">
+				{/* <header className="container py-6">
+					<nav>
+						<div className="flex flex-wrap items-center justify-between gap-4 sm:flex-nowrap md:gap-8">
+							<Link to="/">
+								<div className="font-light">epic</div>
+								<div className="font-bold">notes</div>
+							</Link>
+							<div className="ml-auto hidden max-w-sm flex-1 sm:block">
+								{searchBar}
 							</div>
-						) : (
-							<div className="flex w-[19rem] flex-col border-r-[1px] border-foreground/5 bg-secondary/80 px-4 py-8">
-								<h1 className="text-3xl font-bold">Sistema de Ventas</h1>
-								<nav className="mt-8 flex h-full flex-col gap-3">
-									{navigationLinks.map(link => {
-										return (
-											<NavLink
-												className={({ isActive }) =>
-													cn(
-														'flex select-none items-center gap-3 rounded-sm p-3 text-lg transition-colors hover:bg-primary/10',
-														isActive && ' bg-primary/30 hover:bg-primary/30',
-														link.main && 'text-primary ',
-													)
-												}
-												key={link.name}
-												to={link.path}
-											>
-												<Icon size="md" className="" name={link.icon} />
-												<span>{link.name}</span>
-											</NavLink>
-										)
-									})}
-								</nav>
-								<Button
-									variant={'outline'}
-									onClick={() => setShrinkSidebar(true)}
-								>
-									<Icon name="arrow-left" />
-								</Button>
+							<div className="flex items-center gap-10">
+								{user ? (
+									<UserDropdown />
+								) : (
+									<Button asChild variant="default" size="sm">
+										<Link to="/login">Log In</Link>
+									</Button>
+								)}
 							</div>
-						)}
-					</>
-				)}
-				<div className="flex-1 overflow-auto ">
-					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-end border-b-[1px] border-foreground/5 bg-secondary p-8">
-						{/* <FullScreenToggle /> */}
-						<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
-						{user && <UserDropdown />}
-					</header>
-					<main className="h-[calc(99%-4rem)] p-8">
-						<Outlet />
-					</main>
+							<div className="block w-full sm:hidden">{searchBar}</div>
+						</div>
+					</nav>
+				</header> */}
+
+				<div className="flex-1 ">
+					<Outlet />
 				</div>
+				{/* <ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} /> */}
+				{/* <div className="container flex justify-between pb-5">
+					<Link to="/">
+						<div className="font-light">epic</div>
+						<div className="font-bold">notes</div>
+					</Link>
+					<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
+				</div> */}
 			</div>
 			<EpicToaster toast={data.toast} />
 			<EpicProgress />
@@ -421,14 +313,9 @@ function UserDropdown() {
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
-						<div className="flex flex-col">
-							<span className="text-body-sm font-bold">
-								{user.name ?? user.username}
-							</span>
-							<span className="text-body-xs font-bold text-foreground/60">
-								Vendedor
-							</span>
-						</div>
+						<span className="text-body-sm font-bold">
+							{user.name ?? user.username}
+						</span>
 					</Link>
 				</Button>
 			</DropdownMenuTrigger>
@@ -437,14 +324,14 @@ function UserDropdown() {
 					<DropdownMenuItem asChild>
 						<Link prefetch="intent" to={`/users/${user.username}`}>
 							<Icon className="text-body-md" name="avatar">
-								Perfil
+								Profile
 							</Icon>
 						</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild>
 						<Link prefetch="intent" to={`/users/${user.username}/notes`}>
 							<Icon className="text-body-md" name="pencil-2">
-								Mis estadísticas
+								Notes
 							</Icon>
 						</Link>
 					</DropdownMenuItem>
@@ -458,7 +345,7 @@ function UserDropdown() {
 					>
 						<Form action="/logout" method="POST" ref={formRef}>
 							<Icon className="text-body-md" name="exit">
-								<button type="submit">Cerrar Sesión</button>
+								<button type="submit">Logout</button>
 							</Icon>
 						</Form>
 					</DropdownMenuItem>

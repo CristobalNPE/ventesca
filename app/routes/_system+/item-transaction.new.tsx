@@ -26,7 +26,7 @@ import {
 import { z } from 'zod'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	throw redirect('/system/sell')
+	throw redirect('/sell')
 }
 const SearchSchema = z.object({
 	search: z.number(),
@@ -162,7 +162,7 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 						handleFormChange(e.currentTarget)
 					}}
 					method="POST"
-					action="/system/item-transaction/new"
+					action="/item-transaction/new"
 					className="flex  items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
 					onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
 				>

@@ -24,7 +24,7 @@ const DeleteFormSchema = z.object({
 })
 
 export async function loader() {
-	throw redirect('/system/sell')
+	throw redirect('/sell')
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -56,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	await prisma.transaction.delete({ where: { id: transaction.id } })
 
 	return redirectWithToast(
-		`/system/reports`,
+		`/reports`,
 		{
 			type: 'success',
 			title: 'Transacción Eliminada',
@@ -80,7 +80,7 @@ export function DeleteTransaction({
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
-		formAction: '/system/transaction/delete',
+		formAction: '/transaction/delete',
 	})
 	const [form] = useForm({
 		id: 'delete-transaction',
@@ -90,7 +90,7 @@ export function DeleteTransaction({
 	return (
 		<Form
 			method="POST"
-			action="/system/transaction/delete"
+			action="/transaction/delete"
 			{...form.props}
 	
 		>

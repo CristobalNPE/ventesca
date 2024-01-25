@@ -7,8 +7,10 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
+	await requireUserId(request)
 	const url = new URL(request.url)
 	const searchTerm = url.searchParams.get('search')
 
@@ -39,7 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 
 	if (searchTerm === '') {
-		return redirect('/system/inventory')
+		return redirect('/inventory')
 	}
 
 	const items = prisma.item

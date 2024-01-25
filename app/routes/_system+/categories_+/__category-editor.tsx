@@ -98,7 +98,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/system/categories/${updatedCategory.id}`)
+	return redirect(`/categories/${updatedCategory.id}`)
 }
 
 export function CategoryEditor({

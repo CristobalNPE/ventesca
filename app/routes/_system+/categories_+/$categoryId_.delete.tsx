@@ -20,7 +20,7 @@ const DeleteFormSchema = z.object({
 })
 
 export async function loader() {
-	throw redirect('/system/categories')
+	throw redirect('/categories')
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -47,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.family.delete({ where: { id: category.id } })
 
-	return redirectWithToast(`/system/categories`, {
+	return redirectWithToast(`/categories`, {
 		type: 'success',
 		title: 'Categoría eliminada',
 		description: `Categoría "${category?.description}" ha sido eliminada con éxito.`,

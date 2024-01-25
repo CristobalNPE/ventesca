@@ -101,7 +101,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.provider.delete({ where: { id: provider.id } })
 
-	return redirectWithToast(`/system/providers`, {
+	return redirectWithToast(`/providers`, {
 		type: 'success',
 		title: 'Proveedor eliminado',
 		description: `El proveedor ${provider.name} ha sido eliminado con éxito.`,
@@ -149,7 +149,7 @@ export default function ProviderRoute() {
 			<div className="my-4 flex max-w-[40rem] flex-col gap-4 ">
 				<div className="flex w-full gap-4">
 					<Link
-						to={`/system/inventory?by-provider=${provider.id}`}
+						to={`/inventory?by-provider=${provider.id}`}
 						className="relative  h-[13rem] w-[13rem] rounded-md bg-secondary p-4"
 					>
 						<Icon

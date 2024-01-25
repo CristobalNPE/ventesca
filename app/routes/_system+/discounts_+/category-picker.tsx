@@ -89,7 +89,7 @@ export function CategoryPicker({
 			<fetcher.Form
 				autoComplete="off"
 				method="GET"
-				action="/system/discounts/category-picker"
+				action="/discounts/category-picker"
 				className="flex w-[16.5rem] items-center overflow-hidden rounded-md border border-input bg-background"
 				onChange={e => {
 					handleFormChange(e.currentTarget)

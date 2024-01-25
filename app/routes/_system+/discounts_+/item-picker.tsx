@@ -91,7 +91,7 @@ export function ItemPicker({
 			<fetcher.Form
 				autoComplete="off"
 				method="GET"
-				action="/system/discounts/item-picker"
+				action="/discounts/item-picker"
 				className="flex w-[16.5rem] items-center overflow-hidden rounded-md border border-input bg-background"
 				onChange={e => {
 					handleFormChange(e.currentTarget)

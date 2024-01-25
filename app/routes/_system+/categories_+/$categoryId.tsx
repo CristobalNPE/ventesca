@@ -87,7 +87,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		data: { familyId: destinationCategory },
 	})
 
-	throw redirect(`/system/categories/${destinationCategory}`)
+	throw redirect(`/categories/${destinationCategory}`)
 }
 
 export default function CategoryRoute() {

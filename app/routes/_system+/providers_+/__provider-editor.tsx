@@ -110,7 +110,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/system/providers/${updatedProvider.id}`)
+	return redirect(`/providers/${updatedProvider.id}`)
 }
 
 export function ProviderEditor({

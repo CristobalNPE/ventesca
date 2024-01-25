@@ -78,7 +78,7 @@ export default function DiscountRoute() {
 								<li
 									key={item.id}
 									className="flex cursor-pointer select-none gap-2 text-lg font-semibold tracking-tight hover:text-primary"
-									onClick={() => navigate(`/system/inventory/${item.id}`)}
+									onClick={() => navigate(`/inventory/${item.id}`)}
 								>
 									<p className="w-[3rem] font-bold">{item.code}</p>
 									<p>{item.name}</p>
@@ -99,7 +99,7 @@ export default function DiscountRoute() {
 								<li
 									key={category.id}
 									className="flex cursor-pointer select-none gap-2 text-lg font-semibold tracking-tight hover:text-primary"
-									onClick={() => navigate(`/system/categories/${category.id}`)}
+									onClick={() => navigate(`/categories/${category.id}`)}
 								>
 									<p className="w-[3rem] font-bold">{category.code}</p>
 									<p>{category.description}</p>
