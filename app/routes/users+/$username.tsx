@@ -58,7 +58,7 @@ export default function ProfileRoute() {
 						<h1 className="text-center text-h2">{userDisplayName}</h1>
 					</div>
 					<p className="mt-2 text-center text-muted-foreground">
-						Joined {data.userJoinedDisplay}
+						Activado {data.userJoinedDisplay}
 					</p>
 
 					<Form action="/logout" method="POST" className="mt-3">
