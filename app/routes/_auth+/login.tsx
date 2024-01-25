@@ -346,7 +346,7 @@ export default function LoginPage() {
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Login to Epic Notes' }]
+	return [{ title: 'Iniciar Sesión -  Sistema de Ventas' }]
 }
 
 export function ErrorBoundary() {
