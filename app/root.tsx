@@ -298,7 +298,7 @@ function App() {
 
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
-			<div className="flex h-screen ">
+			<div className="flex h-screen">
 				{user && (
 					<>
 						{shrinkSidebar ? (
@@ -336,7 +336,7 @@ function App() {
 									variant={'outline'}
 									onClick={() => setShrinkSidebar(false)}
 								>
-									<Icon name="arrow-right" />
+									<Icon name="layout-sidebar-left-expand" size="lg" />
 								</Button>
 							</div>
 						) : (
@@ -366,7 +366,7 @@ function App() {
 									variant={'outline'}
 									onClick={() => setShrinkSidebar(true)}
 								>
-									<Icon name="arrow-left" />
+									<Icon name="layout-sidebar-left-collapse" size="lg" />
 								</Button>
 							</div>
 						)}
