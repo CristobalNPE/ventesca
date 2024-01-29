@@ -20,6 +20,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu.tsx'
+import { isDiscountActive } from '#app/routes/_system+/sell.tsx'
 
 export const TYPE_SELL = 'Venta'
 export const TYPE_RETURN = 'Devolución'
@@ -82,10 +83,14 @@ export const ItemTransactionRow = forwardRef<
 	}
 
 	const isItemDiscountApplicable =
-		Boolean(item.discount) && isValidDiscount(item.discount)
+		Boolean(item.discount) &&
+		isValidDiscount(item.discount) &&
+		isDiscountActive(item.discount)
 
 	const isFamilyDiscountApplicable =
-		Boolean(item.family?.discount) && isValidDiscount(item.family?.discount)
+		Boolean(item.family?.discount) &&
+		isValidDiscount(item.family?.discount) &&
+		isDiscountActive(item.family?.discount)
 
 	const isAnyDiscountApplicable =
 		isItemDiscountApplicable || isFamilyDiscountApplicable

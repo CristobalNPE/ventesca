@@ -68,6 +68,15 @@ export type PaymentMethod = z.infer<typeof PaymentMethodSchema>
 export async function loader({ request }: LoaderFunctionArgs) {
 	const transactionId = await getTransactionId(request)
 	const userId = await requireUserId(request)
+
+	// const pendingTransaction = await prisma.transaction.findFirst({
+	// 	where: {
+	// 		sellerId: userId,
+	// 		id: transactionId,
+	// 		status: TRANSACTION_STATUS_PENDING,
+	// 	},
+	// })
+
 	if (!transactionId) {
 		const transactionSession = await transactionSessionStorage.getSession(
 			request.headers.get('cookie'),
@@ -260,6 +269,15 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 }
 
+export const isDiscountActive = (discount: SerializeFrom<Discount>) => {
+	const now = new Date()
+	const validFrom = new Date(discount.validFrom)
+	const validUntil = new Date(discount.validUntil)
+	const isValid = validFrom <= now && validUntil >= now
+
+	return isValid && discount.isActive
+}
+
 export default function SellRoute() {
 	//! CHECK OTHER FILTERS AND ADD THE TOLOWERCASE() WHERE NEEDED.
 
@@ -276,6 +294,7 @@ export default function SellRoute() {
 	): discount is SerializeFrom<Discount> {
 		return discount?.minQuantity !== undefined
 	}
+
 
 	const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
 		const familyDiscount = itemTransaction.item?.family?.discount
@@ -296,7 +315,7 @@ export default function SellRoute() {
 			allDiscounts.push(itemDiscount)
 		}
 
-		const validDiscounts = allDiscounts.filter(Boolean)
+		const validDiscounts = allDiscounts.filter(Boolean).filter(isDiscountActive)
 		return validDiscounts
 	})
 
@@ -428,7 +447,7 @@ export default function SellRoute() {
 				</ScrollArea>
 			</div>
 
-			<div className="mx-auto mt-auto flex h-[11rem] w-fit gap-8  rounded-md bg-secondary py-4 pl-4 pr-6">
+			<div className="mx-auto mt-auto flex h-[11rem] w-fit gap-8  rounded-md bg-secondary py-4 pl-4 pr-6 ">
 				<DiscountsPanel activeDiscounts={discounts} />
 				<div className="flex flex-col justify-between gap-2">
 					<div className="flex items-center text-2xl text-foreground/80">
@@ -574,7 +593,8 @@ const PaymentSelection = ({
 					onClick={() => setPaymentMethod(paymentMethodType)}
 					className={cn(
 						'w-full cursor-pointer rounded-md p-2 text-center',
-						paymentMethodType === paymentMethod && 'bg-primary/50  ring-1 ring-offset-0 ring-primary ',
+						paymentMethodType === paymentMethod &&
+							'bg-primary/50  ring-1 ring-primary ring-offset-0 ',
 					)}
 					key={index}
 				>
