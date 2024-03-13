@@ -246,7 +246,7 @@ const DiscountValidPeriodCard = ({
 			<div
 				className={cn(
 					'flex flex-col items-center justify-center gap-1 rounded-md px-6 py-4 text-6xl text-background',
-					isDiscountActive ? 'bg-primary' : 'bg-destructive',
+					isDiscountActive ? 'bg-primary' : 'bg-secondary text-foreground',
 				)}
 			>
 				<Icon name={discountState.icon} className="flex-none" />
