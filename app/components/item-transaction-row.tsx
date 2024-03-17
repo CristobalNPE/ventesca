@@ -140,6 +140,7 @@ export const ItemTransactionRow = forwardRef<
 			? applicableFamilyDiscounts + applicableItemDiscounts
 			: 0
 
+	//When the promo stops being applicable, it changes back to TYPE_SELL
 	useEffect(() => {
 		if (transactionType === TYPE_PROMO && !isAnyDiscountApplicable) {
 			setTransactionType(TYPE_SELL)
