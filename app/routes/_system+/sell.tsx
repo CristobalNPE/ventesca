@@ -319,6 +319,8 @@ export default function SellRoute() {
 		return validDiscounts
 	})
 
+	//!There is a bug when I activate a promo based on the item quantity, and then decrease the amount.
+	//!The type of the transaction is updated, but the discount still shows in the panel until another submit is made.
 	const discounts = validDiscounts.filter(
 		(discount, index, discounts) =>
 			discounts.findIndex(d => d.id === discount.id) === index,
