@@ -250,7 +250,7 @@ function App() {
 	const theme = useTheme()
 
 	const [shrinkSidebar, setShrinkSidebar] = useState(false)
-	// const { user } = useLoaderData<typeof loader>()
+
 
 	const navigationLinks: NavigationLink[] = [
 		{
@@ -302,7 +302,7 @@ function App() {
 				{user && (
 					<>
 						{shrinkSidebar ? (
-							<div className="flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-2 py-8">
+							<div className="flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-1 py-8">
 								<h1 className="text-3xl font-bold">SV</h1>
 								<nav className="mt-8 flex h-full flex-col gap-3">
 									{navigationLinks.map(link => {
