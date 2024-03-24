@@ -71,7 +71,6 @@ type NavigationLink = {
 	name: string
 	path: string
 	icon: IconName
-	main?: boolean
 }
 
 export const links: LinksFunction = () => {
@@ -252,12 +251,6 @@ function App() {
 	const [shrinkSidebar, setShrinkSidebar] = useState(false)
 
 	const navigationLinks: NavigationLink[] = [
-		// {
-		// 	name: 'Punto de Venta',
-		// 	path: 'sell',
-		// 	icon: 'circle-dollar-sign',
-		// 	main: true,
-		// },
 		{
 			name: 'Centro de Control',
 			path: 'control-center',
@@ -304,158 +297,30 @@ function App() {
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			<div className="flex h-screen">
 				{user && (
-					<>
-						{shrinkSidebar ? (
-							<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-1 pb-6 pt-3">
-								<div className="flex select-none items-center gap-2">
-									<div className="flex size-[2.5rem] rounded-md bg-destructive/40"></div>
-								</div>
-								<nav className="mt-8 flex h-full flex-col justify-between gap-3">
-									<div className="flex flex-col gap-2">
-										{navigationLinks.map(link => {
-											return (
-												<TooltipProvider delayDuration={100} key={link.name}>
-													<Tooltip>
-														<TooltipTrigger>
-															<NavLink
-																className={({ isActive }) =>
-																	cn(
-																		'flex items-center gap-3 rounded-sm p-2 text-2xl transition-colors hover:bg-primary/10',
-																		isActive &&
-																			' bg-primary/30 hover:bg-primary/30',
-																		link.main && 'text-primary ',
-																	)
-																}
-																to={link.path}
-															>
-																<Icon className="" name={link.icon} />
-															</NavLink>
-														</TooltipTrigger>
-														<TooltipContent side="right">
-															<p>{link.name}</p>
-														</TooltipContent>
-													</Tooltip>
-												</TooltipProvider>
-											)
-										})}
-									</div>
-									<div>
-										{secondaryLinks.map(link => {
-											return (
-												<TooltipProvider delayDuration={100} key={link.name}>
-													<Tooltip>
-														<TooltipTrigger>
-															<NavLink
-																className={({ isActive }) =>
-																	cn(
-																		'flex items-center gap-3 rounded-sm p-2 text-2xl transition-colors hover:bg-primary/10',
-																		isActive &&
-																			' bg-primary/30 hover:bg-primary/30',
-																		link.main && 'text-primary ',
-																	)
-																}
-																to={link.path}
-															>
-																<Icon className="" name={link.icon} />
-															</NavLink>
-														</TooltipTrigger>
-														<TooltipContent side="right">
-															<p>{link.name}</p>
-														</TooltipContent>
-													</Tooltip>
-												</TooltipProvider>
-											)
-										})}
-									</div>
-								</nav>
-								<Button
-									className="absolute -right-2 top-[50%] -translate-y-1/2 transform p-0 "
-									variant={'secondary'}
-									onClick={() => setShrinkSidebar(false)}
-								>
-									<Icon name="layout-sidebar-left-expand" size="lg" />
-								</Button>
-							</div>
-						) : (
-							<div className="relative flex w-[18rem] flex-col border-r-[1px] border-foreground/5 bg-secondary/80 px-4 pb-6 pt-3">
-								<div className="flex select-none items-center gap-2">
-									<div className="flex size-[3.5rem] rounded-md bg-destructive/40"></div>
-									<div>
-										<h1 className="text-2xl font-black uppercase tracking-tight">
-											{/* TODO: Change to variable appName or something */}
-											Ventesca
-										</h1>
-										<h3 className="tracking-tight text-foreground/80">
-											{businessName}
-										</h3>
-									</div>
-								</div>
-								<nav className="mt-8 flex h-full flex-col justify-between">
-									<div className="flex flex-col gap-2">
-										{navigationLinks.map(link => {
-											return (
-												<NavLink
-													className={({ isActive }) =>
-														cn(
-															'text-md flex select-none items-center gap-3 rounded-sm p-2 transition-colors hover:bg-foreground/10',
-															isActive &&
-																' bg-foreground/20 hover:bg-foreground/20',
-															link.main && 'text-primary ',
-														)
-													}
-													key={link.name}
-													to={link.path}
-												>
-													<Icon size="md" className="" name={link.icon} />
-													<span>{link.name}</span>
-												</NavLink>
-											)
-										})}
-									</div>
-									<div>
-										{secondaryLinks.map(link => {
-											return (
-												<NavLink
-													className={({ isActive }) =>
-														cn(
-															'text-md flex select-none items-center gap-3 rounded-sm p-2 transition-colors hover:bg-primary/10',
-															isActive && ' bg-primary/30 hover:bg-primary/30',
-															link.main && 'text-primary ',
-														)
-													}
-													key={link.name}
-													to={link.path}
-												>
-													<Icon size="md" className="" name={link.icon} />
-													<span>{link.name}</span>
-												</NavLink>
-											)
-										})}
-									</div>
-									<Button
-										className="absolute -right-2 top-[50%] -translate-y-1/2 transform p-0 "
-										variant={'secondary'}
-										onClick={() => setShrinkSidebar(true)}
-									>
-										<Icon name="layout-sidebar-left-collapse" size="lg" />
-									</Button>
-								</nav>
-							</div>
-						)}
-					</>
+					<SideBar
+						shrinkSidebar={shrinkSidebar}
+						setShrinkSidebar={setShrinkSidebar}
+						navigationLinks={navigationLinks}
+						secondaryLinks={secondaryLinks}
+						businessName={businessName}
+					/>
 				)}
 				<div className="flex-1 overflow-auto ">
 					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-between border-b-[1px] border-foreground/5 bg-secondary p-8">
 						<NavLink
 							className={({ isActive }) =>
 								cn(
-									'text-md flex  select-none items-center gap-2 rounded-sm bg-primary/5 px-12 py-2 font-bold ring-2 ring-primary transition-colors hover:bg-primary/60',
-									isActive && '  bg-primary/60 ',
+									'text-md flex  select-none items-center gap-3 rounded-sm bg-primary/5 px-12 py-2 font-bold ring-2 ring-foreground/80 transition-colors hover:bg-primary/60 *:hover:text-foreground',
+									isActive && 'bg-primary/60 *:text-foreground ',
 								)
 							}
 							to={'sell'}
 						>
-							<Icon size="md" className="" name={'circle-dollar-sign'} />
+							<Icon
+								size="md"
+								className="text-primary"
+								name={'circle-dollar-sign'}
+							/>
 
 							<span>{'Punto de Venta'}</span>
 						</NavLink>
@@ -627,6 +492,159 @@ function ThemeSwitch({ userPreference }: { userPreference?: Theme | null }) {
 			</div>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
+	)
+}
+
+function SideBar({
+	shrinkSidebar,
+	setShrinkSidebar,
+	navigationLinks,
+	secondaryLinks,
+	businessName,
+	businessLogo,
+}: {
+	shrinkSidebar: boolean
+	setShrinkSidebar: Function
+	navigationLinks: NavigationLink[]
+	secondaryLinks: NavigationLink[]
+	businessName: string
+	businessLogo?: string
+}) {
+	return (
+		<>
+			{shrinkSidebar ? (
+				<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-1 pb-8 pt-3">
+					<div className="flex select-none items-center gap-2">
+						<div className="flex size-[2.5rem] rounded-md bg-foreground/40"></div>
+					</div>
+					<nav className="mt-8 flex h-full flex-col justify-between gap-6">
+						<div className="flex flex-col gap-2">
+							{navigationLinks.map(link => {
+								return (
+									<TooltipProvider delayDuration={100} key={link.name}>
+										<Tooltip>
+											<TooltipTrigger>
+												<NavLink
+													className={({ isActive }) =>
+														cn(
+															'flex items-center gap-3 rounded-sm p-2 text-2xl transition-colors hover:bg-foreground/10',
+															isActive &&
+																' bg-foreground/20 hover:bg-foreground/20',
+														)
+													}
+													to={link.path}
+												>
+													<Icon className="" name={link.icon} />
+												</NavLink>
+											</TooltipTrigger>
+											<TooltipContent side="right">
+												<p>{link.name}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+								)
+							})}
+						</div>
+						<div>
+							{secondaryLinks.map(link => {
+								return (
+									<TooltipProvider delayDuration={100} key={link.name}>
+										<Tooltip>
+											<TooltipTrigger>
+												<NavLink
+													className={({ isActive }) =>
+														cn(
+															'flex items-center gap-3 rounded-sm p-2 text-2xl transition-colors hover:bg-foreground/10',
+															isActive &&
+																'bg-foreground/20 hover:bg-foreground/20',
+														)
+													}
+													to={link.path}
+												>
+													<Icon className="" name={link.icon} />
+												</NavLink>
+											</TooltipTrigger>
+											<TooltipContent side="right">
+												<p>{link.name}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+								)
+							})}
+						</div>
+					</nav>
+					<Button
+						className="absolute -right-2 top-[50%] -translate-y-1/2 transform p-0 "
+						variant={'secondary'}
+						onClick={() => setShrinkSidebar(false)}
+					>
+						<Icon name="layout-sidebar-left-expand" size="md" />
+					</Button>
+				</div>
+			) : (
+				<div className="relative flex w-[17.5rem] flex-col border-r-[1px] border-foreground/5 bg-secondary/80 px-4 pb-8 pt-3">
+					<div className="flex select-none items-center gap-2 ">
+						<div className="flex size-[3.5rem] rounded-md bg-foreground/40"></div>
+						<div>
+							<h1 className="text-2xl font-black uppercase tracking-tight">
+								{/* TODO: Change to variable appName or something */}
+								Ventesca
+							</h1>
+							<h3 className="tracking-tight text-foreground/80">
+								{businessName}
+							</h3>
+						</div>
+					</div>
+					<nav className="mt-8 flex h-full flex-col justify-between gap-6">
+						<div className="flex flex-col gap-2">
+							{navigationLinks.map(link => {
+								return (
+									<NavLink
+										className={({ isActive }) =>
+											cn(
+												'text-md flex select-none items-center gap-3 rounded-sm p-2 transition-colors hover:bg-foreground/10',
+												isActive && 'bg-foreground/20 hover:bg-foreground/20',
+											)
+										}
+										key={link.name}
+										to={link.path}
+									>
+										<Icon size="md" className="" name={link.icon} />
+										<span>{link.name}</span>
+									</NavLink>
+								)
+							})}
+						</div>
+						<div>
+							{secondaryLinks.map(link => {
+								return (
+									<NavLink
+										className={({ isActive }) =>
+											cn(
+												'text-md flex select-none items-center gap-3 rounded-sm p-2 transition-colors hover:bg-foreground/10',
+												isActive && 'bg-foreground/20 hover:bg-foreground/20',
+											)
+										}
+										key={link.name}
+										to={link.path}
+									>
+										<Icon size="md" className="" name={link.icon} />
+										<span>{link.name}</span>
+									</NavLink>
+								)
+							})}
+						</div>
+						<Button
+							className="absolute -right-2 top-[50%] -translate-y-1/2 transform p-0 "
+							variant={'secondary'}
+							onClick={() => setShrinkSidebar(true)}
+						>
+							<Icon name="layout-sidebar-left-collapse" size="md" />
+						</Button>
+					</nav>
+				</div>
+			)}
+		</>
 	)
 }
 
