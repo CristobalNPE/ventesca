@@ -16,5 +16,8 @@
   "workbench.editorAssociations": {
     "*.db": "sqlite-viewer.view"
   },
-  "cSpell.language": "en,es-ES"
+  "cSpell.language": "en,es-ES",
+  "cSpell.words": [
+    "Ventesca"
+  ]
 }
