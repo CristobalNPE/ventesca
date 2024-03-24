@@ -295,7 +295,6 @@ export default function SellRoute() {
 		return discount?.minQuantity !== undefined
 	}
 
-
 	const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
 		const familyDiscount = itemTransaction.item?.family?.discount
 		const itemDiscount = itemTransaction.item?.discount
@@ -449,29 +448,29 @@ export default function SellRoute() {
 				</ScrollArea>
 			</div>
 
-			<div className="mx-auto mt-auto flex h-[11rem] w-fit gap-8  rounded-md bg-secondary py-4 pl-4 pr-6 ">
+			<div className="mx-auto mt-auto flex h-[11rem] w-fit flex-col gap-4 rounded-md  py-4  pl-4 pr-6 lg:flex-row ">
 				<DiscountsPanel activeDiscounts={discounts} />
-				<div className="flex flex-col justify-between gap-2">
-					<div className="flex items-center text-2xl text-foreground/80">
+				<div className="flex flex-col justify-between gap-2 rounded-md bg-secondary p-2 ">
+					<div className="flex items-center text-xl text-foreground/80">
 						<span className="w-[12rem] pl-2">Subtotal:</span>
 						<span className="w-[12rem] rounded-md bg-background/50 p-1">
 							{formatCurrency(subtotal)}
 						</span>
 					</div>
-					<div className="flex items-center text-2xl text-foreground/80">
+					<div className="flex items-center text-xl text-foreground/80">
 						<span className="w-[12rem] pl-2">Descuentos:</span>
 						<span className="w-[12rem] rounded-md bg-background/50 p-1">
 							{formatCurrency(discount)}
 						</span>
 					</div>
-					<div className="flex items-center rounded-md bg-background/20 text-2xl font-bold">
+					<div className="flex items-center rounded-md bg-background/20 text-xl font-bold">
 						<span className="w-[12rem] pl-2">Total:</span>
 						<span className="w-[12rem] rounded-md bg-background/50 p-1">
 							{formatCurrency(total)}
 						</span>
 					</div>
 				</div>
-				<div className="flex flex-col items-center justify-between">
+				<div className="flex flex-col items-center justify-between rounded-md bg-secondary p-2">
 					<PaymentSelection currentPaymentMethod={currentPaymentMethod} />
 					{transaction && (
 						<ConfirmFinishTransaction
@@ -523,7 +522,7 @@ const DiscountsPanel = ({
 	const navigate = useNavigate()
 
 	return (
-		<div className="relative flex h-[10rem] w-full min-w-[20rem] flex-col gap-1 md:h-auto md:w-[20rem]">
+		<div className="relative flex h-[10rem] w-full min-w-[20rem] flex-col gap-1 rounded-md bg-secondary p-2 md:h-auto ">
 			{activeDiscounts.length === 0 ? (
 				<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md  bg-background/30 p-1">
 					<span className="select-none text-lg text-foreground/50">
@@ -634,10 +633,10 @@ const ConfirmFinishTransaction = ({
 				<Button
 					disabled={finishedTransaction.items.length === 0}
 					size={'lg'}
-					className="text-md mt-6 flex h-[5rem] w-full gap-2 font-semibold md:h-full"
+					className="text-md mt-6 flex h-[5rem] w-full  gap-2 font-semibold "
 				>
-					<Icon name="check" size="lg" />
-					<span className="">Ingresar Venta</span>
+					<Icon className="flex-shrink-0" name="check" size="xl" />
+					<span className="leading-tight">Ingresar Venta</span>
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>
