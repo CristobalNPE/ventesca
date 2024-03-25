@@ -3,6 +3,14 @@ import { prisma } from '#app/utils/db.server.ts'
 import { json } from '@remix-run/node'
 import { ItemEditor, action } from './__item-editor.tsx'
 import { useLoaderData } from '@remix-run/react'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card.tsx'
 
 export { action }
 
@@ -24,12 +32,18 @@ export default function CreateItem() {
 	const { providers, categories } = useLoaderData<typeof loader>()
 
 	return (
-		<div className="flex max-w-[35rem] flex-col  rounded-md bg-secondary">
-			<div className="flex gap-4 rounded-t-md bg-primary p-3 text-2xl text-background">
-				<Icon name="route" />
-				<h1>Ingresar nuevo articulo</h1>
-			</div>
-			<ItemEditor providers={providers} categories={categories} />
+		<div className="grid grid-cols-1 sm:grid-cols-2 ">
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center text-center md:text-left">
+						<Icon name="plus" className="mr-2" />
+						Ingresar nuevo articulo
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<ItemEditor providers={providers} categories={categories} />
+				</CardContent>
+			</Card>
 		</div>
 	)
 }
