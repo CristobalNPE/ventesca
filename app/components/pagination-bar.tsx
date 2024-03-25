@@ -9,7 +9,7 @@ export function PaginationBar({ total }: { total: number }) {
 	const $top = Number(searchParams.get('$top')) || 5
 	const totalPages = Math.ceil(total / $top)
 	const currentPage = Math.floor($skip / $top) + 1
-	const maxPages = 7
+	const maxPages = 5
 	const halfMaxPages = Math.floor(maxPages / 2)
 	const canPageBackwards = $skip > 0
 	const canPageForwards = $skip + $top < total
@@ -71,7 +71,7 @@ export function PaginationBar({ total }: { total: number }) {
 				if (isCurrentPage) {
 					return (
 						<Button
-							size="icon"
+							size="sm"
 							variant="ghost"
 							key={`${pageNumber}-active`}
 							className="grid min-w-[2rem] place-items-center bg-neutral-200 text-sm text-black"
@@ -93,7 +93,7 @@ export function PaginationBar({ total }: { total: number }) {
 								}}
 								preventScrollReset
 								prefetch="intent"
-								className="min-w-[2rem] font-normal text-neutral-600"
+								className="w-[1rem] md:min-w-[2rem] font-normal text-neutral-600"
 							>
 								{pageNumber}
 							</Link>
