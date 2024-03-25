@@ -306,7 +306,7 @@ function App() {
 					/>
 				)}
 				<div className="flex-1 overflow-auto ">
-					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-between border-b-[1px] border-foreground/5 bg-secondary p-8">
+					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-between border-b-[1px] border-foreground/5 bg-muted/80 p-8">
 						<NavLink
 							className={({ isActive }) =>
 								cn(
@@ -527,9 +527,9 @@ function SideBar({
 												<NavLink
 													className={({ isActive }) =>
 														cn(
-															'flex items-center gap-3 rounded-sm p-2 text-2xl text-muted-foreground transition-colors hover:text-foreground',
+															'flex items-center gap-3 rounded-sm p-2 text-2xl text-foreground transition-colors hover:bg-foreground/20',
 															isActive &&
-																' bg-foreground/20 text-foreground hover:text-foreground',
+																' bg-foreground/20 text-foreground hover:bg-foreground/20',
 														)
 													}
 													to={link.path}
@@ -554,9 +554,9 @@ function SideBar({
 												<NavLink
 													className={({ isActive }) =>
 														cn(
-															'flex items-center gap-3 rounded-sm p-2 text-2xl text-muted-foreground transition-colors hover:text-foreground',
+															'flex items-center gap-3 rounded-sm p-2 text-2xl text-foreground transition-colors hover:bg-foreground/20',
 															isActive &&
-																'bg-foreground/20 text-foreground hover:text-foreground',
+																'bg-foreground/20 text-foreground hover:bg-foreground/20',
 														)
 													}
 													to={link.path}
