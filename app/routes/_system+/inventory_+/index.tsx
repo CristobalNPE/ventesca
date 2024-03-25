@@ -1,3 +1,4 @@
+import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -5,6 +6,7 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
+	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
@@ -38,27 +40,14 @@ import { Suspense, useId } from 'react'
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
 	const url = new URL(request.url)
+	const $top = Number(url.searchParams.get('$top')) || 5
+	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const searchTerm = url.searchParams.get('search') ?? ''
 
 	const searchTermIsCode = !isNaN(parseInt(searchTerm))
 
 	let itemsPromise
 
-	if (searchTerm === '') {
-		itemsPromise = prisma.item
-			.findMany({
-				orderBy: { code: 'asc' },
-				select: {
-					id: true,
-					code: true,
-					name: true,
-					sellingPrice: true,
-					stock: true,
-					family: { select: { description: true } },
-				},
-			})
-			.then(u => u)
-	}
 	if (searchTermIsCode) {
 		itemsPromise = prisma.item
 			.findMany({
@@ -79,6 +68,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	} else {
 		itemsPromise = prisma.item
 			.findMany({
+				take: $top,
+				skip: $skip,
 				orderBy: { code: 'asc' },
 				select: {
 					id: true,
@@ -194,7 +185,7 @@ export default function InventoryRoute() {
 				}
 			>
 				<Await resolve={itemsPromise}>
-					{items => <ItemsTableCard items={items} />}
+					{items => <ItemsTableCard totalItems={totalItems} items={items} />}
 				</Await>
 			</Suspense>
 		</main>
@@ -236,12 +227,12 @@ type ItemData = {
 		description: string
 	} | null
 }
-function ItemsTableCard({ items }: { items: ItemData[] }) {
+function ItemsTableCard({ items, totalItems }: { items: ItemData[], totalItems: number}) {
 	const navigate = useNavigate()
 
 	return (
 		<Card className=" max-h-[63dvh]  xl:col-span-2">
-			<CardHeader className="flex flex-col items-center md:flex-row md:justify-between">
+			<CardHeader className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
 				<div className="grid gap-2">
 					<CardTitle>Artículos</CardTitle>
 					<CardDescription>
@@ -290,6 +281,9 @@ function ItemsTableCard({ items }: { items: ItemData[] }) {
 					</TableBody>
 				</Table>
 			</CardContent>
+			<CardFooter className='flex justify-end'>
+				<PaginationBar total={totalItems}/>
+			</CardFooter>
 		</Card>
 	)
 }
