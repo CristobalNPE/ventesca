@@ -231,7 +231,7 @@ function ItemsTableCard({ items, totalItems }: { items: ItemData[], totalItems: 
 	const navigate = useNavigate()
 
 	return (
-		<Card className=" max-h-[63dvh]  xl:col-span-2">
+		<Card className="   xl:col-span-2">
 			<CardHeader className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
 				<div className="grid gap-2">
 					<CardTitle>Artículos</CardTitle>
@@ -281,7 +281,7 @@ function ItemsTableCard({ items, totalItems }: { items: ItemData[], totalItems: 
 					</TableBody>
 				</Table>
 			</CardContent>
-			<CardFooter className='flex justify-end'>
+			<CardFooter className='flex justify-center md:justify-end'>
 				<PaginationBar total={totalItems}/>
 			</CardFooter>
 		</Card>
