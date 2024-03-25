@@ -513,7 +513,7 @@ function SideBar({
 	return (
 		<>
 			{shrinkSidebar ? (
-				<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-2 pb-8 pt-3">
+				<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-muted px-2 pb-8 pt-3">
 					<div className="flex select-none items-center gap-2">
 						<div className="flex size-[2.5rem] rounded-md bg-foreground/40"></div>
 					</div>
@@ -527,9 +527,9 @@ function SideBar({
 												<NavLink
 													className={({ isActive }) =>
 														cn(
-															'flex items-center gap-3 rounded-sm p-2 text-2xl transition-colors hover:bg-foreground/10',
+															'flex items-center gap-3 rounded-sm p-2 text-2xl text-muted-foreground transition-colors hover:text-foreground',
 															isActive &&
-																' bg-foreground/20 hover:bg-foreground/20',
+																' bg-foreground/20 text-foreground hover:text-foreground',
 														)
 													}
 													to={link.path}
@@ -554,9 +554,9 @@ function SideBar({
 												<NavLink
 													className={({ isActive }) =>
 														cn(
-															'flex items-center gap-3 rounded-sm p-2 text-2xl transition-colors hover:bg-foreground/10',
+															'flex items-center gap-3 rounded-sm p-2 text-2xl text-muted-foreground transition-colors hover:text-foreground',
 															isActive &&
-																'bg-foreground/20 hover:bg-foreground/20',
+																'bg-foreground/20 text-foreground hover:text-foreground',
 														)
 													}
 													to={link.path}
@@ -602,8 +602,9 @@ function SideBar({
 									<NavLink
 										className={({ isActive }) =>
 											cn(
-												'text-md flex select-none items-center gap-3 rounded-sm p-2 transition-colors hover:bg-foreground/10',
-												isActive && 'bg-foreground/20 hover:bg-foreground/20',
+												'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+												isActive &&
+													'bg-foreground/20 text-foreground hover:text-foreground',
 											)
 										}
 										key={link.name}
@@ -621,8 +622,9 @@ function SideBar({
 									<NavLink
 										className={({ isActive }) =>
 											cn(
-												'text-md flex select-none items-center gap-3 rounded-sm p-2 transition-colors hover:bg-foreground/10',
-												isActive && 'bg-foreground/20 hover:bg-foreground/20',
+												'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+												isActive &&
+													'bg-foreground/20 text-foreground hover:text-foreground',
 											)
 										}
 										key={link.name}
