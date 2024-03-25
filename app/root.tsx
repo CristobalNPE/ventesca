@@ -513,7 +513,7 @@ function SideBar({
 	return (
 		<>
 			{shrinkSidebar ? (
-				<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-1 pb-8 pt-3">
+				<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-secondary/80 px-2 pb-8 pt-3">
 					<div className="flex select-none items-center gap-2">
 						<div className="flex size-[2.5rem] rounded-md bg-foreground/40"></div>
 					</div>
