@@ -310,7 +310,7 @@ function App() {
 						<NavLink
 							className={({ isActive }) =>
 								cn(
-									'text-md flex  select-none items-center gap-3 rounded-sm bg-primary/5 px-12 py-2 font-bold ring-2 ring-foreground/80 transition-colors hover:bg-primary/60 *:hover:text-foreground',
+									'text-md flex  select-none items-center gap-3 rounded-sm bg-popover px-12 py-2 font-bold ring-2 ring-primary-foreground transition-colors hover:bg-primary/60 *:hover:text-foreground',
 									isActive && 'bg-primary/60 *:text-foreground ',
 								)
 							}
@@ -322,9 +322,9 @@ function App() {
 								name={'circle-dollar-sign'}
 							/>
 
-							<span>{'Punto de Venta'}</span>
+							<span className='hidden md:flex'>{'Punto de Venta'}</span>
 						</NavLink>
-						<div className="flex">
+						<div className="flex gap-2">
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 							{user && <UserDropdown />}
 						</div>
@@ -372,7 +372,7 @@ function UserDropdown() {
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
-						<div className="flex flex-col">
+						<div className="hidden md:flex flex-col">
 							<span className="text-body-sm font-bold">
 								{user.name ?? user.username}
 							</span>
