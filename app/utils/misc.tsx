@@ -5,27 +5,23 @@ import { useSpinDelay } from 'spin-delay'
 import { extendTailwindMerge } from 'tailwind-merge'
 import { extendedTheme } from './extended-theme.ts'
 
-
-
 export function formatChileanRUT(rut: string | number): string {
 	// Convert the input to a string if it's not already
-	let rutStr = rut.toString();
+	let rutStr = rut.toString()
 
 	// Remove any existing formatting
-	rutStr = rutStr.replace(/\D/g, '');
+	rutStr = rutStr.replace(/\D/g, '')
 
 	// Separate the last digit (verifier) from the rest of the RUT
-	const body = rutStr.slice(0, -1);
-	const dv = rutStr.slice(-1).toUpperCase();
+	const body = rutStr.slice(0, -1)
+	const dv = rutStr.slice(-1).toUpperCase()
 
 	// Format the body of the RUT with dots
-	const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+	const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 
 	// Combine the formatted body with the verifier
-	return `${formattedBody}-${dv}`;
+	return `${formattedBody}-${dv}`
 }
-
-
 
 export function formatCurrency(amountToFormat: number | null) {
 	const amount = amountToFormat ? amountToFormat : 0
@@ -63,6 +59,26 @@ export function calculateDV(rut: string): string {
 		default:
 			return result.toString()
 	}
+}
+
+export function setSearchParamsString(
+	searchParams: URLSearchParams,
+	changes: Record<string, string | number | undefined>,
+) {
+	const newSearchParams = new URLSearchParams(searchParams)
+	for (const [key, value] of Object.entries(changes)) {
+		if (value === undefined) {
+			newSearchParams.delete(key)
+			continue
+		}
+		newSearchParams.set(key, String(value))
+	}
+
+	return Array.from(newSearchParams.entries())
+		.map(([key, value]) =>
+			value ? `${key}=${encodeURIComponent(value)}` : key,
+		)
+		.join('&')
 }
 
 export function getUserImgSrc(imageId?: string | null) {
