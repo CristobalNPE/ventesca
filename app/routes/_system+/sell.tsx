@@ -450,7 +450,7 @@ export default function SellRoute() {
 
 			<div className="mx-auto mt-auto flex h-[11rem] w-fit flex-col gap-4 rounded-md  py-4  pl-4 pr-6 lg:flex-row ">
 				<DiscountsPanel activeDiscounts={discounts} />
-				<div className="flex flex-col justify-between gap-2 rounded-md bg-secondary p-2 ">
+				<div className="flex flex-col justify-between gap-2 rounded-md bg-muted p-2 ">
 					<div className="flex items-center text-xl text-foreground/80">
 						<span className="w-[12rem] pl-2">Subtotal:</span>
 						<span className="w-[12rem] rounded-md bg-background/50 p-1">
@@ -470,7 +470,7 @@ export default function SellRoute() {
 						</span>
 					</div>
 				</div>
-				<div className="flex flex-col items-center justify-between rounded-md bg-secondary p-2">
+				<div className="flex flex-col items-center justify-between rounded-md bg-muted p-2">
 					<PaymentSelection currentPaymentMethod={currentPaymentMethod} />
 					{transaction && (
 						<ConfirmFinishTransaction
@@ -522,7 +522,7 @@ const DiscountsPanel = ({
 	const navigate = useNavigate()
 
 	return (
-		<div className="relative flex h-[10rem] w-full min-w-[20rem] flex-col gap-1 rounded-md bg-secondary p-2 md:h-auto ">
+		<div className="relative flex h-[10rem] w-full min-w-[20rem] flex-col gap-1 rounded-md bg-muted p-2 md:h-auto ">
 			{activeDiscounts.length === 0 ? (
 				<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md  bg-background/30 p-1">
 					<span className="select-none text-lg text-foreground/50">
