@@ -306,7 +306,7 @@ function App() {
 					/>
 				)}
 				<div className="flex-1 overflow-auto ">
-					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-between border-b-[1px] border-foreground/5 bg-muted/80 p-8">
+					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-between border-b-[1px] border-foreground/5 bg-secondary p-8">
 						<NavLink
 							className={({ isActive }) =>
 								cn(
