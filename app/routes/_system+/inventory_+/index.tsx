@@ -155,8 +155,10 @@ export default function InventoryRoute() {
 					value={`${totalItems}`}
 					icon={'package'}
 					subtext={`${newItemsThisMonth} ${
-						newItemsThisMonth === 1 ? 'articulo' : 'artículos'
-					} nuevos este mes`}
+						newItemsThisMonth === 1
+							? 'articulo nuevo este mes'
+							: 'artículos nuevos este mes'
+					} `}
 				/>
 				<DataCard
 					title={'Artículos Sin Stock'}
@@ -227,7 +229,13 @@ type ItemData = {
 		description: string
 	} | null
 }
-function ItemsTableCard({ items, totalItems }: { items: ItemData[], totalItems: number}) {
+function ItemsTableCard({
+	items,
+	totalItems,
+}: {
+	items: ItemData[]
+	totalItems: number
+}) {
 	const navigate = useNavigate()
 
 	return (
@@ -281,8 +289,8 @@ function ItemsTableCard({ items, totalItems }: { items: ItemData[], totalItems: 
 					</TableBody>
 				</Table>
 			</CardContent>
-			<CardFooter className='flex justify-center md:justify-end'>
-				<PaginationBar total={totalItems}/>
+			<CardFooter className="flex justify-center md:justify-end">
+				<PaginationBar total={totalItems} />
 			</CardFooter>
 		</Card>
 	)
