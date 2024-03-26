@@ -262,7 +262,7 @@ export function ItemEditor({
 							<div className="flex gap-4"></div>
 							<ErrorList id={form.errorId} errors={form.errors} />
 						</Form>
-						<div className=" flex justify-between">
+						<div className=" flex flex-col-reverse gap-2 md:flex-row justify-between">
 							<Button
 								form={form.id}
 								variant="ghost"
