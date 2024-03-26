@@ -38,7 +38,7 @@ const SelectModal = ({
 						) : (
 							<Icon name="magnifying-glass" className="mr-2" />
 						)}
-						{selected ? `${title}: ${selected}` : `Seleccionar ${title}`}
+						{selected ? ` ${selected}` : `Seleccionar ${title}`}
 					</Button>
 				</AlertDialogTrigger>
 				<AlertDialogContent className="max-w-xl">
