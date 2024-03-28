@@ -244,7 +244,7 @@ function ItemsTableCard({
 				<div className="grid gap-2">
 					<CardTitle>Artículos</CardTitle>
 					<CardDescription>
-						Lista de artículos registrados en sistema.
+						Mostrando {items.length} de {totalItems} artículos registrados.
 					</CardDescription>
 				</div>
 
