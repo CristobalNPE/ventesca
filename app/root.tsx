@@ -322,14 +322,14 @@ function App() {
 								name={'circle-dollar-sign'}
 							/>
 
-							<span className='hidden md:flex'>{'Punto de Venta'}</span>
+							<span className="hidden md:flex">{'Punto de Venta'}</span>
 						</NavLink>
 						<div className="flex gap-2">
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 							{user && <UserDropdown />}
 						</div>
 					</header>
-					<main className="h-[calc(99%-4rem)] p-8">
+					<main className="h-[calc(99%-4rem)]  p-4 sm:p-6 md:p-8">
 						<Outlet />
 					</main>
 				</div>
@@ -372,7 +372,7 @@ function UserDropdown() {
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
-						<div className="hidden md:flex flex-col">
+						<div className="hidden flex-col md:flex">
 							<span className="text-body-sm font-bold">
 								{user.name ?? user.username}
 							</span>
