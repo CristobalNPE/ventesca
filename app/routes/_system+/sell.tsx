@@ -448,7 +448,7 @@ export default function SellRoute() {
 				</ScrollArea>
 			</div>
 
-			<div className="mx-auto mt-auto flex h-[11rem] w-fit flex-col gap-4 rounded-md  py-4  pl-4 pr-6 lg:flex-row ">
+			<div className="mx-auto mt-auto flex h-[11rem] w-fit flex-col gap-4 rounded-md  py-4  pl-4 pr-6 lg:flex-row">
 				<DiscountsPanel activeDiscounts={discounts} />
 				<div className="flex flex-col justify-between gap-2 rounded-md bg-muted p-2 ">
 					<div className="flex items-center text-xl text-foreground/80">
@@ -470,7 +470,7 @@ export default function SellRoute() {
 						</span>
 					</div>
 				</div>
-				<div className="flex flex-col items-center justify-between rounded-md bg-muted p-2">
+				<div className="flex flex-col items-center justify-between rounded-md bg-muted p-2 ">
 					<PaymentSelection currentPaymentMethod={currentPaymentMethod} />
 					{transaction && (
 						<ConfirmFinishTransaction
