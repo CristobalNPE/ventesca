@@ -22,6 +22,7 @@ export type IconName =
 	| 'circle-dollar-sign'
 	| 'circle-dot-dashed'
 	| 'circle-percentage'
+	| 'clock-up'
 	| 'clock'
 	| 'cross-1'
 	| 'currency-dollar'
