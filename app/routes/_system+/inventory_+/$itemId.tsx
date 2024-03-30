@@ -1,5 +1,47 @@
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { ErrorList } from '#app/components/forms.tsx'
+import { Spacer } from '#app/components/spacer.tsx'
+import {
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbSeparator,
+} from '#app/components/ui/breadcrumb.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card.tsx'
+import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { validateCSRF } from '#app/utils/csrf.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import {
+	cn,
+	formatCurrency,
+	invariantResponse,
+	useIsPending,
+} from '#app/utils/misc.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
+import { Item } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -16,36 +58,6 @@ import { formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { ErrorList } from '#app/components/forms.tsx'
-import {
-	AlertDialog,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '#app/components/ui/alert-dialog.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '#app/components/ui/tooltip.tsx'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import {
-	formatCurrency,
-	invariantResponse,
-	useIsPending,
-} from '#app/utils/misc.tsx'
-import { redirectWithToast } from '#app/utils/toast.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const item = await prisma.item.findUnique({
@@ -118,149 +130,208 @@ export default function ItemRoute() {
 	const navigate = useNavigate()
 	return (
 		<>
-			<div className="my-4 flex flex-col gap-4 text-2xl">
-				{item.family ? (
-					<Badge
-						className="my-2 flex w-fit items-center gap-2"
-						variant={'secondary'}
-					>
-						<Icon name="shapes" />
-						{item.family.description}
-					</Badge>
-				) : (
-					'Sin clasificar'
-				)}
-				<div className="flex items-center gap-4">
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger className="cursor-default select-text">
-								<span className="text-3xl font-semibold">{item.name}</span>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>ID: {item.id}</p>
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-				</div>
-				<div className="flex items-center gap-2 text-foreground/70">
-					<Icon name="scan-barcode" />
-					Código:<span className="">{item.code}</span>
-				</div>
-			</div>
-
-			<div className="mt-8 flex items-center gap-2 text-lg text-foreground/70">
-				<Icon name="clock" />
-				<span>Ultima actualización {item.updatedAt}</span>
-			</div>
-
-			<div className="my-4 flex gap-4 ">
-				<div className="relative  h-[13rem] w-[13rem] rounded-md bg-secondary p-4">
-					<Icon
-						name="package"
-						className="absolute inset-24 scale-[8.5] opacity-5"
-					/>
-					<div className="flex flex-col items-center">
-						<p className="mt-10 text-7xl font-bold">{item.stock}</p>
-						<p className="text-3xl capitalize">
-							{item.stock > 1 || item.stock === 0 ? 'unidades' : 'unidad'}
-						</p>
-						<p className="text-xl capitalize text-foreground/60">
-							{item.stock > 1 || item.stock === 0
-								? 'disponibles'
-								: 'disponible'}
-						</p>
-					</div>
-				</div>
-				<div className="flex flex-col gap-4 ">
-					<Link
-						to={item.provider ? `/providers/${item.provider.id}` : '#'}
-						className="flex min-h-[6rem] w-[26rem] cursor-pointer rounded-md bg-secondary p-4"
-					>
-						<div className="mr-4 grid w-[5rem] place-items-center">
-							<Icon name="user" className="scale-[4.5] opacity-5" />
-						</div>
-						<div className="flex w-full flex-col">
-							<p className="text-xl capitalize text-foreground/60">Proveedor</p>
-							<p className="text-2xl capitalize">
-								{item.provider
-									? item.provider.fantasyName
-									: 'Sin proveedor definido.'}
-							</p>
-						</div>
-					</Link>
-					<div className="flex h-[6rem] w-[26rem] rounded-md bg-secondary p-4">
-						<div className="mr-4 grid w-[5rem] place-items-center">
-							<Icon
-								name="circle-dollar-sign"
-								className="scale-[4.5] opacity-5"
-							/>
-						</div>
-						<div className="flex w-full justify-between pr-4">
-							<div className="flex flex-col ">
-								<p className="text-xl capitalize text-foreground/60">Valor</p>
-								<p className="text-2xl ">{formatCurrency(item.price)}</p>
-							</div>
-							<div className="flex flex-col ">
-								<p className="text-xl capitalize text-foreground/60">
-									Precio de venta
-								</p>
-								<p className="text-2xl font-black">
-									{formatCurrency(item.sellingPrice)}
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div className="mt-8 flex max-w-[40rem] justify-between">
-				<Button
-					variant={'ghost'}
-					onClick={() => navigate(-1)}
-					className="flex items-center gap-2"
-				>
-					<Icon name="arrow-left" />
-					<span>Atrás</span>
-				</Button>
-
-				{isAdmin && (
+			<BreadCrumbs />
+			<Spacer size="4xs" />
+			<div className="flex flex-col gap-2 sm:gap-4  md:flex-row  md:justify-between">
+				<div className="flex flex-col items-center justify-between gap-4 sm:flex-row md:justify-normal">
 					<div className="flex gap-4">
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
-								<Button
-									variant={'secondary'}
-									className="flex items-center gap-2"
-								>
-									<Icon name="trash" />
-									<span>Eliminar</span>
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>
-										Confirmar eliminación de articulo
-									</AlertDialogTitle>
-									<AlertDialogDescription>
-										Esta acción no se puede deshacer. Por favor confirme que
-										desea eliminar el articulo.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter className="flex gap-6">
-									<AlertDialogCancel>Cancelar</AlertDialogCancel>
-									<DeleteItem id={item.id} />
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-						<Button variant={'default'} asChild>
-							<Link to={'edit'} className="flex items-center gap-2">
-								<Icon name="update" />
-								<span>Editar</span>
+						<Button
+							variant={'outline'}
+							size={'icon'}
+							className="h-7 w-7"
+							asChild
+						>
+							<Link to=".." relative="path">
+								<Icon name="chevron-left" />
 							</Link>
 						</Button>
+						<h1 className="text-xl font-bold capitalize tracking-tight">
+							{item.name?.toLowerCase()}
+						</h1>
+					</div>
+					<Badge
+						variant={'outline'}
+						className={cn(item.stock > 0 ? 'text-primary' : 'text-destructive')}
+					>
+						{item.stock > 0 ? 'En Stock' : 'Agotado'}
+					</Badge>
+				</div>
+				{isAdmin && (
+					<div className="hidden md:flex">
+						<DeleteItemConfirmationModal itemId={item.id} />
+					</div>
+				)}
+			</div>
+			<Spacer size="4xs" />
+			<div className="grid gap-4 2xl:grid-cols-2">
+				<Card>
+					<CardHeader>
+						<CardTitle>Detalles del Articulo</CardTitle>
+						<CardDescription>Datos generales del articulo.</CardDescription>
+					</CardHeader>
+					<CardContent className="grid gap-2 md:grid-cols-2 ">
+						<DataRow
+							icon="clock-up"
+							label="Fecha ingreso"
+							value={item.createdAt}
+						/>
+						<DataRow
+							icon="clock"
+							label="Ultima actualización"
+							value={item.updatedAt}
+						/>
+						<DataRow icon="id" label="ID" value={item.id} />
+						<DataRow
+							icon="scan-barcode"
+							label="Código"
+							value={item.code.toString()}
+						/>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader>
+						<CardTitle>Valor y Existencias</CardTitle>
+						<CardDescription>
+							Datos asociados a la venta del articulo.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="grid gap-2 md:grid-cols-2 ">
+						<DataRow
+							icon="package"
+							label="Stock"
+							value={item.stock.toString()}
+							isEditable={isAdmin}
+						/>
+						<DataRow
+							icon="circle-dollar-sign"
+							label="Valor"
+							value={formatCurrency(item.price)}
+							isEditable={isAdmin}
+						/>
+						<DataRow
+							icon="circle-dollar-sign"
+							label="Precio venta"
+							value={formatCurrency(item.sellingPrice)}
+							isEditable={isAdmin}
+						/>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Datos Generales</CardTitle>
+					</CardHeader>
+					<CardContent className="grid gap-2 md:grid-cols-2 ">
+						<DataRow
+							icon="user"
+							label="Proveedor"
+							value={item.provider?.fantasyName}
+							isEditable={isAdmin}
+						/>
+						<DataRow
+							icon="shapes"
+							label="Categoría"
+							value={item.family?.description}
+							isEditable={isAdmin}
+						/>
+					</CardContent>
+				</Card>
+
+				{isAdmin && (
+					<div className="flex w-full sm:m-auto sm:w-fit md:hidden">
+						<DeleteItemConfirmationModal itemId={item.id} />
 					</div>
 				)}
 			</div>
 		</>
+	)
+}
+
+function DataRow({
+	icon,
+	label,
+	value,
+	isEditable,
+}: {
+	icon: IconName
+	label: string
+	value?: string
+	isEditable?: boolean
+}) {
+	return (
+		<div className="flex   items-center justify-between  gap-3 rounded-md bg-secondary/70 p-2 font-semibold text-muted-foreground">
+			<div className="flex gap-3">
+				<Icon name={icon} className="shrink-0 text-3xl" />
+				<div className="flex flex-col">
+					<span>{label}</span>
+					<span className="uppercase text-foreground">
+						{value ? value : 'Sin definir'}
+					</span>
+				</div>
+			</div>
+			{isEditable && (
+				<Button variant="outline" size={'icon'} className="h-7 w-7">
+					<Icon name="pencil-2" />
+					<span className="sr-only">Editar</span>
+				</Button>
+				// This button opens a modal/drawer, with input to edit the value. Should also have a tooltip.
+			)}
+		</div>
+	)
+}
+
+function BreadCrumbs() {
+	return (
+		<Breadcrumb className="hidden md:flex">
+			<BreadcrumbList>
+				<BreadcrumbItem>
+					<BreadcrumbLink asChild>
+						<Link to="/inventory">Inventario</Link>
+					</BreadcrumbLink>
+				</BreadcrumbItem>
+				<BreadcrumbSeparator />
+				<BreadcrumbItem>
+					<BreadcrumbLink asChild>
+						<Link className="text-foreground" to=".">
+							Detalles articulo
+						</Link>
+					</BreadcrumbLink>
+				</BreadcrumbItem>
+			</BreadcrumbList>
+		</Breadcrumb>
+	)
+}
+
+function DeleteItemConfirmationModal({ itemId }: { itemId: string }) {
+	return (
+		<div className="flex w-full gap-4">
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<Button
+						variant={'outline'}
+						className="flex w-full items-center gap-2"
+					>
+						<Icon name="trash" />
+						<span>Eliminar</span>
+					</Button>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							Confirmar eliminación de articulo
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta acción no se puede deshacer. Por favor confirme que desea
+							eliminar el articulo.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter className="flex gap-6">
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<DeleteItem id={itemId} />
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</div>
 	)
 }
 
@@ -284,7 +355,7 @@ export function DeleteItem({ id }: { id: string }) {
 				status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 				disabled={isPending}
 			>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-1 ">
 					<Icon name="trash" />
 					<span>Eliminar</span>
 				</div>
@@ -320,7 +391,7 @@ export function ErrorBoundary() {
 	return (
 		<GeneralErrorBoundary
 			statusHandlers={{
-				403: () => <p>You are not allowed to do that</p>,
+				403: () => <p>No posee los permisos necesarios.</p>,
 				404: ({ params }) => (
 					<p>No existe articulo con ID: "{params.itemId}"</p>
 				),
