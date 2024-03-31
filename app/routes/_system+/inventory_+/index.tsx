@@ -250,7 +250,7 @@ function ItemsTableCard({
 
 				<InventorySearchBar status="idle" autoSubmit />
 			</CardHeader>
-			<CardContent className="h-[45dvh] overflow-y-auto">
+			<CardContent className="h-full ">
 				<Table>
 					<TableHeader>
 						<TableRow>
