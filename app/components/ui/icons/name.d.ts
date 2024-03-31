@@ -40,6 +40,7 @@ export type IconName =
 	| 'file-text'
 	| 'filter'
 	| 'github-logo'
+	| 'id-badge-2'
 	| 'id'
 	| 'laptop'
 	| 'layout-sidebar-left-collapse'
