@@ -13,6 +13,7 @@ export type IconName =
 	| 'box-off'
 	| 'calendar'
 	| 'camera'
+	| 'cash'
 	| 'check'
 	| 'checks'
 	| 'chevron-down'
