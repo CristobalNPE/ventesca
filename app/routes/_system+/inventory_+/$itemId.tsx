@@ -54,6 +54,8 @@ import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { PriceEditModal } from './__item-editors/price-editor.tsx'
 import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
+import { CodeEditModal } from './__item-editors/code-editor.tsx'
+import { NameEditModal } from './__item-editors/name-editor.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -129,6 +131,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function ItemRoute() {
 	const isAdmin = true
 	const { item } = useLoaderData<typeof loader>()
+	const DEFAULT_EMPTY_NAME = 'Sin descripción'
 	// const navigate = useNavigate()
 	return (
 		<>
@@ -186,7 +189,16 @@ export default function ItemRoute() {
 						<DataRow
 							icon="id-badge-2"
 							label="Nombre"
-							value={item.name ?? 'Sin descripción'}
+							value={item.name ?? DEFAULT_EMPTY_NAME}
+							isEditable={isAdmin}
+							editModal={
+								<NameEditModal
+									id={item.id}
+									icon={'id-badge-2'}
+									label={'Nombre'}
+									value={item.name ?? DEFAULT_EMPTY_NAME}
+								/>
+							}
 						/>
 					</CardContent>
 				</Card>
@@ -202,6 +214,15 @@ export default function ItemRoute() {
 							icon="scan-barcode"
 							label="Código"
 							value={item.code.toString()}
+							isEditable={isAdmin}
+							editModal={
+								<CodeEditModal
+									id={item.id}
+									icon={'scan-barcode'}
+									label={'Código'}
+									value={item.code}
+								/>
+							}
 						/>
 						<DataRow
 							icon="package"
@@ -233,14 +254,14 @@ export default function ItemRoute() {
 							}
 						/>
 						<DataRow
-							icon="circle-dollar-sign"
+							icon="cash"
 							label="Precio venta"
 							value={formatCurrency(item.sellingPrice)}
 							isEditable={isAdmin}
 							editModal={
 								<SellingPriceEditModal
 									id={item.id}
-									icon={'circle-dollar-sign'}
+									icon={'cash'}
 									label={'Precio de venta'}
 									value={item.sellingPrice ?? 0}
 								/>
@@ -279,6 +300,8 @@ export default function ItemRoute() {
 	)
 }
 
+//If we need to format a value on the edit modal, we can use the formatFn prop, but we need to also give the value as a Number in order for it to work correctly.
+
 function DataRow({
 	icon,
 	label,
@@ -302,9 +325,11 @@ function DataRow({
 				<Icon name={icon} className="shrink-0 text-3xl" />
 				<div className="flex flex-col">
 					<span>{label}</span>
-					<span className="text-foreground ">
+					<span className="uppercase tracking-tight text-foreground">
 						{sanitizedValue}{' '}
-						<span className="text-muted-foreground">{suffix}</span>
+						<span className="lowercase tracking-normal text-muted-foreground">
+							{suffix}
+						</span>
 					</span>
 				</div>
 			</div>
