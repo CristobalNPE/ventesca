@@ -56,6 +56,8 @@ import { PriceEditModal } from './__item-editors/price-editor.tsx'
 import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
 import { NameEditModal } from './__item-editors/name-editor.tsx'
+import { SelectSupplier } from '../providers_+/select-supplier.tsx'
+import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -280,6 +282,14 @@ export default function ItemRoute() {
 							label="Proveedor"
 							value={item.provider?.fantasyName}
 							isEditable={isAdmin}
+							editModal={
+								<SupplierEditModal
+									id={item.id}
+									icon={'user'}
+									label={'Proveedor'}
+									value={item.provider?.fantasyName ?? DEFAULT_EMPTY_NAME}
+								/>
+							}
 						/>
 						<DataRow
 							icon="shapes"
