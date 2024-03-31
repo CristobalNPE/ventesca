@@ -2,10 +2,28 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { parse } from '@conform-to/zod'
 import { ActionFunctionArgs, json } from '@remix-run/node'
-import { StockEditorSchema } from './__item-editors/stock-editor.tsx'
+import {
+	StockEditorSchema,
+	UPDATE_STOCK_KEY,
+} from './__item-editors/stock-editor.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-import { PriceEditorSchema } from './__item-editors/price-editor.tsx'
-import { SellingPriceEditorSchema } from './__item-editors/sellingPrice-editor.tsx'
+import {
+	PriceEditorSchema,
+	UPDATE_PRICE_KEY,
+} from './__item-editors/price-editor.tsx'
+import {
+	SellingPriceEditorSchema,
+	UPDATE_SELLINGPRICE_KEY,
+} from './__item-editors/sellingPrice-editor.tsx'
+import {
+	CodeEditorSchema,
+	UPDATE_CODE_KEY,
+} from './__item-editors/code-editor.tsx'
+import { z } from 'zod'
+import {
+	NameEditorSchema,
+	UPDATE_NAME_KEY,
+} from './__item-editors/name-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -16,11 +34,64 @@ export async function action({ request }: ActionFunctionArgs) {
 	const intent = formData.get('intent')
 
 	switch (intent) {
-		case 'update-name':
-			break
-		case 'update-code':
-			break
-		case 'update-stock': {
+		case UPDATE_NAME_KEY: {
+			const submission = await parse(formData, { schema: NameEditorSchema })
+
+			if (submission.intent !== 'submit') {
+				return json({ submission, status: 'error' } as const)
+			}
+
+			if (!submission.value) {
+				return json({ submission, status: 'error' } as const, { status: 400 })
+			}
+
+			const { itemId, name } = submission.value
+
+			await prisma.item.update({
+				where: { id: itemId },
+				data: { name },
+			})
+
+			return json({ submission, status: 'success' } as const)
+		}
+		case UPDATE_CODE_KEY: {
+			const submission = await parse(formData, {
+				schema: CodeEditorSchema.superRefine(async (data, ctx) => {
+					const itemByCode = await prisma.item.findUnique({
+						select: { id: true, code: true },
+						where: { code: data.code },
+					})
+
+					if (itemByCode && itemByCode.id !== data.itemId) {
+						ctx.addIssue({
+							path: ['code'],
+							code: z.ZodIssueCode.custom,
+							message: 'El código ya existe.',
+						})
+					}
+				}),
+
+				async: true,
+			})
+
+			if (submission.intent !== 'submit') {
+				return json({ submission, status: 'error' } as const)
+			}
+
+			if (!submission.value) {
+				return json({ submission, status: 'error' } as const, { status: 400 })
+			}
+
+			const { itemId, code } = submission.value
+
+			await prisma.item.update({
+				where: { id: itemId },
+				data: { code },
+			})
+
+			return json({ submission, status: 'success' } as const)
+		}
+		case UPDATE_STOCK_KEY: {
 			const submission = await parse(formData, { schema: StockEditorSchema })
 
 			if (submission.intent !== 'submit') {
@@ -40,7 +111,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			return json({ submission, status: 'success' } as const)
 		}
-		case 'update-price': {
+		case UPDATE_PRICE_KEY: {
 			const submission = await parse(formData, { schema: PriceEditorSchema })
 
 			if (submission.intent !== 'submit') {
@@ -60,7 +131,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			return json({ submission, status: 'success' } as const)
 		}
-		case 'update-sellingPrice':
+		case UPDATE_SELLINGPRICE_KEY:
 			const submission = await parse(formData, {
 				schema: SellingPriceEditorSchema,
 			})
