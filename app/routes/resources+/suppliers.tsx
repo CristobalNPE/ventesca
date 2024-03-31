@@ -21,15 +21,24 @@ import { useFetcher } from '@remix-run/react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
+	const url = new URL(request.url)
+	const query = url.searchParams.get('query')
+	// invariant(query, 'query is required')
 
 	const suppliers = await prisma.provider.findMany({
+		where: {
+			OR: [
+				{ rut: { contains: query ?? '' } },
+				{ fantasyName: { contains: query ?? '' } },
+			],
+		},
 		select: {
 			id: true,
 			name: true,
 			fantasyName: true,
 			rut: true,
 		},
-		orderBy: { fantasyName: 'asc' },
+    orderBy : {fantasyName: 'asc'}
 	})
 
 	return json({ suppliers })
@@ -49,6 +58,20 @@ export function SupplierCombobox({
 	console.log(selectedSupplier)
 	const suppliers = supplierFetcher.data?.suppliers
 	const [open, setOpen] = useState(false)
+	const [search, setSearch] = useState('')
+
+	useEffect(() => {
+		supplierFetcher.submit(
+			{
+				query: search ?? '',
+			},
+			{
+				method: 'GET',
+				action: '/resources/suppliers',
+			},
+		)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [search])
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -60,7 +83,7 @@ export function SupplierCombobox({
 					className="w-full justify-between uppercase"
 				>
 					{selectedSupplier
-						? suppliers?.find(supplier => supplier.fantasyName === selectedSupplier)
+						? suppliers?.find(supplier => supplier.id === selectedSupplier)
 								?.fantasyName
 						: 'Seleccione proveedor...'}
 
@@ -71,14 +94,14 @@ export function SupplierCombobox({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-full p-0">
-				<Command>
+				<Command onValueChange={value => setSearch(value)}>
 					<CommandInput placeholder="Buscar Proveedor..." />
 					<CommandEmpty>Sin resultados.</CommandEmpty>
 					<CommandGroup>
 						{suppliers?.map(supplier => (
 							<CommandItem
 								key={supplier.id}
-								value={supplier.fantasyName}
+								value={supplier.id}
 								className={'flex justify-between gap-10'}
 								onSelect={currentValue => {
 									setSelectedSupplier(
@@ -87,10 +110,8 @@ export function SupplierCombobox({
 									setOpen(false)
 								}}
 							>
-								<span className="font-semibold text-muted-foreground">
-									{formatChileanRUT(supplier.rut)}
-								</span>
-								<span className="font-semibold">{supplier.fantasyName}</span>
+								<span className='text-muted-foreground font-semibold'>{formatChileanRUT(supplier.rut)}</span>
+								<span className='font-semibold'>{supplier.fantasyName}</span>
 							</CommandItem>
 						))}
 					</CommandGroup>
