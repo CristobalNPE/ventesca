@@ -24,7 +24,6 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
@@ -41,25 +40,23 @@ import {
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
-import { Item } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import {
-	Form,
-	Link,
-	useActionData,
-	useLoaderData,
-	useNavigate,
-} from '@remix-run/react'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
+import { StockEditModal } from './__item-editors/stock-editor.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
+import { PriceEditModal } from './__item-editors/price-editor.tsx'
+import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
+	await requireUserId(request)
 	const item = await prisma.item.findUnique({
 		where: { id: params.itemId },
 		select: {
@@ -84,6 +81,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			updatedAt: formatRelative(subDays(item.updatedAt, 0), new Date(), {
 				locale: es,
 			}),
+			createdAt: formatRelative(subDays(item.createdAt, 0), new Date(), {
+				locale: es,
+			}),
 		},
 	})
 }
@@ -96,7 +96,9 @@ const DeleteFormSchema = z.object({
 export async function action({ request }: ActionFunctionArgs) {
 	// const userId = await requireUserId(request)
 	const formData = await request.formData()
+
 	await validateCSRF(formData, request.headers)
+
 	const submission = parse(formData, {
 		schema: DeleteFormSchema,
 	})
@@ -127,7 +129,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function ItemRoute() {
 	const isAdmin = true
 	const { item } = useLoaderData<typeof loader>()
-	const navigate = useNavigate()
+	// const navigate = useNavigate()
 	return (
 		<>
 			<BreadCrumbs />
@@ -180,39 +182,69 @@ export default function ItemRoute() {
 							label="Ultima actualización"
 							value={item.updatedAt}
 						/>
-						<DataRow icon="id" label="ID" value={item.id} />
+						<DataRow icon="id" label="ID" value={item.id.toUpperCase()} />
 						<DataRow
-							icon="scan-barcode"
-							label="Código"
-							value={item.code.toString()}
+							icon="id-badge-2"
+							label="Nombre"
+							value={item.name ?? 'Sin descripción'}
 						/>
 					</CardContent>
 				</Card>
 				<Card>
 					<CardHeader>
-						<CardTitle>Valor y Existencias</CardTitle>
+						<CardTitle>Información de venta</CardTitle>
 						<CardDescription>
 							Datos asociados a la venta del articulo.
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="grid gap-2 md:grid-cols-2 ">
 						<DataRow
+							icon="scan-barcode"
+							label="Código"
+							value={item.code.toString()}
+						/>
+						<DataRow
 							icon="package"
 							label="Stock"
 							value={item.stock.toString()}
 							isEditable={isAdmin}
+							suffix={item.stock !== 1 ? 'unidades' : 'unidad'}
+							editModal={
+								<StockEditModal
+									id={item.id}
+									icon={'package'}
+									label={'Stock'}
+									value={item.stock.toString()}
+								/>
+							}
 						/>
 						<DataRow
 							icon="circle-dollar-sign"
 							label="Valor"
 							value={formatCurrency(item.price)}
 							isEditable={isAdmin}
+							editModal={
+								<PriceEditModal
+									id={item.id}
+									icon={'circle-dollar-sign'}
+									label={'Valor'}
+									value={item.price ?? 0}
+								/>
+							}
 						/>
 						<DataRow
 							icon="circle-dollar-sign"
 							label="Precio venta"
 							value={formatCurrency(item.sellingPrice)}
 							isEditable={isAdmin}
+							editModal={
+								<SellingPriceEditModal
+									id={item.id}
+									icon={'circle-dollar-sign'}
+									label={'Precio de venta'}
+									value={item.sellingPrice ?? 0}
+								/>
+							}
 						/>
 					</CardContent>
 				</Card>
@@ -252,30 +284,34 @@ function DataRow({
 	label,
 	value,
 	isEditable,
+	editModal,
+	suffix,
 }: {
 	icon: IconName
 	label: string
-	value?: string
+	value?: string | number
 	isEditable?: boolean
+	editModal?: JSX.Element
+	suffix?: string
 }) {
+	const sanitizedValue = value ? value : 'Sin definir'
+
 	return (
-		<div className="flex   items-center justify-between  gap-3 rounded-md bg-secondary/70 p-2 font-semibold text-muted-foreground">
+		<div className="flex items-center  justify-between gap-3  truncate rounded-md bg-secondary/70 p-2 font-semibold text-muted-foreground">
 			<div className="flex gap-3">
 				<Icon name={icon} className="shrink-0 text-3xl" />
 				<div className="flex flex-col">
 					<span>{label}</span>
-					<span className="uppercase text-foreground">
-						{value ? value : 'Sin definir'}
+					<span className="text-foreground ">
+						{sanitizedValue}{' '}
+						<span className="text-muted-foreground">{suffix}</span>
 					</span>
 				</div>
 			</div>
-			{isEditable && (
-				<Button variant="outline" size={'icon'} className="h-7 w-7">
-					<Icon name="pencil-2" />
-					<span className="sr-only">Editar</span>
-				</Button>
+			{
+				isEditable && editModal
 				// This button opens a modal/drawer, with input to edit the value. Should also have a tooltip.
-			)}
+			}
 		</div>
 	)
 }
