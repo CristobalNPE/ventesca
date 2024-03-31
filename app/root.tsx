@@ -66,6 +66,12 @@ import {
 } from '#app/components/ui/tooltip.tsx'
 import { cn } from '#app/utils/misc.tsx'
 import { useState } from 'react'
+import {
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetTrigger,
+} from './components/ui/sheet.tsx'
 
 type NavigationLink = {
 	name: string
@@ -218,7 +224,7 @@ function Document({
 	env?: Record<string, string>
 }) {
 	return (
-		<html lang="en" className={`${theme} h-full overflow-x-hidden`}>
+		<html lang="en" className={`${theme} h-[100dvh] overflow-hidden`}>
 			<head>
 				<ClientHintCheck nonce={nonce} />
 				<Meta />
@@ -295,7 +301,7 @@ function App() {
 
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
-			<div className="flex h-screen">
+			<div className="flex h-[100dvh] ">
 				{user && (
 					<SideBar
 						shrinkSidebar={shrinkSidebar}
@@ -306,11 +312,75 @@ function App() {
 					/>
 				)}
 				<div className="flex-1 overflow-auto ">
-					<header className="sticky top-0 z-50 flex  h-[4rem] items-center justify-between border-b-[1px] border-foreground/5 bg-secondary p-8">
+					<header className="sticky top-0 z-50 flex h-[4rem] items-center justify-between gap-8 border-b-[1px] border-foreground/5 bg-secondary p-8">
+						<Sheet>
+							<SheetTrigger asChild>
+								<Button size={'icon'} variant={'outline'} className="sm:hidden">
+									<Icon className="text-xl" name="layout-sidebar-left-expand" />
+									<span className="sr-only">Expandir Menu</span>
+								</Button>
+							</SheetTrigger>
+							<SheetContent side="left" className="sm:max-w-xs">
+								<nav className=" flex h-full flex-col justify-around gap-6">
+									<div className="flex flex-col gap-2">
+										{navigationLinks.map(link => {
+											return (
+												<SheetClose
+													className="group flex"
+													asChild
+													key={link.name}
+												>
+													<NavLink
+														className={({ isActive }) =>
+															cn(
+																'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
+																isActive &&
+																	'bg-foreground/20 text-foreground hover:text-foreground',
+															)
+														}
+														to={link.path}
+													>
+														<Icon size="md" className="" name={link.icon} />
+														<span>{link.name}</span>
+													</NavLink>
+												</SheetClose>
+											)
+										})}
+									</div>
+									<div>
+										{secondaryLinks.map(link => {
+											return (
+												<NavLink
+													className={({ isActive }) =>
+														cn(
+															'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
+															isActive &&
+																'bg-foreground/20 text-foreground hover:text-foreground',
+														)
+													}
+													key={link.name}
+													to={link.path}
+												>
+													<Icon size="md" className="" name={link.icon} />
+													<span>{link.name}</span>
+												</NavLink>
+											)
+										})}
+									</div>
+									<div className="flex flex-col gap-2">
+										<ThemeSwitch
+											userPreference={data.requestInfo.userPrefs.theme}
+										/>
+										{user && <UserDropdown />}
+									</div>
+								</nav>
+							</SheetContent>
+						</Sheet>
+
 						<NavLink
 							className={({ isActive }) =>
 								cn(
-									'text-md flex  select-none items-center gap-3 rounded-sm bg-popover px-12 py-2 font-bold ring-2 ring-primary-foreground transition-colors hover:bg-primary/60 *:hover:text-foreground',
+									'text-md flex w-full select-none items-center  justify-center gap-3 rounded-sm bg-popover px-12 py-2 font-bold ring-2 ring-primary-foreground transition-colors hover:bg-primary/60 *:hover:text-foreground sm:w-fit',
 									isActive && 'bg-primary/60 *:text-foreground ',
 								)
 							}
@@ -324,12 +394,12 @@ function App() {
 
 							<span className="hidden md:flex">{'Punto de Venta'}</span>
 						</NavLink>
-						<div className="flex gap-2">
+						<div className=" hidden gap-2 sm:flex">
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 							{user && <UserDropdown />}
 						</div>
 					</header>
-					<main className="h-[calc(99%-4rem)]  p-4 sm:p-6 md:p-8">
+					<main className="h-[calc(99%-4rem)] overflow-y-auto  p-4 sm:p-5 md:p-7 ">
 						<Outlet />
 					</main>
 				</div>
@@ -360,7 +430,7 @@ function UserDropdown() {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button asChild variant="secondary">
+				<Button asChild variant="ghost">
 					<Link
 						to={`/users/${user.username}`}
 						// this is for progressive enhancement
@@ -368,11 +438,11 @@ function UserDropdown() {
 						className="flex items-center gap-2"
 					>
 						<img
-							className="h-8 w-8 rounded-full object-cover"
+							className="h-8 w-8 rounded-full border-2 border-foreground/20 object-cover p-[2px]"
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
-						<div className="hidden flex-col md:flex">
+						<div className="flex flex-col sm:hidden md:flex">
 							<span className="text-body-sm font-bold">
 								{user.name ?? user.username}
 							</span>
@@ -513,7 +583,7 @@ function SideBar({
 	return (
 		<>
 			{shrinkSidebar ? (
-				<div className="relative flex w-fit flex-col items-center border-r-[1px] border-foreground/5 bg-muted px-2 pb-8 pt-3">
+				<div className="relative hidden w-fit  flex-col items-center border-r-[1px] border-foreground/5 bg-muted px-2 pb-8 pt-3 sm:flex ">
 					<div className="flex select-none items-center gap-2">
 						<div className="flex size-[2.5rem] rounded-md bg-foreground/40"></div>
 					</div>
@@ -582,7 +652,7 @@ function SideBar({
 					</Button>
 				</div>
 			) : (
-				<div className="relative flex w-[17.5rem] flex-col border-r-[1px] border-foreground/5 bg-secondary/80 px-4 pb-8 pt-3">
+				<div className="relative hidden w-[17.5rem]  flex-col border-r-[1px] border-foreground/5 bg-muted px-4 pb-8 pt-3 sm:flex ">
 					<div className="flex select-none items-center gap-2 ">
 						<div className="flex size-[3.5rem] rounded-md bg-foreground/40"></div>
 						<div>
@@ -595,7 +665,7 @@ function SideBar({
 							</h3>
 						</div>
 					</div>
-					<nav className="mt-8 flex h-full flex-col justify-between gap-6">
+					<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
 						<div className="flex flex-col gap-2">
 							{navigationLinks.map(link => {
 								return (
