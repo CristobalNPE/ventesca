@@ -88,11 +88,11 @@ export function Editor({
 					</DialogHeader>
 					{form}
 					<div className="flex items-center justify-between gap-3">
-						<div className="flex w-full items-center justify-center gap-3 rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground">
+						<div className="flex w-full items-center justify-center gap-3 rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground break-all">
 							<div className="flex flex-col items-center gap-3">
 								<Icon name={icon} className="shrink-0 text-3xl" />
 								<div className="flex flex-col">
-									<span className="uppercase text-foreground">
+									<span className="text-center uppercase text-foreground">
 										{formattedValue}
 									</span>
 								</div>
@@ -101,11 +101,11 @@ export function Editor({
 						<div>
 							<Icon className="text-5xl" name="arrow-right" />
 						</div>
-						<div className="flex w-full items-center justify-center gap-3 rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground">
+						<div className="flex w-full items-center justify-center gap-3 rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground grow break-all">
 							<div className="flex flex-col items-center gap-3">
 								<Icon name={icon} className="shrink-0 text-3xl" />
 								<div className="flex flex-col">
-									<span className="uppercase text-foreground">
+									<span className="text-center uppercase text-foreground ">
 										{formattedTargetValue}
 									</span>
 								</div>
