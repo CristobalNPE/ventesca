@@ -12,6 +12,7 @@ import { Editor } from './editor.tsx'
 
 const STOCK_MAX = 9999
 const STOCK_MIN = 0
+export const UPDATE_STOCK_KEY = 'update-stock'
 
 export const StockEditorSchema = z.object({
 	itemId: z.string().optional(),
@@ -21,7 +22,7 @@ export const StockEditorSchema = z.object({
 			invalid_type_error: 'Debe ser un número',
 		})
 		.min(STOCK_MIN, { message: 'El stock no puede ser negativo.' })
-		.max(STOCK_MAX, { message: 'El stock no puede ser mayor a 9999.' }),
+		.max(STOCK_MAX, { message: `El stock no puede ser mayor a ${STOCK_MAX}.` }),
 })
 
 export function StockEditModal({
@@ -35,23 +36,22 @@ export function StockEditModal({
 	value: string
 	id?: string
 }) {
-	const editorId = `update-stock`
 	const actionData = useActionData<typeof action>()
-	const fetcher = useFetcher({ key: editorId })
+	const fetcher = useFetcher({ key: UPDATE_STOCK_KEY })
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
-		id: editorId,
+		id: UPDATE_STOCK_KEY,
 		constraint: getFieldsetConstraint(StockEditorSchema),
 		lastSubmission: actionData?.submission,
 		onValidate({ formData }) {
 			return parse(formData, { schema: StockEditorSchema })
 		},
+
 		defaultValue: {
 			stock: value,
 		},
 	})
-	
 
 	const [targetValue, setTargetValue] = useState<string>(value)
 
@@ -88,7 +88,7 @@ export function StockEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={editorId}
+			value={UPDATE_STOCK_KEY}
 			variant="default"
 			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 			disabled={isPending}
@@ -102,7 +102,7 @@ export function StockEditModal({
 
 	return (
 		<Editor
-			fetcherKey={editorId}
+			fetcherKey={UPDATE_STOCK_KEY}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

@@ -2,17 +2,18 @@ import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Icon, IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { action } from '#app/routes/_system+/inventory_+/edit.tsx'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { useActionData, useFetcher } from '@remix-run/react'
+import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { Editor } from './editor.tsx'
-import { formatCurrency } from '#app/utils/misc.tsx'
 
 const SELLING_PRICE_MAX = 9999999
 const SELLING_PRICE_MIN = 0
+export const UPDATE_SELLINGPRICE_KEY = 'update-sellingPrice'
 
 export const SellingPriceEditorSchema = z.object({
 	itemId: z.string().optional(),
@@ -25,7 +26,7 @@ export const SellingPriceEditorSchema = z.object({
 			message: 'El precio de venta no puede ser negativo.',
 		})
 		.max(SELLING_PRICE_MAX, {
-			message: 'El precio de venta no puede ser mayor a 9999999.',
+			message: `El precio de venta no puede ser mayor a ${SELLING_PRICE_MAX}.`,
 		}),
 })
 
@@ -40,13 +41,12 @@ export function SellingPriceEditModal({
 	value: string | number
 	id?: string
 }) {
-	const actionData = useActionData<typeof action>()
-	const editorId = `update-sellingPrice`
-	const fetcher = useFetcher({ key: editorId })
+	const fetcher = useFetcher<typeof action>({ key: UPDATE_SELLINGPRICE_KEY })
+	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
-		id: editorId,
+		id: UPDATE_SELLINGPRICE_KEY,
 		constraint: getFieldsetConstraint(SellingPriceEditorSchema),
 		lastSubmission: actionData?.submission,
 		onValidate({ formData }) {
@@ -57,7 +57,7 @@ export function SellingPriceEditModal({
 		},
 	})
 
-	const [targetValue, setTargetValue] = useState<string  | number>(value)
+	const [targetValue, setTargetValue] = useState<string | number>(value)
 
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
@@ -94,7 +94,7 @@ export function SellingPriceEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={editorId}
+			value={UPDATE_SELLINGPRICE_KEY}
 			variant="default"
 			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 			disabled={isPending}
@@ -109,7 +109,7 @@ export function SellingPriceEditModal({
 	return (
 		<Editor
 			formatFn={formatCurrency}
-			fetcherKey={editorId}
+			fetcherKey={UPDATE_SELLINGPRICE_KEY}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

@@ -2,31 +2,33 @@ import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Icon, IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { action } from '#app/routes/_system+/inventory_+/edit.tsx'
-import { formatCurrency } from '#app/utils/misc.tsx'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { Editor } from './editor.tsx'
 
-const PRICE_MAX = 9999999
-const PRICE_MIN = 0
-export const UPDATE_PRICE_KEY = 'update-price'
+const NAME_MAX = 30
+const NAME_MIN = 3
+export const UPDATE_NAME_KEY = 'update-name'
 
-export const PriceEditorSchema = z.object({
+export const NameEditorSchema = z.object({
 	itemId: z.string().optional(),
-	price: z
-		.number({
+	name: z
+		.string({
 			required_error: 'Campo obligatorio',
-			invalid_type_error: 'Debe ser un número',
 		})
-		.min(PRICE_MIN, { message: 'El valor no puede ser negativo.' })
-		.max(PRICE_MAX, { message: `El valor no puede ser mayor a ${PRICE_MAX}.` }),
+		.min(NAME_MIN, {
+			message: 'El nombre debe contener al menos 3 caracteres.',
+		})
+		.max(NAME_MAX, {
+			message: `El nombre no puede ser mayor a ${NAME_MAX} caracteres.`,
+		}),
 })
 
-export function PriceEditModal({
+export function NameEditModal({
 	icon,
 	label,
 	value,
@@ -37,30 +39,25 @@ export function PriceEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_PRICE_KEY })
+	const fetcher = useFetcher<typeof action>({ key: UPDATE_NAME_KEY })
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
+
 	const [form, fields] = useForm({
-		id: UPDATE_PRICE_KEY,
-		constraint: getFieldsetConstraint(PriceEditorSchema),
+		id: UPDATE_NAME_KEY,
+		constraint: getFieldsetConstraint(NameEditorSchema),
 		lastSubmission: actionData?.submission,
 		onValidate({ formData }) {
-			return parse(formData, { schema: PriceEditorSchema })
+			return parse(formData, { schema: NameEditorSchema })
 		},
+
 		defaultValue: {
-			price: value,
+			name: value,
 		},
 	})
 
 	const [targetValue, setTargetValue] = useState<string | number>(value)
-
-	//Double check that the value is within the limits to avoid layout issues
-	useEffect(() => {
-		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > PRICE_MAX) setTargetValue(PRICE_MAX.toString())
-		if (targetValueAsNumber < PRICE_MIN) setTargetValue(PRICE_MIN.toString())
-	}, [targetValue])
 
 	const renderedForm = (
 		<fetcher.Form method="POST" {...form.props} action={'/inventory/edit'}>
@@ -69,15 +66,14 @@ export function PriceEditModal({
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...conform.input(fields.price, {
+					...conform.input(fields.name, {
 						ariaAttributes: true,
-						type: 'number',
 					}),
 					onChange: e => setTargetValue(e.target.value),
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.price.errors}
+				errors={fields.name.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -88,7 +84,7 @@ export function PriceEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_PRICE_KEY}
+			value={UPDATE_NAME_KEY}
 			variant="default"
 			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 			disabled={isPending}
@@ -102,8 +98,7 @@ export function PriceEditModal({
 
 	return (
 		<Editor
-			formatFn={formatCurrency}
-			fetcherKey={UPDATE_PRICE_KEY}
+			fetcherKey={UPDATE_NAME_KEY}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}
