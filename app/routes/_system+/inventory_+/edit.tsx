@@ -24,6 +24,10 @@ import {
 	NameEditorSchema,
 	UPDATE_NAME_KEY,
 } from './__item-editors/name-editor.tsx'
+import {
+	SupplierEditorSchema,
+	UPDATE_SUPPLIER_KEY,
+} from './__item-editors/supplier-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -152,8 +156,28 @@ export async function action({ request }: ActionFunctionArgs) {
 			})
 
 			return json({ submission, status: 'success' } as const)
-		case 'update-supplier':
-			break
+		case UPDATE_SUPPLIER_KEY: {
+			const submission = await parse(formData, {
+				schema: SupplierEditorSchema,
+			})
+
+			if (submission.intent !== 'submit') {
+				return json({ submission, status: 'error' } as const)
+			}
+
+			if (!submission.value) {
+				return json({ submission, status: 'error' } as const, { status: 400 })
+			}
+
+			const { itemId, supplierId } = submission.value
+
+			await prisma.item.update({
+				where: { id: itemId },
+				data: { provider: { connect: { id: supplierId } } },
+			})
+
+			return json({ submission, status: 'success' } as const)
+		}
 		case 'update-category':
 			break
 		default:
