@@ -94,7 +94,6 @@ export function PriceEditModal({
 			disabled={isPending}
 		>
 			<div className="flex items-center gap-1 ">
-				<Icon name="checks" />
 				<span>{isPending ? 'Actualizando...' : 'Confirmar'}</span>
 			</div>
 		</StatusButton>

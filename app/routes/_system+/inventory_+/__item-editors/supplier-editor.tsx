@@ -81,7 +81,6 @@ export function SupplierEditModal({
 			disabled={isPending || !targetValue}
 		>
 			<div className="flex items-center gap-1 ">
-				<Icon name="checks" />
 				<span>{isPending ? 'Actualizando...' : 'Confirmar'}</span>
 			</div>
 		</StatusButton>

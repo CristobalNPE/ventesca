@@ -36,7 +36,6 @@ export function CodeEditModal({
 	value: string | number
 	id?: string
 }) {
-	
 	const fetcher = useFetcher<typeof action>({ key: UPDATE_CODE_KEY })
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
@@ -96,7 +95,6 @@ export function CodeEditModal({
 			disabled={isPending}
 		>
 			<div className="flex items-center gap-1 ">
-				<Icon name="checks" />
 				<span>{isPending ? 'Actualizando...' : 'Confirmar'}</span>
 			</div>
 		</StatusButton>
