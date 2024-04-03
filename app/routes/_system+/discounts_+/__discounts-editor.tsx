@@ -1,3 +1,18 @@
+import { conform, useForm } from '@conform-to/react'
+import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { type Discount } from '@prisma/client'
+import {
+	json,
+	redirect,
+	type ActionFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { Form, useActionData } from '@remix-run/react'
+import { addDays } from 'date-fns'
+import { useState } from 'react'
+import { type DateRange } from 'react-day-picker'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 import { Field } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
@@ -8,21 +23,6 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, invariant, useIsPending } from '#app/utils/misc.tsx'
-import { conform, useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { Discount } from '@prisma/client'
-import {
-	json,
-	redirect,
-	type ActionFunctionArgs,
-	type SerializeFrom,
-} from '@remix-run/node'
-import { Form, useActionData } from '@remix-run/react'
-import { addDays } from 'date-fns'
-import { useState } from 'react'
-import { DateRange } from 'react-day-picker'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
 import { CategoryPicker } from './category-picker.tsx'
 import {
 	DISCOUNT_REACH_CATEGORY,

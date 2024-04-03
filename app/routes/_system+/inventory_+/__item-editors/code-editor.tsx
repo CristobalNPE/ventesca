@@ -1,13 +1,13 @@
-import { ErrorList, Field } from '#app/components/forms.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { action } from '#app/routes/_system+/inventory_+/edit.tsx'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
+import { ErrorList, Field } from '#app/components/forms.tsx'
+import { type IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
 import { Editor } from './editor.tsx'
 
 const CODE_MAX = 999999

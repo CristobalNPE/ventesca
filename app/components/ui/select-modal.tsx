@@ -15,6 +15,7 @@ type SelectModalProps = {
 	title: string
 	selected?: string
 	open: boolean
+
 	onOpenChange: (open: boolean) => void
 }
 

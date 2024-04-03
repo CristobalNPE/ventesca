@@ -1,13 +1,13 @@
 import { type Provider } from '@prisma/client'
-import { type SerializeFrom, json, LoaderFunctionArgs } from '@remix-run/node'
+import { type SerializeFrom, json, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { format } from '@validatecl/rut'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { prisma } from '#app/utils/db.server.ts'
 import { requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
 	const providers = await prisma.provider

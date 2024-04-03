@@ -1,9 +1,3 @@
-import { DataTable, DataTableSkeleton } from '#app/components/data-table.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import {
 	NavLink,
@@ -11,8 +5,14 @@ import {
 	useLocation,
 	useNavigation,
 } from '@remix-run/react'
-import { ColumnDef } from '@tanstack/react-table'
+import { type ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
+import { DataTable, DataTableSkeleton } from '#app/components/data-table.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	TRANSACTION_STATUS_COMPLETED,
 	TRANSACTION_STATUS_DISCARDED,

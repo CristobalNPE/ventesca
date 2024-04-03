@@ -1,3 +1,6 @@
+import { type LoaderFunctionArgs, json } from '@remix-run/node'
+import { useFetcher, useSearchParams } from '@remix-run/react'
+import { useEffect, useId, useState } from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
@@ -12,9 +15,6 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { useDebounce } from '#app/utils/misc.tsx'
 
-import { LoaderFunctionArgs, json } from '@remix-run/node'
-import { useFetcher, useSearchParams } from '@remix-run/react'
-import { useEffect, useId, useState } from 'react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)

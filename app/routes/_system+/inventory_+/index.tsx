@@ -1,3 +1,15 @@
+import { Label } from '@radix-ui/react-label'
+import { defer, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Await,
+	Form,
+	Link,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
+import { Suspense, useId } from 'react'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -10,7 +22,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
@@ -24,18 +36,6 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
-import { Label } from '@radix-ui/react-label'
-import { defer, type LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Await,
-	Form,
-	Link,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
-import { Suspense, useId } from 'react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)

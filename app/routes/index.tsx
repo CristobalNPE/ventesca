@@ -1,11 +1,11 @@
-import { Button } from '#app/components/ui/button.tsx'
-import { getUserId } from '#app/utils/auth.server.ts'
 import {
-	LoaderFunctionArgs,
+	type LoaderFunctionArgs,
 	redirect,
 	type MetaFunction,
 } from '@remix-run/node'
 import { Link } from '@remix-run/react'
+import { Button } from '#app/components/ui/button.tsx'
+import { getUserId } from '#app/utils/auth.server.ts'
 
 export const meta: MetaFunction = () => [{ title: 'Sistema de Ventas' }]
 

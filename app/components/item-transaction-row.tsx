@@ -1,3 +1,8 @@
+import { type Discount, type ItemTransaction } from '@prisma/client'
+import { type SerializeFrom } from '@remix-run/node'
+import { Link, useFetcher } from '@remix-run/react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
@@ -9,18 +14,13 @@ import {
 	DISCOUNT_TYPE_PERCENTAGE,
 } from '#app/routes/_system+/discounts_+/index.tsx'
 import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
+import { isDiscountActive } from '#app/routes/_system+/sell.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { Discount, type ItemTransaction } from '@prisma/client'
-import { type SerializeFrom } from '@remix-run/node'
-import { Link, useFetcher } from '@remix-run/react'
-import { forwardRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu.tsx'
-import { isDiscountActive } from '#app/routes/_system+/sell.tsx'
 
 export const TYPE_SELL = 'Venta'
 export const TYPE_RETURN = 'Devolución'

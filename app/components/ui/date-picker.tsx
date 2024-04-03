@@ -1,3 +1,6 @@
+import { addDays, format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { type DateRange } from 'react-day-picker'
 import { Button } from '#app/components/ui/button.tsx'
 import { Calendar } from '#app/components/ui/calendar.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -14,9 +17,6 @@ import {
 	SelectValue,
 } from '#app/components/ui/select.tsx'
 import { cn } from '#app/utils/misc.tsx'
-import { addDays, format } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { DateRange } from 'react-day-picker'
 import { Label } from './label.tsx'
 
 export function DatePickerWithRange({

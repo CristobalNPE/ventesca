@@ -1,3 +1,4 @@
+import { type Discount } from '@prisma/client'
 import {
 	type SerializeFrom,
 	json,
@@ -6,8 +7,12 @@ import {
 } from '@remix-run/node'
 import { Link, useFetcher, useLoaderData, useNavigate } from '@remix-run/react'
 
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
+import { z } from 'zod'
 import {
-	ItemProps,
+	type ItemProps,
 	ItemTransactionRow,
 } from '#app/components/item-transaction-row.tsx'
 import {
@@ -40,13 +45,8 @@ import {
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
-import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
-import { Discount } from '@prisma/client'
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
 export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
 export const TRANSACTION_STATUS_DISCARDED = 'Cancelada'

@@ -2,6 +2,7 @@ import { type LoaderFunctionArgs, json } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { format, formatDistance, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import {
 	Table,
@@ -24,7 +25,6 @@ import {
 	TransactionStatusSchema,
 	ConfirmDeleteTransaction,
 } from '../sell.tsx'
-import { Button } from '#app/components/ui/button.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const transactionReport = await prisma.transaction.findUnique({

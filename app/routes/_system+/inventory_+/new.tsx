@@ -1,16 +1,14 @@
-import { Icon } from '#app/components/ui/icon.tsx'
-import { prisma } from '#app/utils/db.server.ts'
-import { json } from '@remix-run/node'
-import { ItemEditor, action } from './__item-editor.tsx'
-import { useLoaderData } from '@remix-run/react'
 import {
 	Card,
 	CardContent,
-	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { prisma } from '#app/utils/db.server.ts'
+import { json } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+import { ItemEditor, action } from './__item-editor.tsx'
 
 export { action }
 

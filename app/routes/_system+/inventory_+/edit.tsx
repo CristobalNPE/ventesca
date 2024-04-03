@@ -1,12 +1,17 @@
+import { parse } from '@conform-to/zod'
+import { type ActionFunctionArgs, json } from '@remix-run/node'
+import { z } from 'zod'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
-import { parse } from '@conform-to/zod'
-import { ActionFunctionArgs, json } from '@remix-run/node'
-import {
-	StockEditorSchema,
-	UPDATE_STOCK_KEY,
-} from './__item-editors/stock-editor.tsx'
 import { prisma } from '#app/utils/db.server.ts'
+import {
+	CodeEditorSchema,
+	UPDATE_CODE_KEY,
+} from './__item-editors/code-editor.tsx'
+import {
+	NameEditorSchema,
+	UPDATE_NAME_KEY,
+} from './__item-editors/name-editor.tsx'
 import {
 	PriceEditorSchema,
 	UPDATE_PRICE_KEY,
@@ -16,14 +21,9 @@ import {
 	UPDATE_SELLINGPRICE_KEY,
 } from './__item-editors/sellingPrice-editor.tsx'
 import {
-	CodeEditorSchema,
-	UPDATE_CODE_KEY,
-} from './__item-editors/code-editor.tsx'
-import { z } from 'zod'
-import {
-	NameEditorSchema,
-	UPDATE_NAME_KEY,
-} from './__item-editors/name-editor.tsx'
+	StockEditorSchema,
+	UPDATE_STOCK_KEY,
+} from './__item-editors/stock-editor.tsx'
 import {
 	SupplierEditorSchema,
 	UPDATE_SUPPLIER_KEY,

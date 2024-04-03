@@ -1,9 +1,9 @@
-import { prisma } from '#app/utils/db.server.ts'
-import { cleanupDb, createPassword } from '#tests/db-utils.ts'
+import fs from 'fs'
 import { faker } from '@faker-js/faker'
 import { parse } from 'csv-parse'
 import cuid from 'cuid'
-import fs from 'fs'
+import { prisma } from '#app/utils/db.server.ts'
+import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 
 async function seed() {
 	console.log('🌱 Seeding...')

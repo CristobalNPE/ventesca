@@ -1,7 +1,7 @@
+import { format } from '@validatecl/rut'
 import { useState } from 'react'
 import { Input } from './ui/input.tsx'
 import { SelectModal } from './ui/select-modal.tsx'
-import { format } from '@validatecl/rut'
 
 export type Provider = {
 	id: string

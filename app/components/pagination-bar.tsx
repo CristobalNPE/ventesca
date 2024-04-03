@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from '@remix-run/react'
-import { Button } from './ui/button.tsx'
 import { setSearchParamsString } from '#app/utils/misc.tsx'
+import { Button } from './ui/button.tsx'
 import { Icon } from './ui/icon.tsx'
 
 export function PaginationBar({ total }: { total: number }) {

@@ -1,3 +1,5 @@
+import { useFetcher } from '@remix-run/react'
+import { useEffect } from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Dialog,
@@ -18,10 +20,8 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '#app/components/ui/drawer.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { useFetcher } from '@remix-run/react'
-import { useEffect } from 'react'
-import { action } from '#app/routes/_system+/inventory_+/edit.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
 
 export function Editor({
 	fetcherKey,

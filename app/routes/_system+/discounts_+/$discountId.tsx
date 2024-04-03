@@ -1,18 +1,18 @@
+import { type LoaderFunctionArgs, json } from '@remix-run/node'
+import { useLoaderData, useNavigate } from '@remix-run/react'
+import { format, formatDistance, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
-import { LoaderFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
-import { format, formatDistance, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
 import {
 	DISCOUNT_REACH_ITEM,
 	DISCOUNT_TARGET_TOTAL,
 	DISCOUNT_TYPE_PERCENTAGE,
-	DiscountTarget,
-	DiscountType,
+	type DiscountTarget,
+	type DiscountType,
 } from './index.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {

@@ -1,3 +1,15 @@
+import { useForm } from '@conform-to/react'
+import { parse } from '@conform-to/zod'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -27,8 +39,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { SupplierSelectBox } from '#app/routes/resources+/suppliers.tsx'
+import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
@@ -38,25 +52,11 @@ import {
 	useIsPending,
 } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
-import { StockEditModal } from './__item-editors/stock-editor.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
-import { PriceEditModal } from './__item-editors/price-editor.tsx'
-import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
 import { NameEditModal } from './__item-editors/name-editor.tsx'
-import { SelectSupplier } from '../providers_+/select-supplier.tsx'
+import { PriceEditModal } from './__item-editors/price-editor.tsx'
+import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
+import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -138,6 +138,7 @@ export default function ItemRoute() {
 	return (
 		<>
 			<BreadCrumbs />
+
 			<Spacer size="4xs" />
 			<div className="flex flex-col gap-2 sm:gap-4  md:flex-row  md:justify-between">
 				<div className="flex flex-col items-center justify-between gap-4 sm:flex-row md:justify-normal">
