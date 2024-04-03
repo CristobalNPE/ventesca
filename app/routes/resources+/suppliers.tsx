@@ -73,7 +73,7 @@ export function SupplierSelectBox({
 		>
 			<Input
 				autoFocus
-				placeholder="Ingrese RUT o nombre"
+				placeholder="Búsqueda por RUT o nombre..."
 				type="text"
 				className="mb-4 w-full"
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
