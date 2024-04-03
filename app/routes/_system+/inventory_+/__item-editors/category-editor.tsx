@@ -1,17 +1,17 @@
-import { ErrorList } from '#app/components/forms.tsx'
-import { type IconName } from '#app/components/ui/icon.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
-import {
-	CategorySelectBox,
-	SelectedCategory,
-} from '#app/routes/resources+/categories.tsx'
 import { useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
+import { ErrorList } from '#app/components/forms.tsx'
+import { type IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
+import {
+	CategorySelectBox,
+	type SelectedCategory,
+} from '#app/routes/resources+/categories.tsx'
 import { Editor } from './editor.tsx'
 
 export const UPDATE_CATEGORY_KEY = 'update-category'

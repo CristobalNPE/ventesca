@@ -5,6 +5,10 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
+	CategoryEditorSchema,
+	UPDATE_CATEGORY_KEY,
+} from './__item-editors/category-editor.tsx'
+import {
 	CodeEditorSchema,
 	UPDATE_CODE_KEY,
 } from './__item-editors/code-editor.tsx'
@@ -28,10 +32,6 @@ import {
 	SupplierEditorSchema,
 	UPDATE_SUPPLIER_KEY,
 } from './__item-editors/supplier-editor.tsx'
-import {
-	CategoryEditorSchema,
-	UPDATE_CATEGORY_KEY,
-} from './__item-editors/category-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
