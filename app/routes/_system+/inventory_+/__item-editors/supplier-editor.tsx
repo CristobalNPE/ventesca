@@ -44,10 +44,6 @@ export function SupplierEditModal({
 		onValidate({ formData }) {
 			return parse(formData, { schema: SupplierEditorSchema })
 		},
-
-		defaultValue: {
-			name: value,
-		},
 	})
 
 	const [targetValue, setTargetValue] = useState<SelectedSupplier | null>(null)
