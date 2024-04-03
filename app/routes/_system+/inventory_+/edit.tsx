@@ -28,6 +28,10 @@ import {
 	SupplierEditorSchema,
 	UPDATE_SUPPLIER_KEY,
 } from './__item-editors/supplier-editor.tsx'
+import {
+	CategoryEditorSchema,
+	UPDATE_CATEGORY_KEY,
+} from './__item-editors/category-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -178,8 +182,28 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			return json({ submission, status: 'success' } as const)
 		}
-		case 'update-category':
-			break
+		case UPDATE_CATEGORY_KEY: {
+			const submission = await parse(formData, {
+				schema: CategoryEditorSchema,
+			})
+
+			if (submission.intent !== 'submit') {
+				return json({ submission, status: 'error' } as const)
+			}
+
+			if (!submission.value) {
+				return json({ submission, status: 'error' } as const, { status: 400 })
+			}
+
+			const { itemId, categoryId } = submission.value
+
+			await prisma.item.update({
+				where: { id: itemId },
+				data: { family: { connect: { id: categoryId } } },
+			})
+
+			return json({ submission, status: 'success' } as const)
+		}
 		default:
 			return json({ submission: null, status: 'error' } as const)
 	}
