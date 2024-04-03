@@ -1,15 +1,3 @@
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -41,7 +29,6 @@ import {
 } from '#app/components/ui/card.tsx'
 import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { SupplierSelectBox } from '#app/routes/resources+/suppliers.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
@@ -52,6 +39,19 @@ import {
 	useIsPending,
 } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { useForm } from '@conform-to/react'
+import { parse } from '@conform-to/zod'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
+import { CategoryEditModal } from './__item-editors/category-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
 import { NameEditModal } from './__item-editors/name-editor.tsx'
 import { PriceEditModal } from './__item-editors/price-editor.tsx'
@@ -297,6 +297,14 @@ export default function ItemRoute() {
 							label="Categoría"
 							value={item.family?.description}
 							isEditable={isAdmin}
+							editModal={
+								<CategoryEditModal
+									id={item.id}
+									icon={'shapes'}
+									label={'Categoría'}
+									value={item.family?.description ?? DEFAULT_EMPTY_NAME}
+								/>
+							}
 						/>
 					</CardContent>
 				</Card>
