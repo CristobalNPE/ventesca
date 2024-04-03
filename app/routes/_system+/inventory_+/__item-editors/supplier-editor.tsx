@@ -14,12 +14,10 @@ import {
 } from '#app/routes/resources+/suppliers.tsx'
 import { Editor } from './editor.tsx'
 
-// const NAME_MIN = 3
 export const UPDATE_SUPPLIER_KEY = 'update-supplier'
 
 export const SupplierEditorSchema = z.object({
 	itemId: z.string().optional(),
-
 	supplierId: z.string(),
 })
 
