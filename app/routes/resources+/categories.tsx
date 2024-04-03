@@ -64,18 +64,18 @@ export function CategorySelectBox({
 		<SelectModal
 			open={categoryDialogOpen}
 			onOpenChange={setCategoryDialogOpen}
-			title="nuevo Proveedor"
+			title="nueva Categoría"
 			selected={newSelectedCategory?.description}
 		>
 			<Input
 				autoFocus
-				placeholder="Ingrese RUT o nombre"
+				placeholder="Búsqueda por descripción..."
 				type="text"
 				className="mb-4 w-full"
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 					categoryFetcher.submit(
 						{ query: e.target.value },
-						{ method: 'GET', action: '/resources/suppliers' },
+						{ method: 'GET', action: '/resources/categories' },
 					)
 				}
 			/>
@@ -88,7 +88,7 @@ export function CategorySelectBox({
 							setNewSelectedCategory(category)
 							categoryFetcher.submit(
 								{ query: '' },
-								{ method: 'GET', action: '/resources/suppliers' },
+								{ method: 'GET', action: '/resources/categories' },
 							)
 
 							setCategoryDialogOpen(false)
