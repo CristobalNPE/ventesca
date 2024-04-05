@@ -1,19 +1,6 @@
-import { Label } from '@radix-ui/react-label'
-import { defer, type LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Await,
-	Form,
-	Link,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
-import { Suspense, useId } from 'react'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
@@ -36,6 +23,18 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
+import { Label } from '@radix-ui/react-label'
+import { defer, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Await,
+	Form,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
+import { Suspense, useId } from 'react'
+import { CreateItemDialog } from './new.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -86,6 +85,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			.then(u => u)
 	}
 
+	const totalActiveItemsPromise = prisma.item.count({
+		where: { isActive: true },
+	})
 	const totalItemsPromise = prisma.item.count()
 
 	const noStockItemsPromise = prisma.item.count({
@@ -100,28 +102,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 
-	const newItemsThisMonthPromise = prisma.item.count({
-		where: {
-			createdAt: {
-				gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-			},
-		},
-	})
-
-	const [totalItems, noStockItems, lowStockItems, newItemsThisMonth] =
+	const [totalActiveItems, totalItems, noStockItems, lowStockItems] =
 		await Promise.all([
+			totalActiveItemsPromise,
 			totalItemsPromise,
 			noStockItemsPromise,
 			lowStockItemsPromise,
-			newItemsThisMonthPromise,
 		])
 
 	return defer({
 		itemsPromise,
+		totalActiveItems,
 		totalItems,
 		noStockItems,
 		lowStockItems,
-		newItemsThisMonth,
 	})
 }
 
@@ -129,35 +123,28 @@ export default function InventoryRoute() {
 	const isAdmin = true
 	const {
 		itemsPromise,
+		totalActiveItems,
 		totalItems,
 		noStockItems,
 		lowStockItems,
-		newItemsThisMonth,
 	} = useLoaderData<typeof loader>()
 
 	return (
 		<main className="flex flex-col">
 			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
 				<h1 className="text-xl font-semibold">Administración de Inventario</h1>
-				{isAdmin && (
-					<Button asChild variant={'outline'}>
-						<Link className="flex items-center justify-center gap-2" to="new">
-							<Icon name="plus" size="md" />
-							<span>Agregar articulo</span>
-						</Link>
-					</Button>
-				)}
+				{isAdmin && <CreateItemDialog />}
 			</div>
 			<Spacer size={'4xs'} />
 			<div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
 				<DataCard
-					title={'Artículos Registrados'}
-					value={`${totalItems}`}
+					title={'Artículos Disponibles'}
+					value={`${totalActiveItems}`}
 					icon={'package'}
-					subtext={`${newItemsThisMonth} ${
-						newItemsThisMonth === 1
-							? 'articulo nuevo este mes'
-							: 'artículos nuevos este mes'
+					subtext={`${totalItems} ${
+						totalItems === 1
+							? 'artículo registrados en sistema'
+							: 'artículos registrados en sistema'
 					} `}
 				/>
 				<DataCard
@@ -168,13 +155,13 @@ export default function InventoryRoute() {
 				/>
 				<DataCard
 					title={'Mayores Ingresos'}
-					value={`${formatCurrency(102000)} CLP`}
+					value={`${formatCurrency(102000)}`}
 					icon={'trending-up'}
 					subtext={'Zapatilla Nike 24 White'}
 				/>
 				<DataCard
 					title={'Menores Ingresos'}
-					value={`${formatCurrency(2000)} CLP`}
+					value={`${formatCurrency(2000)}`}
 					icon={'trending-down'}
 					subtext={'Caja negra sin sentido'}
 				/>
