@@ -10,8 +10,10 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
 import { Editor } from './editor.tsx'
 
-const CODE_MAX = 999999
-const CODE_MIN = 0
+//Exported constants for consistency on item-creation
+export const CODE_MAX = 999999
+export const CODE_MIN = 0
+
 export const UPDATE_CODE_KEY = 'update-code'
 
 export const CodeEditorSchema = z.object({
