@@ -41,6 +41,7 @@ export type IconName =
 	| 'file-text'
 	| 'filter'
 	| 'github-logo'
+	| 'help'
 	| 'id-badge-2'
 	| 'id'
 	| 'laptop'
