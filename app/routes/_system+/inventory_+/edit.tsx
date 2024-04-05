@@ -32,6 +32,11 @@ import {
 	SupplierEditorSchema,
 	UPDATE_SUPPLIER_KEY,
 } from './__item-editors/supplier-editor.tsx'
+import {
+	STATUS_ENABLED,
+	StatusEditorSchema,
+	UPDATE_STATUS_KEY,
+} from './__item-editors/status-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -200,6 +205,28 @@ export async function action({ request }: ActionFunctionArgs) {
 			await prisma.item.update({
 				where: { id: itemId },
 				data: { family: { connect: { id: categoryId } } },
+			})
+
+			return json({ submission, status: 'success' } as const)
+		}
+		case UPDATE_STATUS_KEY: {
+			const submission = await parse(formData, {
+				schema: StatusEditorSchema,
+			})
+
+			if (submission.intent !== 'submit') {
+				return json({ submission, status: 'error' } as const)
+			}
+
+			if (!submission.value) {
+				return json({ submission, status: 'error' } as const, { status: 400 })
+			}
+
+			const { itemId, status } = submission.value
+
+			await prisma.item.update({
+				where: { id: itemId },
+				data: { isActive: status === STATUS_ENABLED ? true : false },
 			})
 
 			return json({ submission, status: 'success' } as const)
