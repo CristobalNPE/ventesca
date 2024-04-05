@@ -10,8 +10,9 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
 import { Editor } from './editor.tsx'
 
-const NAME_MAX = 30
-const NAME_MIN = 3
+//Exported constants for consistency on item-creation
+export const NAME_MAX = 30
+export const NAME_MIN = 3
 export const UPDATE_NAME_KEY = 'update-name'
 
 export const NameEditorSchema = z.object({
