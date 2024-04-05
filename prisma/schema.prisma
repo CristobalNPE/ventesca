@@ -35,10 +35,11 @@ model Provider {
 
 model Item {
   id           String            @id @default(cuid())
+  isActive     Boolean
   code         Int               @unique
   name         String?
-  sellingPrice Float?
-  price        Float?
+  sellingPrice Float
+  price        Float
   stock        Int
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
