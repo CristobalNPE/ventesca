@@ -66,7 +66,7 @@ async function seed() {
 				},
 			})
 		})
-
+	//create default provider
 	await prisma.provider.create({
 		data: {
 			rut: 'Desconocido',
@@ -112,13 +112,19 @@ async function seed() {
 				})
 			}
 
+			const isActive =
+				parseFloat(venta) > 0 &&
+				parseFloat(precio) > 0 &&
+				parseInt(existencia) > 0
+
 			await prisma.item
 				.create({
 					data: {
 						code: parseInt(codigo),
+						isActive: isActive,
 						name: nombre,
-						sellingPrice: parseFloat(venta),
-						price: parseFloat(precio),
+						sellingPrice: parseFloat(venta) ?? 0,
+						price: parseFloat(precio) ?? 0,
 						family: { connect: { code: parseInt(familia) } },
 						provider: { connect: { rut: rut } },
 						stock: parseInt(existencia) > 0 ? parseInt(existencia) : 0,
@@ -184,20 +190,20 @@ async function seed() {
 	console.time('💰 Created transactions...')
 
 	const totalTransactions = 100
-	const statuses = ['Finalizada','Finalizada','Finalizada', 'Cancelada']
+	const statuses = ['Finalizada', 'Finalizada', 'Finalizada', 'Cancelada']
 	const paymentMethods = ['Contado', 'Crédito']
 
 	for (let index = 0; index < totalTransactions; index++) {
 		const creationDate = getRandomDateWithinTwoYears()
 		const status = getRandomValue(statuses)
-		
+
 		const createdTransaction = await prisma.transaction.create({
 			data: {
 				status: status,
 				paymentMethod: getRandomValue(paymentMethods),
 				subtotal: 0,
 				total: 0,
-				totalDiscount:0,
+				totalDiscount: 0,
 				isDiscarded: status === 'Cancelada',
 				createdAt: subtractMinutes(creationDate, 10),
 				updatedAt: creationDate,
@@ -206,20 +212,16 @@ async function seed() {
 			},
 		})
 
-		
 		const totalItemTransactions = faker.number.int({ min: 1, max: 10 })
 		let totalItemPrice = 0
 
 		for (let index = 0; index < totalItemTransactions; index++) {
-
-
 			const itemForTransaction = await prisma.item.findFirst({
 				where: { code: faker.number.int({ min: 1, max: 5000 }) },
 				select: { code: true },
-			})	
+			})
 
 			if (!itemForTransaction) continue
-
 
 			const createdItemTransaction = await prisma.itemTransaction
 				.create({
@@ -243,8 +245,8 @@ async function seed() {
 
 			// update totalPrice of the transaction to be the sum of all item multiplied by their quantity
 			if (createdItemTransaction) {
-				const priceOfItem = createdItemTransaction.item?.sellingPrice ?? 0;
-				totalItemPrice = createdItemTransaction.quantity * priceOfItem;
+				const priceOfItem = createdItemTransaction.item?.sellingPrice ?? 0
+				totalItemPrice = createdItemTransaction.quantity * priceOfItem
 			}
 
 			if (totalItemPrice > 0 && createdItemTransaction) {
@@ -253,7 +255,6 @@ async function seed() {
 					data: { totalPrice: totalItemPrice },
 				})
 			}
-
 		}
 		const transactionTotal = await prisma.itemTransaction.aggregate({
 			where: { transactionId: createdTransaction.id },
