@@ -1,15 +1,3 @@
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -39,6 +27,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from '#app/components/ui/hover-card.tsx'
 import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
@@ -51,11 +44,24 @@ import {
 	useIsPending,
 } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { useForm } from '@conform-to/react'
+import { parse } from '@conform-to/zod'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 import { CategoryEditModal } from './__item-editors/category-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
 import { NameEditModal } from './__item-editors/name-editor.tsx'
 import { PriceEditModal } from './__item-editors/price-editor.tsx'
 import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
+import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
 
@@ -65,6 +71,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		where: { id: params.itemId },
 		select: {
 			id: true,
+			isActive: true,
 			code: true,
 			name: true,
 			price: true,
@@ -133,8 +140,12 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function ItemRoute() {
 	const isAdmin = true
 	const { item } = useLoaderData<typeof loader>()
+
 	const DEFAULT_EMPTY_NAME = 'Sin descripción'
-	// const navigate = useNavigate()
+	const activateConditions =
+		!item.isActive && item.stock >= 1 && item.price > 0 && item.sellingPrice > 0
+
+		console.log(activateConditions)
 	return (
 		<>
 			<BreadCrumbs />
@@ -164,6 +175,7 @@ export default function ItemRoute() {
 						{item.stock > 0 ? 'En Stock' : 'Agotado'}
 					</Badge>
 				</div>
+
 				{isAdmin && (
 					<div className="hidden md:flex">
 						<DeleteItemConfirmationModal itemId={item.id} />
@@ -171,156 +183,222 @@ export default function ItemRoute() {
 				)}
 			</div>
 			<Spacer size="4xs" />
-			<div className="grid gap-4 2xl:grid-cols-2">
-				<Card>
-					<CardHeader>
-						<CardTitle>Detalles del Articulo</CardTitle>
-						<CardDescription>Datos generales del articulo.</CardDescription>
-					</CardHeader>
-					<CardContent className="grid gap-2 md:grid-cols-2 ">
-						<DataRow
-							icon="clock-up"
-							label="Fecha ingreso"
-							value={item.createdAt}
-						/>
-						<DataRow
-							icon="clock"
-							label="Ultima actualización"
-							value={item.updatedAt}
-						/>
-						<DataRow icon="id" label="ID" value={item.id.toUpperCase()} />
-						<DataRow
-							icon="id-badge-2"
-							label="Nombre"
-							value={item.name ?? DEFAULT_EMPTY_NAME}
-							isEditable={isAdmin}
-							editModal={
-								<NameEditModal
-									id={item.id}
-									icon={'id-badge-2'}
-									label={'Nombre'}
-									value={item.name ?? DEFAULT_EMPTY_NAME}
-								/>
-							}
-						/>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader>
-						<CardTitle>Información de venta</CardTitle>
-						<CardDescription>
-							Datos asociados a la venta del articulo.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="grid gap-2 md:grid-cols-2 ">
-						<DataRow
-							icon="scan-barcode"
-							label="Código"
-							value={item.code.toString()}
-							isEditable={isAdmin}
-							editModal={
-								<CodeEditModal
-									id={item.id}
-									icon={'scan-barcode'}
-									label={'Código'}
-									value={item.code}
-								/>
-							}
-						/>
-						<DataRow
-							icon="package"
-							label="Stock"
-							value={item.stock.toString()}
-							isEditable={isAdmin}
-							suffix={item.stock !== 1 ? 'unidades' : 'unidad'}
-							editModal={
-								<StockEditModal
-									id={item.id}
-									icon={'package'}
-									label={'Stock'}
-									value={item.stock.toString()}
-								/>
-							}
-						/>
-						<DataRow
-							icon="circle-dollar-sign"
-							label="Valor"
-							value={formatCurrency(item.price)}
-							isEditable={isAdmin}
-							editModal={
-								<PriceEditModal
-									id={item.id}
-									icon={'circle-dollar-sign'}
-									label={'Valor'}
-									value={item.price ?? 0}
-								/>
-							}
-						/>
-						<DataRow
-							icon="cash"
-							label="Precio venta"
-							value={formatCurrency(item.sellingPrice)}
-							isEditable={isAdmin}
-							editModal={
-								<SellingPriceEditModal
-									id={item.id}
-									icon={'cash'}
-									label={'Precio de venta'}
-									value={item.sellingPrice ?? 0}
-								/>
-							}
-						/>
-					</CardContent>
-				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>Datos Generales</CardTitle>
-					</CardHeader>
-					<CardContent className="grid gap-2 md:grid-cols-2 ">
-						<DataRow
-							icon="user"
-							label="Proveedor"
-							value={item.provider?.fantasyName}
-							isEditable={isAdmin}
-							editModal={
-								<SupplierEditModal
-									id={item.id}
-									icon={'user'}
-									label={'Proveedor'}
-									value={item.provider?.fantasyName ?? DEFAULT_EMPTY_NAME}
+			<div className="grid gap-4  lg:grid-cols-7 lg:gap-6 2xl:grid-cols-3">
+				<div className="col-span-3 grid auto-rows-max items-start gap-4 lg:col-span-4 lg:gap-6 2xl:col-span-2">
+					<Card>
+						<CardHeader>
+							<CardTitle>Detalles del Articulo</CardTitle>
+							<CardDescription>Datos generales del articulo.</CardDescription>
+						</CardHeader>
+						<CardContent className="grid gap-2 2xl:grid-cols-2 ">
+							<DataRow
+								icon="clock-up"
+								label="Fecha ingreso"
+								value={item.createdAt}
+							/>
+							<DataRow
+								icon="clock"
+								label="Ultima actualización"
+								value={item.updatedAt}
+							/>
+							<DataRow icon="id" label="ID" value={item.id.toUpperCase()} />
+							<DataRow
+								icon="id-badge-2"
+								label="Nombre"
+								value={item.name ?? DEFAULT_EMPTY_NAME}
+								isEditable={isAdmin}
+								editModal={
+									<NameEditModal
+										id={item.id}
+										icon={'id-badge-2'}
+										label={'Nombre'}
+										value={item.name ?? DEFAULT_EMPTY_NAME}
+									/>
+								}
+							/>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardHeader>
+							<CardTitle>Información de venta</CardTitle>
+							<CardDescription>
+								Datos asociados a la venta del articulo.
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="grid gap-2 2xl:grid-cols-2 ">
+							<DataRow
+								icon="scan-barcode"
+								label="Código"
+								value={item.code.toString()}
+								isEditable={isAdmin}
+								editModal={
+									<CodeEditModal
+										id={item.id}
+										icon={'scan-barcode'}
+										label={'Código'}
+										value={item.code}
+									/>
+								}
+							/>
+							<DataRow
+								icon="package"
+								label="Stock"
+								value={item.stock.toString()}
+								isEditable={isAdmin}
+								suffix={item.stock !== 1 ? 'unidades' : 'unidad'}
+								editModal={
+									<StockEditModal
+										id={item.id}
+										icon={'package'}
+										label={'Stock'}
+										value={item.stock.toString()}
+									/>
+								}
+							/>
+							<DataRow
+								icon="circle-dollar-sign"
+								label="Valor"
+								value={formatCurrency(item.price)}
+								isEditable={isAdmin}
+								editModal={
+									<PriceEditModal
+										id={item.id}
+										icon={'circle-dollar-sign'}
+										label={'Valor'}
+										value={item.price ?? 0}
+									/>
+								}
+							/>
+							<DataRow
+								icon="cash"
+								label="Precio venta"
+								value={formatCurrency(item.sellingPrice)}
+								isEditable={isAdmin}
+								editModal={
+									<SellingPriceEditModal
+										id={item.id}
+										icon={'cash'}
+										label={'Precio de venta'}
+										value={item.sellingPrice ?? 0}
+									/>
+								}
+							/>
+						</CardContent>
+					</Card>
+				</div>
+				<div className="col-span-3 grid auto-rows-max items-start gap-4 lg:gap-6 2xl:col-span-1">
+					<Card className=" ">
+						<CardHeader>
+							<CardTitle>Datos Generales</CardTitle>
+							<CardDescription>
+								Modificar categoría y/o proveedor.
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="grid gap-2 ">
+							<DataRow
+								icon="user"
+								label="Proveedor"
+								value={item.provider?.fantasyName}
+								isEditable={isAdmin}
+								editModal={
+									<SupplierEditModal
+										id={item.id}
+										icon={'user'}
+										label={'Proveedor'}
+										value={item.provider?.fantasyName ?? DEFAULT_EMPTY_NAME}
+									/>
+								}
+							/>
+							<DataRow
+								icon="shapes"
+								label="Categoría"
+								value={item.family?.description}
+								isEditable={isAdmin}
+								editModal={
+									<CategoryEditModal
+										id={item.id}
+										icon={'shapes'}
+										label={'Categoría'}
+										value={item.family?.description ?? DEFAULT_EMPTY_NAME}
+									/>
+								}
+							/>
+						</CardContent>
+					</Card>
+					<Card className="relative">
+						<CardHeader className="">
+							<CardTitle>Estado del articulo</CardTitle>
+							<CardDescription>
+								<span>El articulo se encuentra actualmente</span>{' '}
+								<span
+									className={cn(
+										'font-bold',
+										item.isActive ? 'text-primary' : 'text-destructive',
+									)}
+								>
+									{item.isActive ? 'Disponible' : 'No Disponible'}
+								</span>
+								{(!activateConditions && !item.isActive) && (
+									<HoverCard openDelay={200} closeDelay={300}>
+										<HoverCardTrigger className="absolute right-3 top-3 transition-all hover:scale-105 hover:text-foreground">
+											<Icon className="ml-2 text-3xl" name="help" />
+										</HoverCardTrigger>
+										<HoverCardContent className="flex flex-col gap-2">
+											{item.stock < 1 && (
+												<div className="flex items-center gap-2 ">
+													<Icon
+														name="exclamation-circle"
+														className="shrink-0"
+													/>
+													Debe definir un stock valido.
+												</div>
+											)}
+											{item.price <= 0 && (
+												<div className="flex items-center gap-2 ">
+													<Icon
+														name="exclamation-circle"
+														className="shrink-0"
+													/>
+													Debe definir un valor valido mayor a 0.
+												</div>
+											)}
+											{item.sellingPrice <= 0 && (
+												<div className="flex items-center gap-2 ">
+													<Icon
+														name="exclamation-circle"
+														className="shrink-0"
+													/>
+													Debe definir un precio de venta valido mayor a 0.
+												</div>
+											)}
+										</HoverCardContent>
+									</HoverCard>
+								)}
+							</CardDescription>
+						</CardHeader>
+						{isAdmin && (
+							<CardContent className="grid place-items-center md:place-content-end">
+								<EditStatus
+									isActive={item.isActive}
+									disabled={!activateConditions}
+									itemId={item.id}
 								/>
-							}
-						/>
-						<DataRow
-							icon="shapes"
-							label="Categoría"
-							value={item.family?.description}
-							isEditable={isAdmin}
-							editModal={
-								<CategoryEditModal
-									id={item.id}
-									icon={'shapes'}
-									label={'Categoría'}
-									value={item.family?.description ?? DEFAULT_EMPTY_NAME}
-								/>
-							}
-						/>
-					</CardContent>
-				</Card>
-
-				{isAdmin && (
-					<div className="flex w-full sm:m-auto sm:w-fit md:hidden">
-						<DeleteItemConfirmationModal itemId={item.id} />
-					</div>
-				)}
+							</CardContent>
+						)}
+					</Card>
+					{isAdmin && (
+						<div className="flex w-full sm:m-auto sm:w-fit md:hidden">
+							<DeleteItemConfirmationModal itemId={item.id} />
+						</div>
+					)}
+				</div>
 			</div>
 		</>
 	)
 }
 
 //If we need to format a value on the edit modal, we can use the formatFn prop, but we need to also give the value as a Number in order for it to work correctly.
-
 function DataRow({
 	icon,
 	label,
@@ -352,10 +430,7 @@ function DataRow({
 					</span>
 				</div>
 			</div>
-			{
-				isEditable && editModal
-				// This button opens a modal/drawer, with input to edit the value. Should also have a tooltip.
-			}
+			{isEditable && editModal}
 		</div>
 	)
 }
