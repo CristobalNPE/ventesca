@@ -1,6 +1,6 @@
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { type Family } from '@prisma/client'
+import { type Category } from '@prisma/client'
 import {
 	json,
 	redirect,
@@ -47,11 +47,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const submission = await parse(formData, {
 		schema: CategoryEditorSchema.superRefine(async (data, ctx) => {
-			const categoryByCode = await prisma.family.findUnique({
+			const categoryByCode = await prisma.category.findUnique({
 				select: { id: true, code: true },
 				where: { code: data.code },
 			})
-			const categoryByDescription = await prisma.family.findFirst({
+			const categoryByDescription = await prisma.category.findFirst({
 				select: { id: true, description: true },
 				where: { description: data.description },
 			})
@@ -85,7 +85,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const { id: categoryId, code, description } = submission.value
 
-	const updatedCategory = await prisma.family.upsert({
+	const updatedCategory = await prisma.category.upsert({
 		select: { id: true },
 		where: { id: categoryId ?? '__new_category__' },
 		create: {
@@ -104,7 +104,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export function CategoryEditor({
 	category,
 }: {
-	category?: SerializeFrom<Pick<Family, 'id' | 'code' | 'description'>>
+	category?: SerializeFrom<Pick<Category, 'id' | 'code' | 'description'>>
 }) {
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()

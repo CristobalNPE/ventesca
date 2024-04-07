@@ -284,7 +284,7 @@ function App() {
 		},
 		{
 			name: 'Proveedores',
-			path: 'providers',
+			path: 'suppliers',
 			icon: 'users',
 		},
 	]

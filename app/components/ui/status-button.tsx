@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useSpinDelay } from 'spin-delay'
 import { cn } from '#app/utils/misc.tsx'
 import { Button, type ButtonProps } from './button.tsx'
-import { Icon, IconName } from './icon.tsx'
+import { Icon, type IconName } from './icon.tsx'
 import {
 	Tooltip,
 	TooltipContent,

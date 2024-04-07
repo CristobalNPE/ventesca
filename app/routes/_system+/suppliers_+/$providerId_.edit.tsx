@@ -10,7 +10,7 @@ export { action }
 export async function loader({ params }: LoaderFunctionArgs) {
 	// const userId = await requireUserId(request)
 
-	const provider = await prisma.provider.findFirst({
+	const supplier = await prisma.supplier.findFirst({
 		select: {
 			id: true,
 			rut: true,
@@ -25,13 +25,13 @@ export async function loader({ params }: LoaderFunctionArgs) {
 			id: params.providerId,
 		},
 	})
-	invariantResponse(provider, 'Not found', { status: 404 })
+	invariantResponse(supplier, 'Not found', { status: 404 })
 
-	return json({ provider })
+	return json({ supplier })
 }
 
 export default function ProviderEdit() {
-	const { provider } = useLoaderData<typeof loader>()
+	const { supplier } = useLoaderData<typeof loader>()
 
 	return (
 		<div className="flex max-w-[35rem] flex-col  rounded-md bg-secondary">
@@ -39,7 +39,7 @@ export default function ProviderEdit() {
 				<Icon name="route" />
 				<h1>Modificar Proveedor</h1>
 			</div>
-			<ProviderEditor provider={provider} />
+			<ProviderEditor provider={supplier} />
 		</div>
 	)
 }

@@ -1,10 +1,10 @@
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
-import { action } from '../edit.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { type action } from '../edit.tsx'
 
 export const UPDATE_STATUS_KEY = 'update-status'
 export const STATUS_DISABLED = 'active'

@@ -39,13 +39,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const { categoryId } = submission.value
 
-	const category = await prisma.family.findFirst({
+	const category = await prisma.category.findFirst({
 		select: { id: true, description: true },
 		where: { id: categoryId },
 	})
 	invariantResponse(category, 'Not found', { status: 404 })
 
-	await prisma.family.delete({ where: { id: category.id } })
+	await prisma.category.delete({ where: { id: category.id } })
 
 	return redirectWithToast(`/categories`, {
 		type: 'success',

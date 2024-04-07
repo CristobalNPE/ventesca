@@ -25,6 +25,11 @@ import {
 	UPDATE_SELLINGPRICE_KEY,
 } from './__item-editors/sellingPrice-editor.tsx'
 import {
+	STATUS_ENABLED,
+	StatusEditorSchema,
+	UPDATE_STATUS_KEY,
+} from './__item-editors/status-editor.tsx'
+import {
 	StockEditorSchema,
 	UPDATE_STOCK_KEY,
 } from './__item-editors/stock-editor.tsx'
@@ -32,11 +37,6 @@ import {
 	SupplierEditorSchema,
 	UPDATE_SUPPLIER_KEY,
 } from './__item-editors/supplier-editor.tsx'
-import {
-	STATUS_ENABLED,
-	StatusEditorSchema,
-	UPDATE_STATUS_KEY,
-} from './__item-editors/status-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -182,7 +182,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			await prisma.item.update({
 				where: { id: itemId },
-				data: { provider: { connect: { id: supplierId } } },
+				data: { supplier: { connect: { id: supplierId } } },
 			})
 
 			return json({ submission, status: 'success' } as const)
@@ -204,7 +204,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			await prisma.item.update({
 				where: { id: itemId },
-				data: { family: { connect: { id: categoryId } } },
+				data: { category: { connect: { id: categoryId } } },
 			})
 
 			return json({ submission, status: 'success' } as const)

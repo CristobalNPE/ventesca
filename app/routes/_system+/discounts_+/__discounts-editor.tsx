@@ -163,7 +163,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				validFrom,
 				validUntil,
 				isActive: true,
-				families: {
+				categories: {
 					connect: categoryIdsArray.map(id => ({ id })),
 				},
 				value,
@@ -177,7 +177,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				validFrom,
 				isActive: true,
 				validUntil,
-				families: {
+				categories: {
 					connect: categoryIdsArray.map(id => ({ id })),
 				},
 				value,

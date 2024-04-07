@@ -14,7 +14,7 @@ async function seed() {
 	console.timeEnd('🧹 Cleaned up the database...')
 
 	console.time('🔑 Created permissions...')
-	const entities = ['user', 'item', 'family', 'provider']
+	const entities = ['user', 'item', 'category', 'provider']
 	const actions = ['create', 'read', 'update', 'delete']
 	const accesses = ['own', 'any'] as const
 	for (const entity of entities) {
@@ -33,18 +33,18 @@ async function seed() {
 		.on('data', async function (row) {
 			const [code, description] = row
 			const codeAsInt = parseInt(code)
-			await prisma.family.create({
+			await prisma.category.create({
 				data: { code: codeAsInt, description },
 			})
 		})
 
-	await prisma.family.create({
-		data: { code: 99, description: 'SIN CLASIFICAR' },
+	await prisma.category.create({
+		data: { code: 999, description: 'General' },
 	})
 
 	console.timeEnd('☺ Created families...')
 
-	console.time('🤼 Created providers...')
+	console.time('🤼 Created suppliers...')
 
 	fs.createReadStream('./providers.csv')
 		.pipe(parse({ delimiter: ',', from_line: 2 }))
@@ -52,11 +52,11 @@ async function seed() {
 			const [rut, nombre, direccion, ciudad, fanta, telefono, fax] = row
 
 			// const parsedRUT = `${rut}${dv.trim() ? '-' + dv : ''}`
-			const providerRut = rut.trim() ? rut : `Desconocido-${cuid()}`
+			const supplierRut = rut.trim() ? rut : `Desconocido-${cuid()}`
 
-			await prisma.provider.create({
+			await prisma.supplier.create({
 				data: {
-					rut: providerRut,
+					rut: supplierRut,
 					name: nombre,
 					address: direccion,
 					city: ciudad,
@@ -67,7 +67,7 @@ async function seed() {
 			})
 		})
 	//create default provider
-	await prisma.provider.create({
+	await prisma.supplier.create({
 		data: {
 			rut: 'Desconocido',
 			name: 'Desconocido',
@@ -79,7 +79,7 @@ async function seed() {
 		},
 	})
 
-	console.timeEnd('🤼 Created providers...')
+	console.timeEnd('🤼 Created suppliers...')
 
 	console.time('🛒 Created products...')
 
@@ -88,15 +88,15 @@ async function seed() {
 		.on('data', async function (row) {
 			const [codigo, nombre, precio, familia, venta, rut, existencia] = row
 
-			const existingProvider = await prisma.provider.findUnique({
+			const existingSupplier = await prisma.supplier.findUnique({
 				where: { rut: rut.trim() },
 			})
 
-			if (!existingProvider) {
+			if (!existingSupplier) {
 				console.log(
-					`⛔⛔ Provider with RUT ${rut} does not exist. It will be created.`,
+					`⛔⛔ Supplier with RUT ${rut} does not exist. It will be created.`,
 				)
-				await prisma.provider.upsert({
+				await prisma.supplier.upsert({
 					where: { rut: rut.trim() },
 					create: {
 						rut: rut.trim(),
@@ -125,8 +125,8 @@ async function seed() {
 						name: nombre,
 						sellingPrice: parseFloat(venta) ?? 0,
 						price: parseFloat(precio) ?? 0,
-						family: { connect: { code: parseInt(familia) } },
-						provider: { connect: { rut: rut } },
+						category: { connect: { code: parseInt(familia) } },
+						supplier: { connect: { rut: rut } },
 						stock: parseInt(existencia) > 0 ? parseInt(existencia) : 0,
 					},
 				})

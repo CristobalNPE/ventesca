@@ -1,5 +1,9 @@
-import { type Provider } from '@prisma/client'
-import { type SerializeFrom, json, type LoaderFunctionArgs } from '@remix-run/node'
+import { type Supplier } from '@prisma/client'
+import {
+	type SerializeFrom,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { format } from '@validatecl/rut'
@@ -10,7 +14,7 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
-	const providers = await prisma.provider
+	const suppliers = await prisma.supplier
 		.findMany({
 			orderBy: { name: 'asc' },
 			select: {
@@ -23,13 +27,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		})
 		.then(u => u)
 
-	const totalProviders = await prisma.provider.count()
+	const totalSuppliers = await prisma.supplier.count()
 
-	return json({ providers, totalProviders })
+	return json({ suppliers, totalSuppliers })
 }
 
 export const providerColumns: ColumnDef<
-	SerializeFrom<Pick<Provider, 'id' | 'rut' | 'name' | 'fantasyName'>>
+	SerializeFrom<Pick<Supplier, 'id' | 'rut' | 'name' | 'fantasyName'>>
 >[] = [
 	{
 		header: ({ column }) => {
@@ -102,14 +106,14 @@ export const providerColumns: ColumnDef<
 
 export default function ProvidersRoute() {
 	const isAdmin = true
-	const { providers, totalProviders } = useLoaderData<typeof loader>()
+	const { suppliers, totalSuppliers } = useLoaderData<typeof loader>()
 	return (
 		<>
 			<div className="flex justify-between border-b-2 border-secondary pb-4">
 				<div className="flex items-center gap-4">
 					<h1 className="text-2xl">Proveedores</h1>
 					<h1 className="text-xl text-foreground/70">
-						[{totalProviders} registrados]
+						[{totalSuppliers} registrados]
 					</h1>
 				</div>
 				{isAdmin && (
@@ -126,7 +130,7 @@ export default function ProvidersRoute() {
 			<DataTable
 				withItemSearch={false}
 				columns={providerColumns}
-				data={providers}
+				data={suppliers}
 				searchFilter={{
 					description: 'RUT',
 					key: 'rut',

@@ -1,3 +1,15 @@
+import { useForm } from '@conform-to/react'
+import { parse } from '@conform-to/zod'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -44,18 +56,6 @@ import {
 	useIsPending,
 } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { z } from 'zod'
 import { CategoryEditModal } from './__item-editors/category-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
 import { NameEditModal } from './__item-editors/name-editor.tsx'
@@ -79,8 +79,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			createdAt: true,
 			updatedAt: true,
 			sellingPrice: true,
-			family: { select: { description: true, id: true } },
-			provider: { select: { fantasyName: true, id: true } },
+			category: { select: { description: true, id: true } },
+			supplier: { select: { fantasyName: true, id: true } },
 		},
 	})
 
@@ -145,7 +145,7 @@ export default function ItemRoute() {
 	const activateConditions =
 		!item.isActive && item.stock >= 1 && item.price > 0 && item.sellingPrice > 0
 
-		console.log(activateConditions)
+	console.log(activateConditions)
 	return (
 		<>
 			<BreadCrumbs />
@@ -299,28 +299,28 @@ export default function ItemRoute() {
 							<DataRow
 								icon="user"
 								label="Proveedor"
-								value={item.provider?.fantasyName}
+								value={item.supplier.fantasyName}
 								isEditable={isAdmin}
 								editModal={
 									<SupplierEditModal
 										id={item.id}
 										icon={'user'}
 										label={'Proveedor'}
-										value={item.provider?.fantasyName ?? DEFAULT_EMPTY_NAME}
+										value={item.supplier.fantasyName ?? DEFAULT_EMPTY_NAME}
 									/>
 								}
 							/>
 							<DataRow
 								icon="shapes"
 								label="Categoría"
-								value={item.family?.description}
+								value={item.category.description}
 								isEditable={isAdmin}
 								editModal={
 									<CategoryEditModal
 										id={item.id}
 										icon={'shapes'}
 										label={'Categoría'}
-										value={item.family?.description ?? DEFAULT_EMPTY_NAME}
+										value={item.category.description ?? DEFAULT_EMPTY_NAME}
 									/>
 								}
 							/>
@@ -339,7 +339,7 @@ export default function ItemRoute() {
 								>
 									{item.isActive ? 'Disponible' : 'No Disponible'}
 								</span>
-								{(!activateConditions && !item.isActive) && (
+								{!activateConditions && !item.isActive && (
 									<HoverCard openDelay={200} closeDelay={300}>
 										<HoverCardTrigger className="absolute right-3 top-3 transition-all hover:scale-105 hover:text-foreground">
 											<Icon className="ml-2 text-3xl" name="help" />

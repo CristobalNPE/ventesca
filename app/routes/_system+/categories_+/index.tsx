@@ -1,5 +1,9 @@
-import { type Family } from '@prisma/client'
-import { type SerializeFrom, json, type LoaderFunctionArgs } from '@remix-run/node'
+import { type Category } from '@prisma/client'
+import {
+	type SerializeFrom,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '#app/components/data-table.tsx'
@@ -10,12 +14,12 @@ import { prisma } from '#app/utils/db.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
-	const categories = await prisma.family.findMany({
+	const categories = await prisma.category.findMany({
 		select: {
 			id: true,
 			code: true,
 			description: true,
-			_count: { select: { items: true } },	
+			_count: { select: { items: true } },
 		},
 	})
 
@@ -24,13 +28,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		totalItems: category._count.items,
 	}))
 
-	const totalCategories = await prisma.family.count()
+	const totalCategories = await prisma.category.count()
 
 	return json({ categories: formatted, totalCategories })
 }
 
 const columns: ColumnDef<
-	SerializeFrom<Pick<Family, 'code' | 'description' | 'id'>>
+	SerializeFrom<Pick<Category, 'code' | 'description' | 'id'>>
 >[] = [
 	{
 		header: ({ column }) => {

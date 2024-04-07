@@ -11,7 +11,7 @@ export { action }
 export async function loader({ params }: LoaderFunctionArgs) {
 	// const userId = await requireUserId(request)
 
-	const category = await prisma.family.findFirst({
+	const category = await prisma.category.findFirst({
 		select: {
 			id: true,
 			code: true,

@@ -35,11 +35,11 @@ export type TransactionReportDataType = {
 			stock: number
 			sellingPrice: number
 
-			family: {
+			category: {
 				description: string
 				id: string
 			}
-			provider: {
+			supplier: {
 				fantasyName: string
 				id: string
 			}
@@ -73,8 +73,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
 							price: true,
 							stock: true,
 							sellingPrice: true,
-							family: { select: { description: true, id: true } },
-							provider: { select: { fantasyName: true, id: true } },
+							category: { select: { description: true, id: true } },
+							supplier: { select: { fantasyName: true, id: true } },
 						},
 					},
 				},

@@ -1,6 +1,6 @@
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { type Provider } from '@prisma/client'
+import { type Supplier } from '@prisma/client'
 import {
 	type ActionFunctionArgs,
 	json,
@@ -41,7 +41,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const submission = await parse(formData, {
 		schema: ProviderEditorSchema.superRefine(async (data, ctx) => {
-			const providerByRut = await prisma.provider.findUnique({
+			const providerByRut = await prisma.supplier.findUnique({
 				select: { id: true, rut: true },
 				where: { rut: data.rut },
 			})
@@ -87,7 +87,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const cleanedRut = clean(rut)
 
-	const updatedProvider = await prisma.provider.upsert({
+	const updatedProvider = await prisma.supplier.upsert({
 		select: { id: true },
 		where: { id: providerId ?? '__new_provider__' },
 		create: {
@@ -118,7 +118,7 @@ export function ProviderEditor({
 }: {
 	provider?: SerializeFrom<
 		Pick<
-			Provider,
+			Supplier,
 			| 'id'
 			| 'rut'
 			| 'name'

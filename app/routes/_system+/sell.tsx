@@ -111,7 +111,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 								sellingPrice: true,
 								stock: true,
 								discount: true,
-								family: { select: { discount: true } },
+								category: { select: { discount: true } },
 							},
 						},
 
@@ -159,7 +159,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 							sellingPrice: true,
 							stock: true,
 							discount: true,
-							family: { select: { discount: true } },
+							category: { select: { discount: true } },
 						},
 					},
 				},
@@ -296,7 +296,7 @@ export default function SellRoute() {
 	}
 
 	const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
-		const familyDiscount = itemTransaction.item?.family?.discount
+		const familyDiscount = itemTransaction.item?.category.discount
 		const itemDiscount = itemTransaction.item?.discount
 
 		const isValidFamilyDiscount =

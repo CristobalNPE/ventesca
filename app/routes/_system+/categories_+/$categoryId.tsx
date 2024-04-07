@@ -33,7 +33,7 @@ import { cn, invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { DeleteCategory } from './$categoryId_.delete.tsx'
 
 export async function loader({ params }: LoaderFunctionArgs) {
-	const category = await prisma.family.findUnique({
+	const category = await prisma.category.findUnique({
 		where: { id: params.categoryId },
 		select: {
 			id: true,
@@ -50,7 +50,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 		},
 	})
 
-	const allCategories = await prisma.family.findMany({
+	const allCategories = await prisma.category.findMany({
 		select: { id: true, code: true, description: true },
 		orderBy: { code: 'asc' },
 	})
@@ -84,7 +84,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.item.updateMany({
 		where: { id: { in: itemsToTransfer } },
-		data: { familyId: destinationCategory },
+		data: { categoryId: destinationCategory },
 	})
 
 	throw redirect(`/categories/${destinationCategory}`)

@@ -1,3 +1,14 @@
+import { Label } from '@radix-ui/react-label'
+import { defer, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Await,
+	Form,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
+import { Suspense, useId } from 'react'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -23,17 +34,6 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
-import { Label } from '@radix-ui/react-label'
-import { defer, type LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Await,
-	Form,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
-import { Suspense, useId } from 'react'
 import { CreateItemDialog } from './new.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -57,7 +57,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					name: true,
 					sellingPrice: true,
 					stock: true,
-					family: { select: { description: true } },
+					category: { select: { description: true } },
 				},
 				where: {
 					code: parseInt(searchTerm),
@@ -76,7 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					name: true,
 					sellingPrice: true,
 					stock: true,
-					family: { select: { description: true } },
+					category: { select: { description: true } },
 				},
 				where: {
 					name: { contains: searchTerm },
@@ -212,9 +212,9 @@ type ItemData = {
 	id: string
 	sellingPrice: number | null
 	stock: number
-	family: {
+	category: {
 		description: string
-	} | null
+	}
 }
 function ItemsTableCard({
 	items,
@@ -262,7 +262,7 @@ function ItemsTableCard({
 								</TableCell>
 								<TableCell className="hidden lg:table-cell">
 									<Badge className="text-xs uppercase" variant="outline">
-										{item.family?.description}
+										{item.category.description}
 									</Badge>
 								</TableCell>
 								<TableCell className="hidden md:table-cell">

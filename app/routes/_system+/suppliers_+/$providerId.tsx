@@ -39,7 +39,7 @@ import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	const provider = await prisma.provider.findUnique({
+	const supplier = await prisma.supplier.findUnique({
 		where: { id: params.providerId },
 		select: {
 			id: true,
@@ -55,26 +55,26 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			updatedAt: true,
 		},
 	})
-	invariantResponse(provider, 'Not found', { status: 404 })
-	const providerItemsCount = await prisma.item.count({
-		where: { providerId: provider.id },
+	invariantResponse(supplier, 'Not found', { status: 404 })
+	const supplierItemsCount = await prisma.item.count({
+		where: { supplierId: supplier.id },
 	})
 
 	return json({
-		provider: {
-			...provider,
+		supplier: {
+			...supplier,
 
-			updatedAt: formatRelative(subDays(provider.updatedAt, 0), new Date(), {
+			updatedAt: formatRelative(subDays(supplier.updatedAt, 0), new Date(), {
 				locale: es,
 			}),
 		},
-		providerItemsCount,
+		supplierItemsCount,
 	})
 }
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-provider'),
-	providerId: z.string(),
+	supplierId: z.string(),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -91,32 +91,32 @@ export async function action({ request }: ActionFunctionArgs) {
 		return json({ status: 'error', submission } as const, { status: 400 })
 	}
 
-	const { providerId } = submission.value
+	const { supplierId } = submission.value
 
-	const provider = await prisma.provider.findFirst({
+	const supplier = await prisma.supplier.findFirst({
 		select: { id: true, name: true },
-		where: { id: providerId },
+		where: { id: supplierId },
 	})
-	invariantResponse(provider, 'Not found', { status: 404 })
+	invariantResponse(supplier, 'Not found', { status: 404 })
 
-	await prisma.provider.delete({ where: { id: provider.id } })
+	await prisma.supplier.delete({ where: { id: supplier.id } })
 
-	return redirectWithToast(`/providers`, {
+	return redirectWithToast(`/suppliers`, {
 		type: 'success',
 		title: 'Proveedor eliminado',
-		description: `El proveedor ${provider.name} ha sido eliminado con éxito.`,
+		description: `El proveedor ${supplier.name} ha sido eliminado con éxito.`,
 	})
 }
 
 export default function ProviderRoute() {
 	const isAdmin = true
-	const { provider, providerItemsCount } = useLoaderData<typeof loader>()
-	const address = provider.address
-		? provider.address
+	const { supplier, supplierItemsCount } = useLoaderData<typeof loader>()
+	const address = supplier.address
+		? supplier.address
 		: 'Sin dirección definida.'
-	const phone = provider.phone ? provider.phone : 'Sin teléfono definido.'
-	const city = provider.city ? provider.city : 'Sin ciudad definida.'
-	const fax = provider.fax ? provider.fax : 'Sin fax definido.'
+	const phone = supplier.phone ? supplier.phone : 'Sin teléfono definido.'
+	const city = supplier.city ? supplier.city : 'Sin ciudad definida.'
+	const fax = supplier.fax ? supplier.fax : 'Sin fax definido.'
 
 	return (
 		<>
@@ -126,30 +126,30 @@ export default function ProviderRoute() {
 						<Tooltip>
 							<TooltipTrigger className="cursor-default select-text">
 								<span className="text-3xl font-semibold">
-									{provider.fantasyName}
+									{supplier.fantasyName}
 								</span>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p>ID: {provider.id}</p>
+								<p>ID: {supplier.id}</p>
 							</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>
 				</div>
 				<div className="flex items-center gap-2 text-foreground/70">
 					<Icon name="user" />
-					<span className="">{provider.name}</span>
+					<span className="">{supplier.name}</span>
 				</div>
 			</div>
 
 			<div className="mt-8 flex items-center gap-2 text-lg text-foreground/70">
 				<Icon name="clock" />
-				<span>Ultima actualización {provider.updatedAt}</span>
+				<span>Ultima actualización {supplier.updatedAt}</span>
 			</div>
 
 			<div className="my-4 flex max-w-[40rem] flex-col gap-4 ">
 				<div className="flex w-full gap-4">
 					<Link
-						to={`/inventory?by-provider=${provider.id}`}
+						to={`/inventory?by-provider=${supplier.id}`}
 						className="relative  h-[13rem] w-[13rem] rounded-md bg-secondary p-4"
 					>
 						<Icon
@@ -157,21 +157,21 @@ export default function ProviderRoute() {
 							className="absolute inset-24 scale-[8.5] opacity-5"
 						/>
 						<div className="flex flex-col items-center">
-							<p className="mt-10 text-7xl font-bold">{providerItemsCount}</p>
+							<p className="mt-10 text-7xl font-bold">{supplierItemsCount}</p>
 							<p className="text-3xl capitalize">
-								{providerItemsCount > 1 || providerItemsCount === 0
+								{supplierItemsCount > 1 || supplierItemsCount === 0
 									? 'artículos'
 									: 'articulo'}
 							</p>
 							<p className="text-xl capitalize text-foreground/60">
-								{providerItemsCount > 1 || providerItemsCount === 0
+								{supplierItemsCount > 1 || supplierItemsCount === 0
 									? 'asociados'
 									: 'asociado'}
 							</p>
 						</div>
 					</Link>
 					<div className="flex flex-1 flex-col gap-4">
-						<InfoCard title="RUT" data={format(provider.rut)} icon="id" />
+						<InfoCard title="RUT" data={format(supplier.rut)} icon="id" />
 						<InfoCard title="Teléfono" data={phone} icon="phone" />
 					</div>
 				</div>
@@ -207,19 +207,19 @@ export default function ProviderRoute() {
 										</AlertDialogTitle>
 										<AlertDialogDescription>
 											<br />
-											{providerItemsCount !== 0 &&
+											{supplierItemsCount !== 0 &&
 												`Eliminar a ${
-													provider.name
+													supplier.name
 												} del registro también eliminara  ${
-													providerItemsCount > 1
-														? `los ${providerItemsCount}`
+													supplierItemsCount > 1
+														? `los ${supplierItemsCount}`
 														: 'el'
 												}  ${
-													providerItemsCount > 1 ? 'artículos' : 'articulo'
+													supplierItemsCount > 1 ? 'artículos' : 'articulo'
 												} ${
-													providerItemsCount > 1 ? 'asociados' : 'asociado'
+													supplierItemsCount > 1 ? 'asociados' : 'asociado'
 												} a este proveedor.`}
-											{providerItemsCount !== 0 && (
+											{supplierItemsCount !== 0 && (
 												<>
 													<br />
 													<br />
@@ -233,7 +233,7 @@ export default function ProviderRoute() {
 									<AlertDialogFooter className="flex gap-6">
 										<AlertDialogCancel>Cancelar</AlertDialogCancel>
 
-										<DeleteProvider id={provider.id} />
+										<DeleteProvider id={supplier.id} />
 									</AlertDialogFooter>
 								</AlertDialogContent>
 							</AlertDialog>
@@ -266,7 +266,7 @@ export function DeleteProvider({ id }: { id: string }) {
 	return (
 		<Form method="POST" {...form.props}>
 			<AuthenticityTokenInput />
-			<input type="hidden" name="providerId" value={id} />
+			<input type="hidden" name="supplierId" value={id} />
 			<StatusButton
 				type="submit"
 				name="intent"

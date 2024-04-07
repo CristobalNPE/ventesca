@@ -32,7 +32,7 @@ export type ItemTransactionType = z.infer<typeof ItemTransactionTypeSchema>
 
 //? it should only allow to change to promo if there are available discounts
 
-type FamilyProps = {
+type CategoryProps = {
 	id: string
 	name: string
 	discount: Discount | null
@@ -45,7 +45,7 @@ export type ItemProps = {
 	sellingPrice: number | null
 	stock: number
 	discount: Discount | null
-	family: FamilyProps
+	category: CategoryProps
 }
 
 type ItemTransactionRowProps = {
@@ -88,9 +88,9 @@ export const ItemTransactionRow = forwardRef<
 		isDiscountActive(item.discount)
 
 	const isFamilyDiscountApplicable =
-		Boolean(item.family?.discount) &&
-		isValidDiscount(item.family?.discount) &&
-		isDiscountActive(item.family?.discount)
+		Boolean(item.category.discount) &&
+		isValidDiscount(item.category.discount) &&
+		isDiscountActive(item.category.discount)
 
 	const isAnyDiscountApplicable =
 		isItemDiscountApplicable || isFamilyDiscountApplicable
@@ -98,16 +98,16 @@ export const ItemTransactionRow = forwardRef<
 	function calculateDiscounts() {
 		if (!isAnyDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
 
-		const familyDiscount = item.family?.discount
+		const categoryDiscount = item.category.discount
 		const itemDiscount = item.discount
 		const sellingPrice = item.sellingPrice ?? 0
 
-		let totalFamilyDiscount = 0
+		let totalCategoryDiscount = 0
 		let totalItemDiscount = 0
 
-		if (familyDiscount) {
-			totalFamilyDiscount = calculateDiscount(
-				familyDiscount,
+		if (categoryDiscount) {
+			totalCategoryDiscount = calculateDiscount(
+				categoryDiscount,
 				sellingPrice,
 				quantity,
 			)
@@ -122,14 +122,14 @@ export const ItemTransactionRow = forwardRef<
 		}
 
 		return {
-			familyDiscount: totalFamilyDiscount,
+			categoryDiscount: totalCategoryDiscount,
 			itemDiscount: totalItemDiscount,
 		}
 	}
 
 	const { familyDiscount, itemDiscount } = calculateDiscounts() ?? {}
 
-	const applicableFamilyDiscounts = isFamilyDiscountApplicable
+	const applicableCategoryDiscounts = isFamilyDiscountApplicable
 		? familyDiscount ?? 0
 		: 0
 	const applicableItemDiscounts = isItemDiscountApplicable
@@ -137,7 +137,7 @@ export const ItemTransactionRow = forwardRef<
 		: 0
 	const totalDiscounts =
 		transactionType === TYPE_PROMO
-			? applicableFamilyDiscounts + applicableItemDiscounts
+			? applicableCategoryDiscounts + applicableItemDiscounts
 			: 0
 
 	//When the promo stops being applicable, it changes back to TYPE_SELL

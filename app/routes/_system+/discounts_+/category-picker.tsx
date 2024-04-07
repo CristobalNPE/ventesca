@@ -25,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const categorySearchAsNumber = Number(categorySearch) || null
 
 	if (categorySearchAsNumber) {
-		const categories = await prisma.family.findMany({
+		const categories = await prisma.category.findMany({
 			select: { id: true, code: true, description: true },
 			where: { code: categorySearchAsNumber },
 
@@ -35,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return json({ categories })
 	}
 
-	const categories = await prisma.family.findMany({
+	const categories = await prisma.category.findMany({
 		select: { id: true, code: true, description: true },
 		where: { description: { contains: categorySearch ?? '' } },
 

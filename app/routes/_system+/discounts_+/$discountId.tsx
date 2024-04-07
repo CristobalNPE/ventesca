@@ -33,7 +33,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			updatedAt: true,
 			minQuantity: true,
 			items: { select: { id: true, code: true, name: true } },
-			families: { select: { id: true, code: true, description: true } },
+			categories: { select: { id: true, code: true, description: true } },
 		},
 	})
 
@@ -95,7 +95,7 @@ export default function DiscountRoute() {
 							Categorías asociadas
 						</span>
 						<ul>
-							{discount.families.map(category => (
+							{discount.categories.map(category => (
 								<li
 									key={category.id}
 									className="flex cursor-pointer select-none gap-2 text-lg font-semibold tracking-tight hover:text-primary"

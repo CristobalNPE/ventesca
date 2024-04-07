@@ -1,3 +1,8 @@
+import { conform, useForm } from '@conform-to/react'
+import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
+import { useFetcher } from '@remix-run/react'
+import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -14,11 +19,6 @@ import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { conform, useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { ActionFunctionArgs, json, redirect } from '@remix-run/node'
-import { useFetcher } from '@remix-run/react'
-import { z } from 'zod'
 import { CODE_MAX, CODE_MIN } from './__item-editors/code-editor.tsx'
 import { NAME_MAX, NAME_MIN } from './__item-editors/name-editor.tsx'
 
@@ -85,12 +85,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const { code, name } = submission.value
 
-	let defaultSupplier = await prisma.provider.findUnique({
+	let defaultSupplier = await prisma.supplier.findUnique({
 		where: { rut: DEFAULT_SUPPLIER },
 	})
 
 	if (!defaultSupplier) {
-		defaultSupplier = await prisma.provider.create({
+		defaultSupplier = await prisma.supplier.create({
 			data: {
 				rut: DEFAULT_SUPPLIER,
 				name: DEFAULT_SUPPLIER,
@@ -103,12 +103,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	}
 
-	let defaultCategory = await prisma.family.findFirst({
+	let defaultCategory = await prisma.category.findFirst({
 		where: { description: DEFAULT_CATEGORY },
 	})
 
 	if (!defaultCategory) {
-		defaultCategory = await prisma.family.create({
+		defaultCategory = await prisma.category.create({
 			data: { code: DEFAULT_CATEGORY_CODE, description: DEFAULT_CATEGORY },
 		})
 	}
@@ -120,8 +120,8 @@ export async function action({ request }: ActionFunctionArgs) {
 			name,
 			sellingPrice: DEFAULT_PRICE,
 			price: DEFAULT_PRICE,
-			family: { connect: { id: defaultCategory.id } },
-			provider: { connect: { id: defaultSupplier.id } },
+			category: { connect: { id: defaultCategory.id } },
+			supplier: { connect: { id: defaultSupplier.id } },
 			stock: DEFAULT_STOCK,
 		},
 	})
