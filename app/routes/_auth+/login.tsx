@@ -346,7 +346,7 @@ export default function LoginPage() {
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Iniciar Sesión -  Sistema de Ventas' }]
+	return [{ title: 'Iniciar Sesión -  Ventesca' }]
 }
 
 export function ErrorBoundary() {
