@@ -300,7 +300,7 @@ function App() {
 	const businessName = user?.business.name ?? ''
 
 	// ?CONSIDER MAKING DIFFERENT HEADERS FOR LOGGED IN USER AND OTHERS.
-	
+
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			<div className="flex h-[100dvh] ">
@@ -638,6 +638,10 @@ function SideBar({
 		</div>
 	)
 }
+
+function UserHeader(){}
+
+function VisitorHeader(){}
 
 export function ErrorBoundary() {
 	// the nonce doesn't rely on the loader so we can access that
