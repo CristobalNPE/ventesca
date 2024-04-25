@@ -51,7 +51,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 	const { search } = result.data
 
-	const item = await prisma.item.findUnique({
+	const item = await prisma.item.findFirst({
 		where: { code: search },
 		select: {
 			id: true,
