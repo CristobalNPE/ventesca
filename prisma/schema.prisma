@@ -17,7 +17,7 @@ model Category {
   items       Item[]
   discount    Discount? @relation(fields: [discountId], references: [id])
   discountId  String?
-  Business    Business? @relation(fields: [businessId], references: [id])
+  business    Business? @relation(fields: [businessId], references: [id])
   businessId  String?
 }
 
@@ -33,14 +33,14 @@ model Supplier {
   items       Item[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  Business    Business? @relation(fields: [businessId], references: [id])
+  business    Business? @relation(fields: [businessId], references: [id])
   businessId  String?
 }
 
 model Item {
   id           String            @id @default(cuid())
   isActive     Boolean
-  code         Int               @unique
+  code         Int
   name         String?
   sellingPrice Float
   price        Float
@@ -54,8 +54,7 @@ model Item {
   transactions ItemTransaction[]
   discount     Discount?         @relation(fields: [discountId], references: [id])
   discountId   String?
-  // business     Business          @relation(fields: [familyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  Business     Business?         @relation(fields: [businessId], references: [id])
+  business     Business?         @relation(fields: [businessId], references: [id])
   businessId   String?
 }
 
@@ -74,7 +73,7 @@ model Transaction {
   items         ItemTransaction[]
   seller        User?             @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   sellerId      String?
-  Business      Business?         @relation(fields: [businessId], references: [id])
+  business      Business?         @relation(fields: [businessId], references: [id])
   businessId    String?
 }
 
@@ -110,7 +109,7 @@ model Discount {
   items        Item[]
   categories   Category[]
   transactions Transaction[]
-  Business     Business?     @relation(fields: [businessId], references: [id])
+  business     Business?     @relation(fields: [businessId], references: [id])
   businessId   String?
 }
 
@@ -140,8 +139,8 @@ model User {
   sessions     Session[]
   connections  Connection[]
   transactions Transaction[]
-  Business     Business?     @relation(fields: [businessId], references: [id])
-  businessId   String?
+  business     Business      @relation(fields: [businessId], references: [id])
+  businessId   String
 }
 
 model UserImage {
