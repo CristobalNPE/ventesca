@@ -1,3 +1,14 @@
+import {
+	Icon,
+	href as iconsHref,
+	type IconName,
+} from '#app/components/ui/icon.tsx'
+import {
+	cn,
+	combineHeaders,
+	getDomainUrl,
+	getUserImgSrc,
+} from '#app/utils/misc.tsx'
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
 import { cssBundleHref } from '@remix-run/css-bundle'
@@ -24,18 +35,10 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
-import { useRef , useState } from 'react'
+import { useRef } from 'react'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 import { z } from 'zod'
-import { type IconName , Icon, href as iconsHref } from '#app/components/ui/icon.tsx'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '#app/components/ui/tooltip.tsx'
-import { cn , combineHeaders, getDomainUrl, getUserImgSrc } from '#app/utils/misc.tsx'
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
 import { ErrorList } from './components/forms.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
@@ -70,8 +73,6 @@ import { getTheme, setTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, useUser } from './utils/user.ts'
-
-
 
 type NavigationLink = {
 	name: string
@@ -109,8 +110,8 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return [
-		{ title: data ? 'Sistema de ventas' : 'Error | Sistema de ventas' },
-		{ name: 'description', content: `Sistema de ventas S3l1m` },
+		{ title: data ? 'Ventesca' : 'Error | Ventesca' },
+		{ name: 'description', content: `Sistema de ventas` },
 	]
 }
 
@@ -130,6 +131,7 @@ export async function loader({ request }: DataFunctionArgs) {
 							id: true,
 							name: true,
 							username: true,
+							business: { select: { name: true } },
 							image: { select: { id: true } },
 							roles: {
 								select: {
@@ -254,8 +256,6 @@ function App() {
 	const user = useOptionalUser()
 	const theme = useTheme()
 
-	const [shrinkSidebar, setShrinkSidebar] = useState(false)
-
 	const navigationLinks: NavigationLink[] = [
 		{
 			name: 'Centro de Control',
@@ -297,15 +297,15 @@ function App() {
 		},
 	]
 
-	const businessName = 'Test Business Name'
+	const businessName = user?.business.name ?? ''
 
+	// ?CONSIDER MAKING DIFFERENT HEADERS FOR LOGGED IN USER AND OTHERS.
+	
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			<div className="flex h-[100dvh] ">
 				{user && (
 					<SideBar
-						shrinkSidebar={shrinkSidebar}
-						setShrinkSidebar={setShrinkSidebar}
 						navigationLinks={navigationLinks}
 						secondaryLinks={secondaryLinks}
 						businessName={businessName}
@@ -315,7 +315,7 @@ function App() {
 					<header className="sticky top-0 z-50 flex h-[4rem] items-center justify-between gap-8 border-b-[1px] border-foreground/5 bg-secondary p-8">
 						<Sheet>
 							<SheetTrigger asChild>
-								<Button size={'icon'} variant={'outline'} className="sm:hidden">
+								<Button size={'icon'} variant={'outline'} className="xl:hidden">
 									<Icon className="text-xl" name="layout-sidebar-left-expand" />
 									<span className="sr-only">Expandir Menu</span>
 								</Button>
@@ -350,20 +350,25 @@ function App() {
 									<div>
 										{secondaryLinks.map(link => {
 											return (
-												<NavLink
-													className={({ isActive }) =>
-														cn(
-															'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
-															isActive &&
-																'bg-foreground/20 text-foreground hover:text-foreground',
-														)
-													}
+												<SheetClose
+													className="group flex"
+													asChild
 													key={link.name}
-													to={link.path}
 												>
-													<Icon size="md" className="" name={link.icon} />
-													<span>{link.name}</span>
-												</NavLink>
+													<NavLink
+														className={({ isActive }) =>
+															cn(
+																'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
+																isActive &&
+																	'bg-foreground/20 text-foreground hover:text-foreground',
+															)
+														}
+														to={link.path}
+													>
+														<Icon size="md" className="" name={link.icon} />
+														<span>{link.name}</span>
+													</NavLink>
+												</SheetClose>
 											)
 										})}
 									</div>
@@ -394,7 +399,7 @@ function App() {
 
 							<span className="hidden md:flex">{'Punto de Venta'}</span>
 						</NavLink>
-						<div className=" hidden gap-2 sm:flex">
+						<div className=" hidden gap-2 xl:flex">
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 							{user && <UserDropdown />}
 						</div>
@@ -566,157 +571,71 @@ function ThemeSwitch({ userPreference }: { userPreference?: Theme | null }) {
 }
 
 function SideBar({
-	shrinkSidebar,
-	setShrinkSidebar,
 	navigationLinks,
 	secondaryLinks,
 	businessName,
 	businessLogo,
 }: {
-	shrinkSidebar: boolean
-	setShrinkSidebar: Function
 	navigationLinks: NavigationLink[]
 	secondaryLinks: NavigationLink[]
 	businessName: string
 	businessLogo?: string
 }) {
 	return (
-		<>
-			{shrinkSidebar ? (
-				<div className="relative hidden w-fit  flex-col items-center border-r-[1px] border-foreground/5 bg-muted px-2 pb-8 pt-3 sm:flex ">
-					<div className="flex select-none items-center gap-2">
-						<div className="flex size-[2.5rem] rounded-md bg-foreground/40"></div>
-					</div>
-					<nav className="mt-8 flex h-full flex-col justify-between gap-6">
-						<div className="flex flex-col gap-2">
-							{navigationLinks.map(link => {
-								return (
-									<TooltipProvider delayDuration={100} key={link.name}>
-										<Tooltip>
-											<TooltipTrigger>
-												<NavLink
-													className={({ isActive }) =>
-														cn(
-															'flex items-center gap-3 rounded-sm p-2 text-2xl text-foreground transition-colors hover:bg-foreground/20',
-															isActive &&
-																' bg-foreground/20 text-foreground hover:bg-foreground/20',
-														)
-													}
-													to={link.path}
-												>
-													<Icon className="" name={link.icon} />
-												</NavLink>
-											</TooltipTrigger>
-											<TooltipContent side="right">
-												<p>{link.name}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
-								)
-							})}
-						</div>
-						<div>
-							{secondaryLinks.map(link => {
-								return (
-									<TooltipProvider delayDuration={100} key={link.name}>
-										<Tooltip>
-											<TooltipTrigger>
-												<NavLink
-													className={({ isActive }) =>
-														cn(
-															'flex items-center gap-3 rounded-sm p-2 text-2xl text-foreground transition-colors hover:bg-foreground/20',
-															isActive &&
-																'bg-foreground/20 text-foreground hover:bg-foreground/20',
-														)
-													}
-													to={link.path}
-												>
-													<Icon className="" name={link.icon} />
-												</NavLink>
-											</TooltipTrigger>
-											<TooltipContent side="right">
-												<p>{link.name}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
-								)
-							})}
-						</div>
-					</nav>
-					<Button
-						className="absolute -right-2 top-[50%] -translate-y-1/2 transform p-0 "
-						variant={'secondary'}
-						onClick={() => setShrinkSidebar(false)}
-					>
-						<Icon name="layout-sidebar-left-expand" size="md" />
-					</Button>
+		<div className="relative hidden w-[17.5rem]  flex-col border-r-[1px] border-foreground/5 bg-muted px-4 pb-8 pt-3 xl:flex ">
+			<div className="flex select-none items-center gap-2 ">
+				<div className="flex size-[3.5rem] rounded-md bg-foreground/40"></div>
+				<div>
+					<h1 className="text-2xl font-black uppercase tracking-tight">
+						{/* TODO: Change to variable appName or something */}
+						Ventesca
+					</h1>
+					<h3 className="text-muted-foreground">{businessName}</h3>
 				</div>
-			) : (
-				<div className="relative hidden w-[17.5rem]  flex-col border-r-[1px] border-foreground/5 bg-muted px-4 pb-8 pt-3 sm:flex ">
-					<div className="flex select-none items-center gap-2 ">
-						<div className="flex size-[3.5rem] rounded-md bg-foreground/40"></div>
-						<div>
-							<h1 className="text-2xl font-black uppercase tracking-tight">
-								{/* TODO: Change to variable appName or something */}
-								Ventesca
-							</h1>
-							<h3 className="tracking-tight text-foreground/80">
-								{businessName}
-							</h3>
-						</div>
-					</div>
-					<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
-						<div className="flex flex-col gap-2">
-							{navigationLinks.map(link => {
-								return (
-									<NavLink
-										className={({ isActive }) =>
-											cn(
-												'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
-												isActive &&
-													'bg-foreground/20 text-foreground hover:text-foreground',
-											)
-										}
-										key={link.name}
-										to={link.path}
-									>
-										<Icon size="md" className="" name={link.icon} />
-										<span>{link.name}</span>
-									</NavLink>
-								)
-							})}
-						</div>
-						<div>
-							{secondaryLinks.map(link => {
-								return (
-									<NavLink
-										className={({ isActive }) =>
-											cn(
-												'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
-												isActive &&
-													'bg-foreground/20 text-foreground hover:text-foreground',
-											)
-										}
-										key={link.name}
-										to={link.path}
-									>
-										<Icon size="md" className="" name={link.icon} />
-										<span>{link.name}</span>
-									</NavLink>
-								)
-							})}
-						</div>
-						<Button
-							className="absolute -right-2 top-[50%] -translate-y-1/2 transform p-0 "
-							variant={'secondary'}
-							onClick={() => setShrinkSidebar(true)}
-						>
-							<Icon name="layout-sidebar-left-collapse" size="md" />
-						</Button>
-					</nav>
+			</div>
+			<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
+				<div className="flex flex-col gap-2">
+					{navigationLinks.map(link => {
+						return (
+							<NavLink
+								className={({ isActive }) =>
+									cn(
+										'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+										isActive &&
+											'bg-foreground/20 text-foreground hover:text-foreground',
+									)
+								}
+								key={link.name}
+								to={link.path}
+							>
+								<Icon size="md" className="" name={link.icon} />
+								<span>{link.name}</span>
+							</NavLink>
+						)
+					})}
 				</div>
-			)}
-		</>
+				<div>
+					{secondaryLinks.map(link => {
+						return (
+							<NavLink
+								className={({ isActive }) =>
+									cn(
+										'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+										isActive &&
+											'bg-foreground/20 text-foreground hover:text-foreground',
+									)
+								}
+								key={link.name}
+								to={link.path}
+							>
+								<Icon size="md" className="" name={link.icon} />
+								<span>{link.name}</span>
+							</NavLink>
+						)
+					})}
+				</div>
+			</nav>
+		</div>
 	)
 }
 
