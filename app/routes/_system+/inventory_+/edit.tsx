@@ -37,10 +37,12 @@ import {
 	SupplierEditorSchema,
 	UPDATE_SUPPLIER_KEY,
 } from './__item-editors/supplier-editor.tsx'
+import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+
 	const formData = await request.formData()
 	await validateCSRF(formData, request.headers)
 
@@ -70,9 +72,9 @@ export async function action({ request }: ActionFunctionArgs) {
 		case UPDATE_CODE_KEY: {
 			const submission = await parse(formData, {
 				schema: CodeEditorSchema.superRefine(async (data, ctx) => {
-					const itemByCode = await prisma.item.findUnique({
+					const itemByCode = await prisma.item.findFirst({
 						select: { id: true, code: true },
-						where: { code: data.code },
+						where: { ...getWhereBusinessQuery(userId), code: data.code },
 					})
 
 					if (itemByCode && itemByCode.id !== data.itemId) {
