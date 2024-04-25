@@ -19,6 +19,9 @@ export type TransactionReportDataType = {
 	subtotal: number
 	total: number
 	paymentMethod: string
+	business: {
+		name: string
+	}
 	seller: {
 		name: string
 	}
@@ -51,6 +54,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 	const transactionReportData = await prisma.transaction.findUnique({
 		where: { id: params.reportId },
 		select: {
+			business: { select: { name: true } },
 			id: true,
 			status: true,
 			createdAt: true,
@@ -144,7 +148,6 @@ const styles = StyleSheet.create({
 		alignItems: 'flex-end',
 	},
 	footerTextTitle: {
-	
 		fontFamily: 'Helvetica-Bold',
 	},
 
@@ -212,7 +215,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 			<Page size="A4" style={styles.page}>
 				{/* Title Section */}
 				<View style={styles.title}>
-					<Text style={styles.titleText}>SELIM AMAR Y CIA LIMITADA</Text>
+					<Text style={styles.titleText}>{data.business.name}</Text>
 					<Text style={styles.titleText}>Reporte de Transacción</Text>
 				</View>
 				{/* Header Section */}
