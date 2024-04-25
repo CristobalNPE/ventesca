@@ -21,6 +21,7 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { CODE_MAX, CODE_MIN } from './__item-editors/code-editor.tsx'
 import { NAME_MAX, NAME_MIN } from './__item-editors/name-editor.tsx'
+import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 
 const DEFAULT_SUPPLIER = 'Desconocido'
 const DEFAULT_CATEGORY = 'General'
@@ -53,14 +54,19 @@ export async function loader() {
 }
 export async function action({ request }: ActionFunctionArgs) {
 	//TODO: SHOULD BE USER WITH PERMISSION
-	await requireUserId(request)
+	const userId = await requireUserId(request)
 	const formData = await request.formData()
+
+	const { businessId } = await prisma.user.findUniqueOrThrow({
+		where: { id: userId },
+		select: { businessId: true },
+	})
 
 	const submission = await parse(formData, {
 		schema: CreateItemSchema.superRefine(async (data, ctx) => {
-			const itemByCode = await prisma.item.findUnique({
+			const itemByCode = await prisma.item.findFirst({
 				select: { id: true, code: true },
-				where: { code: data.code },
+				where: { ...getWhereBusinessQuery(userId), code: data.code },
 			})
 
 			if (itemByCode && itemByCode.id !== data.itemId) {
@@ -99,6 +105,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				fantasyName: DEFAULT_SUPPLIER,
 				phone: DEFAULT_SUPPLIER,
 				fax: DEFAULT_SUPPLIER,
+				business: { connect: { id: businessId } },
 			},
 		})
 	}
@@ -109,7 +116,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	if (!defaultCategory) {
 		defaultCategory = await prisma.category.create({
-			data: { code: DEFAULT_CATEGORY_CODE, description: DEFAULT_CATEGORY },
+			data: {
+				code: DEFAULT_CATEGORY_CODE,
+				description: DEFAULT_CATEGORY,
+				business: { connect: { id: businessId } },
+			},
 		})
 	}
 
@@ -122,6 +133,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			price: DEFAULT_PRICE,
 			category: { connect: { id: defaultCategory.id } },
 			supplier: { connect: { id: defaultSupplier.id } },
+			business: { connect: { id: businessId } },
 			stock: DEFAULT_STOCK,
 		},
 	})
