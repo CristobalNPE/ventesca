@@ -1,19 +1,15 @@
 import { type Discount } from '@prisma/client'
 import {
-	type SerializeFrom,
 	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
+	type SerializeFrom,
 } from '@remix-run/node'
 import { Link, useFetcher, useLoaderData, useNavigate } from '@remix-run/react'
 
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
-import { z } from 'zod'
 import {
-	type ItemProps,
 	ItemTransactionRow,
+	type ItemProps,
 } from '#app/components/item-transaction-row.tsx'
 import {
 	AlertDialog,
@@ -45,6 +41,10 @@ import {
 	transactionKey,
 	transactionSessionStorage,
 } from '#app/utils/transaction.server.ts'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import React, { createRef, useEffect, useMemo, useRef, useState } from 'react'
+import { z } from 'zod'
 import { ItemReader } from './item-transaction.new.tsx'
 import { DiscardTransaction } from './transaction.discard.tsx'
 export const TRANSACTION_STATUS_PENDING = 'Pendiente'
@@ -65,76 +65,52 @@ const paymentMethodTypes = [PAYMENT_METHOD_CASH, PAYMENT_METHOD_CREDIT] as const
 export const PaymentMethodSchema = z.enum(paymentMethodTypes)
 export type PaymentMethod = z.infer<typeof PaymentMethodSchema>
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	const transactionId = await getTransactionId(request)
-	const userId = await requireUserId(request)
-
-	// const pendingTransaction = await prisma.transaction.findFirst({
-	// 	where: {
-	// 		sellerId: userId,
-	// 		id: transactionId,
-	// 		status: TRANSACTION_STATUS_PENDING,
-	// 	},
-	// })
-
-	if (!transactionId) {
-		const transactionSession = await transactionSessionStorage.getSession(
-			request.headers.get('cookie'),
-		)
-
-		const newTransaction = await prisma.transaction.create({
-			data: {
-				seller: { connect: { id: userId } },
-				status: TRANSACTION_STATUS_PENDING,
-				paymentMethod: PAYMENT_METHOD_CASH,
-				totalDiscount: 0,
-				subtotal: 0,
-				total: 0,
-			},
-			select: {
-				id: true,
-				status: true,
-				createdAt: true,
-				paymentMethod: true,
-				total: true,
-				seller: { select: { name: true } },
-				items: {
-					select: {
-						id: true,
-						type: true,
-						totalDiscount: true,
-						item: {
-							select: {
-								id: true,
-								code: true,
-								name: true,
-								sellingPrice: true,
-								stock: true,
-								discount: true,
-								category: { select: { discount: true } },
-							},
+async function createNewTransaction(userId: string, businessId: string) {
+	const newTransaction = await prisma.transaction.create({
+		data: {
+			seller: { connect: { id: userId } },
+			status: TRANSACTION_STATUS_PENDING,
+			paymentMethod: PAYMENT_METHOD_CASH,
+			totalDiscount: 0,
+			subtotal: 0,
+			total: 0,
+			business: { connect: { id: businessId } },
+		},
+		select: {
+			id: true,
+			status: true,
+			createdAt: true,
+			paymentMethod: true,
+			total: true,
+			seller: { select: { name: true } },
+			items: {
+				select: {
+					id: true,
+					type: true,
+					totalDiscount: true,
+					item: {
+						select: {
+							id: true,
+							code: true,
+							name: true,
+							sellingPrice: true,
+							stock: true,
+							discount: true,
+							category: { select: { discount: true } },
 						},
-
-						quantity: true,
-						totalPrice: true,
 					},
+					quantity: true,
+					totalPrice: true,
 				},
 			},
-		})
+		},
+	})
 
-		transactionSession.set(transactionKey, newTransaction.id)
-		return json(
-			{ transaction: newTransaction },
-			{
-				headers: {
-					'Set-Cookie':
-						await transactionSessionStorage.commitSession(transactionSession),
-				},
-			},
-		)
-	}
+	return newTransaction
+}
 
-	const currentTransaction = await prisma.transaction.findUnique({
+async function fetchTransactionDetails(transactionId: string) {
+	return prisma.transaction.findUnique({
 		where: { id: transactionId },
 		select: {
 			id: true,
@@ -166,10 +142,62 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			},
 		},
 	})
+}
 
-	invariantResponse(currentTransaction, 'No es posible cargar la transacción.')
+export async function loader({ request }: LoaderFunctionArgs) {
+	const transactionId = await getTransactionId(request)
+	const userId = await requireUserId(request)
 
-	return json({ transaction: currentTransaction })
+	const { businessId } = await prisma.user.findUniqueOrThrow({
+		where: { id: userId },
+		select: { businessId: true },
+	})
+
+	async function respondWithNewTransaction(
+		newTransaction: Awaited<ReturnType<typeof createNewTransaction>>,
+	) {
+		const transactionSession = await transactionSessionStorage.getSession(
+			request.headers.get('cookie'),
+		)
+		transactionSession.set(transactionKey, newTransaction.id)
+
+		return json(
+			{ transaction: newTransaction },
+			{
+				headers: {
+					'Set-Cookie':
+						await transactionSessionStorage.commitSession(transactionSession),
+				},
+			},
+		)
+	}
+
+	if (!transactionId) {
+		console.log('There was no transactionId in Cookie, creating new one...')
+		const newTransaction = await createNewTransaction(userId, businessId)
+
+		return respondWithNewTransaction(newTransaction)
+	}
+
+	//check for the transaction to belong to the current loggedIn user
+	const currentSellerTransaction = await prisma.transaction.findUnique({
+		where: { id: transactionId, sellerId: userId, businessId: businessId },
+		select: { id: true },
+	})
+
+	if (!currentSellerTransaction) {
+		console.log(
+			"The transaction in the cookie didn't belong to current user...",
+		)
+		const newTransaction = await createNewTransaction(userId, businessId)
+		return respondWithNewTransaction(newTransaction)
+	}
+
+	//Transaction belongs to current user, fetch and return it.
+
+	const transactionDetails = await fetchTransactionDetails(transactionId)
+	invariantResponse(transactionDetails, 'No es posible cargar la transacción')
+	return json({ transaction: transactionDetails })
 }
 
 const SetPaymentMethodSchema = z.object({
