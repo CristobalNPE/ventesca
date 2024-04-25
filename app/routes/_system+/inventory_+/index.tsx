@@ -1,14 +1,3 @@
-import { Label } from '@radix-ui/react-label'
-import { defer, type LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Await,
-	Form,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
-import { Suspense, useId } from 'react'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -34,16 +23,37 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
+import { Label } from '@radix-ui/react-label'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Form,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
+import { useId } from 'react'
 import { CreateItemDialog } from './new.tsx'
+import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+
 	const url = new URL(request.url)
 	const $top = Number(url.searchParams.get('$top')) || 5
 	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const searchTerm = url.searchParams.get('search') ?? ''
 
 	const searchTermIsCode = !isNaN(parseInt(searchTerm))
+	const itemSelect = {
+		id: true,
+		code: true,
+		name: true,
+		sellingPrice: true,
+		stock: true,
+		category: { select: { description: true } },
+	}
+	const whereBusiness = getWhereBusinessQuery(userId)
 
 	let itemsPromise
 
@@ -51,15 +61,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		itemsPromise = prisma.item
 			.findMany({
 				orderBy: { code: 'asc' },
-				select: {
-					id: true,
-					code: true,
-					name: true,
-					sellingPrice: true,
-					stock: true,
-					category: { select: { description: true } },
-				},
+				select: { ...itemSelect },
+
 				where: {
+					...whereBusiness,
 					code: parseInt(searchTerm),
 				},
 			})
@@ -70,15 +75,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				take: $top,
 				skip: $skip,
 				orderBy: { code: 'asc' },
-				select: {
-					id: true,
-					code: true,
-					name: true,
-					sellingPrice: true,
-					stock: true,
-					category: { select: { description: true } },
-				},
+				select: { ...itemSelect },
 				where: {
+					...whereBusiness,
 					name: { contains: searchTerm },
 				},
 			})
@@ -86,32 +85,40 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 
 	const totalActiveItemsPromise = prisma.item.count({
-		where: { isActive: true },
+		where: {
+			...whereBusiness,
+			isActive: true,
+		},
 	})
-	const totalItemsPromise = prisma.item.count()
+	const totalItemsPromise = prisma.item.count({
+		where: { ...whereBusiness },
+	})
 
 	const noStockItemsPromise = prisma.item.count({
 		where: {
+			...whereBusiness,
 			stock: 0,
 		},
 	})
 
 	const lowStockItemsPromise = prisma.item.count({
 		where: {
+			...whereBusiness,
 			stock: { lte: 5, gt: 0 },
 		},
 	})
 
-	const [totalActiveItems, totalItems, noStockItems, lowStockItems] =
+	const [items, totalActiveItems, totalItems, noStockItems, lowStockItems] =
 		await Promise.all([
+			itemsPromise,
 			totalActiveItemsPromise,
 			totalItemsPromise,
 			noStockItemsPromise,
 			lowStockItemsPromise,
 		])
 
-	return defer({
-		itemsPromise,
+	return json({
+		items,
 		totalActiveItems,
 		totalItems,
 		noStockItems,
@@ -121,13 +128,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function InventoryRoute() {
 	const isAdmin = true
-	const {
-		itemsPromise,
-		totalActiveItems,
-		totalItems,
-		noStockItems,
-		lowStockItems,
-	} = useLoaderData<typeof loader>()
+	const { items, totalActiveItems, totalItems, noStockItems, lowStockItems } =
+		useLoaderData<typeof loader>()
 
 	return (
 		<main className="flex flex-col">
@@ -168,15 +170,7 @@ export default function InventoryRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<Suspense
-				fallback={
-					<LoadingSpinner description={`Cargando ${totalItems} artículos...`} />
-				}
-			>
-				<Await resolve={itemsPromise}>
-					{items => <ItemsTableCard totalItems={totalItems} items={items} />}
-				</Await>
-			</Suspense>
+			<ItemsTableCard totalItems={totalItems} items={items} />
 		</main>
 	)
 }
@@ -247,6 +241,7 @@ function ItemsTableCard({
 							<TableHead className="text-right">Precio Venta</TableHead>
 						</TableRow>
 					</TableHeader>
+
 					<TableBody>
 						{items.map(item => (
 							<TableRow
@@ -338,18 +333,5 @@ function InventorySearchBar({
 				</StatusButton>
 			</div>
 		</Form>
-	)
-}
-
-function LoadingSpinner({
-	description = 'Cargando...',
-}: {
-	description?: string
-}) {
-	return (
-		<div className="flex h-full w-full flex-col items-center justify-center gap-3 p-16  text-2xl">
-			<Icon name="update" className="animate-spin text-4xl" />
-			<div className="text-muted-foreground">{description}</div>
-		</div>
 	)
 }
