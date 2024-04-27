@@ -14,7 +14,7 @@ import {
 	DISCOUNT_TYPE_PERCENTAGE,
 } from '#app/routes/_system+/discounts_+/index.tsx'
 import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
-import { isDiscountActive } from '#app/routes/_system+/sell.tsx'
+import { isDiscountActive } from '#app/routes/_system+/transaction+/index.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	DropdownMenu,
