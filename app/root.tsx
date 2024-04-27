@@ -389,7 +389,7 @@ function App() {
 									isActive && 'bg-primary/60 *:text-foreground ',
 								)
 							}
-							to={'sell'}
+							to={'transaction'}
 						>
 							<Icon
 								size="md"
