@@ -79,13 +79,10 @@ export function DeleteItemTransaction({
 				name="intent"
 				value="delete-item-transaction"
 				tabIndex={-1}
-				variant={'destructive'}
-				className="w-full focus-within:ring-0  focus-visible:ring-0 flex "
+				variant={'ghost'}
 				onClick={onClick}
-				
 			>
-				<Icon name="cross-1" className='mr-2'/>
-				Remover
+				<Icon name="cross-1" />
 			</Button>
 		</fetcher.Form>
 	)
