@@ -16,15 +16,18 @@ import {
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
 import {
-	type PaymentMethod,
-	PaymentMethodSchema,
 	TRANSACTION_STATUS_COMPLETED,
 	TRANSACTION_STATUS_DISCARDED,
 	TRANSACTION_STATUS_PENDING,
 	type TransactionStatus,
 	TransactionStatusSchema,
-	ConfirmDeleteTransaction,
-} from '../sell.tsx'
+
+} from '../transaction+/index.tsx'
+import {
+	PaymentMethod,
+	PaymentMethodSchema,
+} from '../transaction+/_types/payment-method.ts'
+import { ConfirmDeleteTransaction } from '../transaction+/transaction-panel.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const transactionReport = await prisma.transaction.findUnique({
@@ -152,7 +155,9 @@ export default function ReportRoute() {
 							<TableCell className="font-medium">
 								{itemTransaction.item?.code}
 							</TableCell>
-							<TableCell className='uppercase'>{itemTransaction.item?.name}</TableCell>
+							<TableCell className="uppercase">
+								{itemTransaction.item?.name}
+							</TableCell>
 							<TableCell>{itemTransaction.quantity}</TableCell>
 							<TableCell>{itemTransaction.type}</TableCell>
 							<TableCell className="text-right">

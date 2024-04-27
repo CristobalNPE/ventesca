@@ -17,7 +17,7 @@ import {
 	TRANSACTION_STATUS_COMPLETED,
 	TRANSACTION_STATUS_DISCARDED,
 	TRANSACTION_STATUS_PENDING,
-} from '../sell.tsx'
+} from '../transaction+/index.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

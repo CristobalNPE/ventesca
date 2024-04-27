@@ -10,7 +10,7 @@ import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { TYPE_RETURN } from '#app/components/item-transaction-row.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { TRANSACTION_STATUS_COMPLETED } from '../sell.tsx'
+import { TRANSACTION_STATUS_COMPLETED } from '../transaction+/index.tsx'
 export type TransactionReportDataType = {
 	id: string
 	status: string
