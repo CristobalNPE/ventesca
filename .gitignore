@@ -18,6 +18,7 @@ node_modules
 /coverage
 
 /other/cache.db
+TODO.md
 
 # Easy way to create temporary files/folders that won't accidentally be added to git
 *.local.*
