@@ -15,8 +15,6 @@ model Category {
   code        Int       @unique
   description String
   items       Item[]
-  discount    Discount? @relation(fields: [discountId], references: [id])
-  discountId  String?
   business    Business? @relation(fields: [businessId], references: [id])
   businessId  String?
 }
@@ -85,7 +83,7 @@ model ItemTransaction {
   totalDiscount Int
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  item          Item         @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   itemId        String
   transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   transactionId String?
@@ -107,7 +105,6 @@ model Discount {
   validUntil   DateTime
   isActive     Boolean       @default(true)
   items        Item[]
-  categories   Category[]
   transactions Transaction[]
   business     Business?     @relation(fields: [businessId], references: [id])
   businessId   String?
