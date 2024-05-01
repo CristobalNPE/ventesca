@@ -11,12 +11,12 @@ datasource db {
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  code        Int       @unique
+  id          String   @id @default(cuid())
+  code        Int      
   description String
   items       Item[]
-  business    Business? @relation(fields: [businessId], references: [id])
-  businessId  String?
+  business    Business @relation(fields: [businessId], references: [id])
+  businessId  String
 }
 
 model Supplier {
@@ -27,7 +27,7 @@ model Supplier {
   city        String
   fantasyName String
   phone       String
-  fax         String
+  email       String
   items       Item[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -39,7 +39,7 @@ model Item {
   id           String            @id @default(cuid())
   isActive     Boolean
   code         Int
-  name         String?
+  name         String
   sellingPrice Float
   price        Float
   stock        Int
@@ -52,8 +52,8 @@ model Item {
   transactions ItemTransaction[]
   discount     Discount?         @relation(fields: [discountId], references: [id])
   discountId   String?
-  business     Business?         @relation(fields: [businessId], references: [id])
-  businessId   String?
+  business     Business          @relation(fields: [businessId], references: [id])
+  businessId   String
 }
 
 model Transaction {
@@ -69,24 +69,24 @@ model Transaction {
   updatedAt     DateTime          @updatedAt
   completedAt   DateTime          @default(now())
   items         ItemTransaction[]
-  seller        User?             @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  sellerId      String?
-  business      Business?         @relation(fields: [businessId], references: [id])
-  businessId    String?
+  seller        User              @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId      String
+  business      Business          @relation(fields: [businessId], references: [id])
+  businessId    String
 }
 
 model ItemTransaction {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   quantity      Int
   type          String // e.g. sale, loan, return
   totalPrice    Int
   totalDiscount Int
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  item          Item         @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   itemId        String
-  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  transactionId String?
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  transactionId String
 
   @@unique([itemId, transactionId])
 }
@@ -106,8 +106,8 @@ model Discount {
   isActive     Boolean       @default(true)
   items        Item[]
   transactions Transaction[]
-  business     Business?     @relation(fields: [businessId], references: [id])
-  businessId   String?
+  business     Business      @relation(fields: [businessId], references: [id])
+  businessId   String
 }
 
 model Business {
