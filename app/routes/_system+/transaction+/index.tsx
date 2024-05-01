@@ -26,6 +26,15 @@ import {
 	PaymentMethodSchema,
 } from './_types/payment-method.ts'
 
+import { Button } from '#app/components/ui/button.tsx'
+import {
+	Drawer,
+	DrawerContent,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTrigger,
+} from '#app/components/ui/drawer.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
 import {
 	DiscountsPanel,
@@ -393,7 +402,7 @@ export default function SellRoute() {
 	}, [allItemTransactions.length])
 
 	return (
-		<div className="flex h-full flex-1 flex-col gap-12 xl:flex-row">
+		<div className="flex h-full flex-1  gap-12 ">
 			<div className="flex-1">
 				{/* //? I need to redo the item reader, change its width and add good feedback for when, for example, there is no stock or the item is not active */}
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
@@ -448,7 +457,7 @@ export default function SellRoute() {
 				</div>
 			</div>
 
-			<div className="mx-auto flex w-[20rem] flex-col justify-between gap-4">
+			<div className="mx-auto hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
 				<TransactionIdPanel transactionId={transaction.id} />
 				{/* <PaymentSelectionPanel currentPaymentMethod={currentPaymentMethod} /> */}
 				<PaymentMethodPanel currentPaymentMethod={currentPaymentMethod} />
@@ -466,7 +475,36 @@ export default function SellRoute() {
 					totalDiscount={discount}
 				/>
 			</div>
+
+			<Drawer>
+				<DrawerTrigger asChild>
+					<Button className="absolute bottom-5 right-5 flex rounded-full outline outline-4 xl:hidden">
+						<Icon className="text-2xl" name="moneybag" />
+					</Button>
+				</DrawerTrigger>
+				<DrawerContent>
+					<DrawerHeader></DrawerHeader>
+
+					<div className="mx-auto flex w-[20rem] flex-col justify-between gap-4 ">
+						<TransactionIdPanel transactionId={transaction.id} />
+						<PaymentMethodPanel currentPaymentMethod={currentPaymentMethod} />
+						<DiscountsPanel activeDiscounts={discounts} />
+						<TransactionOverviewPanel
+							subtotal={subtotal}
+							discount={discount}
+							total={total}
+						/>
+
+						<TransactionOptionsPanel
+							transaction={{ transaction }}
+							total={total}
+							subtotal={subtotal}
+							totalDiscount={discount}
+						/>
+					</div>
+					<DrawerFooter></DrawerFooter>
+				</DrawerContent>
+			</Drawer>
 		</div>
-		// </div>
 	)
 }
