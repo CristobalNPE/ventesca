@@ -34,7 +34,7 @@ export function TransactionIdPanel({
 }) {
 	return (
 		<PanelCard>
-			<div className="absolute -top-4 w-fit rounded-md bg-card px-3 py-1 text-xs">
+			<div className="select-none absolute -top-4 w-fit rounded-md bg-card px-3 py-1 text-xs">
 				ID Transacción
 			</div>
 			<span className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary">
@@ -138,7 +138,7 @@ export const PaymentMethodPanel = ({
 	return (
 		<PanelCard className="relative">
 			{showSpinner && (
-				<div className="absolute inset-0 z-20 flex animate-spin  items-center justify-center">
+				<div className="absolute inset-0 z-20 flex animate-spin  items-center justify-center ">
 					<Icon className="text-2xl" name="update" />
 				</div>
 			)}
@@ -147,12 +147,12 @@ export const PaymentMethodPanel = ({
 				method="post"
 				className={cn(
 					'flex justify-between',
-					showSpinner && 'opacity-50 brightness-50',
+					showSpinner && 'opacity-50 blur-sm brightness-50',
 				)}
 			>
 				{allPaymentMethods.map((paymentMethodType, index) => (
 					<label
-						className={`flex w-[5rem] cursor-pointer flex-col items-center justify-center gap-1 rounded-md bg-card p-2 transition-colors duration-150  hover:bg-primary/20 has-[:checked]:bg-primary/90  has-[:checked]:text-background `}
+						className={`flex w-[5rem] cursor-pointer select-none flex-col items-center justify-center gap-1 rounded-md bg-card p-2 transition-colors duration-150 hover:bg-primary/20 has-[:checked]:bg-primary/90 has-[:checked]:text-background  has-[:disabled]:hover:bg-card `}
 						key={index}
 						htmlFor={paymentMethodType}
 					>
