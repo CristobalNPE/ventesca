@@ -12,7 +12,7 @@ datasource db {
 
 model Category {
   id          String   @id @default(cuid())
-  code        Int      
+  code        Int
   description String
   items       Item[]
   business    Business @relation(fields: [businessId], references: [id])
@@ -36,24 +36,39 @@ model Supplier {
 }
 
 model Item {
-  id           String            @id @default(cuid())
-  isActive     Boolean
-  code         Int
-  name         String
-  sellingPrice Float
-  price        Float
-  stock        Int
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  category     Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  categoryId   String
-  supplier     Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  supplierId   String
-  transactions ItemTransaction[]
-  discount     Discount?         @relation(fields: [discountId], references: [id])
-  discountId   String?
-  business     Business          @relation(fields: [businessId], references: [id])
-  businessId   String
+  id            String            @id @default(cuid())
+  isActive      Boolean
+  code          Int
+  name          String
+  sellingPrice  Float
+  price         Float
+  stock         Int
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  category      Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  categoryId    String
+  supplier      Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  supplierId    String
+  transactions  ItemTransaction[]
+  discount      Discount?         @relation(fields: [discountId], references: [id])
+  discountId    String?
+  business      Business          @relation(fields: [businessId], references: [id])
+  businessId    String
+  itemAnalytics ItemAnalytics?
+}
+
+model ItemAnalytics {
+  id             String    @id @default(cuid())
+  item           Item      @relation(fields: [itemId], references: [id])
+  itemId         String    @unique
+  totalProfit    Float     @default(0)
+  totalSales     Int       @default(0)
+  averagePrice   Float
+  leastSoldDate  DateTime?
+  mostProfitData DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Transaction {
