@@ -1,9 +1,6 @@
-import fs from 'fs'
-import { faker } from '@faker-js/faker'
-import { parse } from 'csv-parse'
-import cuid from 'cuid'
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
+import { fakerES_MX as faker } from '@faker-js/faker'
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -28,128 +25,26 @@ async function seed() {
 
 	console.time('🏫 Created testing business')
 
+	const allBusinesses = []
 	const testBusiness = await prisma.business.create({
 		data: {
-			name: 'Venta de cosas y CIA',
+			name: faker.company.name(),
 		},
+		select: { id: true },
 	})
 
 	const testBusiness2 = await prisma.business.create({
 		data: {
-			name: 'Venta de Administrador',
+			name: faker.company.name(),
 		},
+		select: { id: true },
 	})
 
+	allBusinesses.push(testBusiness)
+	allBusinesses.push(testBusiness2)
+	console.log(allBusinesses)
+
 	console.timeEnd('🏫 Created testing business')
-
-	// console.time('☺ Created families...')
-	// //!NEED TO MOVE USERS UP
-	// fs.createReadStream('./FAMILIA2.csv')
-	// 	.pipe(parse({ delimiter: ',', from_line: 2 }))
-	// 	.on('data', async function (row) {
-	// 		const [code, description] = row
-	// 		const codeAsInt = parseInt(code)
-	// 		await prisma.category.create({
-	// 			data: { code: codeAsInt, description },
-	// 		})
-	// 	})
-
-	// await prisma.category.create({
-	// 	data: { code: 999, description: 'General' },
-	// })
-
-	// console.timeEnd('☺ Created families...')
-
-	// console.time('🤼 Created suppliers...')
-
-	// fs.createReadStream('./providers.csv')
-	// 	.pipe(parse({ delimiter: ',', from_line: 2 }))
-	// 	.on('data', async function (row) {
-	// 		const [rut, nombre, direccion, ciudad, fanta, telefono, fax] = row
-
-	// 		// const parsedRUT = `${rut}${dv.trim() ? '-' + dv : ''}`
-	// 		const supplierRut = rut.trim() ? rut : `Desconocido-${cuid()}`
-
-	// 		await prisma.supplier.create({
-	// 			data: {
-	// 				rut: supplierRut,
-	// 				name: nombre,
-	// 				address: direccion,
-	// 				city: ciudad,
-	// 				fantasyName: fanta,
-	// 				phone: telefono,
-	// 				fax,
-	// 			},
-	// 		})
-	// 	})
-	// //create default provider
-	// await prisma.supplier.create({
-	// 	data: {
-	// 		rut: 'Desconocido',
-	// 		name: 'Desconocido',
-	// 		address: 'Desconocido',
-	// 		city: 'Desconocido',
-	// 		fantasyName: 'Desconocido',
-	// 		phone: 'Desconocido',
-	// 		fax: 'Desconocido',
-	// 	},
-	// })
-
-	// console.timeEnd('🤼 Created suppliers...')
-
-	// console.time('🛒 Created products...')
-
-	// fs.createReadStream('./items.csv')
-	// 	.pipe(parse({ delimiter: ',', from_line: 2 }))
-	// 	.on('data', async function (row) {
-	// 		const [codigo, nombre, precio, familia, venta, rut, existencia] = row
-
-	// 		const existingSupplier = await prisma.supplier.findUnique({
-	// 			where: { rut: rut.trim() },
-	// 		})
-
-	// 		if (!existingSupplier) {
-	// 			console.log(
-	// 				`⛔⛔ Supplier with RUT ${rut} does not exist. It will be created.`,
-	// 			)
-	// 			await prisma.supplier.upsert({
-	// 				where: { rut: rut.trim() },
-	// 				create: {
-	// 					rut: rut.trim(),
-
-	// 					name: 'Sin Definir',
-	// 					address: 'Sin Definir',
-	// 					city: 'Sin Definir',
-	// 					fantasyName: 'Sin Definir',
-	// 					phone: 'Sin Definir',
-	// 					fax: 'Sin Definir',
-	// 				},
-	// 				update: {},
-	// 			})
-	// 		}
-
-	// 		const isActive =
-	// 			parseFloat(venta) > 0 &&
-	// 			parseFloat(precio) > 0 &&
-	// 			parseInt(existencia) > 0
-
-	// 		await prisma.item
-	// 			.create({
-	// 				data: {
-	// 					code: parseInt(codigo),
-	// 					isActive: isActive,
-	// 					name: nombre,
-	// 					sellingPrice: parseFloat(venta) ?? 0,
-	// 					price: parseFloat(precio) ?? 0,
-	// 					category: { connect: { code: parseInt(familia) } },
-	// 					supplier: { connect: { rut: rut } },
-	// 					stock: parseInt(existencia) > 0 ? parseInt(existencia) : 0,
-	// 				},
-	// 			})
-	// 			.catch(e => ({}))
-	// 	})
-
-	// console.timeEnd('🛒 Created products...')
 
 	console.time('👑 Created roles...')
 	await prisma.role.create({
@@ -177,23 +72,25 @@ async function seed() {
 
 	console.timeEnd('👑 Created roles...')
 
-	console.time(`🐨 Created admin user "admin"`)
+	console.time(`🐨 Created test users`)
 
-	await prisma.user.create({
-		select: { id: true },
+	const users = []
+
+	const user1 = await prisma.user.create({
+		select: { id: true, businessId: true },
 		data: {
 			business: { connect: { id: testBusiness2.id } },
 			email: 'admin@admin.dev',
 			username: 'admin',
-			name: 'Administrador Sistema Ventas',
+			name: 'Administrador Sistema',
 			password: { create: createPassword('admin123') },
 
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
 		},
 	})
 
-	await prisma.user.create({
-		select: { id: true },
+	const user2 = await prisma.user.create({
+		select: { id: true, businessId: true },
 		data: {
 			business: { connect: { id: testBusiness.id } },
 			email: 'cristobal@dev.com',
@@ -204,91 +101,106 @@ async function seed() {
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
 		},
 	})
-	console.timeEnd(`🐨 Created admin user "admin"`)
 
-	// console.time('💰 Created transactions...')
+	users.push(user1, user2)
+	console.timeEnd(`🐨 Created test users`)
 
-	// const totalTransactions = 100
-	// const statuses = ['Finalizada', 'Finalizada', 'Finalizada', 'Cancelada']
-	// const paymentMethods = ['Contado', 'Crédito']
+	const NUMBER_OF_CATEGORIES = 15
+	console.time(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
 
-	// for (let index = 0; index < totalTransactions; index++) {
-	// 	const creationDate = getRandomDateWithinTwoYears()
-	// 	const status = getRandomValue(statuses)
+	for (let business of allBusinesses) {
+		for (let i = 0; i < NUMBER_OF_CATEGORIES; i++) {
+			let code = i + 1
+			await prisma.category.create({
+				data: {
+					code,
+					description: faker.commerce.department(),
+					business: { connect: { id: business.id } },
+				},
+			})
+		}
+	}
 
-	// 	const createdTransaction = await prisma.transaction.create({
-	// 		data: {
-	// 			status: status,
-	// 			paymentMethod: getRandomValue(paymentMethods),
-	// 			subtotal: 0,
-	// 			total: 0,
-	// 			totalDiscount: 0,
-	// 			isDiscarded: status === 'Cancelada',
-	// 			createdAt: subtractMinutes(creationDate, 10),
-	// 			updatedAt: creationDate,
-	// 			completedAt: creationDate,
-	// 			seller: { connect: { id: adminUser.id } },
-	// 		},
-	// 	})
+	console.timeEnd(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
 
-	// 	const totalItemTransactions = faker.number.int({ min: 1, max: 10 })
-	// 	let totalItemPrice = 0
+	const NUMBER_OF_SUPPLIERS = 20
+	console.time(`🤼 Created ${NUMBER_OF_SUPPLIERS} suppliers...`)
+	for (let business of allBusinesses) {
+		for (let i = 0; i < NUMBER_OF_SUPPLIERS; i++) {
+			let firstName = faker.person.firstName()
+			let lastName = faker.person.lastName()
 
-	// 	for (let index = 0; index < totalItemTransactions; index++) {
-	// 		const itemForTransaction = await prisma.item.findFirst({
-	// 			where: { code: faker.number.int({ min: 1, max: 5000 }) },
-	// 			select: { id: true },
-	// 		})
+			await prisma.supplier.create({
+				data: {
+					rut: generateFakeRUT(),
+					name: `${firstName} ${lastName}`,
+					address: `${faker.location.streetAddress()}, ${faker.location.buildingNumber()}`,
+					city: faker.location.city(),
+					fantasyName: faker.company.name(),
+					phone: faker.phone.number(),
+					email: `${firstName}.${lastName}.${faker.number.int({
+						min: 1,
+						max: 99,
+					})}@xmail.com`,
+					business: { connect: { id: business.id } },
+				},
+				select: { id: true },
+			})
+		}
+	}
 
-	// 		if (!itemForTransaction) continue
+	console.timeEnd(`🤼 Created ${NUMBER_OF_SUPPLIERS} suppliers...`)
 
-	// 		const createdItemTransaction = await prisma.itemTransaction
-	// 			.create({
-	// 				data: {
-	// 					quantity: faker.number.int({ min: 1, max: 5 }),
-	// 					type: 'Venta',
-	// 					totalPrice: 0,
-	// 					totalDiscount: 0,
-	// 					item: {
-	// 						connect: {
-	// 							id: itemForTransaction.id,
-	// 						},
-	// 					},
-	// 					transaction: {
-	// 						connect: { id: createdTransaction.id },
-	// 					},
-	// 				},
-	// 				select: { id: true, quantity: true, item: true },
-	// 			})
-	// 			.catch(e => null)
+	const NUMBER_OF_PRODUCTS = 200
+	console.time(`🛒 Created ${NUMBER_OF_PRODUCTS} products per business...`)
 
-	// 		// update totalPrice of the transaction to be the sum of all item multiplied by their quantity
-	// 		if (createdItemTransaction) {
-	// 			const priceOfItem = createdItemTransaction.item?.sellingPrice ?? 0
-	// 			totalItemPrice = createdItemTransaction.quantity * priceOfItem
-	// 		}
+	for (let business of allBusinesses) {
+		let businessSuppliers = await prisma.supplier.findMany({
+			select: { id: true },
+			where: { businessId: business.id },
+		})
 
-	// 		if (totalItemPrice > 0 && createdItemTransaction) {
-	// 			await prisma.itemTransaction.update({
-	// 				where: { id: createdItemTransaction.id },
-	// 				data: { totalPrice: totalItemPrice },
-	// 			})
-	// 		}
-	// 	}
-	// 	const transactionTotal = await prisma.itemTransaction.aggregate({
-	// 		where: { transactionId: createdTransaction.id },
-	// 		_sum: { totalPrice: true },
-	// 	})
-	// 	await prisma.transaction.update({
-	// 		where: { id: createdTransaction.id },
-	// 		data: {
-	// 			subtotal: transactionTotal._sum.totalPrice ?? 0,
-	// 			total: transactionTotal._sum.totalPrice ?? 0,
-	// 		},
-	// 	})
-	// }
+		let businessCategories = await prisma.category.findMany({
+			select: { id: true },
+			where: { businessId: business.id },
+		})
 
-	// console.timeEnd('💰 Created transactions...')
+		for (let i = 0; i < NUMBER_OF_PRODUCTS; i++) {
+			let price =
+				Math.round(faker.number.int({ min: 1000, max: 50000 }) / 100) * 100
+			let sellingPrice = price * faker.number.int({ min: 2, max: 3 })
+			let stock = faker.number.int({ min: 0, max: 99 })
+			let isActive = price > 0 && sellingPrice > 0 && stock > 0
+
+			await prisma.item.create({
+				data: {
+					code: i + 1,
+					name: faker.commerce.productName(),
+					sellingPrice,
+					price,
+					stock,
+					isActive,
+					business: { connect: { id: business.id } },
+					category: {
+						connect: {
+							id: businessCategories[
+								faker.number.int({ min: 0, max: businessCategories.length - 1 })
+							].id,
+						},
+					},
+					supplier: {
+						connect: {
+							id: businessSuppliers[
+								faker.number.int({ min: 0, max: businessSuppliers.length - 1 })
+							].id,
+						},
+					},
+				},
+			})
+		}
+	}
+
+	console.timeEnd(`🛒 Created ${NUMBER_OF_PRODUCTS} products per business...`)
 
 	console.timeEnd(`🌱 Database has been seeded`)
 }
@@ -302,32 +214,30 @@ seed()
 		await prisma.$disconnect()
 	})
 
-function getRandomDateWithinTwoYears(): Date {
-	const now = new Date()
-	const twoYearsAgo = new Date(
-		now.getFullYear() - 2,
-		now.getMonth(),
-		now.getDate(),
-	)
+function generateFakeRUT() {
+	// Generate a random number for the first part (without the verifier digit)
+	let randomNumber = Math.floor(Math.random() * 99999999) + 1000000
+	let rutWithoutVerifier = randomNumber.toString().substr(0, 8) // Make sure it has 8 digits
 
-	const randomTime = randomDateInRange(twoYearsAgo.getTime(), now.getTime())
-	return new Date(randomTime)
-}
+	// Calculate the verifier digit using the algorithm for Chilean RUT
+	let sum = 0
+	let multipliers = [2, 3, 4, 5, 6, 7]
+	for (
+		let i = rutWithoutVerifier.length - 1, j = 0;
+		i >= 0;
+		i--, j = (j + 1) % 6
+	) {
+		sum += parseInt(rutWithoutVerifier[i]) * multipliers[j]
+	}
+	let verifierDigit: string | number = 11 - (sum % 11)
+	if (verifierDigit == 10) {
+		verifierDigit = 'K'
+	} else if (verifierDigit == 11) {
+		verifierDigit = 0
+	}
 
-function randomDateInRange(start: number, end: number): number {
-	return start + Math.random() * (end - start)
-}
-function getRandomValue(array: string[]): string {
-	const randomIndex = Math.floor(Math.random() * array.length)
-	return array[randomIndex]
-}
-// function subtractDays(date: Date, daysToSubtract: number): Date {
-// 	const result = new Date(date)
-// 	result.setDate(result.getDate() - daysToSubtract)
-// 	return result
-// }
-function subtractMinutes(date: Date, minutesToSubtract: number): Date {
-	const result = new Date(date)
-	result.setMinutes(result.getMinutes() - minutesToSubtract)
-	return result
+	// Concatenate the random number and verifier digit to form the RUT
+	let rut = rutWithoutVerifier + '-' + verifierDigit
+
+	return rut
 }
