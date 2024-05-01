@@ -43,6 +43,7 @@ import {
 	TransactionOptionsPanel,
 	TransactionOverviewPanel,
 } from './transaction-panel.tsx'
+import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 
 //? REFACTOR INTO ITS OWN SELL FOLDER, THIS FILE AS INDEX, AND SEPARATE INTO DIFFERENT COMPONENTS/TYPES/ETC
 
@@ -89,7 +90,6 @@ async function createNewTransaction(userId: string, businessId: string) {
 							sellingPrice: true,
 							stock: true,
 							discount: true,
-							
 						},
 					},
 					quantity: true,
@@ -128,7 +128,6 @@ async function fetchTransactionDetails(transactionId: string) {
 							sellingPrice: true,
 							stock: true,
 							discount: true,
-		
 						},
 					},
 				},
@@ -343,14 +342,12 @@ export default function SellRoute() {
 	//!The type of the transaction is updated, but the discount still shows in the panel until another submit is made.
 
 	//? JUST FOR TESTING
-	const discounts = new Array<SerializeFrom<Discount>>
-	
+	const discounts = new Array<SerializeFrom<Discount>>()
+
 	// const discounts = validDiscounts.filter(
 	// 	(discount, index, discounts) =>
 	// 		discounts.findIndex(d => d.id === discount.id) === index,
 	// )
-
-
 
 	const discount = allItemTransactions
 		.map(itemTransaction => itemTransaction.totalDiscount)
@@ -409,43 +406,11 @@ export default function SellRoute() {
 
 	return (
 		<div className="flex h-full flex-1  gap-12 ">
-			<div className="flex-1">
+			<div className="flex-1 ">
 				{/* //? I need to redo the item reader, change its width and add good feedback for when, for example, there is no stock or the item is not active */}
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
 				<Spacer size="4xs" />
-				<div className="flex flex-col gap-1">
-					{/* <Table className="min-w-full overflow-clip rounded-md ">
-						<TableHeader className="  bg-secondary uppercase  ">
-							<TableRow className="">
-								<TableHead className="w-[50px]"></TableHead>
-								<TableHead className="w-[100px]">Código</TableHead>
-								<TableHead className="w-[100px]">
-									<span className="tracking-widest">V/P/D</span>
-								</TableHead>
-								<TableHead className="">Descripción Articulo</TableHead>
-								<TableHead>Precio</TableHead>
-								<TableHead>Cantidad</TableHead>
-								<TableHead className="text-right">Total</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody className=" bg-background/60">
-							{transaction &&
-								allItemTransactions.map((itemTransaction, index) => {
-									if (itemTransaction.item) {
-										return (
-											<ItemTransactionRow
-												itemReaderRef={itemReaderRef}
-												ref={itemRefs.current[index]}
-												itemTransaction={itemTransaction}
-												key={itemTransaction.item.id}
-												item={itemTransaction.item as SerializeFrom<ItemProps>}
-											/>
-										)
-									} else return null
-								})}
-						</TableBody>
-					</Table> */}
-
+				<div className="flex flex-col gap-1  overflow-y-auto sm:max-h-[calc(100%-4rem)]">
 					{transaction &&
 						allItemTransactions.map((itemTransaction, index) => {
 							if (itemTransaction.item) {
