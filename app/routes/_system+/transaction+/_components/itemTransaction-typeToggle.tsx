@@ -1,6 +1,6 @@
 import { cn } from '#app/utils/misc.tsx'
 import { useFetcher } from '@remix-run/react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { z } from 'zod'
 import { itemTransactionTypeColors } from '../_constants/itemTransactionTypesColors.ts'
 import {
@@ -20,19 +20,18 @@ export const UpdateItemTransactionTypeSchema = z.object({
 
 export const ItemTransactionTypeToggle = ({
 	itemTransactionId,
-	currentItemTransactionType,
+	itemTransactionType,
+	setItemTransactionType,
 	isPromoApplicable,
-	cardRef,
 }: {
 	itemTransactionId: string
-	currentItemTransactionType: ItemTransactionType
+	itemTransactionType: ItemTransactionType
+	setItemTransactionType: (value: ItemTransactionType) => void
 	isPromoApplicable: boolean
-	cardRef: React.RefObject<HTMLDivElement>
 }) => {
-	const [itemTransactionType, setItemTransactionType] =
-		useState<ItemTransactionType>(currentItemTransactionType)
-
-	const itemTransactionTypeFetcher = useFetcher({ key: UPDATE_IT_TYPE })
+	const itemTransactionTypeFetcher = useFetcher({
+		key: `${UPDATE_IT_TYPE}-${itemTransactionId}`,
+	})
 
 	const cycleState = () => {
 		let nextState: ItemTransactionType
