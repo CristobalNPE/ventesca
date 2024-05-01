@@ -1,6 +1,5 @@
-import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
+
 import {
 	DISCOUNT_TARGET_TOTAL,
 	DISCOUNT_TARGET_UNIT,
@@ -15,15 +14,24 @@ import {
 	type ItemTransaction as ItemTransactionModel,
 } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
-import { useFetcher } from '@remix-run/react'
-import React, { forwardRef, useEffect, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useState } from 'react'
 import {
 	ItemTransactionType,
+	ItemTransactionTypeSchema,
 	TYPE_PROMO,
 	TYPE_RETURN,
 	TYPE_SELL,
 } from '../_types/item-transactionType.ts'
-import { ItemTransactionTypeToggle } from './itemTransaction-typeToggle.tsx'
+import {
+	QuantitySelector,
+	UPDATE_IT_QUANTITY,
+} from './itemTransaction-quantitySelector.tsx'
+import {
+	ItemTransactionTypeToggle,
+	UPDATE_IT_TYPE,
+} from './itemTransaction-typeToggle.tsx'
+import { useFetchers } from '@remix-run/react'
+import { useSpinDelay } from 'spin-delay'
 
 //? it should only allow to change to promo if there are available discounts
 
@@ -52,17 +60,39 @@ type ItemTransactionRowProps = {
 }
 
 export const ItemTransaction = forwardRef<
-	HTMLTableRowElement,
+	HTMLDivElement,
 	ItemTransactionRowProps
 >(({ item, itemTransaction, itemReaderRef }, ref) => {
-	const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
-	const [isFocused, setIsFocused] = useState(false)
+	// const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
+	const totalPrice = itemTransaction.totalPrice
+	// const [isFocused, setIsFocused] = useState(false)
 	const [quantity, setQuantity] = useState(itemTransaction.quantity)
-	// const [transactionType, setTransactionType] = useState<ItemTransactionType>(
-	// 	itemTransaction.type as ItemTransactionType,
-	// )
 
-	const transactionType = itemTransaction.type
+	const currentItemTransactionType = ItemTransactionTypeSchema.parse(
+		itemTransaction.type,
+	)
+
+	const [itemTransactionType, setItemTransactionType] =
+		useState<ItemTransactionType>(currentItemTransactionType)
+
+	// Check the status of submissions that modify the item transaction to know when to show the spinner.
+	const updateFetchersKeys = [
+		`${UPDATE_IT_TYPE}-${itemTransaction.id}`,
+		`${UPDATE_IT_QUANTITY}-${itemTransaction.id}`,
+	]
+	const allFetchers = useFetchers()
+
+	const updateFetchers = allFetchers.filter(fetcher =>
+		updateFetchersKeys.includes(fetcher.key),
+	)
+	const isItemTransactionUpdating = updateFetchers.some(
+		fetcher => fetcher.state !== 'idle',
+	)
+	const showUpdateSpinner = useSpinDelay(isItemTransactionUpdating, {
+		delay: 150,
+		minDuration: 500,
+	})
+	/////////////////////////////////
 
 	function hasMinQuantity(
 		discount: SerializeFrom<Discount> | null | undefined,
@@ -133,61 +163,52 @@ export const ItemTransaction = forwardRef<
 		? itemDiscount ?? 0
 		: 0
 	const totalDiscounts =
-		transactionType === TYPE_PROMO
+		itemTransactionType === TYPE_PROMO
 			? applicableCategoryDiscounts + applicableItemDiscounts
 			: 0
 
-	useEffect(() => {
-		if (transactionType === TYPE_RETURN && totalPrice > 0) {
-			setTotalPrice(totalPrice * -1)
-		}
-		if (transactionType !== TYPE_RETURN && totalPrice < 0) {
-			setTotalPrice(totalPrice * -1)
-		}
-	}, [transactionType, totalPrice])
+	// useEffect(() => {
+	// 	if (transactionType === TYPE_RETURN && totalPrice > 0) {
+	// 		setTotalPrice(totalPrice * -1)
+	// 	}
+	// 	if (transactionType !== TYPE_RETURN && totalPrice < 0) {
+	// 		setTotalPrice(totalPrice * -1)
+	// 	}
+	// }, [transactionType, totalPrice])
 
-	const fetcherKey = `it-${itemTransaction.id}`
+	// const fetcherKey = `it-${itemTransaction.id}`
 
-	const fetcher = useFetcher({ key: fetcherKey })
-	const isLoading = fetcher.state !== 'idle'
+	// const fetcher = useFetcher({ key: fetcherKey })
+	// const isLoading = fetcher.state !== 'idle'
 
-	const quantityChanged = itemTransaction.quantity !== quantity
-	const typeChanged = itemTransaction.type !== transactionType
+	// const quantityChanged = itemTransaction.quantity !== quantity
+	// const typeChanged = itemTransaction.type !== transactionType
 
 	const formData = new FormData()
 	formData.append('it-id', itemTransaction.id)
-	formData.append('it-vpd', transactionType)
+	formData.append('it-vpd', itemTransactionType)
 	formData.append('it-quantity', quantity.toString())
 	formData.append('it-total-price', totalPrice.toString())
 	formData.append('it-total-discount', totalDiscounts.toString())
 
-	const submitForm = () => {
-		if (isLoading) return
-		if (!quantityChanged && !typeChanged) return
+	//! TAKE A LOOK FOR DISCOUNTS
+	// useEffect(() => {
+	// 	if (item.sellingPrice && transactionType === TYPE_SELL) {
+	// 		setTotalPrice(item.sellingPrice * quantity)
+	// 	}
 
-		fetcher.submit(formData, {
-			method: 'POST',
-			action: '/item-transaction/edit',
-		})
-	}
+	// 	if (item.sellingPrice && transactionType === TYPE_PROMO) {
+	// 		let priceAfterDiscounts = item.sellingPrice * quantity
+	// 		if (isFamilyDiscountApplicable) {
+	// 			priceAfterDiscounts = priceAfterDiscounts - familyDiscount!
+	// 		}
 
-	useEffect(() => {
-		if (item.sellingPrice && transactionType === TYPE_SELL) {
-			setTotalPrice(item.sellingPrice * quantity)
-		}
-
-		if (item.sellingPrice && transactionType === TYPE_PROMO) {
-			let priceAfterDiscounts = item.sellingPrice * quantity
-			if (isFamilyDiscountApplicable) {
-				priceAfterDiscounts = priceAfterDiscounts - familyDiscount!
-			}
-
-			if (isItemDiscountApplicable) {
-				priceAfterDiscounts = priceAfterDiscounts - itemDiscount!
-			}
-			setTotalPrice(priceAfterDiscounts)
-		}
-	}, [quantity, item.sellingPrice, transactionType])
+	// 		if (isItemDiscountApplicable) {
+	// 			priceAfterDiscounts = priceAfterDiscounts - itemDiscount!
+	// 		}
+	// 		setTotalPrice(priceAfterDiscounts)
+	// 	}
+	// }, [quantity, item.sellingPrice, transactionType])
 
 	const rowRef = ref
 
@@ -202,19 +223,19 @@ export const ItemTransaction = forwardRef<
 				event.preventDefault()
 				setQuantity(q => (q > 1 ? q - 1 : q))
 				break
-			// case 'V':
-			// case 'v':
-			// 	setTransactionType(TYPE_SELL)
-			// 	break
-			// case 'D':
-			// case 'd':
-			// 	setTransactionType(TYPE_RETURN)
-			// 	break
-			// case 'P':
-			// case 'p':
-			// 	event.preventDefault()
-			// 	setTransactionType(TYPE_PROMO)
-			// 	break
+			case 'V':
+			case 'v':
+				setItemTransactionType(TYPE_SELL)
+				break
+			case 'D':
+			case 'd':
+				setItemTransactionType(TYPE_RETURN)
+				break
+			case 'P':
+			case 'p':
+				event.preventDefault()
+				setItemTransactionType(TYPE_PROMO)
+				break
 			case 'Enter':
 				event.preventDefault()
 				itemReaderRef.current?.focus()
@@ -238,16 +259,23 @@ export const ItemTransaction = forwardRef<
 	}, [rowRef, item.stock])
 
 	return (
-		<ItemTransactionCard className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
-			<div className="min-w-[11rem] flex-1">
+		<ItemTransactionCard
+			className={cn(
+				'flex flex-col gap-3 sm:flex-row sm:items-center  sm:gap-8',
+				isItemTransactionUpdating &&
+					'pointer-events-none animate-pulse duration-1000',
+			)}
+			ref={rowRef}
+		>
+			<div className="min-w-[11rem] flex-1 ">
 				<div className="flex w-fit items-center gap-1 rounded-sm bg-muted/70 px-[2px] text-sm  text-muted-foreground">
 					<Icon name="scan-barcode" /> <span>{item.code}</span>
 				</div>
 				<div className="font-bold uppercase">{item.name}</div>
 			</div>
 
-			<div className="flex flex-col items-center gap-3 sm:flex-row">
-				<div className="flex w-[6.5rem] flex-col">
+			<div className="flex items-center gap-8 ">
+				<div className="flex w-[6.5rem] flex-col ">
 					<span className="text-xs text-muted-foreground">Precio unitario</span>
 					<span>{formatCurrency(item.sellingPrice)}</span>
 				</div>
@@ -256,6 +284,7 @@ export const ItemTransaction = forwardRef<
 					max={item.stock}
 					quantity={quantity}
 					setQuantity={setQuantity}
+					itemTransactionId={itemTransaction.id}
 				/>
 				<div className="flex w-[6.5rem]  flex-col text-right">
 					<span className="text-xs text-muted-foreground">Total</span>
@@ -265,77 +294,22 @@ export const ItemTransaction = forwardRef<
 			<ItemTransactionTypeToggle
 				itemTransactionId={itemTransaction.id}
 				isPromoApplicable={isAnyDiscountApplicable}
-				currentItemTransactionType={itemTransaction.type as ItemTransactionType}
-				cardRef={ref}
+				itemTransactionType={itemTransactionType}
+				setItemTransactionType={setItemTransactionType}
 			/>
 			<div>
-				<DeleteItemTransaction id={itemTransaction.id} />
+				{showUpdateSpinner ? (
+					<div className="h-10 px-4 py-2">
+						<Icon name="update" className="animate-spin" />
+					</div>
+				) : (
+					<DeleteItemTransaction id={itemTransaction.id} />
+				)}
 			</div>
 		</ItemTransactionCard>
 	)
 })
 ItemTransaction.displayName = 'ItemTransactionRow'
-
-const QuantitySelector = ({
-	min,
-	max,
-	quantity,
-	setQuantity,
-}: {
-	min: number
-	max: number
-	quantity: number
-	setQuantity: (value: number) => void
-}) => {
-	const componentRef = useRef<HTMLDivElement>(null)
-
-	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = parseInt(event.target.value, 10)
-		if (!isNaN(newValue) && newValue >= min && newValue <= max) {
-			setQuantity(newValue)
-		}
-	}
-
-	const increaseValue = () => {
-		const newValue = quantity < max ? quantity + 1 : quantity
-		setQuantity(newValue)
-	}
-
-	const decreaseValue = () => {
-		const newValue = quantity > min ? quantity - 1 : quantity
-		setQuantity(newValue)
-	}
-
-	return (
-		<div ref={componentRef} className="flex rounded-sm border">
-			<Button
-				tabIndex={-1}
-				variant={'ghost'}
-				className="aspect-square h-[1.6rem] w-[2rem] rounded-sm p-0"
-				onClick={decreaseValue}
-				disabled={quantity <= min}
-			>
-				<Icon size="lg" name="minus" />
-			</Button>
-			<Input
-				className="h-[1.6rem] w-[3rem] border-none p-0 text-center [&::-webkit-inner-spin-button]:appearance-none"
-				tabIndex={-1}
-				type="number"
-				value={quantity}
-				onChange={handleInputChange}
-			/>
-			<Button
-				tabIndex={-1}
-				variant={'ghost'}
-				className="aspect-square h-[1.6rem] w-[2rem] rounded-sm p-0"
-				onClick={increaseValue}
-				disabled={quantity >= max}
-			>
-				<Icon size="lg" name="plus" />
-			</Button>
-		</div>
-	)
-}
 
 const calculateDiscount = (
 	discount: SerializeFrom<Discount>,
