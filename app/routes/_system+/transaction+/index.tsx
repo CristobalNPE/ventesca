@@ -43,7 +43,6 @@ import {
 	TransactionOptionsPanel,
 	TransactionOverviewPanel,
 } from './transaction-panel.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 
 //? REFACTOR INTO ITS OWN SELL FOLDER, THIS FILE AS INDEX, AND SEPARATE INTO DIFFERENT COMPONENTS/TYPES/ETC
 
