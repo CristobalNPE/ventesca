@@ -89,7 +89,7 @@ async function createNewTransaction(userId: string, businessId: string) {
 							sellingPrice: true,
 							stock: true,
 							discount: true,
-							category: { select: { discount: true } },
+							
 						},
 					},
 					quantity: true,
@@ -128,7 +128,7 @@ async function fetchTransactionDetails(transactionId: string) {
 							sellingPrice: true,
 							stock: true,
 							discount: true,
-							category: { select: { discount: true } },
+		
 						},
 					},
 				},
@@ -316,35 +316,41 @@ export default function SellRoute() {
 		return discount?.minQuantity !== undefined
 	}
 
-	const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
-		const familyDiscount = itemTransaction.item?.category.discount
-		const itemDiscount = itemTransaction.item?.discount
+	// const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
+	// 	const familyDiscount = itemTransaction.item?.category.discount
+	// 	const itemDiscount = itemTransaction.item?.discount
 
-		const isValidFamilyDiscount =
-			hasMinQuantity(familyDiscount) &&
-			familyDiscount.minQuantity <= itemTransaction.quantity
-		const isValidItemDiscount =
-			hasMinQuantity(itemDiscount) &&
-			itemDiscount.minQuantity <= itemTransaction.quantity
+	// 	const isValidFamilyDiscount =
+	// 		hasMinQuantity(familyDiscount) &&
+	// 		familyDiscount.minQuantity <= itemTransaction.quantity
+	// 	const isValidItemDiscount =
+	// 		hasMinQuantity(itemDiscount) &&
+	// 		itemDiscount.minQuantity <= itemTransaction.quantity
 
-		const allDiscounts: SerializeFrom<Discount>[] = []
-		if (isValidFamilyDiscount) {
-			allDiscounts.push(familyDiscount)
-		}
-		if (isValidItemDiscount) {
-			allDiscounts.push(itemDiscount)
-		}
+	// 	const allDiscounts: SerializeFrom<Discount>[] = []
+	// 	if (isValidFamilyDiscount) {
+	// 		allDiscounts.push(familyDiscount)
+	// 	}
+	// 	if (isValidItemDiscount) {
+	// 		allDiscounts.push(itemDiscount)
+	// 	}
 
-		const validDiscounts = allDiscounts.filter(Boolean).filter(isDiscountActive)
-		return validDiscounts
-	})
+	// 	const validDiscounts = allDiscounts.filter(Boolean).filter(isDiscountActive)
+	// 	return validDiscounts
+	// })
 
 	//!There is a bug when I activate a promo based on the item quantity, and then decrease the amount.
 	//!The type of the transaction is updated, but the discount still shows in the panel until another submit is made.
-	const discounts = validDiscounts.filter(
-		(discount, index, discounts) =>
-			discounts.findIndex(d => d.id === discount.id) === index,
-	)
+
+	//? JUST FOR TESTING
+	const discounts = new Array<SerializeFrom<Discount>>
+	
+	// const discounts = validDiscounts.filter(
+	// 	(discount, index, discounts) =>
+	// 		discounts.findIndex(d => d.id === discount.id) === index,
+	// )
+
+
 
 	const discount = allItemTransactions
 		.map(itemTransaction => itemTransaction.totalDiscount)

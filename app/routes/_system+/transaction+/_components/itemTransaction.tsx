@@ -114,16 +114,13 @@ export const ItemTransaction = forwardRef<
 		isValidDiscount(item.discount) &&
 		isDiscountActive(item.discount)
 
-	const isFamilyDiscountApplicable =
-		Boolean(item.category.discount) &&
-		isValidDiscount(item.category.discount) &&
-		isDiscountActive(item.category.discount)
-
-	const isAnyDiscountApplicable =
-		isItemDiscountApplicable || isFamilyDiscountApplicable
+	// const isFamilyDiscountApplicable =
+	// 	Boolean(item.category.discount) &&
+	// 	isValidDiscount(item.category.discount) &&
+	// 	isDiscountActive(item.category.discount)
 
 	function calculateDiscounts() {
-		if (!isAnyDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
+		if (!isItemDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
 
 		const categoryDiscount = item.category.discount
 		const itemDiscount = item.discount
@@ -154,18 +151,13 @@ export const ItemTransaction = forwardRef<
 		}
 	}
 
-	const { familyDiscount, itemDiscount } = calculateDiscounts() ?? {}
+	const { itemDiscount } = calculateDiscounts() ?? {}
 
-	const applicableCategoryDiscounts = isFamilyDiscountApplicable
-		? familyDiscount ?? 0
-		: 0
 	const applicableItemDiscounts = isItemDiscountApplicable
 		? itemDiscount ?? 0
 		: 0
 	const totalDiscounts =
-		itemTransactionType === TYPE_PROMO
-			? applicableCategoryDiscounts + applicableItemDiscounts
-			: 0
+		itemTransactionType === TYPE_PROMO ? applicableItemDiscounts : 0
 
 	// useEffect(() => {
 	// 	if (transactionType === TYPE_RETURN && totalPrice > 0) {
@@ -293,7 +285,7 @@ export const ItemTransaction = forwardRef<
 			</div>
 			<ItemTransactionTypeToggle
 				itemTransactionId={itemTransaction.id}
-				isPromoApplicable={isAnyDiscountApplicable}
+				isPromoApplicable={isItemDiscountApplicable}
 				itemTransactionType={itemTransactionType}
 				setItemTransactionType={setItemTransactionType}
 			/>
