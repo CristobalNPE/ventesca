@@ -8,7 +8,7 @@ import {
 import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { TRANSACTION_STATUS_COMPLETED } from './transaction+/index.tsx'
+import { TRANSACTION_STATUS_COMPLETED } from '../transaction+/index.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	//Count items with 0 stock

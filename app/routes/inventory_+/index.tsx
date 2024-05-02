@@ -9,7 +9,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { DataCard } from '#app/components/ui/data-card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
@@ -22,6 +23,7 @@ import {
 } from '#app/components/ui/table.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
 import { Label } from '@radix-ui/react-label'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
@@ -34,7 +36,6 @@ import {
 } from '@remix-run/react'
 import { useId } from 'react'
 import { CreateItemDialog } from './new.tsx'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -172,31 +173,6 @@ export default function InventoryRoute() {
 
 			<ItemsTableCard totalItems={totalItems} items={items} />
 		</main>
-	)
-}
-
-function DataCard({
-	title,
-	value,
-	icon,
-	subtext,
-}: {
-	title: string
-	value: string
-	icon: IconName
-	subtext: string
-}) {
-	return (
-		<Card>
-			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-				<CardTitle className="text-sm font-medium">{title}</CardTitle>
-				<Icon className="text-xl text-foreground/80" name={icon} />
-			</CardHeader>
-			<CardContent>
-				<div className="text-2xl font-bold">{value}</div>
-				<p className="text-xs text-muted-foreground">{subtext}</p>
-			</CardContent>
-		</Card>
 	)
 }
 

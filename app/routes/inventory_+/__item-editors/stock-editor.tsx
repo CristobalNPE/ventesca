@@ -1,32 +1,31 @@
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { useFetcher } from '@remix-run/react'
+import { useActionData, useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
-import { formatCurrency } from '#app/utils/misc.tsx'
+import { type action } from '#app/routes/inventory_+/edit.js'
 import { Editor } from './editor.tsx'
 
-const PRICE_MAX = 9999999
-const PRICE_MIN = 0
-export const UPDATE_PRICE_KEY = 'update-price'
+const STOCK_MAX = 9999
+const STOCK_MIN = 0
+export const UPDATE_STOCK_KEY = 'update-stock'
 
-export const PriceEditorSchema = z.object({
+export const StockEditorSchema = z.object({
 	itemId: z.string().optional(),
-	price: z
+	stock: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(PRICE_MIN, { message: 'El valor no puede ser negativo.' })
-		.max(PRICE_MAX, { message: `El valor no puede ser mayor a ${PRICE_MAX}.` }),
+		.min(STOCK_MIN, { message: 'El stock no puede ser negativo.' })
+		.max(STOCK_MAX, { message: `El stock no puede ser mayor a ${STOCK_MAX}.` }),
 })
 
-export function PriceEditModal({
+export function StockEditModal({
 	icon,
 	label,
 	value,
@@ -34,32 +33,33 @@ export function PriceEditModal({
 }: {
 	icon: IconName
 	label: string
-	value: string | number
+	value: string
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_PRICE_KEY })
-	const actionData = fetcher.data
+	const actionData = useActionData<typeof action>()
+	const fetcher = useFetcher({ key: UPDATE_STOCK_KEY })
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
-		id: UPDATE_PRICE_KEY,
-		constraint: getFieldsetConstraint(PriceEditorSchema),
+		id: UPDATE_STOCK_KEY,
+		constraint: getFieldsetConstraint(StockEditorSchema),
 		lastSubmission: actionData?.submission,
 		onValidate({ formData }) {
-			return parse(formData, { schema: PriceEditorSchema })
+			return parse(formData, { schema: StockEditorSchema })
 		},
+
 		defaultValue: {
-			price: value,
+			stock: value,
 		},
 	})
 
-	const [targetValue, setTargetValue] = useState<string | number>(value)
+	const [targetValue, setTargetValue] = useState<string>(value)
 
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
 		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > PRICE_MAX) setTargetValue(PRICE_MAX.toString())
-		if (targetValueAsNumber < PRICE_MIN) setTargetValue(PRICE_MIN.toString())
+		if (targetValueAsNumber > STOCK_MAX) setTargetValue(STOCK_MAX.toString())
+		if (targetValueAsNumber < STOCK_MIN) setTargetValue(STOCK_MIN.toString())
 	}, [targetValue])
 
 	const renderedForm = (
@@ -69,7 +69,7 @@ export function PriceEditModal({
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...conform.input(fields.price, {
+					...conform.input(fields.stock, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -77,7 +77,7 @@ export function PriceEditModal({
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.price.errors}
+				errors={fields.stock.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -88,7 +88,7 @@ export function PriceEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_PRICE_KEY}
+			value={UPDATE_STOCK_KEY}
 			variant="default"
 			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 			disabled={isPending}
@@ -101,8 +101,7 @@ export function PriceEditModal({
 
 	return (
 		<Editor
-			formatFn={formatCurrency}
-			fetcherKey={UPDATE_PRICE_KEY}
+			fetcherKey={UPDATE_STOCK_KEY}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

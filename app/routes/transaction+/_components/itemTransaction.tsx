@@ -1,20 +1,15 @@
 import { Icon } from '#app/components/ui/icon.tsx'
 
-import {
-	DISCOUNT_TARGET_TOTAL,
-	DISCOUNT_TARGET_UNIT,
-	DISCOUNT_TYPE_FIXED,
-	DISCOUNT_TYPE_PERCENTAGE,
-} from '#app/routes/_system+/discounts_+/index.tsx'
 import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
-import { isDiscountActive } from '#app/routes/_system+/transaction+/index.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	type Discount,
 	type ItemTransaction as ItemTransactionModel,
 } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
+import { useFetchers } from '@remix-run/react'
 import React, { forwardRef, useEffect, useState } from 'react'
+import { useSpinDelay } from 'spin-delay'
 import {
 	ItemTransactionType,
 	ItemTransactionTypeSchema,
@@ -30,8 +25,6 @@ import {
 	ItemTransactionTypeToggle,
 	UPDATE_IT_TYPE,
 } from './itemTransaction-typeToggle.tsx'
-import { useFetchers } from '@remix-run/react'
-import { useSpinDelay } from 'spin-delay'
 
 //? it should only allow to change to promo if there are available discounts
 
@@ -47,7 +40,7 @@ export type ItemProps = {
 	name: string | null
 	sellingPrice: number | null
 	stock: number
-	discount: Discount | null
+	discounts: Discount[] 
 	category: CategoryProps
 }
 
@@ -94,70 +87,70 @@ export const ItemTransaction = forwardRef<
 	})
 	/////////////////////////////////
 
-	function hasMinQuantity(
-		discount: SerializeFrom<Discount> | null | undefined,
-	): discount is SerializeFrom<Discount> {
-		return discount?.minQuantity !== undefined
-	}
+	// function hasMinQuantity(
+	// 	discount: SerializeFrom<Discount> | null | undefined,
+	// ): discount is SerializeFrom<Discount> {
+	// 	return discount?.minQuantity !== undefined
+	// }
 
-	function isValidDiscount(
-		discount: SerializeFrom<Discount> | null | undefined,
-	): discount is SerializeFrom<Discount> {
-		return (
-			hasMinQuantity(discount) &&
-			discount.minQuantity <= itemTransaction.quantity
-		)
-	}
+	// function isValidDiscount(
+	// 	discount: SerializeFrom<Discount> | null | undefined,
+	// ): discount is SerializeFrom<Discount> {
+	// 	return (
+	// 		hasMinQuantity(discount) &&
+	// 		discount.minQuantity <= itemTransaction.quantity
+	// 	)
+	// }
 
-	const isItemDiscountApplicable =
-		Boolean(item.discount) &&
-		isValidDiscount(item.discount) &&
-		isDiscountActive(item.discount)
+	const isItemDiscountApplicable = false
+		// Boolean(item.discount) &&
+		// isValidDiscount(item.discount) &&
+		// isDiscountActive(item.discount)
 
 	// const isFamilyDiscountApplicable =
 	// 	Boolean(item.category.discount) &&
 	// 	isValidDiscount(item.category.discount) &&
 	// 	isDiscountActive(item.category.discount)
 
-	function calculateDiscounts() {
-		if (!isItemDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
+	// function calculateDiscounts() {
+	// 	if (!isItemDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
 
-		const categoryDiscount = item.category.discount
-		const itemDiscount = item.discount
-		const sellingPrice = item.sellingPrice ?? 0
+	// 	const categoryDiscount = item.category.discount
+	// 	// const itemDiscount = item.discount
+	// 	const sellingPrice = item.sellingPrice ?? 0
 
-		let totalCategoryDiscount = 0
-		let totalItemDiscount = 0
+	// 	let totalCategoryDiscount = 0
+	// 	let totalItemDiscount = 0
 
-		if (categoryDiscount) {
-			totalCategoryDiscount = calculateDiscount(
-				categoryDiscount,
-				sellingPrice,
-				quantity,
-			)
-		}
+	// 	if (categoryDiscount) {
+	// 		totalCategoryDiscount = calculateDiscount(
+	// 			categoryDiscount,
+	// 			sellingPrice,
+	// 			quantity,
+	// 		)
+	// 	}
 
-		if (itemDiscount) {
-			totalItemDiscount = calculateDiscount(
-				itemDiscount,
-				sellingPrice,
-				quantity,
-			)
-		}
+	// 	if (itemDiscount) {
+	// 		totalItemDiscount = calculateDiscount(
+	// 			itemDiscount,
+	// 			sellingPrice,
+	// 			quantity,
+	// 		)
+	// 	}
 
-		return {
-			categoryDiscount: totalCategoryDiscount,
-			itemDiscount: totalItemDiscount,
-		}
-	}
+	// 	return {
+	// 		categoryDiscount: totalCategoryDiscount,
+	// 		itemDiscount: totalItemDiscount,
+	// 	}
+	// }
 
-	const { itemDiscount } = calculateDiscounts() ?? {}
+	// const { itemDiscount } = calculateDiscounts() ?? {}
 
-	const applicableItemDiscounts = isItemDiscountApplicable
-		? itemDiscount ?? 0
-		: 0
-	const totalDiscounts =
-		itemTransactionType === TYPE_PROMO ? applicableItemDiscounts : 0
+	// const applicableItemDiscounts = isItemDiscountApplicable
+	// 	? itemDiscount ?? 0
+	// 	: 0
+	// const totalDiscounts =
+	// 	itemTransactionType === TYPE_PROMO ? applicableItemDiscounts : 0
 
 	// useEffect(() => {
 	// 	if (transactionType === TYPE_RETURN && totalPrice > 0) {
@@ -176,12 +169,8 @@ export const ItemTransaction = forwardRef<
 	// const quantityChanged = itemTransaction.quantity !== quantity
 	// const typeChanged = itemTransaction.type !== transactionType
 
-	const formData = new FormData()
-	formData.append('it-id', itemTransaction.id)
-	formData.append('it-vpd', itemTransactionType)
-	formData.append('it-quantity', quantity.toString())
-	formData.append('it-total-price', totalPrice.toString())
-	formData.append('it-total-discount', totalDiscounts.toString())
+
+
 
 	//! TAKE A LOOK FOR DISCOUNTS
 	// useEffect(() => {
@@ -303,29 +292,29 @@ export const ItemTransaction = forwardRef<
 })
 ItemTransaction.displayName = 'ItemTransactionRow'
 
-const calculateDiscount = (
-	discount: SerializeFrom<Discount>,
-	itemPrice: number,
-	quantity: number,
-) => {
-	if (discount.target === DISCOUNT_TARGET_UNIT) {
-		if (discount.type === DISCOUNT_TYPE_FIXED) {
-			return discount.value * quantity
-		}
-		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
-			return ((itemPrice * discount.value) / 100) * quantity
-		}
-	}
-	if (discount.target === DISCOUNT_TARGET_TOTAL) {
-		if (discount.type === DISCOUNT_TYPE_FIXED) {
-			return discount.value
-		}
-		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
-			return (itemPrice * quantity * discount.value) / 100
-		}
-	}
-	return 0
-}
+// const calculateDiscount = (
+// 	discount: SerializeFrom<Discount>,
+// 	itemPrice: number,
+// 	quantity: number,
+// ) => {
+// 	if (discount.target === DISCOUNT_TARGET_UNIT) {
+// 		if (discount.type === DISCOUNT_TYPE_FIXED) {
+// 			return discount.value * quantity
+// 		}
+// 		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
+// 			return ((itemPrice * discount.value) / 100) * quantity
+// 		}
+// 	}
+// 	if (discount.target === DISCOUNT_TARGET_TOTAL) {
+// 		if (discount.type === DISCOUNT_TYPE_FIXED) {
+// 			return discount.value
+// 		}
+// 		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
+// 			return (itemPrice * quantity * discount.value) / 100
+// 		}
+// 	}
+// 	return 0
+// }
 
 const ItemTransactionCard = React.forwardRef<
 	HTMLDivElement,

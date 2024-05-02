@@ -20,7 +20,7 @@ import {
 } from '#app/utils/transaction.server.ts'
 import React, { createRef, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
-import { ItemReader } from '../item-transaction.new.tsx'
+import { ItemReader } from '../_system+/item-transaction.new.tsx'
 import {
 	PAYMENT_METHOD_CASH,
 	PaymentMethodSchema,
@@ -88,7 +88,7 @@ async function createNewTransaction(userId: string, businessId: string) {
 							name: true,
 							sellingPrice: true,
 							stock: true,
-							discount: true,
+							discounts: true,
 						},
 					},
 					quantity: true,
@@ -126,7 +126,7 @@ async function fetchTransactionDetails(transactionId: string) {
 							name: true,
 							sellingPrice: true,
 							stock: true,
-							discount: true,
+							discounts: true,
 						},
 					},
 				},

@@ -289,25 +289,17 @@ export function DiscountsEditor({
 						{ label: 'Fijo', value: DISCOUNT_TYPE_FIXED },
 					]}
 				/>
+
 				<SelectTab
-					name={'discount-target'}
-					selected={selectedDiscountTarget}
-					setSelected={setSelectedDiscountTarget}
+					name={'discount-reach'}
+					selected={selectedDiscountReach}
+					setSelected={setSelectedDiscountReach}
 					options={[
-						{ label: 'Por Unidad', value: DISCOUNT_TARGET_UNIT },
-						{ label: 'Al Total', value: DISCOUNT_TARGET_TOTAL },
+						{ label: 'Por Categoría', value: DISCOUNT_REACH_CATEGORY },
+						{ label: 'Por Artículo(s)', value: DISCOUNT_REACH_ITEM },
 					]}
 				/>
 			</div>
-			<SelectTab
-				name={'discount-reach'}
-				selected={selectedDiscountReach}
-				setSelected={setSelectedDiscountReach}
-				options={[
-					{ label: 'Por Categoría', value: DISCOUNT_REACH_CATEGORY },
-					{ label: 'Por Artículo(s)', value: DISCOUNT_REACH_ITEM },
-				]}
-			/>
 
 			{selectedDiscountReach === DISCOUNT_REACH_ITEM ? (
 				<ItemPicker setAddedItemsIds={setAddedItemsIds} />

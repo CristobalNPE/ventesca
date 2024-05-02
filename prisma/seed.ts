@@ -2,6 +2,11 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { fakerES_MX as faker } from '@faker-js/faker'
 
+//config:
+const NUMBER_OF_CATEGORIES = 15
+const NUMBER_OF_SUPPLIERS = 80
+const NUMBER_OF_PRODUCTS = 6000
+
 async function seed() {
 	console.log('🌱 Seeding...')
 	console.time(`🌱 Database has been seeded`)
@@ -105,7 +110,6 @@ async function seed() {
 	users.push(user1, user2)
 	console.timeEnd(`🐨 Created test users`)
 
-	const NUMBER_OF_CATEGORIES = 15
 	console.time(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
 
 	for (let business of allBusinesses) {
@@ -123,7 +127,6 @@ async function seed() {
 
 	console.timeEnd(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
 
-	const NUMBER_OF_SUPPLIERS = 20
 	console.time(`🤼 Created ${NUMBER_OF_SUPPLIERS} suppliers...`)
 	for (let business of allBusinesses) {
 		for (let i = 0; i < NUMBER_OF_SUPPLIERS; i++) {
@@ -151,7 +154,6 @@ async function seed() {
 
 	console.timeEnd(`🤼 Created ${NUMBER_OF_SUPPLIERS} suppliers...`)
 
-	const NUMBER_OF_PRODUCTS = 200
 	console.time(`🛒 Created ${NUMBER_OF_PRODUCTS} products per business...`)
 
 	for (let business of allBusinesses) {

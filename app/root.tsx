@@ -273,7 +273,7 @@ function App() {
 			icon: 'package',
 		},
 		{
-			name: 'Promociones',
+			name: 'Descuentos',
 			path: 'discounts',
 			icon: 'tag',
 		},

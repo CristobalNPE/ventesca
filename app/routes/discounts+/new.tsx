@@ -1,8 +1,8 @@
 import { Icon } from '#app/components/ui/icon.tsx'
-import { DiscountsEditor, action } from './__discounts-editor.tsx'
+// import { DiscountsEditor, action } from './__discounts-editor.tsx'
 
 
-export { action }
+// export { action }
 
 
 
@@ -14,7 +14,7 @@ export default function CreateDiscount() {
 				<Icon name="route" />
 				<h1>Registrar nuevo descuento</h1>
 			</div>
-			<DiscountsEditor  />
+			{/* <DiscountsEditor  /> */}
 		</div>
 	)
 }

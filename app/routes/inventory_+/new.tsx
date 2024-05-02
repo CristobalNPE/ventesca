@@ -104,7 +104,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				city: DEFAULT_SUPPLIER,
 				fantasyName: DEFAULT_SUPPLIER,
 				phone: DEFAULT_SUPPLIER,
-				fax: DEFAULT_SUPPLIER,
+				email: DEFAULT_SUPPLIER,
 				business: { connect: { id: businessId } },
 			},
 		})

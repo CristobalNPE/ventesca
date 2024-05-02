@@ -11,7 +11,7 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { loader as mainTransactionLoader } from '#app/routes/_system+/transaction+/index.tsx'
+import { loader as mainTransactionLoader } from '#app/routes/transaction+/index.js'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Discount } from '@prisma/client'
 import { SerializeFrom } from '@remix-run/node'
@@ -19,7 +19,7 @@ import { Link, useFetcher, useNavigate } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import React from 'react'
-import { DiscardTransaction } from '../transaction.discard.tsx'
+import { DiscardTransaction } from '../_system+/transaction.discard.tsx'
 import { paymentMethodIcons } from './_constants/paymentMethodIcons.ts'
 import {
 	allPaymentMethods,

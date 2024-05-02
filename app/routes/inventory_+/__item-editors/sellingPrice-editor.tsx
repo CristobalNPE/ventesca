@@ -1,31 +1,36 @@
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
-import { useActionData, useFetcher } from '@remix-run/react'
+import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/_system+/inventory_+/edit.tsx'
+import { type action } from '#app/routes/inventory_+/edit.js'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { Editor } from './editor.tsx'
 
-const STOCK_MAX = 9999
-const STOCK_MIN = 0
-export const UPDATE_STOCK_KEY = 'update-stock'
+const SELLING_PRICE_MAX = 9999999
+const SELLING_PRICE_MIN = 0
+export const UPDATE_SELLINGPRICE_KEY = 'update-sellingPrice'
 
-export const StockEditorSchema = z.object({
+export const SellingPriceEditorSchema = z.object({
 	itemId: z.string().optional(),
-	stock: z
+	sellingPrice: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(STOCK_MIN, { message: 'El stock no puede ser negativo.' })
-		.max(STOCK_MAX, { message: `El stock no puede ser mayor a ${STOCK_MAX}.` }),
+		.min(SELLING_PRICE_MIN, {
+			message: 'El precio de venta no puede ser negativo.',
+		})
+		.max(SELLING_PRICE_MAX, {
+			message: `El precio de venta no puede ser mayor a ${SELLING_PRICE_MAX}.`,
+		}),
 })
 
-export function StockEditModal({
+export function SellingPriceEditModal({
 	icon,
 	label,
 	value,
@@ -33,33 +38,34 @@ export function StockEditModal({
 }: {
 	icon: IconName
 	label: string
-	value: string
+	value: string | number
 	id?: string
 }) {
-	const actionData = useActionData<typeof action>()
-	const fetcher = useFetcher({ key: UPDATE_STOCK_KEY })
+	const fetcher = useFetcher<typeof action>({ key: UPDATE_SELLINGPRICE_KEY })
+	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
-		id: UPDATE_STOCK_KEY,
-		constraint: getFieldsetConstraint(StockEditorSchema),
+		id: UPDATE_SELLINGPRICE_KEY,
+		constraint: getFieldsetConstraint(SellingPriceEditorSchema),
 		lastSubmission: actionData?.submission,
 		onValidate({ formData }) {
-			return parse(formData, { schema: StockEditorSchema })
+			return parse(formData, { schema: SellingPriceEditorSchema })
 		},
-
 		defaultValue: {
-			stock: value,
+			sellingPrice: value,
 		},
 	})
 
-	const [targetValue, setTargetValue] = useState<string>(value)
+	const [targetValue, setTargetValue] = useState<string | number>(value)
 
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
 		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > STOCK_MAX) setTargetValue(STOCK_MAX.toString())
-		if (targetValueAsNumber < STOCK_MIN) setTargetValue(STOCK_MIN.toString())
+		if (targetValueAsNumber > SELLING_PRICE_MAX)
+			setTargetValue(SELLING_PRICE_MAX.toString())
+		if (targetValueAsNumber < SELLING_PRICE_MIN)
+			setTargetValue(SELLING_PRICE_MIN.toString())
 	}, [targetValue])
 
 	const renderedForm = (
@@ -69,7 +75,7 @@ export function StockEditModal({
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...conform.input(fields.stock, {
+					...conform.input(fields.sellingPrice, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -77,7 +83,7 @@ export function StockEditModal({
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.stock.errors}
+				errors={fields.sellingPrice.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -88,7 +94,7 @@ export function StockEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_STOCK_KEY}
+			value={UPDATE_SELLINGPRICE_KEY}
 			variant="default"
 			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
 			disabled={isPending}
@@ -101,7 +107,8 @@ export function StockEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_STOCK_KEY}
+			formatFn={formatCurrency}
+			fetcherKey={UPDATE_SELLINGPRICE_KEY}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

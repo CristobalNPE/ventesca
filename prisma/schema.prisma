@@ -50,8 +50,7 @@ model Item {
   supplier      Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   supplierId    String
   transactions  ItemTransaction[]
-  discount      Discount?         @relation(fields: [discountId], references: [id])
-  discountId    String?
+  discounts     Discount[]
   business      Business          @relation(fields: [businessId], references: [id])
   businessId    String
   itemAnalytics ItemAnalytics?
@@ -107,22 +106,22 @@ model ItemTransaction {
 }
 
 model Discount {
-  id           String        @id @default(cuid())
-  type         String // e.g. percentage, fixed_amount
-  target       String // e.g. unit, total
-  reach        String // e.g. item,category(family)
-  value        Float
-  description  String
-  minQuantity  Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  validFrom    DateTime
-  validUntil   DateTime
-  isActive     Boolean       @default(true)
-  items        Item[]
-  transactions Transaction[]
-  business     Business      @relation(fields: [businessId], references: [id])
-  businessId   String
+  id              String        @id @default(cuid())
+  name            String
+  description     String
+  type            String // e.g. FIXED AMOUNT, PERCENTAGE
+  scope           String // e.g. SingleItem, Category
+  minimumQuantity Int
+  value           Int
+  validFrom       DateTime
+  validUntil      DateTime
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  business        Business      @relation(fields: [businessId], references: [id])
+  businessId      String
+  items           Item[]
+  transactions    Transaction[]
 }
 
 model Business {
