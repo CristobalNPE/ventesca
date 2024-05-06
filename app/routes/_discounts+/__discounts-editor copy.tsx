@@ -35,7 +35,7 @@ import {
 	DiscountTargetSchema,
 	DiscountTypeSchema,
 } from './index.tsx'
-import { ItemPicker } from './item-picker.tsx'
+import { ItemPicker } from './discounts.item-picker.tsx'
 
 const DiscountEditorSchema = z.object({
 	id: z.string().optional(),

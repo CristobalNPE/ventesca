@@ -1,6 +1,6 @@
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
-import { fakerES_MX as faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 
 //config:
 const NUMBER_OF_CATEGORIES = 15

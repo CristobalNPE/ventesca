@@ -29,14 +29,14 @@ import { useDebounce, useIsPending } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
 	Form,
-	NavLink,
+	Link,
 	Outlet,
 	useLoaderData,
 	useNavigate,
 	useSearchParams,
 	useSubmit,
 } from '@remix-run/react'
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -73,25 +73,36 @@ export default function DiscountsPage() {
 	const { discounts } = useLoaderData<typeof loader>()
 	const isAdmin = true
 
+	const divRef = useRef<HTMLDivElement>(null)
+
+	const scrollToElement = () => {
+		const { current } = divRef
+		if (current !== null) {
+			current?.scrollIntoView({ behavior: 'smooth' })
+		}
+	}
+
 	return (
 		<main className="flex flex-col">
 			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
 				<h1 className="text-xl font-semibold">Descuentos y Promociones</h1>
 				{isAdmin && (
 					<Button variant={'outline'} asChild>
-						<NavLink
+						<Link
+							onClick={() => scrollToElement()}
+							preventScrollReset={true}
 							to={'new'}
 							className="flex items-center justify-center gap-2"
 						>
 							<Icon name="plus" />
 							<span>Registrar Descuento</span>
-						</NavLink>
+						</Link>
 					</Button>
 				)}
 			</div>
 			<Spacer size={'4xs'} />
-			<div className="grid gap-4 md:gap-8 lg:grid-cols-2 ">
-				<div className="flex flex-col gap-4 md:gap-8">
+			<div className="flex flex-col-reverse justify-between gap-8 sm:flex-row">
+				<div className="flex grow flex-col gap-4 md:gap-8 ">
 					<div className="grid gap-4 md:grid-cols-2 md:gap-8">
 						<DataCard
 							title={'Descuentos Activos'}
@@ -101,18 +112,14 @@ export default function DiscountsPage() {
 						/>
 						<DataCard
 							title={'Descuento Destacado'}
-							value={'Artesanal Cotton Tuna'}
+							value={'Descuento Invierno 2024'}
 							icon={'tag'}
-							subtext={'Aplicado 42 veces.'}
+							subtext={'Utilizado 42 veces.'}
 						/>
 					</div>
 					<DiscountsTableCard totalDiscounts={0} discounts={discounts} />
 				</div>
-				<div className="bg-purple-900">
-					<Outlet />
-				</div>
 			</div>
-			<Spacer size={'4xs'} />
 		</main>
 	)
 }
