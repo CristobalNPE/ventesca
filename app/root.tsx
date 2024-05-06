@@ -399,6 +399,14 @@ function App() {
 
 							<span className="hidden md:flex">{'Punto de Venta'}</span>
 						</NavLink>
+						<div className="flex gap-1 text-sm font-bold">
+							SIZE:
+							<span className="hidden xl:flex">XL</span>
+							<span className="hidden lg:flex xl:hidden">LG</span>
+							<span className="hidden md:flex lg:hidden">MD</span>
+							<span className="hidden sm:flex md:hidden">SM</span>
+							<span className="xs:flex hidden sm:hidden">XS</span>
+						</div>
 						<div className=" hidden gap-2 xl:flex">
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 							{user && <UserDropdown />}
@@ -589,7 +597,9 @@ function SideBar({
 					<h1 className="text-2xl font-black uppercase tracking-tight">
 						Ventesca
 					</h1>
-					<h3 className="leading-tight text-sm text-muted-foreground">{businessName}</h3>
+					<h3 className="text-sm leading-tight text-muted-foreground">
+						{businessName}
+					</h3>
 				</div>
 			</div>
 			<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
