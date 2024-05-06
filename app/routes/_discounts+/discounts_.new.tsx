@@ -16,8 +16,7 @@ import { Field } from '#app/components/forms.tsx'
 import { z } from 'zod'
 import { ActionFunctionArgs } from '@remix-run/node'
 import { useIsPending } from '#app/utils/misc.tsx'
-import { conform, useForm, useInputEvent } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
+
 import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
 import { addDays } from 'date-fns'
 import { DateRange } from 'react-day-picker'
@@ -31,6 +30,8 @@ import {
 	BreadcrumbSeparator,
 } from '#app/components/ui/breadcrumb.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export async function action({ request }: ActionFunctionArgs) {
 	return null
@@ -93,10 +94,10 @@ export default function CreateDiscount() {
 		id: 'new-discount',
 		shouldValidate: 'onBlur',
 		shouldRevalidate: 'onInput',
-		constraint: getFieldsetConstraint(NewDiscountSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(NewDiscountSchema),
+		lastResult: actionData?.submission,
 		onValidate({ formData }) {
-			return parse(formData, { schema: NewDiscountSchema })
+			return parseWithZod(formData, { schema: NewDiscountSchema })
 		},
 
 		defaultValue: {
@@ -104,8 +105,6 @@ export default function CreateDiscount() {
 			// description: category?.description ?? '',
 		},
 	})
-
-	
 
 	const [discountType, setDiscountType] = useState<DiscountType>(
 		DiscountType.FIXED,
@@ -141,7 +140,7 @@ export default function CreateDiscount() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Form className="grid " {...form.props}>
+						<Form className="grid " {...getFormProps(form)}>
 							<input
 								type="hidden"
 								name="validFrom"
@@ -201,9 +200,8 @@ export default function CreateDiscount() {
 									<Field
 										labelProps={{ children: 'Valor descuento fijo' }}
 										inputProps={{
-											type: 'number',
-
-											...conform.input(fields.fixedValue, {
+											...getInputProps(fields.fixedValue, {
+												type: 'text',
 												ariaAttributes: true,
 											}),
 										}}
@@ -213,8 +211,8 @@ export default function CreateDiscount() {
 									<Field
 										labelProps={{ children: 'Valor descuento porcentual' }}
 										inputProps={{
-											type: 'number',
-											...conform.input(fields.porcentualValue, {
+											...getInputProps(fields.porcentualValue, {
+												type: 'number',
 												ariaAttributes: true,
 											}),
 										}}
@@ -224,8 +222,8 @@ export default function CreateDiscount() {
 								<Field
 									labelProps={{ children: 'Cantidad minima requerida' }}
 									inputProps={{
-										type: 'number',
-										...conform.input(fields.minQuantity, {
+										...getInputProps(fields.minQuantity, {
+											type: 'number',
 											ariaAttributes: true,
 										}),
 									}}
@@ -237,8 +235,8 @@ export default function CreateDiscount() {
 									labelProps={{ children: 'Nombre' }}
 									inputProps={{
 										placeholder: 'Ej: Descuento Temporada Invierno',
-										type: 'text',
-										...conform.input(fields.name, {
+										...getInputProps(fields.name, {
+											type: 'text',
 											ariaAttributes: true,
 										}),
 									}}
