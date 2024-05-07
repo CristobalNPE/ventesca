@@ -65,6 +65,7 @@ export type IconName =
 	| 'percentage'
 	| 'phone'
 	| 'plus'
+	| 'point'
 	| 'printer'
 	| 'question-mark-circled'
 	| 'report-money'
