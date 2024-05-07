@@ -1,3 +1,4 @@
+import { Field } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -8,20 +9,15 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
+import { invariant, useIsPending } from '#app/utils/misc.tsx'
+import { ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { Form, Link, useActionData } from '@remix-run/react'
 import { useState } from 'react'
+import { z } from 'zod'
 import { DiscountScope, DiscountScopeSchema } from './_types/discount-reach.ts'
 import { DiscountType, DiscountTypeSchema } from './_types/discount-type.ts'
-import { Field } from '#app/components/forms.tsx'
-import { z } from 'zod'
-import { ActionFunctionArgs } from '@remix-run/node'
-import { useIsPending } from '#app/utils/misc.tsx'
 
-import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
-import { addDays } from 'date-fns'
-import { DateRange } from 'react-day-picker'
-import { ItemPicker } from './discounts.item-picker.tsx'
-import { CategoryPicker } from './category-picker.tsx'
+import { Spacer } from '#app/components/spacer.tsx'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -29,20 +25,19 @@ import {
 	BreadcrumbList,
 	BreadcrumbSeparator,
 } from '#app/components/ui/breadcrumb.tsx'
-import { Spacer } from '#app/components/spacer.tsx'
+import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-
-export async function action({ request }: ActionFunctionArgs) {
-	return null
-}
+import { addDays } from 'date-fns'
+import { DateRange } from 'react-day-picker'
+import { CategoryPicker } from './category-picker.tsx'
+import { ItemPicker } from './discounts.item-picker.tsx'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
 const DEFAULT_FIXED_DISCOUNT_VALUE = 0
 const DEFAULT_PERCENTAGE_DISCOUNT_VALUE = 0
-
-const DESCRIPTION_MIN_LENGTH = 10
-const DESCRIPTION_MAX_LENGTH = 100
 
 const NAME_MIN_LENGTH = 7
 const NAME_MAX_LENGTH = 50
@@ -58,14 +53,6 @@ const NewDiscountSchema = z.object({
 		})
 		.max(NAME_MAX_LENGTH, {
 			message: `Debe tener un máximo de ${NAME_MAX_LENGTH} caracteres`,
-		}),
-	description: z
-		.string({ required_error: 'Campo obligatorio' })
-		.min(DESCRIPTION_MIN_LENGTH, {
-			message: `Debe tener al menos ${DESCRIPTION_MIN_LENGTH} caracteres`,
-		})
-		.max(DESCRIPTION_MAX_LENGTH, {
-			message: `Debe tener un máximo de ${DESCRIPTION_MAX_LENGTH} caracteres`,
 		}),
 
 	fixedValue: z
@@ -84,9 +71,111 @@ const NewDiscountSchema = z.object({
 	validFrom: z.coerce.date(),
 	validUntil: z.coerce.date(),
 	itemIds: z.string().optional(),
-	categoryIds: z.string().optional(),
-})
+	categoryId: z.string().optional(),
+}) //TODO: SHOULD REFINE THIS IN THE BACKEND.
 
+export async function action({ request }: ActionFunctionArgs) {
+	const userId = await requireUserId(request)
+	const formData = await request.formData()
+
+	const businessId = await getBusinessId(userId)
+	const submission = await parseWithZod(formData, {
+		schema: NewDiscountSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+	let {
+		discountScope,
+		discountType,
+		minQuantity,
+		name,
+		validFrom,
+		validUntil,
+		categoryId,
+		fixedValue,
+		itemIds,
+		porcentualValue,
+	} = submission.value
+
+	const description = 'PLACEHOLDER_DESCRIPTION'
+
+	fixedValue = fixedValue === undefined ? 0 : fixedValue
+	porcentualValue = porcentualValue === undefined ? 0 : porcentualValue
+
+	if (discountScope === DiscountScope.SINGLE_ITEM) {
+		invariant(itemIds, 'Item IDs should be defined.')
+		const itemIdsArray = itemIds.split(',')
+
+		const createdDiscount = await prisma.discount.create({
+			data: {
+				description: description,
+				minimumQuantity: minQuantity,
+				name: name,
+				validFrom: validFrom,
+				validUntil: validUntil,
+				value:
+					discountType === DiscountType.FIXED ? fixedValue : porcentualValue,
+				items: { connect: itemIdsArray.map(itemId => ({ id: itemId })) },
+				scope: discountScope,
+				business: { connect: { id: businessId } },
+				type: discountType,
+				isActive: true,
+			},
+			select: { id: true },
+		})
+		return redirect(`/discounts/${createdDiscount.id}`)
+	}
+	if (discountScope === DiscountScope.CATEGORY) {
+		const itemsInSelectedCategory = await prisma.item.findMany({
+			where: { categoryId: categoryId },
+			select: { id: true },
+		})
+
+		const itemIdsArray = itemsInSelectedCategory.map(item => item.id)
+
+		const createdDiscount = await prisma.discount.create({
+			data: {
+				description: description,
+				minimumQuantity: minQuantity,
+				name: name,
+				validFrom: validFrom,
+				validUntil: validUntil,
+				value:
+					discountType === DiscountType.FIXED ? fixedValue : porcentualValue,
+				items: { connect: itemIdsArray.map(itemId => ({ id: itemId })) },
+				scope: discountScope,
+				business: { connect: { id: businessId } },
+				type: discountType,
+				isActive: true,
+			},
+			select: { id: true },
+		})
+		return redirect(`/discounts/${createdDiscount.id}`)
+	}
+
+	//we fallback to GLOBAL SCOPE behavior (not related to any item in particular):
+	const createdDiscount = await prisma.discount.create({
+		data: {
+			description: description,
+			minimumQuantity: minQuantity,
+			name: name,
+			validFrom: validFrom,
+			validUntil: validUntil,
+			value: discountType === DiscountType.FIXED ? fixedValue : porcentualValue,
+			scope: discountScope,
+			business: { connect: { id: businessId } },
+			type: discountType,
+			isActive: true,
+		},
+	})
+
+	return redirect(`/discounts/${createdDiscount.id}`)
+}
 export default function CreateDiscount() {
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()
@@ -101,31 +190,24 @@ export default function CreateDiscount() {
 		},
 
 		defaultValue: {
-			// code: category?.code ?? '',
-			// description: category?.description ?? '',
+			minQuantity: DEFAULT_MIN_QUANTITY_REQUIRED,
+			fixedValue: DEFAULT_FIXED_DISCOUNT_VALUE,
+			porcentualValue: DEFAULT_PERCENTAGE_DISCOUNT_VALUE,
+			discountScope: DiscountScope.GLOBAL,
+			discountType: DiscountType.FIXED,
 		},
 	})
 
-	const [discountType, setDiscountType] = useState<DiscountType>(
-		DiscountType.FIXED,
-	)
-	const [discountScope, setDiscountScope] = useState<DiscountScope>(
-		DiscountScope.GLOBAL,
-	)
-	const defaultRange = 7
+	const DEFAULT_RANGE = 7
 	const [discountPeriod, setDiscountPeriod] = useState<DateRange | undefined>({
 		from: new Date(),
-		to: addDays(new Date(), defaultRange),
+		to: addDays(new Date(), DEFAULT_RANGE),
 	})
-	const description = 'CHANGE_THIS_DESCRIPTION'
 
 	const [addedItemsIds, setAddedItemsIds] = useState<string>('')
+	console.log(addedItemsIds)
 	const [addedCategoriesIds, setAddedCategoriesIds] = useState<string>('')
 
-	console.log(addedItemsIds)
-
-	//TODO: we need to keep track of the input fields in order to 'compose' a preview Discount object that will be sent to the item/category picker, so it can show preview results of the applied discount.
-	//TODO: we might do this by tracking every state and making the inputs controlled, or we might try to find a way to read the conform field values, although it seems difficult.
 	return (
 		<>
 			<BreadCrumbs />
@@ -140,18 +222,27 @@ export default function CreateDiscount() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Form className="grid " {...getFormProps(form)}>
+						<Form method="POST" className="grid " {...getFormProps(form)}>
 							<input
 								type="hidden"
-								name="validFrom"
+								name={fields.itemIds.name}
+								value={addedItemsIds}
+							/>
+							<input
+								type="hidden"
+								name={fields.categoryId.name}
+								value={addedCategoriesIds}
+							/>
+							<input
+								type="hidden"
+								name={fields.validFrom.name}
 								value={discountPeriod?.from?.toISOString()}
 							/>
 							<input
 								type="hidden"
-								name="validUntil"
+								name={fields.validUntil.name}
 								value={discountPeriod?.to?.toISOString()}
 							/>
-							<input type="hidden" name="description" value={description} />
 							<div className="mb-5 space-y-2">
 								<SelectTab
 									label="Alcance del descuento"
@@ -172,9 +263,8 @@ export default function CreateDiscount() {
 											icon: 'package',
 										},
 									]}
-									name={'discount-scope'}
-									selected={discountScope}
-									setSelected={setDiscountScope}
+									name={fields.discountScope.name}
+									initialValue={fields.discountScope.initialValue}
 								/>
 								<SelectTab
 									label="Tipo de descuento"
@@ -190,13 +280,12 @@ export default function CreateDiscount() {
 											icon: 'percentage',
 										},
 									]}
-									name={'discount-type'}
-									selected={discountType}
-									setSelected={setDiscountType}
+									name={fields.discountType.name}
+									initialValue={fields.discountType.initialValue}
 								/>
 							</div>
 							<div className="grid grid-cols-2 gap-4">
-								{discountType === DiscountType.FIXED ? (
+								{fields.discountType.value === DiscountType.FIXED ? (
 									<Field
 										labelProps={{ children: 'Valor descuento fijo' }}
 										inputProps={{
@@ -219,6 +308,7 @@ export default function CreateDiscount() {
 										errors={fields.porcentualValue.errors}
 									/>
 								)}
+
 								<Field
 									labelProps={{ children: 'Cantidad minima requerida' }}
 									inputProps={{
@@ -254,12 +344,15 @@ export default function CreateDiscount() {
 						<Button variant="outline" asChild>
 							<Link to={'..'}>Cancelar</Link>
 						</Button>
-						<Button className="w-full">Crear Descuento</Button>
+						{/* CHANGE THIS BUTTON TO STATE BUTTON AND POSSIBLY ADD A CONFIRM DIALOG */}
+						<Button type="submit" form={form.id} className="w-full">
+							Crear Descuento
+						</Button>
 					</CardFooter>
 				</Card>
-				{discountScope !== DiscountScope.GLOBAL && (
+				{fields.discountScope.value !== DiscountScope.GLOBAL && (
 					<div>
-						{discountScope === DiscountScope.SINGLE_ITEM ? (
+						{fields.discountScope.value === DiscountScope.SINGLE_ITEM ? (
 							<ItemPicker setAddedItemsIds={setAddedItemsIds} />
 						) : (
 							<CategoryPicker setAddedCategoriesIds={setAddedCategoriesIds} />
