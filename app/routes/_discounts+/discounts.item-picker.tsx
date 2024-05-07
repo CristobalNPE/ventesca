@@ -25,7 +25,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { formatCurrency, useDebounce } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useFetcher, useSearchParams } from '@remix-run/react'
+import { useFetcher } from '@remix-run/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useSpinDelay } from 'spin-delay'
 
