@@ -34,6 +34,11 @@ import { addDays } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { CategoryPicker } from './category-picker.tsx'
 import { ItemPicker } from './discounts.item-picker.tsx'
+import {
+	DiscountApplicationMethod,
+	DiscountApplicationMethodSchema,
+} from './_types/discount-applicationMethod.ts'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
 const DEFAULT_FIXED_DISCOUNT_VALUE = 0
@@ -68,6 +73,7 @@ const NewDiscountSchema = z.object({
 
 	discountType: DiscountTypeSchema,
 	discountScope: DiscountScopeSchema,
+	discountApplicationMethod: DiscountApplicationMethodSchema,
 	validFrom: z.coerce.date(),
 	validUntil: z.coerce.date(),
 	itemIds: z.string().optional(),
@@ -100,9 +106,31 @@ export async function action({ request }: ActionFunctionArgs) {
 		fixedValue,
 		itemIds,
 		porcentualValue,
+		discountApplicationMethod,
 	} = submission.value
 
-	const description = 'PLACEHOLDER_DESCRIPTION'
+	function buildDescription(categoryDescription?: string) {
+		const desc = categoryDescription === undefined ? '' : categoryDescription
+
+		const descriptionValue =
+			discountType === DiscountType.FIXED
+				? `$${fixedValue}`
+				: `${porcentualValue}%`
+
+		const descriptionScope =
+			discountScope === DiscountScope.SINGLE_ITEM
+				? 'artículos seleccionados'
+				: discountScope === DiscountScope.CATEGORY
+				  ? `categoría`
+				  : 'todos los artículos'
+
+		const descriptionApplicationMethod =
+			discountApplicationMethod === DiscountApplicationMethod.TO_TOTAL
+				? `aplicado al total de la compra`
+				: `aplicado al valor de cada articulo`
+
+		return `${descriptionValue} de descuento en ${descriptionScope} ${desc} ${descriptionApplicationMethod}. Compra minima ${minQuantity}`
+	}
 
 	fixedValue = fixedValue === undefined ? 0 : fixedValue
 	porcentualValue = porcentualValue === undefined ? 0 : porcentualValue
@@ -113,7 +141,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		const createdDiscount = await prisma.discount.create({
 			data: {
-				description: description,
+				description: buildDescription(),
 				minimumQuantity: minQuantity,
 				name: name,
 				validFrom: validFrom,
@@ -125,6 +153,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				business: { connect: { id: businessId } },
 				type: discountType,
 				isActive: true,
+				applicationMethod: discountApplicationMethod,
 			},
 			select: { id: true },
 		})
@@ -133,14 +162,18 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (discountScope === DiscountScope.CATEGORY) {
 		const itemsInSelectedCategory = await prisma.item.findMany({
 			where: { categoryId: categoryId },
-			select: { id: true },
+			select: { id: true, name: true },
+		})
+		const selectedCategory = await prisma.category.findFirst({
+			where: { id: categoryId, businessId: businessId },
+			select: { description: true },
 		})
 
 		const itemIdsArray = itemsInSelectedCategory.map(item => item.id)
 
 		const createdDiscount = await prisma.discount.create({
 			data: {
-				description: description,
+				description: buildDescription(selectedCategory?.description),
 				minimumQuantity: minQuantity,
 				name: name,
 				validFrom: validFrom,
@@ -152,6 +185,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				business: { connect: { id: businessId } },
 				type: discountType,
 				isActive: true,
+				applicationMethod: discountApplicationMethod,
 			},
 			select: { id: true },
 		})
@@ -161,7 +195,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	//we fallback to GLOBAL SCOPE behavior (not related to any item in particular):
 	const createdDiscount = await prisma.discount.create({
 		data: {
-			description: description,
+			description: buildDescription(),
 			minimumQuantity: minQuantity,
 			name: name,
 			validFrom: validFrom,
@@ -171,6 +205,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			business: { connect: { id: businessId } },
 			type: discountType,
 			isActive: true,
+			applicationMethod: discountApplicationMethod,
 		},
 	})
 
@@ -195,6 +230,7 @@ export default function CreateDiscount() {
 			porcentualValue: DEFAULT_PERCENTAGE_DISCOUNT_VALUE,
 			discountScope: DiscountScope.GLOBAL,
 			discountType: DiscountType.FIXED,
+			discountApplicationMethod: DiscountApplicationMethod.BY_ITEM,
 		},
 	})
 
@@ -205,14 +241,13 @@ export default function CreateDiscount() {
 	})
 
 	const [addedItemsIds, setAddedItemsIds] = useState<string>('')
-	console.log(addedItemsIds)
 	const [addedCategoriesIds, setAddedCategoriesIds] = useState<string>('')
 
 	return (
 		<>
 			<BreadCrumbs />
 			<Spacer size="4xs" />
-			<main className="flex max-h-[40rem] flex-col  gap-4 lg:flex-row lg:gap-8">
+			<main className="flex  flex-col  gap-4 lg:flex-row lg:gap-8">
 				<Card className="w-full lg:max-w-xl">
 					<CardHeader>
 						<CardTitle>Registrar Descuento</CardTitle>
@@ -250,17 +285,17 @@ export default function CreateDiscount() {
 										{
 											label: 'Global',
 											value: DiscountScope.GLOBAL,
-											icon: 'world',
+											// icon: 'world',
 										},
 										{
 											label: 'Por Categoría',
 											value: DiscountScope.CATEGORY,
-											icon: 'shapes',
+											// icon: 'shapes',
 										},
 										{
 											label: 'Por Articulo',
 											value: DiscountScope.SINGLE_ITEM,
-											icon: 'package',
+											// icon: 'package',
 										},
 									]}
 									name={fields.discountScope.name}
@@ -272,16 +307,33 @@ export default function CreateDiscount() {
 										{
 											label: 'Fijo',
 											value: DiscountType.FIXED,
-											icon: 'circle-dollar-sign',
+											// icon: 'circle-dollar-sign',
 										},
 										{
 											label: 'Porcentaje',
 											value: DiscountType.PERCENTAGE,
-											icon: 'percentage',
+											// icon: 'percentage',
 										},
 									]}
 									name={fields.discountType.name}
 									initialValue={fields.discountType.initialValue}
+								/>
+								<SelectTab
+									label="Método de aplicación"
+									options={[
+										{
+											label: 'Por Articulo',
+											value: DiscountApplicationMethod.BY_ITEM,
+											// icon: 'circle-dollar-sign',
+										},
+										{
+											label: 'Al Total',
+											value: DiscountApplicationMethod.TO_TOTAL,
+											// icon: 'percentage',
+										},
+									]}
+									name={fields.discountApplicationMethod.name}
+									initialValue={fields.discountApplicationMethod.initialValue}
 								/>
 							</div>
 							<div className="grid grid-cols-2 gap-4">
@@ -345,9 +397,16 @@ export default function CreateDiscount() {
 							<Link to={'..'}>Cancelar</Link>
 						</Button>
 						{/* CHANGE THIS BUTTON TO STATE BUTTON AND POSSIBLY ADD A CONFIRM DIALOG */}
-						<Button type="submit" form={form.id} className="w-full">
+
+						<StatusButton
+							form={form.id}
+							type="submit"
+							disabled={isPending}
+							className="w-full"
+							status={isPending ? 'pending' : 'idle'}
+						>
 							Crear Descuento
-						</Button>
+						</StatusButton>
 					</CardFooter>
 				</Card>
 				{fields.discountScope.value !== DiscountScope.GLOBAL && (

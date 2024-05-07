@@ -9,6 +9,18 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	const discount = await prisma.discount.findUnique({
 		where: { id: params.discountId },
+		select: {
+			id: true,
+			name: true,
+			description: true,
+			isActive: true,
+			minimumQuantity: true,
+			scope: true,
+			type: true,
+      applicationMethod:true,
+			value: true,
+			items: { select: { id: true, name: true } },
+		},
 	})
 
 	invariantResponse(discount, 'Not found', { status: 404 })
@@ -28,7 +40,12 @@ export default function DiscountRoute() {
 			<div>{discount.minimumQuantity}</div>
 			<div>{discount.scope}</div>
 			<div>{discount.type}</div>
+			<div>{discount.applicationMethod}</div>
 			<div>{discount.value}</div>
+      Items:
+			{discount.items.map(item => (
+				<div key={item.id}>{item.name}</div>
+			))}
 		</>
 	)
 }
