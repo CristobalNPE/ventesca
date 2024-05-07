@@ -95,7 +95,7 @@ export default function CreateDiscount() {
 		shouldValidate: 'onBlur',
 		shouldRevalidate: 'onInput',
 		constraint: getZodConstraint(NewDiscountSchema),
-		lastResult: actionData?.submission,
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
 			return parseWithZod(formData, { schema: NewDiscountSchema })
 		},

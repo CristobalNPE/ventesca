@@ -1,5 +1,5 @@
 import { type SEOHandle } from '@nasa-gcn/remix-seo'
-import { json, type DataFunctionArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, Outlet, useMatches } from '@remix-run/react'
 import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -17,7 +17,7 @@ export const handle: BreadcrumbHandle & SEOHandle = {
 	getSitemapEntries: () => null,
 }
 
-export async function loader({ request }: DataFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
@@ -47,7 +47,7 @@ export default function EditUserProfile() {
 		.filter(Boolean)
 
 	return (
-		<div className="m-auto max-w-3xl">
+		<div className="m-auto mb-24 mt-16 max-w-3xl">
 			<div className="container">
 				<ul className="flex gap-3">
 					<li>
@@ -70,7 +70,7 @@ export default function EditUserProfile() {
 					))}
 				</ul>
 			</div>
-			<Spacer size="4xs" />
+			<Spacer size="xs" />
 			<main className="mx-auto bg-muted px-6 py-8 md:container md:rounded-3xl">
 				<Outlet />
 			</main>
