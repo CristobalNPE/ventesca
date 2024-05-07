@@ -1,5 +1,3 @@
-import { conform, useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -9,6 +7,8 @@ import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import { Editor } from './editor.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 //Exported constants for consistency on item-creation
 export const NAME_MAX = 30
@@ -47,27 +47,32 @@ export function NameEditModal({
 
 	const [form, fields] = useForm({
 		id: UPDATE_NAME_KEY,
-		constraint: getFieldsetConstraint(NameEditorSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(NameEditorSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: NameEditorSchema })
+			return parseWithZod(formData, { schema: NameEditorSchema })
 		},
 
 		defaultValue: {
-			name: value,
+			name: value as string,
 		},
 	})
 
 	const [targetValue, setTargetValue] = useState<string | number>(value)
 
 	const renderedForm = (
-		<fetcher.Form method="POST" {...form.props} action={'/inventory/edit'}>
+		<fetcher.Form
+			method="POST"
+			{...getFormProps(form)}
+			action={'/inventory/edit'}
+		>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...conform.input(fields.name, {
+					...getInputProps(fields.name, {
+						type: 'text',
 						ariaAttributes: true,
 					}),
 					onChange: e => setTargetValue(e.target.value),
@@ -87,7 +92,7 @@ export function NameEditModal({
 			name="intent"
 			value={UPDATE_NAME_KEY}
 			variant="default"
-			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
 		>
 			<div className="flex items-center gap-1 ">

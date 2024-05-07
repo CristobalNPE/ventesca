@@ -1,10 +1,11 @@
-import { useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { getFormProps, useForm } from '@conform-to/react'
+
 import { useFetcher } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '../edit.tsx'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export const UPDATE_STATUS_KEY = 'update-status'
 export const STATUS_DISABLED = 'active'
@@ -31,10 +32,10 @@ export function EditStatus({
 
 	const [form] = useForm({
 		id: UPDATE_STATUS_KEY,
-		constraint: getFieldsetConstraint(StatusEditorSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(StatusEditorSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: StatusEditorSchema })
+			return parseWithZod(formData, { schema: StatusEditorSchema })
 		},
 	})
 
@@ -42,7 +43,7 @@ export function EditStatus({
 		return (
 			<itemStatusFetcher.Form
 				method="POST"
-				{...form.props}
+				{...getFormProps(form)}
 				action={'/inventory/edit'}
 			>
 				<AuthenticityTokenInput />
@@ -55,7 +56,7 @@ export function EditStatus({
 					name="intent"
 					value={UPDATE_STATUS_KEY}
 					variant="outline"
-					status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+					status={isPending ? 'pending' : form.status ?? 'idle'}
 					disabled={isPending}
 				>
 					<div className="flex items-center gap-1 ">
@@ -69,7 +70,7 @@ export function EditStatus({
 	return (
 		<itemStatusFetcher.Form
 			method="POST"
-			{...form.props}
+			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
 			<AuthenticityTokenInput />
@@ -82,7 +83,7 @@ export function EditStatus({
 				name="intent"
 				value={UPDATE_STATUS_KEY}
 				variant="outline"
-				status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+				status={isPending ? 'pending' : form.status ?? 'idle'}
 				disabled={isPending || disabled}
 			>
 				<div className="flex items-center gap-1 ">

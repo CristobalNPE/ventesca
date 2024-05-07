@@ -1,5 +1,5 @@
-import { useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { getFormProps, useForm } from '@conform-to/react'
+
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -13,6 +13,7 @@ import {
 	SupplierSelectBox,
 } from '#app/routes/resources+/suppliers.tsx'
 import { Editor } from './editor.tsx'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export const UPDATE_SUPPLIER_KEY = 'update-supplier'
 
@@ -39,17 +40,21 @@ export function SupplierEditModal({
 
 	const [form] = useForm({
 		id: UPDATE_SUPPLIER_KEY,
-		constraint: getFieldsetConstraint(SupplierEditorSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(SupplierEditorSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: SupplierEditorSchema })
+			return parseWithZod(formData, { schema: SupplierEditorSchema })
 		},
 	})
 
 	const [targetValue, setTargetValue] = useState<SelectedSupplier | null>(null)
 
 	const renderedForm = (
-		<fetcher.Form method="POST" {...form.props} action={'/inventory/edit'}>
+		<fetcher.Form
+			method="POST"
+			{...getFormProps(form)}
+			action={'/inventory/edit'}
+		>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			{targetValue && (
@@ -71,7 +76,7 @@ export function SupplierEditModal({
 			name="intent"
 			value={UPDATE_SUPPLIER_KEY}
 			variant="default"
-			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending || !targetValue}
 		>
 			<div className="flex items-center gap-1 ">

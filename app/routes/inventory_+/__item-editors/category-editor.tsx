@@ -1,5 +1,5 @@
-import { useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { getFormProps, useForm } from '@conform-to/react'
+
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -13,6 +13,7 @@ import {
 	type SelectedCategory,
 } from '#app/routes/resources+/categories.tsx'
 import { Editor } from './editor.tsx'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export const UPDATE_CATEGORY_KEY = 'update-category'
 
@@ -39,17 +40,21 @@ export function CategoryEditModal({
 
 	const [form] = useForm({
 		id: UPDATE_CATEGORY_KEY,
-		constraint: getFieldsetConstraint(CategoryEditorSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(CategoryEditorSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: CategoryEditorSchema })
+			return parseWithZod(formData, { schema: CategoryEditorSchema })
 		},
 	})
 
 	const [targetValue, setTargetValue] = useState<SelectedCategory | null>(null)
 
 	const renderedForm = (
-		<fetcher.Form method="POST" {...form.props} action={'/inventory/edit'}>
+		<fetcher.Form
+			method="POST"
+			{...getFormProps(form)}
+			action={'/inventory/edit'}
+		>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			{targetValue && (
@@ -71,7 +76,7 @@ export function CategoryEditModal({
 			name="intent"
 			value={UPDATE_CATEGORY_KEY}
 			variant="default"
-			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending || !targetValue}
 		>
 			<div className="flex items-center gap-1 ">

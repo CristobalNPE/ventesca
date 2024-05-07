@@ -1,5 +1,3 @@
-import { conform, useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -10,6 +8,8 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { Editor } from './editor.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 const SELLING_PRICE_MAX = 9999999
 const SELLING_PRICE_MIN = 0
@@ -47,10 +47,10 @@ export function SellingPriceEditModal({
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
 		id: UPDATE_SELLINGPRICE_KEY,
-		constraint: getFieldsetConstraint(SellingPriceEditorSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(SellingPriceEditorSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: SellingPriceEditorSchema })
+			return parseWithZod(formData, { schema: SellingPriceEditorSchema })
 		},
 		defaultValue: {
 			sellingPrice: value,
@@ -69,13 +69,17 @@ export function SellingPriceEditModal({
 	}, [targetValue])
 
 	const renderedForm = (
-		<fetcher.Form method="POST" {...form.props} action={'/inventory/edit'}>
+		<fetcher.Form
+			method="POST"
+			{...getFormProps(form)}
+			action={'/inventory/edit'}
+		>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...conform.input(fields.sellingPrice, {
+					...getInputProps(fields.sellingPrice, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -96,7 +100,7 @@ export function SellingPriceEditModal({
 			name="intent"
 			value={UPDATE_SELLINGPRICE_KEY}
 			variant="default"
-			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
 		>
 			<div className="flex items-center gap-1 ">

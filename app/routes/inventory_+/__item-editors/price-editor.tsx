@@ -1,5 +1,3 @@
-import { conform, useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -10,6 +8,8 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { Editor } from './editor.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 const PRICE_MAX = 9999999
 const PRICE_MIN = 0
@@ -43,10 +43,10 @@ export function PriceEditModal({
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
 		id: UPDATE_PRICE_KEY,
-		constraint: getFieldsetConstraint(PriceEditorSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(PriceEditorSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: PriceEditorSchema })
+			return parseWithZod(formData, { schema: PriceEditorSchema })
 		},
 		defaultValue: {
 			price: value,
@@ -63,13 +63,17 @@ export function PriceEditModal({
 	}, [targetValue])
 
 	const renderedForm = (
-		<fetcher.Form method="POST" {...form.props} action={'/inventory/edit'}>
+		<fetcher.Form
+			method="POST"
+			{...getFormProps(form)}
+			action={'/inventory/edit'}
+		>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...conform.input(fields.price, {
+					...getInputProps(fields.price, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -90,7 +94,7 @@ export function PriceEditModal({
 			name="intent"
 			value={UPDATE_PRICE_KEY}
 			variant="default"
-			status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
 		>
 			<div className="flex items-center gap-1 ">

@@ -1,5 +1,3 @@
-import { conform, useForm } from '@conform-to/react'
-import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
@@ -22,6 +20,8 @@ import { prisma } from '#app/utils/db.server.ts'
 import { CODE_MAX, CODE_MIN } from './__item-editors/code-editor.tsx'
 import { NAME_MAX, NAME_MIN } from './__item-editors/name-editor.tsx'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 const DEFAULT_SUPPLIER = 'Desconocido'
 const DEFAULT_CATEGORY = 'General'
@@ -62,7 +62,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		select: { businessId: true },
 	})
 
-	const submission = await parse(formData, {
+	const submission = await parseWithZod(formData, {
 		schema: CreateItemSchema.superRefine(async (data, ctx) => {
 			const itemByCode = await prisma.item.findFirst({
 				select: { id: true, code: true },
@@ -81,12 +81,11 @@ export async function action({ request }: ActionFunctionArgs) {
 		async: true,
 	})
 
-	if (submission.intent !== 'submit') {
-		return json({ submission } as const)
-	}
-
-	if (!submission.value) {
-		return json({ submission } as const, { status: 400 })
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
 	}
 
 	const { code, name } = submission.value
@@ -148,10 +147,10 @@ export function CreateItemDialog() {
 
 	const [form, fields] = useForm({
 		id: 'create-item',
-		constraint: getFieldsetConstraint(CreateItemSchema),
-		lastSubmission: actionData?.submission,
+		constraint: getZodConstraint(CreateItemSchema),
+		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parse(formData, { schema: CreateItemSchema })
+			return parseWithZod(formData, { schema: CreateItemSchema })
 		},
 	})
 
@@ -174,15 +173,18 @@ export function CreateItemDialog() {
 				<createItemFetcher.Form
 					method="POST"
 					action="/inventory/new"
-					{...form.props}
+					{...getFormProps(form)}
 				>
 					<div className="flex flex-col gap-4 sm:flex-row">
 						<Field
 							labelProps={{ children: 'Código único' }}
 							inputProps={{
 								autoFocus: true,
-								type: 'number',
-								...conform.input(fields.code, { ariaAttributes: true }),
+
+								...getInputProps(fields.code, {
+									type: 'number',
+									ariaAttributes: true,
+								}),
 							}}
 							errors={fields.code.errors}
 						/>
@@ -190,7 +192,10 @@ export function CreateItemDialog() {
 							className="grow"
 							labelProps={{ children: 'Nombre del producto' }}
 							inputProps={{
-								...conform.input(fields.name, { ariaAttributes: true }),
+								...getInputProps(fields.name, {
+									type: 'text',
+									ariaAttributes: true,
+								}),
 							}}
 							errors={fields.name.errors}
 						/>

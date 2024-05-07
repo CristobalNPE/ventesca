@@ -44,8 +44,8 @@ import {
 	useIsPending,
 } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
+import { getFormProps, useForm } from '@conform-to/react'
+
 import {
 	json,
 	type ActionFunctionArgs,
@@ -64,6 +64,7 @@ import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
+import { parseWithZod } from '@conform-to/zod'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -111,14 +112,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await validateCSRF(formData, request.headers)
 
-	const submission = parse(formData, {
+	const submission = parseWithZod(formData, {
 		schema: DeleteFormSchema,
 	})
-	if (submission.intent !== 'submit') {
-		return json({ status: 'idle', submission } as const)
-	}
-	if (!submission.value) {
-		return json({ status: 'error', submission } as const, { status: 400 })
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
 	}
 
 	const { itemId } = submission.value
@@ -339,9 +340,7 @@ export default function ItemRoute() {
 							</CardDescription>
 						</CardHeader>
 						{isAdmin && (
-							<CardContent className="flex justify-end">
-							
-							</CardContent>
+							<CardContent className="flex justify-end"></CardContent>
 						)}
 					</Card>
 					<Card className="relative">
@@ -513,11 +512,11 @@ export function DeleteItem({ id }: { id: string }) {
 	const isPending = useIsPending()
 	const [form] = useForm({
 		id: 'delete-item',
-		lastSubmission: actionData?.submission,
+		lastResult: actionData?.result,
 	})
 
 	return (
-		<Form method="POST" {...form.props}>
+		<Form method="POST" {...getFormProps(form)}>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			<StatusButton
@@ -525,7 +524,7 @@ export function DeleteItem({ id }: { id: string }) {
 				name="intent"
 				value="delete-item"
 				variant="destructive"
-				status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+				status={isPending ? 'pending' : form.status ?? 'idle'}
 				disabled={isPending}
 			>
 				<div className="flex items-center gap-1 ">

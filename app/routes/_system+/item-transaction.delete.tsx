@@ -1,5 +1,4 @@
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
+import { getFormProps, useForm } from '@conform-to/react'
 
 import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
 import { useActionData, useFetcher } from '@remix-run/react'
@@ -9,6 +8,7 @@ import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse } from '#app/utils/misc.tsx'
+import { parseWithZod } from '@conform-to/zod'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-item-transaction'),
@@ -23,17 +23,16 @@ export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
 	const formData = await request.formData()
 
-	const submission = parse(formData, {
+	const submission = parseWithZod(formData, {
 		schema: DeleteFormSchema,
 	})
 
-	if (submission.intent !== 'submit') {
-		return json({ status: 'idle', submission } as const)
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
 	}
-	if (!submission.value) {
-		return json({ status: 'error', submission } as const, { status: 400 })
-	}
-
 	const { itemTransactionId } = submission.value
 
 	const itemTransaction = await prisma.itemTransaction.findFirst({
@@ -49,7 +48,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.itemTransaction.delete({ where: { id: itemTransaction.id } })
 
-	return json({ status: 'success', submission } as const)
+	return json({ result: submission.reply() })
 }
 
 export function DeleteItemTransaction({
@@ -63,14 +62,14 @@ export function DeleteItemTransaction({
 	const fetcher = useFetcher()
 	const [form] = useForm({
 		id: 'delete-item-transaction',
-		lastSubmission: actionData?.submission,
+		lastResult: actionData?.result,
 	})
 
 	return (
 		<fetcher.Form
 			method="POST"
 			action="/item-transaction/delete"
-			{...form.props}
+			{...getFormProps(form)}
 		>
 			<input type="hidden" name="itemTransactionId" value={id} />
 

@@ -50,7 +50,7 @@ export function Editor({
 
 	//We close the modal after the submission is successful.
 	useEffect(() => {
-		if (fetcher.state === 'idle' && fetcher.data?.status === 'success') {
+		if (fetcher.state === 'idle' && fetcher.data?.result.status === 'success') {
 			setOpen(false)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,7 +88,7 @@ export function Editor({
 					</DialogHeader>
 					{form}
 					<div className="flex items-center justify-between gap-3">
-						<div className="flex w-full items-center justify-center gap-3 rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground break-all">
+						<div className="flex w-full items-center justify-center gap-3 break-all rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground">
 							<div className="flex flex-col items-center gap-3">
 								<Icon name={icon} className="shrink-0 text-3xl" />
 								<div className="flex flex-col">
@@ -101,7 +101,7 @@ export function Editor({
 						<div>
 							<Icon className="text-5xl" name="arrow-right" />
 						</div>
-						<div className="flex w-full items-center justify-center gap-3 rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground grow break-all">
+						<div className="flex w-full grow items-center justify-center gap-3 break-all rounded-md bg-secondary/70 p-3 font-semibold text-muted-foreground">
 							<div className="flex flex-col items-center gap-3">
 								<Icon name={icon} className="shrink-0 text-3xl" />
 								<div className="flex flex-col">

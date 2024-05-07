@@ -1,5 +1,5 @@
-import { useForm } from '@conform-to/react'
-import { parse } from '@conform-to/zod'
+import { getFormProps, useForm } from '@conform-to/react'
+
 import {
 	json,
 	type ActionFunctionArgs,
@@ -37,6 +37,7 @@ import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { parseWithZod } from '@conform-to/zod'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const supplier = await prisma.supplier.findUnique({
@@ -50,7 +51,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			phone: true,
 			city: true,
 			fantasyName: true,
-			fax: true,
+			email: true,
 			createdAt: true,
 			updatedAt: true,
 		},
@@ -81,14 +82,14 @@ export async function action({ request }: ActionFunctionArgs) {
 	// const userId = await requireUserId(request)
 	const formData = await request.formData()
 	await validateCSRF(formData, request.headers)
-	const submission = parse(formData, {
+	const submission = parseWithZod(formData, {
 		schema: DeleteFormSchema,
 	})
-	if (submission.intent !== 'submit') {
-		return json({ status: 'idle', submission } as const)
-	}
-	if (!submission.value) {
-		return json({ status: 'error', submission } as const, { status: 400 })
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
 	}
 
 	const { supplierId } = submission.value
@@ -116,7 +117,7 @@ export default function ProviderRoute() {
 		: 'Sin dirección definida.'
 	const phone = supplier.phone ? supplier.phone : 'Sin teléfono definido.'
 	const city = supplier.city ? supplier.city : 'Sin ciudad definida.'
-	const fax = supplier.fax ? supplier.fax : 'Sin fax definido.'
+	const fax = supplier.email ? supplier.email : 'Sin email definido.'
 
 	return (
 		<>
@@ -260,11 +261,11 @@ export function DeleteProvider({ id }: { id: string }) {
 	const isPending = useIsPending()
 	const [form] = useForm({
 		id: 'delete-provider',
-		lastSubmission: actionData?.submission,
+		lastResult: actionData?.result,
 	})
 
 	return (
-		<Form method="POST" {...form.props}>
+		<Form method="POST" {...getFormProps(form)}>
 			<AuthenticityTokenInput />
 			<input type="hidden" name="supplierId" value={id} />
 			<StatusButton
@@ -272,7 +273,7 @@ export function DeleteProvider({ id }: { id: string }) {
 				name="intent"
 				value="delete-provider"
 				variant="destructive"
-				status={isPending ? 'pending' : actionData?.status ?? 'idle'}
+				status={isPending ? 'pending' : form.status ?? 'idle'}
 				disabled={isPending}
 			>
 				<div className="flex items-center gap-2">

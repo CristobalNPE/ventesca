@@ -1,4 +1,3 @@
-import { parse } from '@conform-to/zod'
 import { type ActionFunctionArgs, json } from '@remix-run/node'
 import { z } from 'zod'
 import { requireUserId } from '#app/utils/auth.server.ts'
@@ -38,6 +37,7 @@ import {
 	UPDATE_SUPPLIER_KEY,
 } from './__item-editors/supplier-editor.tsx'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
+import { parseWithZod } from '@conform-to/zod'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -50,14 +50,15 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	switch (intent) {
 		case UPDATE_NAME_KEY: {
-			const submission = await parse(formData, { schema: NameEditorSchema })
+			const submission = await parseWithZod(formData, {
+				schema: NameEditorSchema,
+			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, name } = submission.value
@@ -67,10 +68,10 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { name },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
 		case UPDATE_CODE_KEY: {
-			const submission = await parse(formData, {
+			const submission = await parseWithZod(formData, {
 				schema: CodeEditorSchema.superRefine(async (data, ctx) => {
 					const itemByCode = await prisma.item.findFirst({
 						select: { id: true, code: true },
@@ -89,12 +90,11 @@ export async function action({ request }: ActionFunctionArgs) {
 				async: true,
 			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, code } = submission.value
@@ -104,19 +104,19 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { code },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
 		case UPDATE_STOCK_KEY: {
-			const submission = await parse(formData, { schema: StockEditorSchema })
+			const submission = await parseWithZod(formData, {
+				schema: StockEditorSchema,
+			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
-			}
-
 			const { itemId, stock } = submission.value
 
 			await prisma.item.update({
@@ -124,17 +124,18 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { stock },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
 		case UPDATE_PRICE_KEY: {
-			const submission = await parse(formData, { schema: PriceEditorSchema })
+			const submission = await parseWithZod(formData, {
+				schema: PriceEditorSchema,
+			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, price } = submission.value
@@ -144,19 +145,18 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { price },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
 		case UPDATE_SELLINGPRICE_KEY:
-			const submission = await parse(formData, {
+			const submission = await parseWithZod(formData, {
 				schema: SellingPriceEditorSchema,
 			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, sellingPrice } = submission.value
@@ -166,18 +166,17 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { sellingPrice },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		case UPDATE_SUPPLIER_KEY: {
-			const submission = await parse(formData, {
+			const submission = await parseWithZod(formData, {
 				schema: SupplierEditorSchema,
 			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, supplierId } = submission.value
@@ -187,19 +186,18 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { supplier: { connect: { id: supplierId } } },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
 		case UPDATE_CATEGORY_KEY: {
-			const submission = await parse(formData, {
+			const submission = await parseWithZod(formData, {
 				schema: CategoryEditorSchema,
 			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, categoryId } = submission.value
@@ -209,19 +207,18 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { category: { connect: { id: categoryId } } },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
 		case UPDATE_STATUS_KEY: {
-			const submission = await parse(formData, {
+			const submission = await parseWithZod(formData, {
 				schema: StatusEditorSchema,
 			})
 
-			if (submission.intent !== 'submit') {
-				return json({ submission, status: 'error' } as const)
-			}
-
-			if (!submission.value) {
-				return json({ submission, status: 'error' } as const, { status: 400 })
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
 			}
 
 			const { itemId, status } = submission.value
@@ -231,9 +228,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				data: { isActive: status === STATUS_ENABLED ? true : false },
 			})
 
-			return json({ submission, status: 'success' } as const)
+			return json({ result: submission.reply() })
 		}
-		default:
-			return json({ submission: null, status: 'error' } as const)
 	}
 }

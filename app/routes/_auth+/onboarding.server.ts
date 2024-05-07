@@ -2,7 +2,7 @@ import { redirect } from '@remix-run/node'
 import { verifySessionStorage } from '#app/utils/verification.server.ts'
 import { onboardingEmailSessionKey } from './onboarding.tsx'
 import { type VerifyFunctionArgs } from './verify.server.ts'
-import { invariant } from '#app/utils/misc.js'
+import { invariant } from '#app/utils/misc.tsx'
 
 export async function handleVerification({ submission }: VerifyFunctionArgs) {
 	invariant(
