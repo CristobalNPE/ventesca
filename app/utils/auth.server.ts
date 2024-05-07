@@ -23,6 +23,15 @@ for (const [providerName, provider] of Object.entries(providers)) {
 	authenticator.use(provider.getAuthStrategy(), providerName)
 }
 
+export async function getBusinessId(userId: string) {
+	const { businessId } = await prisma.user.findUniqueOrThrow({
+		where: { id: userId },
+		select: { businessId: true },
+	})
+
+	return businessId
+}
+
 export async function getUserId(request: Request) {
 	const authSession = await authSessionStorage.getSession(
 		request.headers.get('cookie'),
