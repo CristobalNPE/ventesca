@@ -106,22 +106,23 @@ model ItemTransaction {
 }
 
 model Discount {
-  id              String        @id @default(cuid())
-  name            String
-  description     String
-  type            String // e.g. FIXED AMOUNT, PERCENTAGE
-  scope           String // e.g. SingleItem, Category
-  minimumQuantity Int
-  value           Int
-  validFrom       DateTime
-  validUntil      DateTime
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  business        Business      @relation(fields: [businessId], references: [id])
-  businessId      String
-  items           Item[]
-  transactions    Transaction[]
+  id                String        @id @default(cuid())
+  name              String
+  description       String
+  type              String // e.g. FIXED AMOUNT, PERCENTAGE
+  scope             String // e.g. SingleItem, Category
+  applicationMethod String // e.g. to-total, by-item
+  minimumQuantity   Int
+  value             Int
+  validFrom         DateTime
+  validUntil        DateTime
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  business          Business      @relation(fields: [businessId], references: [id])
+  businessId        String
+  items             Item[]
+  transactions      Transaction[]
 }
 
 model Business {
@@ -139,7 +140,7 @@ model Business {
 
 model User {
   id           String        @id @default(cuid())
-  email        String       @unique
+  email        String        @unique
   username     String        @unique
   name         String?
   createdAt    DateTime      @default(now())
