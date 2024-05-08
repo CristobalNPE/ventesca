@@ -32,13 +32,14 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { addDays } from 'date-fns'
 import { DateRange } from 'react-day-picker'
-import { CategoryPicker } from './category-picker.tsx'
+
 import { ItemPicker } from './discounts.item-picker.tsx'
 import {
 	DiscountApplicationMethod,
 	DiscountApplicationMethodSchema,
 } from './_types/discount-applicationMethod.ts'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { CategoryPicker } from './discounts.category-picker.tsx'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
 const DEFAULT_FIXED_DISCOUNT_VALUE = 0
@@ -77,7 +78,7 @@ const NewDiscountSchema = z.object({
 	validFrom: z.coerce.date(),
 	validUntil: z.coerce.date(),
 	itemIds: z.string().optional(),
-	categoryId: z.string().optional(),
+	categoryIds: z.string().optional(),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -100,10 +101,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			if (
 				data.discountScope === DiscountScope.CATEGORY &&
-				data.categoryId === undefined
+				data.categoryIds === undefined
 			) {
 				ctx.addIssue({
-					path: ['categoryId'],
+					path: ['categoryIds'],
 					code: z.ZodIssueCode.custom,
 					message: 'Debe seleccionar una categoría.',
 				})
@@ -125,16 +126,14 @@ export async function action({ request }: ActionFunctionArgs) {
 		name,
 		validFrom,
 		validUntil,
-		categoryId,
+		categoryIds,
 		fixedValue,
 		itemIds,
 		porcentualValue,
 		discountApplicationMethod,
 	} = submission.value
 
-	function buildDescription(categoryDescription?: string) {
-		const desc = categoryDescription === undefined ? '' : categoryDescription
-
+	function buildDescription() {
 		const descriptionValue =
 			discountType === DiscountType.FIXED
 				? `$${fixedValue}`
@@ -144,7 +143,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			discountScope === DiscountScope.SINGLE_ITEM
 				? 'artículos seleccionados'
 				: discountScope === DiscountScope.CATEGORY
-				  ? `categoría`
+				  ? `categorías seleccionadas`
 				  : 'todos los artículos'
 
 		const descriptionApplicationMethod =
@@ -152,7 +151,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				? `aplicado al total de la compra`
 				: `aplicado al valor de cada articulo`
 
-		return `${descriptionValue} de descuento en ${descriptionScope} ${desc}, ${descriptionApplicationMethod}. Compra minima ${minQuantity}`
+		return `${descriptionValue} de descuento en ${descriptionScope}, ${descriptionApplicationMethod}. Cantidad minima ${minQuantity}`
 	}
 
 	fixedValue = fixedValue === undefined ? 0 : fixedValue
@@ -183,27 +182,35 @@ export async function action({ request }: ActionFunctionArgs) {
 		return redirect(`/discounts/${createdDiscount.id}`)
 	}
 	if (discountScope === DiscountScope.CATEGORY) {
-		const itemsInSelectedCategory = await prisma.item.findMany({
-			where: { categoryId: categoryId },
-			select: { id: true, name: true },
-		})
-		const selectedCategory = await prisma.category.findFirst({
-			where: { id: categoryId, businessId: businessId },
-			select: { description: true },
-		})
+		invariant(categoryIds, 'Category IDs should be defined.')
+		const categoryIdsArray = categoryIds.split(',')
 
-		const itemIdsArray = itemsInSelectedCategory.map(item => item.id)
+		let itemIdsInSelectedCategories: string[] = []
+
+		for (const categoryId of categoryIdsArray) {
+			const itemsInCategory = await prisma.item.findMany({
+				where: { categoryId: categoryId },
+				select: { id: true },
+			})
+			let itemIdsInCategory = itemsInCategory.map(item => item.id)
+			itemIdsInSelectedCategories = [
+				...itemIdsInSelectedCategories,
+				...itemIdsInCategory,
+			]
+		}
 
 		const createdDiscount = await prisma.discount.create({
 			data: {
-				description: buildDescription(selectedCategory?.description),
+				description: buildDescription(),
 				minimumQuantity: minQuantity,
 				name: name,
 				validFrom: validFrom,
 				validUntil: validUntil,
 				value:
 					discountType === DiscountType.FIXED ? fixedValue : porcentualValue,
-				items: { connect: itemIdsArray.map(itemId => ({ id: itemId })) },
+				items: {
+					connect: itemIdsInSelectedCategories.map(itemId => ({ id: itemId })),
+				},
 				scope: discountScope,
 				business: { connect: { id: businessId } },
 				type: discountType,
@@ -289,7 +296,7 @@ export default function CreateDiscount() {
 							/>
 							<input
 								type="hidden"
-								name={fields.categoryId.name}
+								name={fields.categoryIds.name}
 								value={addedCategoriesIds}
 							/>
 							<input
@@ -441,7 +448,10 @@ export default function CreateDiscount() {
 								setAddedItemsIds={setAddedItemsIds}
 							/>
 						) : (
-							<CategoryPicker setAddedCategoriesIds={setAddedCategoriesIds} />
+							<CategoryPicker
+								setAddedCategoriesIds={setAddedCategoriesIds}
+								errors={fields.categoryIds.errors}
+							/>
 						)}
 					</div>
 				)}
