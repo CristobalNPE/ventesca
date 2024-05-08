@@ -32,10 +32,9 @@ import {
 	HoverCardContent,
 	HoverCardTrigger,
 } from '#app/components/ui/hover-card.tsx'
-import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
 	cn,
@@ -46,6 +45,8 @@ import {
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { getFormProps, useForm } from '@conform-to/react'
 
+import { DataRow } from '#app/components/data-row.tsx'
+import { parseWithZod } from '@conform-to/zod'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -64,7 +65,6 @@ import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
-import { parseWithZod } from '@conform-to/zod'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -107,10 +107,8 @@ const DeleteFormSchema = z.object({
 })
 
 export async function action({ request }: ActionFunctionArgs) {
-	// const userId = await requireUserId(request)
+	await requireUserId(request)
 	const formData = await request.formData()
-
-	await validateCSRF(formData, request.headers)
 
 	const submission = parseWithZod(formData, {
 		schema: DeleteFormSchema,
@@ -416,41 +414,6 @@ export default function ItemRoute() {
 }
 
 //If we need to format a value on the edit modal, we can use the formatFn prop, but we need to also give the value as a Number in order for it to work correctly.
-function DataRow({
-	icon,
-	label,
-	value,
-	isEditable,
-	editModal,
-	suffix,
-}: {
-	icon: IconName
-	label: string
-	value?: string | number
-	isEditable?: boolean
-	editModal?: JSX.Element
-	suffix?: string
-}) {
-	const sanitizedValue = value ? value : 'Sin definir'
-
-	return (
-		<div className="flex items-center  justify-between gap-3  truncate rounded-md bg-secondary/70 p-2 font-semibold text-muted-foreground">
-			<div className="flex gap-3">
-				<Icon name={icon} className="shrink-0 text-3xl" />
-				<div className="flex flex-col">
-					<span>{label}</span>
-					<span className="uppercase tracking-tight text-foreground">
-						{sanitizedValue}{' '}
-						<span className="lowercase tracking-normal text-muted-foreground">
-							{suffix}
-						</span>
-					</span>
-				</div>
-			</div>
-			{isEditable && editModal}
-		</div>
-	)
-}
 
 function BreadCrumbs() {
 	return (
