@@ -15,6 +15,7 @@ export type IconName =
 	| 'camera'
 	| 'cash'
 	| 'check'
+	| 'checklist'
 	| 'checks'
 	| 'chevron-down'
 	| 'chevron-left'
