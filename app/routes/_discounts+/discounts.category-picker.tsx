@@ -22,10 +22,9 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '#app/components/ui/popover.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
-import { formatCurrency, useDebounce } from '#app/utils/misc.tsx'
+import { useDebounce } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useId, useRef, useState } from 'react'
@@ -33,55 +32,58 @@ import { useSpinDelay } from 'spin-delay'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
-	const whereBusiness = getWhereBusinessQuery(userId)
+
+	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
-	const itemSearch = url.searchParams.get('item-search')
+	const categorySearch = url.searchParams.get('category-search')
 
-	const itemSearchAsNumber = Number(itemSearch) || null
+	const categorySearchAsNumber = Number(categorySearch) || null
 
-	if (itemSearch === null) return null
+	if (categorySearch === null) return null
 	console.log(url.searchParams.getAll(''))
-	console.log(itemSearch)
+	console.log(categorySearch)
 
-	const itemSearchByNameButTooShort =
-		itemSearchAsNumber === null && itemSearch.length <= 2
+	const categorySearchByNameButTooShort =
+		categorySearchAsNumber === null && categorySearch.length <= 2
 
-	if (itemSearchByNameButTooShort) return null
+	if (categorySearchByNameButTooShort) return null
 
-	if (itemSearchAsNumber) {
-		const items = await prisma.item.findMany({
-			select: { id: true, code: true, name: true, sellingPrice: true }, //Put this in a variable
-			where: { code: itemSearchAsNumber, ...whereBusiness },
+	if (categorySearchAsNumber) {
+		const categories = await prisma.category.findMany({
+			select: { id: true, code: true, description: true, _count: true },
+			where: { code: categorySearchAsNumber, businessId: businessId },
 
-			orderBy: { name: 'asc' },
+			orderBy: { description: 'asc' },
 		})
 
-		return json({ items })
+		return json({ categories })
 	}
-
-	const items = await prisma.item.findMany({
-		select: { id: true, code: true, name: true, sellingPrice: true },
-		where: { name: { contains: itemSearch }, ...whereBusiness },
+	const categories = await prisma.category.findMany({
+		select: { id: true, code: true, description: true, _count: true },
+		where: {
+			description: { contains: categorySearch },
+			businessId: businessId,
+		},
 
 		orderBy: { code: 'asc' },
 	})
 
-	return json({ items })
+	return json({ categories })
 }
 
-export function ItemPicker({
-	setAddedItemsIds,
+export function CategoryPicker({
+	setAddedCategoriesIds,
 	errors,
 }: {
-	setAddedItemsIds: (ids: string) => void
+	setAddedCategoriesIds: (ids: string) => void
 	errors: ListOfErrors
 }) {
 	const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false)
 	const id = useId()
 	const errorId = errors?.length ? `${id}-error` : undefined
 
-	const fetcher = useFetcher<typeof loader>({ key: 'item-search' })
+	const fetcher = useFetcher<typeof loader>({ key: 'category-search' })
 
 	const isSubmitting = fetcher.state !== 'idle'
 	const showSpin = useSpinDelay(isSubmitting, {
@@ -89,33 +91,33 @@ export function ItemPicker({
 		minDuration: 500,
 	})
 
-	const items = fetcher.data?.items ?? []
-	type Item = (typeof items)[0]
+	const categories = fetcher.data?.categories ?? []
+	type Category = (typeof categories)[0]
 
-	const [addedItems, setAddedItems] = useState<Item[]>([])
+	const [addedCategories, setAddedCategories] = useState<Category[]>([])
 
 	useEffect(() => {
-		setAddedItemsIds(addedItems.map(i => i.id).join(','))
-	}, [addedItems, setAddedItemsIds])
+		setAddedCategoriesIds(addedCategories.map(i => i.id).join(','))
+	}, [addedCategories, setAddedCategoriesIds])
 
-	const addItem = (item: Item) => {
-		if (!addedItems.find(i => i.id === item.id)) {
-			setAddedItems([...addedItems, item])
+	const addCategory = (category: Category) => {
+		if (!addedCategories.find(c => c.id === category.id)) {
+			setAddedCategories([...addedCategories, category])
 		}
 	}
 
-	const removeItem = (item: Item) => {
-		setAddedItems(addedItems.filter(i => i.id !== item.id))
+	const removeCategory = (category: Category) => {
+		setAddedCategories(addedCategories.filter(c => c.id !== category.id))
 	}
 
 	const formRef = useRef<HTMLFormElement>(null)
 
 	const handleFormChange = useDebounce((inputValue: string) => {
 		fetcher.submit(
-			{ 'item-search': inputValue ?? '' },
+			{ 'category-search': inputValue ?? '' },
 			{
 				method: 'get',
-				action: '/discounts/item-picker',
+				action: '/discounts/category-picker',
 			},
 		)
 		setIsSearchBoxOpen(true)
@@ -125,14 +127,16 @@ export function ItemPicker({
 		<Card className="relative max-h-[40rem] flex-1 overflow-auto lg:max-w-lg">
 			<CardHeader>
 				<CardTitle>
-					Artículos asociados{' '}
-					{addedItems.length > 0 && (
-						<span className="text-muted-foreground">({addedItems.length})</span>
+					Categorías asociadas{' '}
+					{addedCategories.length > 0 && (
+						<span className="text-muted-foreground">
+							({addedCategories.length})
+						</span>
 					)}
 				</CardTitle>
 				<CardDescription>
-					Utilice la búsqueda para agregar artículos que estarán asociados al
-					nuevo descuento.
+					Utilice la búsqueda para agregar las categorías que estarán incluidas
+					en el nuevo descuento.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -144,7 +148,7 @@ export function ItemPicker({
 								className="mx-auto mb-4 flex w-[24rem] items-center justify-center gap-2"
 							>
 								<Icon name="magnifying-glass" />
-								<span>Buscar articulo</span>
+								<span>Buscar categoría</span>
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent className="w-[24rem]">
@@ -158,7 +162,7 @@ export function ItemPicker({
 											type="text"
 											name="item-search"
 											id={id}
-											placeholder="Búsqueda por código o nombre"
+											placeholder="Búsqueda por código o descripción"
 											className="border-none focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none"
 											onChange={e => {
 												handleFormChange(e.target.value)
@@ -176,18 +180,20 @@ export function ItemPicker({
 
 								<CommandEmpty>Sin coincidencias.</CommandEmpty>
 								<CommandGroup className="max-h-[15rem] overflow-y-auto">
-									{items.map(item => (
+									{categories.map(category => (
 										<CommandItem
-											key={item.id}
+											key={category.id}
 											className="flex cursor-pointer gap-5 rounded-md p-1 hover:bg-primary/20 "
 											onSelect={() => {
-												addItem(item)
+												addCategory(category)
 												setIsSearchBoxOpen(false)
 												formRef.current?.reset()
 											}}
 										>
-											<span className="w-[2.5rem] font-bold">{item.code}</span>
-											<span className="flex-1 ">{item.name}</span>
+											<span className="w-[2.5rem] font-bold">
+												{category.code}
+											</span>
+											<span className="flex-1 ">{category.description}</span>
 										</CommandItem>
 									))}
 								</CommandGroup>
@@ -195,29 +201,24 @@ export function ItemPicker({
 						</PopoverContent>
 					</Popover>
 
-					{addedItems.length > 0 && (
+					{addedCategories.length > 0 && (
 						<div className="flex flex-col gap-1  ">
-							{addedItems.map(item => (
+							{addedCategories.map(category => (
 								<div
-									key={item.id}
+									key={category.id}
 									className="flex items-center justify-between gap-8 rounded-sm  bg-accent p-2"
 								>
 									<div className="flex flex-col gap-2 ">
 										<div className="flex flex-col text-sm">
 											<div className="flex items-center gap-1 text-muted-foreground">
-												<Icon name="scan-barcode" /> <span>{item.code}</span>
+												<Icon name="scan-barcode" />{' '}
+												<span>{category.code}</span>
 											</div>
-											<span>{item.name}</span>
+											<span>{category.description}</span>
 										</div>
 										<div className="flex items-center gap-1 text-sm">
-											<span className="text-muted-foreground line-through">
-												{formatCurrency(item.sellingPrice)}
-											</span>
-											<span>
-												<Icon className="text-xl" name="arrow-right" />
-											</span>
-											<span className="font-bold text-primary">
-												{formatCurrency(item.sellingPrice)}
+											<span className="text-muted-foreground">
+												{category._count.items} artículos asociados.
 											</span>
 										</div>
 									</div>
@@ -225,10 +226,12 @@ export function ItemPicker({
 									<Button
 										variant={'destructive'}
 										className="text-xl "
-										onClick={() => removeItem(item)}
+										onClick={() => removeCategory(category)}
 									>
 										<Icon name="trash" />
-										<span className="sr-only">Quitar articulo de la lista</span>
+										<span className="sr-only">
+											Quitar categoría de la lista
+										</span>
 									</Button>
 								</div>
 							))}
