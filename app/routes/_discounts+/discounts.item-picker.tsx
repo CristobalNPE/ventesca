@@ -108,11 +108,6 @@ export function ItemPicker({
 		setAddedItems(addedItems.filter(i => i.id !== item.id))
 	}
 
-	// console.log(addedItems)
-	// console.log(addedItems.length)
-	// const addedItemsIds = addedItems.map(i => i.id).join(',')
-	// console.log(addedItemsIds)
-
 	const formRef = useRef<HTMLFormElement>(null)
 
 	const handleFormChange = useDebounce((inputValue: string) => {
