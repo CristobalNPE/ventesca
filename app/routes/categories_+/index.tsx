@@ -9,11 +9,13 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '#app/components/data-table.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { requireUserId, getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
+
 	const categories = await prisma.category.findMany({
 		select: {
 			id: true,
@@ -21,6 +23,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			description: true,
 			_count: { select: { items: true } },
 		},
+		where: { businessId },
 	})
 
 	const formatted = categories.map(category => ({
@@ -28,7 +31,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		totalItems: category._count.items,
 	}))
 
-	const totalCategories = await prisma.category.count()
+	const totalCategories = await prisma.category.count({where:{businessId}})
 
 	return json({ categories: formatted, totalCategories })
 }
