@@ -101,24 +101,23 @@ export default function DiscountsPage() {
 				)}
 			</div>
 			<Spacer size={'4xs'} />
-			<div className="flex flex-col-reverse justify-between gap-8 sm:flex-row">
-				<div className="flex grow flex-col gap-4 md:gap-8 ">
-					<div className="grid gap-4 md:grid-cols-2 md:gap-8">
-						<DataCard
-							title={'Descuentos Activos'}
-							value={'666'}
-							icon={'tag'}
-							subtext={'22 descuentos expiran pronto.'}
-						/>
-						<DataCard
-							title={'Descuento Destacado'}
-							value={'Descuento Invierno 2024'}
-							icon={'tag'}
-							subtext={'Utilizado 42 veces.'}
-						/>
-					</div>
-					<DiscountsTableCard totalDiscounts={0} discounts={discounts} />
+			<div className="flex flex-col  ">
+				<div className="grid gap-4 md:grid-cols-2 md:gap-8">
+					<DataCard
+						title={'Descuentos Activos'}
+						value={'666'}
+						icon={'tag'}
+						subtext={'22 descuentos expiran pronto.'}
+					/>
+					<DataCard
+						title={'Descuento Destacado'}
+						value={'Descuento Invierno 2024'}
+						icon={'tag'}
+						subtext={'Utilizado 42 veces.'}
+					/>
 				</div>
+				<Spacer size={'4xs'} />
+				<DiscountsTableCard totalDiscounts={0} discounts={discounts} />
 			</div>
 		</main>
 	)
