@@ -3,9 +3,9 @@ import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
 
 //config:
-const NUMBER_OF_CATEGORIES = 15
-const NUMBER_OF_SUPPLIERS = 80
-const NUMBER_OF_PRODUCTS = 6000
+const NUMBER_OF_CATEGORIES = 5
+const NUMBER_OF_SUPPLIERS = 10
+const NUMBER_OF_PRODUCTS = 50
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -118,7 +118,7 @@ async function seed() {
 			await prisma.category.create({
 				data: {
 					code,
-					description: faker.commerce.department(),
+					description: `${faker.commerce.department()}-${business.id}`,
 					business: { connect: { id: business.id } },
 				},
 			})
