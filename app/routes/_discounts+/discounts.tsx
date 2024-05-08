@@ -30,7 +30,6 @@ import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
 	Form,
 	Link,
-	Outlet,
 	useLoaderData,
 	useNavigate,
 	useSearchParams,
