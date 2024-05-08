@@ -152,7 +152,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				? `aplicado al total de la compra`
 				: `aplicado al valor de cada articulo`
 
-		return `${descriptionValue} de descuento en ${descriptionScope} ${desc} ${descriptionApplicationMethod}. Compra minima ${minQuantity}`
+		return `${descriptionValue} de descuento en ${descriptionScope} ${desc}, ${descriptionApplicationMethod}. Compra minima ${minQuantity}`
 	}
 
 	fixedValue = fixedValue === undefined ? 0 : fixedValue
