@@ -1,8 +1,10 @@
+import { ErrorList, ListOfErrors } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
 	CardDescription,
+	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
@@ -70,11 +72,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function ItemPicker({
 	setAddedItemsIds,
+	errors,
 }: {
 	setAddedItemsIds: (ids: string) => void
+	errors: ListOfErrors
 }) {
 	const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false)
 	const id = useId()
+	const errorId = errors?.length ? `${id}-error` : undefined
 
 	const fetcher = useFetcher<typeof loader>({ key: 'item-search' })
 
@@ -236,6 +241,9 @@ export function ItemPicker({
 					)}
 				</div>
 			</CardContent>
+			<CardFooter>
+				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
+			</CardFooter>
 		</Card>
 	)
 }

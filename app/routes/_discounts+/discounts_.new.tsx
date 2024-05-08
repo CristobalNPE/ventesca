@@ -78,7 +78,7 @@ const NewDiscountSchema = z.object({
 	validUntil: z.coerce.date(),
 	itemIds: z.string().optional(),
 	categoryId: z.string().optional(),
-}) //TODO: SHOULD REFINE THIS IN THE BACKEND.
+})
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -86,7 +86,30 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const businessId = await getBusinessId(userId)
 	const submission = await parseWithZod(formData, {
-		schema: NewDiscountSchema,
+		schema: NewDiscountSchema.superRefine(async (data, ctx) => {
+			if (
+				data.discountScope === DiscountScope.SINGLE_ITEM &&
+				data.itemIds === undefined
+			) {
+				ctx.addIssue({
+					path: ['itemIds'],
+					code: z.ZodIssueCode.custom,
+					message: 'Debe seleccionar uno o mas artículos.',
+				})
+			}
+
+			if (
+				data.discountScope === DiscountScope.CATEGORY &&
+				data.categoryId === undefined
+			) {
+				ctx.addIssue({
+					path: ['categoryId'],
+					code: z.ZodIssueCode.custom,
+					message: 'Debe seleccionar una categoría.',
+				})
+			}
+		}),
+		async: true,
 	})
 
 	if (submission.status !== 'success') {
@@ -211,6 +234,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	return redirect(`/discounts/${createdDiscount.id}`)
 }
+
 export default function CreateDiscount() {
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()
@@ -412,7 +436,10 @@ export default function CreateDiscount() {
 				{fields.discountScope.value !== DiscountScope.GLOBAL && (
 					<div>
 						{fields.discountScope.value === DiscountScope.SINGLE_ITEM ? (
-							<ItemPicker setAddedItemsIds={setAddedItemsIds} />
+							<ItemPicker
+								errors={fields.itemIds.errors}
+								setAddedItemsIds={setAddedItemsIds}
+							/>
 						) : (
 							<CategoryPicker setAddedCategoriesIds={setAddedCategoriesIds} />
 						)}
