@@ -24,9 +24,10 @@ import {
 } from '#app/components/ui/popover.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency, useDebounce } from '#app/utils/misc.tsx'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useFetcher } from '@remix-run/react'
+import { useDebounce } from '#app/utils/misc.tsx'
+import { Item } from '@prisma/client'
+import { SerializeFrom, json, type LoaderFunctionArgs } from '@remix-run/node'
+import { Link, useFetcher } from '@remix-run/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useSpinDelay } from 'spin-delay'
 
@@ -195,43 +196,11 @@ export function ItemPicker({
 					</Popover>
 
 					{addedItems.length > 0 && (
-						<div className="flex flex-col gap-1  ">
-							{addedItems.map(item => (
-								<div
-									key={item.id}
-									className="flex items-center justify-between gap-8 rounded-sm  bg-accent p-2"
-								>
-									<div className="flex flex-col gap-2 ">
-										<div className="flex flex-col text-sm">
-											<div className="flex items-center gap-1 text-muted-foreground">
-												<Icon name="scan-barcode" /> <span>{item.code}</span>
-											</div>
-											<span>{item.name}</span>
-										</div>
-										<div className="flex items-center gap-1 text-sm">
-											<span className="text-muted-foreground line-through">
-												{formatCurrency(item.sellingPrice)}
-											</span>
-											<span>
-												<Icon className="text-xl" name="arrow-right" />
-											</span>
-											<span className="font-bold text-primary">
-												{formatCurrency(item.sellingPrice)}
-											</span>
-										</div>
-									</div>
-
-									<Button
-										variant={'destructive'}
-										className="text-xl "
-										onClick={() => removeItem(item)}
-									>
-										<Icon name="trash" />
-										<span className="sr-only">Quitar articulo de la lista</span>
-									</Button>
-								</div>
-							))}
-						</div>
+						<DiscountItemsList
+							canRemove={true}
+							addedItems={addedItems}
+							removeItem={removeItem}
+						/>
 					)}
 				</div>
 			</CardContent>
@@ -239,5 +208,62 @@ export function ItemPicker({
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
 			</CardFooter>
 		</Card>
+	)
+}
+
+export type DiscountItemListItem = SerializeFrom<
+	Pick<Item, 'id' | 'code' | 'name' | 'sellingPrice'>
+>
+
+export function DiscountItemsList({
+	addedItems,
+	removeItem,
+	canRemove,
+	showDetailsLink = false,
+}: {
+	addedItems: DiscountItemListItem[]
+	removeItem?: (item: DiscountItemListItem) => void
+	canRemove: boolean
+	showDetailsLink?: boolean
+}) {
+	return (
+		<div className="flex flex-col gap-1  ">
+			{addedItems.map(item => (
+				<div
+					key={item.id}
+					className="flex items-center justify-between gap-8 rounded-sm  bg-accent/90 p-2 "
+				>
+					<div className="flex  gap-1 text-base">
+						{showDetailsLink ? (
+							<Link
+								to={`/inventory/${item.id}`}
+								className="flex w-[4rem] items-center gap-1 text-muted-foreground hover:text-foreground"
+							>
+								<Icon className="shrink-0" name="scan-barcode" />{' '}
+								<span>{item.code}</span>
+							</Link>
+						) : (
+							<div className="flex w-[4rem] items-center gap-1 text-muted-foreground ">
+								<Icon className="shrink-0" name="scan-barcode" />{' '}
+								<span>{item.code}</span>
+							</div>
+						)}
+						<span>{item.name}</span>
+					</div>
+
+					{canRemove && removeItem && (
+						<Button
+							variant={'destructive'}
+							className="text-lg "
+							size={'icon'}
+							onClick={() => removeItem(item)}
+						>
+							<Icon name="trash" />
+							<span className="sr-only">Quitar articulo de la lista</span>
+						</Button>
+					)}
+				</div>
+			))}
+		</div>
 	)
 }
