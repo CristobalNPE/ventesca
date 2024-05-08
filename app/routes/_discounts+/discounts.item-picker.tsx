@@ -22,9 +22,8 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '#app/components/ui/popover.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { formatCurrency, useDebounce } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
@@ -33,7 +32,7 @@ import { useSpinDelay } from 'spin-delay'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
-	const whereBusiness = getWhereBusinessQuery(userId)
+	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
 	const itemSearch = url.searchParams.get('item-search')
@@ -52,7 +51,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (itemSearchAsNumber) {
 		const items = await prisma.item.findMany({
 			select: { id: true, code: true, name: true, sellingPrice: true }, //Put this in a variable
-			where: { code: itemSearchAsNumber, ...whereBusiness },
+			where: { code: itemSearchAsNumber, businessId: businessId },
 
 			orderBy: { name: 'asc' },
 		})
@@ -62,7 +61,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const items = await prisma.item.findMany({
 		select: { id: true, code: true, name: true, sellingPrice: true },
-		where: { name: { contains: itemSearch }, ...whereBusiness },
+		where: { name: { contains: itemSearch }, businessId: businessId },
 
 		orderBy: { code: 'asc' },
 	})
