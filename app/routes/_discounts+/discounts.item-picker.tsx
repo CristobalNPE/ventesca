@@ -231,7 +231,7 @@ export function DiscountItemsList({
 			{addedItems.map(item => (
 				<div
 					key={item.id}
-					className="flex items-center justify-between gap-8 rounded-sm  bg-accent/90 p-2 "
+					className="flex items-center justify-between gap-8 rounded-sm  bg-accent/50 p-2 "
 				>
 					<div className="flex  gap-1 text-base">
 						{showDetailsLink ? (
