@@ -23,11 +23,11 @@ export function DataRow({
 	return (
 		<div
 			className={cn(
-				'flex items-center justify-between gap-3 truncate rounded-md bg-secondary/70 p-2 font-semibold uppercase tracking-wide text-muted-foreground ',
+				'flex items-center justify-between gap-3 truncate rounded-md p-4 font-semibold uppercase tracking-wide text-muted-foreground transition-colors duration-150 hover:bg-accent ',
 				className && className,
 			)}
 		>
-			<div className="flex gap-3">
+			<div className="flex gap-6  overflow-x-clip">
 				<Icon name={icon} className="shrink-0 text-3xl" />
 				<div className="flex flex-col">
 					<span className="capitalize tracking-normal">{label}</span>
