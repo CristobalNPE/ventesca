@@ -12,7 +12,7 @@ import {
 	CategorySelectBox,
 	type SelectedCategory,
 } from '#app/routes/resources+/categories.tsx'
-import { Editor } from './editor.tsx'
+import { Editor } from '../../../components/editor.tsx'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export const UPDATE_CATEGORY_KEY = 'update-category'
