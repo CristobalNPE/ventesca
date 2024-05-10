@@ -80,7 +80,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			createdAt: true,
 			updatedAt: true,
 			sellingPrice: true,
-			discounts: { select: { id: true } },
+			discounts: { select: { id: true, name: true } },
 			category: { select: { description: true, id: true } },
 			supplier: { select: { fantasyName: true, id: true } },
 		},
@@ -330,11 +330,18 @@ export default function ItemRoute() {
 						<CardHeader>
 							<CardTitle>Promociones</CardTitle>
 							<CardDescription>
-								{item.discounts.length === 0
-									? `Ninguna promoción activa.`
-									: item.discounts.length > 1
-									  ? `${item.discounts.length} promociones activas.`
-									  : `${item.discounts.length} promoción activa.`}
+								<div>
+									{item.discounts.length === 0
+										? `Ninguna promoción activa.`
+										: item.discounts.length > 1
+										  ? `${item.discounts.length} promociones activas.`
+										  : `${item.discounts.length} promoción activa.`}
+								</div>
+								<div>
+									{item.discounts.map(discount => (
+										<div className='text-xs' key={discount.id}>{discount.name}</div>
+									))}
+								</div>
 							</CardDescription>
 						</CardHeader>
 						{isAdmin && (
