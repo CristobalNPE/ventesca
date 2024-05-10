@@ -242,7 +242,7 @@ export const ItemTransaction = forwardRef<
 	return (
 		<ItemTransactionCard
 			className={cn(
-				'flex flex-col gap-3 sm:flex-row sm:items-center  sm:gap-8',
+				'flex flex-col gap-3 sm:flex-row sm:items-center  sm:gap-8 ',
 				isItemTransactionUpdating &&
 					'pointer-events-none animate-pulse duration-1000',
 			)}
@@ -324,7 +324,7 @@ const ItemTransactionCard = React.forwardRef<
 		ref={ref}
 		tabIndex={0}
 		className={cn(
-			'relative rounded-md bg-card p-3 shadow-sm outline-none transition-all duration-300 focus:brightness-90 dark:focus:brightness-150',
+			'relative rounded-md bg-secondary p-3 shadow-sm outline-none transition-all duration-300 focus:brightness-90 dark:focus:brightness-150 border',
 			className,
 		)}
 		{...props}
