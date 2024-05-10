@@ -12,7 +12,7 @@ import {
 	type SelectedSupplier,
 	SupplierSelectBox,
 } from '#app/routes/resources+/suppliers.tsx'
-import { Editor } from './editor.tsx'
+import { Editor } from '../../../components/editor.tsx'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export const UPDATE_SUPPLIER_KEY = 'update-supplier'
