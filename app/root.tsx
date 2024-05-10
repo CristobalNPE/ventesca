@@ -232,7 +232,7 @@ function Document({
 				<meta name="viewport" content="width=device-width,initial-scale=1" />
 				<Links />
 			</head>
-			<body className="bg-background/95 text-foreground">
+			<body className="bg-background text-foreground">
 				{children}
 				<script
 					nonce={nonce}
@@ -309,8 +309,8 @@ function App() {
 						businessName={businessName}
 					/>
 				)}
-				<div className="flex-1 overflow-auto ">
-					<header className="sticky top-0 z-50 flex h-[4rem] items-center justify-between gap-8 border-b-[1px] border-foreground/5 bg-secondary p-8">
+				<div className="flex-1 overflow-auto bg-muted/40">
+					<header className="sticky top-0 z-50 flex h-[4rem]  items-center justify-between gap-8 border-b bg-background p-8">
 						<Sheet>
 							<SheetTrigger asChild>
 								<Button size={'icon'} variant={'outline'} className="xl:hidden">
@@ -383,7 +383,7 @@ function App() {
 						<NavLink
 							className={({ isActive }) =>
 								cn(
-									'text-md flex w-full select-none items-center  justify-center gap-3 rounded-sm bg-popover px-12 py-2 font-bold ring-2 ring-primary-foreground transition-colors hover:bg-primary/60 *:hover:text-foreground sm:w-fit',
+									'text-md flex w-full select-none items-center  justify-center gap-3 rounded-sm bg-background px-12 py-2 font-bold ring-2 ring-primary-foreground transition-colors hover:bg-primary/60 *:hover:text-foreground sm:w-fit',
 									isActive && 'bg-primary/60 *:text-foreground ',
 								)
 							}
@@ -410,6 +410,7 @@ function App() {
 							{user && <UserDropdown />}
 						</div>
 					</header>
+					{/* !!FIX	COLORS PLEASE */}
 					<main className="h-[calc(99%-4rem)] overflow-y-auto  p-4 sm:p-5 md:p-7 ">
 						<Outlet />
 					</main>
@@ -590,7 +591,7 @@ function SideBar({
 	businessLogo?: string
 }) {
 	return (
-		<div className="relative hidden w-[17.5rem]  flex-col border-r-[1px] border-foreground/5 bg-muted px-4 pb-8 pt-3 xl:flex ">
+		<div className="relative hidden w-[17.5rem]  flex-col border-r bg-background px-4 pb-8 pt-3 xl:flex ">
 			<div className="flex select-none items-center gap-2 ">
 				<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
 				<div>
@@ -611,7 +612,7 @@ function SideBar({
 									cn(
 										'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
 										isActive &&
-											'bg-foreground/20 text-foreground hover:text-foreground',
+											' dark:bg-accent bg-muted-foreground/20  text-foreground hover:text-foreground brightness-110',
 									)
 								}
 								key={link.name}
