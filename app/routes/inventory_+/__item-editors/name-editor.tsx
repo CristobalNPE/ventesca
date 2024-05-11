@@ -11,9 +11,9 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 //Exported constants for consistency on item-creation
-export const NAME_MAX = 30
-export const NAME_MIN = 3
-export const UPDATE_NAME_KEY = 'update-name'
+export const ITEM_NAME_MAX = 30
+export const ITEM_NAME_MIN = 3
+export const UPDATE_ITEM_NAME_KEY = 'update-item-name'
 
 export const NameEditorSchema = z.object({
 	itemId: z.string().optional(),
@@ -21,11 +21,11 @@ export const NameEditorSchema = z.object({
 		.string({
 			required_error: 'Campo obligatorio',
 		})
-		.min(NAME_MIN, {
+		.min(ITEM_NAME_MIN, {
 			message: 'El nombre debe contener al menos 3 caracteres.',
 		})
-		.max(NAME_MAX, {
-			message: `El nombre no puede ser mayor a ${NAME_MAX} caracteres.`,
+		.max(ITEM_NAME_MAX, {
+			message: `El nombre no puede ser mayor a ${ITEM_NAME_MAX} caracteres.`,
 		}),
 })
 
@@ -40,13 +40,13 @@ export function NameEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_NAME_KEY })
+	const fetcher = useFetcher<typeof action>({ key: UPDATE_ITEM_NAME_KEY })
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_NAME_KEY,
+		id: UPDATE_ITEM_NAME_KEY,
 		constraint: getZodConstraint(NameEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -90,7 +90,7 @@ export function NameEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_NAME_KEY}
+			value={UPDATE_ITEM_NAME_KEY}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -103,7 +103,7 @@ export function NameEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_NAME_KEY}
+			fetcherKey={UPDATE_ITEM_NAME_KEY}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}
