@@ -53,6 +53,7 @@ import { z } from 'zod'
 import { parseWithZod } from '@conform-to/zod'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { DiscountNameEditModal } from './__discounts-editors/name-editor.tsx'
+import { DiscountDescriptionEditModal } from './__discounts-editors/description-editor.tsx'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-discount'),
@@ -226,15 +227,15 @@ export default function DiscountRoute() {
 								label="Descripción"
 								value={discount.description}
 								className="overflow-auto whitespace-normal normal-case tracking-normal 2xl:col-span-2"
-								// isEditable={isAdmin}
-								// editModal={
-								// 	<NameEditModal
-								// 		id={item.id}
-								// 		icon={'id-badge-2'}
-								// 		label={'Nombre'}
-								// 		value={item.name ?? DEFAULT_EMPTY_NAME}
-								// 	/>
-								// }
+								isEditable={isAdmin}
+								editModal={
+									<DiscountDescriptionEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Nombre'}
+										value={discount.description}
+									/>
+								}
 							/>
 						</CardContent>
 					</Card>
