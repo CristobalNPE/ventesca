@@ -39,7 +39,7 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react'
 
 import { DataRow } from '#app/components/data-row.tsx'
 import { Link } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
+import { format, formatDistance, formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { DiscountType } from './_types/discount-type.ts'
 import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
@@ -52,6 +52,7 @@ import { ErrorList } from '#app/components/forms.tsx'
 import { z } from 'zod'
 import { parseWithZod } from '@conform-to/zod'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { DiscountNameEditModal } from './__discounts-editors/name-editor.tsx'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-discount'),
@@ -118,12 +119,23 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	return json({
 		discount: {
 			...discount,
-			updatedAt: formatRelative(subDays(discount.updatedAt, 0), new Date(), {
+			updatedAt: formatDistance(subDays(discount.updatedAt, 0), new Date(), {
+				addSuffix: true,
 				locale: es,
 			}),
 			createdAt: formatRelative(subDays(discount.createdAt, 0), new Date(), {
 				locale: es,
 			}),
+			validFrom: format(
+				discount.validFrom,
+				"dd 'de' MMMM yyyy, 'a las' HH:mm",
+				{ locale: es },
+			),
+			validUntil: format(
+				discount.validUntil,
+				"dd 'de' MMMM yyyy, 'a las' HH:mm",
+				{ locale: es },
+			),
 		},
 	})
 }
@@ -199,21 +211,21 @@ export default function DiscountRoute() {
 								icon="id-badge-2"
 								label="Nombre"
 								value={discount.name}
-								// isEditable={isAdmin}
-								// editModal={
-								// 	<NameEditModal
-								// 		id={item.id}
-								// 		icon={'id-badge-2'}
-								// 		label={'Nombre'}
-								// 		value={item.name ?? DEFAULT_EMPTY_NAME}
-								// 	/>
-								// }
+								isEditable={isAdmin}
+								editModal={
+									<DiscountNameEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Nombre'}
+										value={discount.name}
+									/>
+								}
 							/>
 							<DataRow
 								icon="file-text"
 								label="Descripción"
 								value={discount.description}
-								className="overflow-auto whitespace-normal lowercase tracking-normal 2xl:col-span-2"
+								className="overflow-auto whitespace-normal normal-case tracking-normal 2xl:col-span-2"
 								// isEditable={isAdmin}
 								// editModal={
 								// 	<NameEditModal
