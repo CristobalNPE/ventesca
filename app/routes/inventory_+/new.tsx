@@ -18,7 +18,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { CODE_MAX, CODE_MIN } from './__item-editors/code-editor.tsx'
-import { NAME_MAX, NAME_MIN } from './__item-editors/name-editor.tsx'
+import { ITEM_NAME_MAX, ITEM_NAME_MIN } from './__item-editors/name-editor.tsx'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
@@ -35,11 +35,11 @@ export const CreateItemSchema = z.object({
 		.string({
 			required_error: 'Campo obligatorio',
 		})
-		.min(NAME_MIN, {
+		.min(ITEM_NAME_MIN, {
 			message: 'El nombre debe contener al menos 3 caracteres.',
 		})
-		.max(NAME_MAX, {
-			message: `El nombre no puede ser mayor a ${NAME_MAX} caracteres.`,
+		.max(ITEM_NAME_MAX, {
+			message: `El nombre no puede ser mayor a ${ITEM_NAME_MAX} caracteres.`,
 		}),
 	code: z
 		.number({
