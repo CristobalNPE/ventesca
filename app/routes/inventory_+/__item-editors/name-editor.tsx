@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/inventory_+/edit.js'
+import { type action } from '#app/routes/inventory_+/edit.tsx'
 import { Editor } from '../../../components/editor.tsx'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
@@ -15,7 +15,7 @@ export const ITEM_NAME_MAX = 30
 export const ITEM_NAME_MIN = 3
 export const UPDATE_ITEM_NAME_KEY = 'update-item-name'
 
-export const NameEditorSchema = z.object({
+export const ItemNameEditorSchema = z.object({
 	itemId: z.string().optional(),
 	name: z
 		.string({
@@ -29,7 +29,7 @@ export const NameEditorSchema = z.object({
 		}),
 })
 
-export function NameEditModal({
+export function ItemNameEditModal({
 	icon,
 	label,
 	value,
@@ -47,10 +47,10 @@ export function NameEditModal({
 
 	const [form, fields] = useForm({
 		id: UPDATE_ITEM_NAME_KEY,
-		constraint: getZodConstraint(NameEditorSchema),
+		constraint: getZodConstraint(ItemNameEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: NameEditorSchema })
+			return parseWithZod(formData, { schema: ItemNameEditorSchema })
 		},
 
 		defaultValue: {
