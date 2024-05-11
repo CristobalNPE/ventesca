@@ -12,8 +12,8 @@ import {
 	UPDATE_CODE_KEY,
 } from './__item-editors/code-editor.tsx'
 import {
-	NameEditorSchema,
-	UPDATE_NAME_KEY,
+	ItemNameEditorSchema,
+	UPDATE_ITEM_NAME_KEY,
 } from './__item-editors/name-editor.tsx'
 import {
 	PriceEditorSchema,
@@ -49,9 +49,9 @@ export async function action({ request }: ActionFunctionArgs) {
 	const intent = formData.get('intent')
 
 	switch (intent) {
-		case UPDATE_NAME_KEY: {
+		case UPDATE_ITEM_NAME_KEY: {
 			const submission = await parseWithZod(formData, {
-				schema: NameEditorSchema,
+				schema: ItemNameEditorSchema,
 			})
 
 			if (submission.status !== 'success') {
