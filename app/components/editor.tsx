@@ -79,7 +79,7 @@ export function Editor({
 						<span className="sr-only">Modificar</span>
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="sm:max-w-[425px]">
+				<DialogContent className="sm:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>Modificar {label}</DialogTitle>
 						<DialogDescription>
