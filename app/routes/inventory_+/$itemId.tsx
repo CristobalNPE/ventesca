@@ -59,7 +59,7 @@ import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { CategoryEditModal } from './__item-editors/category-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
-import { NameEditModal } from './__item-editors/name-editor.tsx'
+import { ItemNameEditModal } from './__item-editors/name-editor.tsx'
 import { PriceEditModal } from './__item-editors/price-editor.tsx'
 import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
@@ -206,14 +206,14 @@ export default function ItemRoute() {
 							<DataRow
 								icon="id-badge-2"
 								label="Nombre"
-								value={item.name ?? DEFAULT_EMPTY_NAME}
+								value={item.name}
 								isEditable={isAdmin}
 								editModal={
-									<NameEditModal
+									<ItemNameEditModal
 										id={item.id}
 										icon={'id-badge-2'}
 										label={'Nombre'}
-										value={item.name ?? DEFAULT_EMPTY_NAME}
+										value={item.name}
 									/>
 								}
 							/>
@@ -328,20 +328,24 @@ export default function ItemRoute() {
 					</Card>
 					<Card>
 						<CardHeader>
-							<CardTitle>Promociones</CardTitle>
+							<CardTitle>
+								{item.discounts.length === 0
+									? `Sin promociones activas.`
+									: `Promociones `}
+								{item.discounts.length !== 0 && (
+									<span className="text-sm text-muted-foreground">
+										{item.discounts.length > 1
+											? `${item.discounts.length}  activas.`
+											: `${item.discounts.length}  activa.`}
+									</span>
+								)}
+							</CardTitle>
 							<CardDescription>
-								<div>
-									{item.discounts.length === 0
-										? `Ninguna promoción activa.`
-										: item.discounts.length > 1
-										  ? `${item.discounts.length} promociones activas.`
-										  : `${item.discounts.length} promoción activa.`}
-								</div>
-								<div>
-									{item.discounts.map(discount => (
-										<div className='text-xs' key={discount.id}>{discount.name}</div>
-									))}
-								</div>
+								{item.discounts.map(discount => (
+									<div className="text-xs" key={discount.id}>
+										{discount.name}
+									</div>
+								))}
 							</CardDescription>
 						</CardHeader>
 						{isAdmin && (
