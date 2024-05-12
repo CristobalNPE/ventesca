@@ -59,12 +59,30 @@ import { discountTypeNames } from './_constants/discountTypeNames.ts'
 import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
 import { DiscountType } from './_types/discount-type.ts'
 import { DiscountItemsList } from './discounts.item-picker.tsx'
-import { DiscountValidfromEditModal } from './__discounts-editors/validFrom-editor.tsx'
+import { DiscountValidperiodEditModal } from './__discounts-editors/validFrom-editor.tsx'
+import { DiscountScope } from './_types/discount-reach.ts'
+import { Discount } from '@prisma/client'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-discount'),
 	discountId: z.string(),
 })
+
+export async function updateDiscountValidity(
+	discount: Pick<Discount, 'id' | 'validFrom' | 'validUntil'>,
+) {
+	const currentDate = new Date()
+
+	const isInValidPeriod =
+		currentDate >= new Date(discount.validFrom) &&
+		currentDate <= new Date(discount.validUntil)
+	await prisma.discount.update({
+		where: { id: discount.id },
+		data: {
+			isActive: isInValidPeriod,
+		},
+	})
+}
 
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
@@ -123,6 +141,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	invariantResponse(discount, 'Not found', { status: 404 })
 
+	await updateDiscountValidity(discount)
+
 	return json({
 		discount: {
 			...discount,
@@ -133,16 +153,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			createdAt: formatRelative(subDays(discount.createdAt, 0), new Date(), {
 				locale: es,
 			}),
-			validFrom: format(
-				discount.validFrom,
-				"dd 'de' MMMM, yyyy",
-				{ locale: es },
-			),
-			validUntil: format(
-				discount.validUntil,
-				"dd 'de' MMMM, yyyy",
-				{ locale: es },
-			),
 		},
 	})
 }
@@ -150,10 +160,21 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function DiscountRoute() {
 	const isAdmin = true
 	const { discount } = useLoaderData<typeof loader>()
+	const discountValidPeriod = formatDistance(
+		new Date(discount.validFrom),
+		new Date(discount.validUntil),
+		{ locale: es, includeSeconds: true },
+	)
+	const formattedDates = `${format(
+		new Date(discount.validFrom),
+		"dd 'de' MMMM 'del' yyyy",
+		{ locale: es },
+	)} -- ${format(new Date(discount.validUntil), "dd 'de' MMMM 'del' yyyy", {
+		locale: es,
+	})}`
 
-	// const DEFAULT_EMPTY_NAME = 'Sin descripción'
-	// const activateConditions =
-	// 	!item.isActive && item.stock >= 1 && item.price > 0 && item.sellingPrice > 0
+	//Amount of items at which the height for the card container with the associated items becomes fixed.
+	const MAX_ITEMS_BEFORE_OVERFLOW = 14
 
 	return (
 		<>
@@ -330,31 +351,21 @@ export default function DiscountRoute() {
 							/>
 							<DataRow
 								icon="id-badge-2"
-								label="Fecha inicio"
-								value={discount.validFrom}
+								label={`Periodo de validez ${
+									discount.isActive ? '' : '(CADUCADO)'
+								}`}
+								value={formattedDates}
+								suffix={`| [ ${discountValidPeriod} ]`}
+								className="overflow-auto whitespace-normal normal-case tracking-normal 2xl:col-span-2"
 								isEditable={isAdmin}
 								editModal={
-									<DiscountValidfromEditModal
+									<DiscountValidperiodEditModal
 										id={discount.id}
 										icon={'id-badge-2'}
 										label={'Fecha inicio'}
-										value={discount.validFrom}
+										value={formattedDates}
 									/>
 								}
-							/>
-							<DataRow
-								icon="id-badge-2"
-								label="Fecha termino"
-								value={discount.validUntil}
-								// isEditable={isAdmin}
-								// editModal={
-								// 	<NameEditModal
-								// 		id={item.id}
-								// 		icon={'id-badge-2'}
-								// 		label={'Nombre'}
-								// 		value={item.name}
-								// 	/>
-								// }
 							/>
 						</CardContent>
 					</Card>
@@ -362,31 +373,37 @@ export default function DiscountRoute() {
 				<div className="col-span-3 grid auto-rows-max items-start gap-4 lg:gap-6 2xl:col-span-1">
 					<Card className="">
 						<CardHeader>
-							<CardTitle>Artículos asociados</CardTitle>
+							<CardTitle>
+								<span>Artículos asociados</span>{' '}
+								{discount.scope !== DiscountScope.GLOBAL ? (
+									<span className="text-md tracking-wide text-muted-foreground">
+										({discount.items.length})
+									</span>
+								) : null}
+							</CardTitle>
 							<CardDescription>
-								Lista de artículos asociados al descuento.
+								{discount.scope === DiscountScope.GLOBAL
+									? 'Descuento Global. Aplicado a todos los artículos registrados en sistema.'
+									: 'Lista de artículos asociados al descuento.'}
 							</CardDescription>
 						</CardHeader>
-						<CardContent className=" ">
-							<ScrollArea className="h-[23rem] rounded-sm p-3">
-								<DiscountItemsList
-									addedItems={discount.items}
-									canRemove={false}
-									showDetailsLink
-								/>
-							</ScrollArea>
-						</CardContent>
-					</Card>
-					<Card className="">
-						<CardHeader>
-							<CardTitle>Desactivar descuento</CardTitle>
-							<CardDescription>
-								Deshabilita el descuento independientemente del tiempo restante.
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="flex justify-end ">
-							<Button variant={'outline'}>Desactivar</Button>
-						</CardContent>
+						{discount.scope !== DiscountScope.GLOBAL ? (
+							<CardContent>
+								<ScrollArea
+									className={cn(
+										'h-fit rounded-sm p-3',
+										discount.items.length >= MAX_ITEMS_BEFORE_OVERFLOW &&
+											'h-[41rem]',
+									)}
+								>
+									<DiscountItemsList
+										addedItems={discount.items}
+										canRemove={false}
+										showDetailsLink
+									/>
+								</ScrollArea>
+							</CardContent>
+						) : null}
 					</Card>
 				</div>
 			</div>
