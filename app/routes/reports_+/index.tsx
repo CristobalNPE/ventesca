@@ -20,8 +20,7 @@ import {
 } from '../transaction+/index.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const userId = await requireUserId(request)
-	console.log(userId)
+	await requireUserId(request)
 
 	const url = new URL(request.url)
 	let since = url.searchParams.get('since')
