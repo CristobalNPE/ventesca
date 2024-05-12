@@ -37,6 +37,10 @@ import {
 	DiscountAppmethodEditorSchema,
 	UPDATE_DISCOUNT_APPMETHOD_KEY,
 } from './__discounts-editors/applicationMethod-editor.tsx'
+import {
+	DiscountValidperiodEditorSchema,
+	UPDATE_DISCOUNT_VALIDPERIOD_KEY,
+} from './__discounts-editors/validPeriod-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later
@@ -269,6 +273,52 @@ export async function action({ request }: ActionFunctionArgs) {
 				await prisma.discount.update({
 					where: { id: discountId },
 					data: { applicationMethod },
+				})
+			}
+
+			return json({ result: submission.reply() })
+		}
+		case UPDATE_DISCOUNT_VALIDPERIOD_KEY: {
+			const submission = await parseWithZod(formData, {
+				schema: DiscountValidperiodEditorSchema.superRefine(
+					async (data, ctx) => {
+						const discount = await prisma.discount.findUniqueOrThrow({
+							where: { id: data.discountId },
+							select: { validFrom: true },
+						})
+
+						if (data.validUntil.getTime() < discount.validFrom.getTime()) {
+							ctx.addIssue({
+								path: ['validFrom'],
+								code: z.ZodIssueCode.custom,
+								message: `La nueva fecha de termino no puede ser anterior a la fecha de inicio.`,
+							})
+						}
+					},
+				),
+				async: true,
+			})
+			if (submission.status !== 'success') {
+				return json(
+					{ result: submission.reply() },
+					{ status: submission.status === 'error' ? 400 : 200 },
+				)
+			}
+
+			const { discountId, validFrom, validUntil } = submission.value
+
+			const currentDiscountState = await prisma.discount.findFirstOrThrow({
+				where: { id: discountId },
+				select: { validFrom: true, validUntil: true },
+			})
+
+			if (
+				currentDiscountState.validFrom !== validFrom ||
+				currentDiscountState.validUntil !== validUntil
+			) {
+				await prisma.discount.update({
+					where: { id: discountId },
+					data: { validFrom, validUntil },
 				})
 			}
 
