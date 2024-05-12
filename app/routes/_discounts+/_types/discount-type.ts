@@ -5,6 +5,6 @@ export enum DiscountType {
 	FIXED = 'fixed',
 }
 
-const allDiscountTypes = [DiscountType.PERCENTAGE, DiscountType.FIXED] as const
+export const allDiscountTypes = [DiscountType.PERCENTAGE, DiscountType.FIXED] as const
 
 export const DiscountTypeSchema = z.enum(allDiscountTypes)

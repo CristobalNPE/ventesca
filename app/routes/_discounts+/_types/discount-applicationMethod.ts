@@ -5,7 +5,7 @@ export enum DiscountApplicationMethod {
 	TO_TOTAL = 'to-total',
 }
 
-const allDiscountApplicationMethods = [
+export const allDiscountApplicationMethods = [
 	DiscountApplicationMethod.BY_ITEM,
 	DiscountApplicationMethod.TO_TOTAL,
 ] as const
