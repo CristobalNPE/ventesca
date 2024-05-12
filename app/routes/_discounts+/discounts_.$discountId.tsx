@@ -1,5 +1,4 @@
 import { Spacer } from '#app/components/spacer.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -10,6 +9,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '#app/components/ui/alert-dialog.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -38,22 +38,28 @@ import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 
 import { DataRow } from '#app/components/data-row.tsx'
+import { ErrorList } from '#app/components/forms.tsx'
+import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { getFormProps, useForm } from '@conform-to/react'
+import { parseWithZod } from '@conform-to/zod'
 import { Link } from '@remix-run/react'
 import { format, formatDistance, formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { DiscountType } from './_types/discount-type.ts'
-import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
-import { DiscountScope } from './_types/discount-reach.ts'
-import { DiscountItemsList } from './discounts.item-picker.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { getFormProps, useForm } from '@conform-to/react'
-import { ErrorList } from '#app/components/forms.tsx'
 import { z } from 'zod'
-import { parseWithZod } from '@conform-to/zod'
-import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { DiscountNameEditModal } from './__discounts-editors/name-editor.tsx'
+import { DiscountAppmethodEditModal } from './__discounts-editors/applicationMethod-editor.tsx'
 import { DiscountDescriptionEditModal } from './__discounts-editors/description-editor.tsx'
+import { DiscountNameEditModal } from './__discounts-editors/name-editor.tsx'
+import { DiscountMinquantityEditModal } from './__discounts-editors/quantity-editor.tsx'
+import { DiscountTypeEditModal } from './__discounts-editors/type-editor.tsx'
+import { DiscountValueEditModal } from './__discounts-editors/value-editor.tsx'
+import { discountAppmethodNames } from './_constants/discountAppmethodNames.ts'
+import { discountTypeNames } from './_constants/discountTypeNames.ts'
+import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
+import { DiscountType } from './_types/discount-type.ts'
+import { DiscountItemsList } from './discounts.item-picker.tsx'
+import { DiscountValidfromEditModal } from './__discounts-editors/validFrom-editor.tsx'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-discount'),
@@ -129,12 +135,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			}),
 			validFrom: format(
 				discount.validFrom,
-				"dd 'de' MMMM yyyy, 'a las' HH:mm",
+				"dd 'de' MMMM, yyyy",
 				{ locale: es },
 			),
 			validUntil: format(
 				discount.validUntil,
-				"dd 'de' MMMM yyyy, 'a las' HH:mm",
+				"dd 'de' MMMM, yyyy",
 				{ locale: es },
 			),
 		},
@@ -180,7 +186,6 @@ export default function DiscountRoute() {
 					</Badge>
 				</div>
 
-				{/* WE MIGHT NEED TO CHECK MODEL CASCADE WHEN DELETING !!! */}
 				{isAdmin && (
 					<div className="hidden md:flex ">
 						<DeleteDiscountConfirmationModal discountId={discount.id} />
@@ -232,7 +237,7 @@ export default function DiscountRoute() {
 									<DiscountDescriptionEditModal
 										id={discount.id}
 										icon={'id-badge-2'}
-										label={'Nombre'}
+										label={'Descripción'}
 										value={discount.description}
 									/>
 								}
@@ -248,12 +253,58 @@ export default function DiscountRoute() {
 						</CardHeader>
 						<CardContent className="grid gap-2 2xl:grid-cols-2 ">
 							<DataRow
+								icon="id"
+								label="Método de aplicación"
+								value={
+									discount.applicationMethod ===
+									DiscountApplicationMethod.BY_ITEM
+										? discountAppmethodNames[DiscountApplicationMethod.BY_ITEM]
+										: discountAppmethodNames[DiscountApplicationMethod.TO_TOTAL]
+								}
+								isEditable={isAdmin}
+								editModal={
+									<DiscountAppmethodEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Método de aplicación'}
+										value={discount.applicationMethod}
+									/>
+								}
+							/>
+							<DataRow
+								icon="id"
+								label="Tipo de descuento"
+								value={
+									discount.type === DiscountType.FIXED
+										? discountTypeNames[DiscountType.FIXED]
+										: discountTypeNames[DiscountType.PERCENTAGE]
+								}
+								isEditable={isAdmin}
+								editModal={
+									<DiscountTypeEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Tipo de descuento'}
+										value={discount.type}
+									/>
+								}
+							/>
+							<DataRow
 								icon="checklist"
 								label="Cantidad minima requerida"
 								value={discount.minimumQuantity}
 								suffix={`${
 									discount.minimumQuantity !== 1 ? 'unidades' : 'unidad'
 								}.`}
+								isEditable={isAdmin}
+								editModal={
+									<DiscountMinquantityEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Cantidad Minima'}
+										value={discount.minimumQuantity}
+									/>
+								}
 							/>
 							<DataRow
 								icon={
@@ -267,41 +318,29 @@ export default function DiscountRoute() {
 										? formatCurrency(discount.value)
 										: `${discount.value}%`
 								} `}
-							/>
-							<DataRow
-								icon="id"
-								label="Método de aplicación"
-								value={
-									discount.applicationMethod ===
-									DiscountApplicationMethod.BY_ITEM
-										? 'Por articulo'
-										: 'Al total'
-								}
-							/>
-							<DataRow
-								icon="id"
-								label="Alcance"
-								value={
-									discount.scope === DiscountScope.GLOBAL
-										? 'Global'
-										: discount.scope === DiscountScope.CATEGORY
-										  ? `X categorías (${discount.items.length} artículos.)`
-										  : `${discount.items.length} artículos.`
+								isEditable={isAdmin}
+								editModal={
+									<DiscountValueEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Valor del descuento'}
+										value={discount.value}
+									/>
 								}
 							/>
 							<DataRow
 								icon="id-badge-2"
 								label="Fecha inicio"
 								value={discount.validFrom}
-								// isEditable={isAdmin}
-								// editModal={
-								// 	<NameEditModal
-								// 		id={item.id}
-								// 		icon={'id-badge-2'}
-								// 		label={'Nombre'}
-								// 		value={item.name ?? DEFAULT_EMPTY_NAME}
-								// 	/>
-								// }
+								isEditable={isAdmin}
+								editModal={
+									<DiscountValidfromEditModal
+										id={discount.id}
+										icon={'id-badge-2'}
+										label={'Fecha inicio'}
+										value={discount.validFrom}
+									/>
+								}
 							/>
 							<DataRow
 								icon="id-badge-2"
@@ -313,7 +352,7 @@ export default function DiscountRoute() {
 								// 		id={item.id}
 								// 		icon={'id-badge-2'}
 								// 		label={'Nombre'}
-								// 		value={item.name ?? DEFAULT_EMPTY_NAME}
+								// 		value={item.name}
 								// 	/>
 								// }
 							/>
