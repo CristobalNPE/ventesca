@@ -59,7 +59,7 @@ import { discountTypeNames } from './_constants/discountTypeNames.ts'
 import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
 import { DiscountType } from './_types/discount-type.ts'
 import { DiscountItemsList } from './discounts.item-picker.tsx'
-import { DiscountValidperiodEditModal } from './__discounts-editors/validFrom-editor.tsx'
+import { DiscountValidperiodEditModal } from './__discounts-editors/validPeriod-editor.tsx'
 import { DiscountScope } from './_types/discount-reach.ts'
 import { Discount } from '@prisma/client'
 
