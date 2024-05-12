@@ -330,20 +330,16 @@ export default function ItemRoute() {
 						<CardHeader>
 							<CardTitle>
 								{item.discounts.length === 0
-									? `Sin promociones activas.`
-									: `Promociones `}
-								{item.discounts.length !== 0 && (
-									<span className="text-sm text-muted-foreground">
-										{item.discounts.length > 1
-											? `${item.discounts.length}  activas.`
-											: `${item.discounts.length}  activa.`}
-									</span>
-								)}
+									? `Sin descuentos asociados.`
+									: item.discounts.length > 1
+									  ? `${item.discounts.length} Descuentos asociados.`
+									  : `${item.discounts.length} Descuento asociado.`}
 							</CardTitle>
 							<CardDescription>
 								{item.discounts.map(discount => (
-									<div className="text-xs" key={discount.id}>
-										{discount.name}
+									<div className="text-xs flex gap-1 items-center" key={discount.id}>
+										<Icon name="tag" />
+										<span>{discount.name}</span>
 									</div>
 								))}
 							</CardDescription>
