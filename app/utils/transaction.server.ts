@@ -1,7 +1,7 @@
 import { createCookieSessionStorage, redirect } from '@remix-run/node'
 import { prisma } from './db.server.ts'
 
-export const TRANSACTION_EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 30
+// export const TRANSACTION_EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 30
 
 export const transactionSessionStorage = createCookieSessionStorage({
 	cookie: {
@@ -11,7 +11,7 @@ export const transactionSessionStorage = createCookieSessionStorage({
 		httpOnly: true,
 		secrets: process.env.SESSION_SECRET.split(','),
 		secure: process.env.NODE_ENV === 'production',
-		expires: new Date(Date.now() + TRANSACTION_EXPIRATION_TIME),
+		// expires: new Date(Date.now() + TRANSACTION_EXPIRATION_TIME),
 	},
 })
 
@@ -28,7 +28,7 @@ export async function getTransactionId(request: Request) {
 		where: { id: transactionId },
 	})
 	if (!transaction) {
-		throw redirect('/sell', {
+		throw redirect('/transaction', {
 			headers: {
 				'set-cookie':
 					await transactionSessionStorage.destroySession(transactionSession),
