@@ -81,6 +81,33 @@ const NewDiscountSchema = z.object({
 	categoryIds: z.string().optional(),
 })
 
+export function buildDescription(
+	discountType: DiscountType,
+	discountValue: number,
+	discountScope: DiscountScope,
+	discountApplicationMethod: DiscountApplicationMethod,
+	minQuantity: number,
+) {
+	const descriptionValue =
+		discountType === DiscountType.FIXED
+			? `$${discountValue}`
+			: `${discountValue}%`
+
+	const descriptionScope =
+		discountScope === DiscountScope.SINGLE_ITEM
+			? 'artículos seleccionados'
+			: discountScope === DiscountScope.CATEGORY
+			  ? `categorías seleccionadas`
+			  : 'todos los artículos'
+
+	const descriptionApplicationMethod =
+		discountApplicationMethod === DiscountApplicationMethod.TO_TOTAL
+			? `aplicado al total de la compra`
+			: `aplicado al valor de cada articulo`
+
+	return `${descriptionValue} de descuento en ${descriptionScope}, ${descriptionApplicationMethod}. Cantidad minima ${minQuantity}.`
+}
+
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserId(request)
 	const formData = await request.formData()
@@ -133,26 +160,21 @@ export async function action({ request }: ActionFunctionArgs) {
 		discountApplicationMethod,
 	} = submission.value
 
-	function buildDescription() {
-		const descriptionValue =
-			discountType === DiscountType.FIXED
-				? `$${fixedValue}`
-				: `${porcentualValue}%`
+	const discountValue =
+		discountType === DiscountType.FIXED ? fixedValue : porcentualValue
 
-		const descriptionScope =
-			discountScope === DiscountScope.SINGLE_ITEM
-				? 'artículos seleccionados'
-				: discountScope === DiscountScope.CATEGORY
-				  ? `categorías seleccionadas`
-				  : 'todos los artículos'
+	invariant(
+		discountValue,
+		'At least one type of discount value should be already defined.',
+	)
 
-		const descriptionApplicationMethod =
-			discountApplicationMethod === DiscountApplicationMethod.TO_TOTAL
-				? `aplicado al total de la compra`
-				: `aplicado al valor de cada articulo`
-
-		return `${descriptionValue} de descuento en ${descriptionScope}, ${descriptionApplicationMethod}. Cantidad minima ${minQuantity}.`
-	}
+	const generatedDescription = buildDescription(
+		discountType,
+		discountValue,
+		discountScope,
+		discountApplicationMethod,
+		minQuantity,
+	)
 
 	fixedValue = fixedValue === undefined ? 0 : fixedValue
 	porcentualValue = porcentualValue === undefined ? 0 : porcentualValue
@@ -163,7 +185,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		const createdDiscount = await prisma.discount.create({
 			data: {
-				description: buildDescription(),
+				description: generatedDescription,
 				minimumQuantity: minQuantity,
 				name: name,
 				validFrom: validFrom,
@@ -201,7 +223,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		const createdDiscount = await prisma.discount.create({
 			data: {
-				description: buildDescription(),
+				description: generatedDescription,
 				minimumQuantity: minQuantity,
 				name: name,
 				validFrom: validFrom,
@@ -225,7 +247,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	//we fallback to GLOBAL SCOPE behavior (not related to any item in particular):
 	const createdDiscount = await prisma.discount.create({
 		data: {
-			description: buildDescription(),
+			description: generatedDescription,
 			minimumQuantity: minQuantity,
 			name: name,
 			validFrom: validFrom,
