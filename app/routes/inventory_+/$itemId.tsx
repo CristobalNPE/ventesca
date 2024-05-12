@@ -65,10 +65,11 @@ import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
+import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
-	const item = await prisma.item.findUnique({
+	const itemPromise = prisma.item.findUnique({
 		where: { id: params.itemId },
 		select: {
 			id: true,
@@ -86,6 +87,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		},
 	})
 
+	const globalDiscountsPromise = prisma.discount.findMany({
+		where: { scope: DiscountScope.GLOBAL },
+		select: { id: true, name: true },
+	})
+
+	const [item, globalDiscounts] = await Promise.all([
+		itemPromise,
+		globalDiscountsPromise,
+	])
+
 	invariantResponse(item, 'Not found', { status: 404 })
 
 	return json({
@@ -98,6 +109,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 				locale: es,
 			}),
 		},
+		globalDiscounts,
 	})
 }
 
@@ -139,13 +151,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function ItemRoute() {
 	const isAdmin = true
-	const { item } = useLoaderData<typeof loader>()
+	const { item, globalDiscounts } = useLoaderData<typeof loader>()
 
-	const DEFAULT_EMPTY_NAME = 'Sin descripción'
+	const allAssociatedDiscounts = [...globalDiscounts, ...item.discounts]
+
 	const activateConditions =
 		!item.isActive && item.stock >= 1 && item.price > 0 && item.sellingPrice > 0
 
-	console.log(activateConditions)
 	return (
 		<>
 			<BreadCrumbs />
@@ -306,7 +318,7 @@ export default function ItemRoute() {
 										id={item.id}
 										icon={'user'}
 										label={'Proveedor'}
-										value={item.supplier.fantasyName ?? DEFAULT_EMPTY_NAME}
+										value={item.supplier.fantasyName}
 									/>
 								}
 							/>
@@ -320,7 +332,7 @@ export default function ItemRoute() {
 										id={item.id}
 										icon={'shapes'}
 										label={'Categoría'}
-										value={item.category.description ?? DEFAULT_EMPTY_NAME}
+										value={item.category.description}
 									/>
 								}
 							/>
@@ -329,15 +341,18 @@ export default function ItemRoute() {
 					<Card>
 						<CardHeader>
 							<CardTitle>
-								{item.discounts.length === 0
+								{allAssociatedDiscounts.length === 0
 									? `Sin descuentos asociados.`
-									: item.discounts.length > 1
-									  ? `${item.discounts.length} Descuentos asociados.`
-									  : `${item.discounts.length} Descuento asociado.`}
+									: allAssociatedDiscounts.length > 1
+									  ? `${allAssociatedDiscounts.length} Descuentos asociados.`
+									  : `${allAssociatedDiscounts.length} Descuento asociado.`}
 							</CardTitle>
 							<CardDescription>
-								{item.discounts.map(discount => (
-									<div className="text-xs flex gap-1 items-center" key={discount.id}>
+								{allAssociatedDiscounts.map(discount => (
+									<div
+										className="flex items-center gap-1 text-xs"
+										key={discount.id}
+									>
 										<Icon name="tag" />
 										<span>{discount.name}</span>
 									</div>
