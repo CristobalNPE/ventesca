@@ -215,8 +215,8 @@ export default function DiscountRoute() {
 			</div>
 			<Spacer size="4xs" />
 
-			<div className="grid gap-4  lg:grid-cols-7 lg:gap-6 2xl:grid-cols-3">
-				<div className="col-span-3 grid auto-rows-max items-start gap-4 lg:col-span-4 lg:gap-6 2xl:col-span-2">
+			<div className="grid h-full  gap-4 lg:grid-cols-7 lg:gap-6 2xl:grid-cols-3">
+				<div className="col-span-3 grid auto-rows-max items-start gap-4 lg:col-span-4 lg:gap-6 2xl:col-span-2 ">
 					<Card>
 						<CardHeader>
 							<CardTitle>Datos Generales</CardTitle>
