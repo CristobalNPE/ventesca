@@ -404,7 +404,7 @@ export default function SellRoute() {
 	}, [allItemTransactions.length])
 
 	return (
-		<div className="flex h-full flex-1  gap-12 ">
+		<div className="flex h-full flex-1  gap-12">
 			<div className="flex-1 ">
 				{/* //? I need to redo the item reader, change its width and add good feedback for when, for example, there is no stock or the item is not active */}
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
@@ -427,9 +427,8 @@ export default function SellRoute() {
 				</div>
 			</div>
 
-			<div className="mx-auto hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
+			<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
 				<TransactionIdPanel transactionId={transaction.id} />
-				{/* <PaymentSelectionPanel currentPaymentMethod={currentPaymentMethod} /> */}
 				<PaymentMethodPanel currentPaymentMethod={currentPaymentMethod} />
 				<DiscountsPanel activeDiscounts={discounts} />
 				<TransactionOverviewPanel
