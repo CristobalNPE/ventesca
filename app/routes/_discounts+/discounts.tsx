@@ -25,7 +25,7 @@ import {
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
-import { useDebounce, useIsPending } from '#app/utils/misc.tsx'
+import { cn, useDebounce, useIsPending } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
 	Form,
@@ -36,6 +36,8 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { useId, useRef } from 'react'
+import { updateDiscountValidity } from './discounts_.$discountId.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -54,7 +56,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			id: true,
 			name: true,
 			description: true,
-
+			validFrom: true,
+			validUntil: true,
 			isActive: true,
 		},
 		where: {
@@ -63,8 +66,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 
-	//filter discounts an set to isActive false all of the discounts that are out of date range
-	//do this checking in the discountId page aswell
+	//Check discounts state (isActive) before sending it to the page.
+	for (let discount of discounts) {
+		await updateDiscountValidity(discount)
+	}
+
 	return json({ discounts })
 }
 
@@ -175,7 +181,14 @@ function DiscountsTableCard({
 								</TableCell>
 
 								<TableCell className="text-right">
-									{discount.isActive ? 'TRUE' : 'FALSE'}
+									<Badge
+										variant={'outline'}
+										className={cn(
+											discount.isActive ? 'text-primary' : 'text-destructive',
+										)}
+									>
+										{discount.isActive ? 'Activo' : 'Inactivo'}
+									</Badge>
 								</TableCell>
 							</TableRow>
 						))}
