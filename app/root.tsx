@@ -309,7 +309,7 @@ function App() {
 			<div className="flex h-[100dvh] ">
 				{user && (
 					<SideBar
-						
+						themeUserPreference={data.requestInfo.userPrefs.theme}
 						navigationLinks={navigationLinks}
 						secondaryLinks={secondaryLinks}
 						businessName={businessName}
@@ -418,7 +418,7 @@ function App() {
 					</header> */}
 				{/* !!FIX	COLORS PLEASE */}
 				{/* <main className="h-[calc(99%-4rem)] overflow-y-auto  p-4 sm:p-5 md:p-7"> */}
-				<main className="md:m-2 flex-1  overflow-y-auto md:rounded-md md:border bg-muted/40 p-4 sm:p-5 md:p-7">
+				<main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7">
 					<div className="mx-auto h-full max-w-[120rem]">
 						<Outlet />
 					</div>
@@ -589,78 +589,143 @@ function ThemeSwitch({ userPreference }: { userPreference?: Theme | null }) {
 }
 
 function SideBar({
+	themeUserPreference,
 	navigationLinks,
 	secondaryLinks,
 	businessName,
 	businessLogo,
 }: {
+	themeUserPreference?: Theme | null
 	navigationLinks: NavigationLink[]
 	secondaryLinks: NavigationLink[]
 	businessName: string
 	businessLogo?: string
 }) {
 	return (
-		<div className="relative hidden w-[17.5rem]  flex-col  bg-background px-4 pb-8 pt-3 xl:flex ">
-			<div className="flex select-none items-center gap-2 ">
-				<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
-				<div>
-					<h1 className="text-2xl font-black uppercase tracking-tight">
-						Ventesca
-					</h1>
-					<h3 className="text-sm leading-tight text-muted-foreground">
-						{businessName}
-					</h3>
+		<>
+			<div className="relative hidden w-[17.5rem]  flex-col  bg-background px-4 pb-8 pt-3 xl:flex ">
+				<div className="flex select-none items-center gap-2 ">
+					<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
+					<div>
+						<h1 className="text-2xl font-black uppercase tracking-tight">
+							Ventesca
+						</h1>
+						<h3 className="text-sm leading-tight text-muted-foreground">
+							{businessName}
+						</h3>
+					</div>
 				</div>
+				<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
+					<div className="flex flex-col gap-2">
+						{navigationLinks.map(link => {
+							return (
+								<NavLink
+									className={({ isActive }) =>
+										cn(
+											'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+											isActive &&
+												' bg-muted-foreground/20 text-foreground  brightness-110 hover:text-foreground dark:bg-accent',
+										)
+									}
+									key={link.name}
+									to={link.path}
+								>
+									<Icon size="md" className="" name={link.icon} />
+									<span>{link.name}</span>
+								</NavLink>
+							)
+						})}
+					</div>
+					<div>
+						{secondaryLinks.map(link => {
+							return (
+								<NavLink
+									className={({ isActive }) =>
+										cn(
+											'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+											isActive &&
+												'bg-foreground/20 text-foreground hover:text-foreground',
+										)
+									}
+									key={link.name}
+									to={link.path}
+								>
+									<Icon size="md" className="" name={link.icon} />
+									<span>{link.name}</span>
+								</NavLink>
+							)
+						})}
+					</div>
+					<ThemeSwitch userPreference={themeUserPreference} />
+					<UserDropdown />
+				</nav>
 			</div>
-			<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
-				<div className="flex flex-col gap-2">
-					{navigationLinks.map(link => {
-						return (
-							<NavLink
-								className={({ isActive }) =>
-									cn(
-										'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
-										isActive &&
-											' bg-muted-foreground/20 text-foreground  brightness-110 hover:text-foreground dark:bg-accent',
-									)
-								}
-								key={link.name}
-								to={link.path}
-							>
-								<Icon size="md" className="" name={link.icon} />
-								<span>{link.name}</span>
-							</NavLink>
-						)
-					})}
-				</div>
-				<div>
-					{secondaryLinks.map(link => {
-						return (
-							<NavLink
-								className={({ isActive }) =>
-									cn(
-										'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
-										isActive &&
-											'bg-foreground/20 text-foreground hover:text-foreground',
-									)
-								}
-								key={link.name}
-								to={link.path}
-							>
-								<Icon size="md" className="" name={link.icon} />
-								<span>{link.name}</span>
-							</NavLink>
-						)
-					})}
-				</div>
-				
-				<UserDropdown />
-			</nav>
-		</div>
+			{/* MOBILE DEVICES SIDEBAR: */}
+			<Sheet>
+				<SheetTrigger asChild>
+					<Button
+						size={'icon'}
+						variant={'default'}
+						className="absolute left-2 top-2 opacity-50 ring-4 xl:hidden"
+					>
+						<Icon className="text-2xl" name="layout-sidebar-left-expand" />
+						<span className="sr-only">Expandir Menu</span>
+					</Button>
+				</SheetTrigger>
+				<SheetContent side="left" className="sm:max-w-xs">
+					<nav className=" flex h-full flex-col justify-around gap-6">
+						<div className="flex flex-col gap-2">
+							{navigationLinks.map(link => {
+								return (
+									<SheetClose className="group flex" asChild key={link.name}>
+										<NavLink
+											className={({ isActive }) =>
+												cn(
+													'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
+													isActive &&
+														'bg-foreground/20 text-foreground hover:text-foreground',
+												)
+											}
+											to={link.path}
+										>
+											<Icon size="md" className="" name={link.icon} />
+											<span>{link.name}</span>
+										</NavLink>
+									</SheetClose>
+								)
+							})}
+						</div>
+						<div>
+							{secondaryLinks.map(link => {
+								return (
+									<SheetClose className="group flex" asChild key={link.name}>
+										<NavLink
+											className={({ isActive }) =>
+												cn(
+													'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
+													isActive &&
+														'bg-foreground/20 text-foreground hover:text-foreground',
+												)
+											}
+											to={link.path}
+										>
+											<Icon size="md" className="" name={link.icon} />
+											<span>{link.name}</span>
+										</NavLink>
+									</SheetClose>
+								)
+							})}
+						</div>
+						{/* <div className="flex flex-col gap-2">
+							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
+						</div> */}
+					</nav>
+					<UserDropdown />
+				</SheetContent>
+			</Sheet>
+		</>
 	)
 }
-
-
 
 export function ErrorBoundary() {
 	// the nonce doesn't rely on the loader so we can access that
