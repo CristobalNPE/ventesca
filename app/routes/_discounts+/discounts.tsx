@@ -1,5 +1,6 @@
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -22,9 +23,8 @@ import {
 	TableHeader,
 	TableRow,
 } from '#app/components/ui/table.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { cn, useDebounce, useIsPending } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
@@ -37,16 +37,15 @@ import {
 } from '@remix-run/react'
 import { useId, useRef } from 'react'
 import { updateDiscountValidity } from './discounts_.$discountId.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
 	const $top = Number(url.searchParams.get('$top')) || 5
 	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const searchTerm = url.searchParams.get('search') ?? ''
-	const whereBusiness = getWhereBusinessQuery(userId)
 
 	const discounts = await prisma.discount.findMany({
 		take: $top,
@@ -61,7 +60,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			isActive: true,
 		},
 		where: {
-			...whereBusiness,
+			businessId,
 			name: { contains: searchTerm },
 		},
 	})
@@ -70,12 +69,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	for (let discount of discounts) {
 		await updateDiscountValidity(discount)
 	}
-
-	return json({ discounts })
+	const amountOfActiveDiscounts = await prisma.discount.count({
+		where: { isActive: true, businessId },
+	})
+	return json({ discounts, amountOfActiveDiscounts })
 }
 
 export default function DiscountsPage() {
-	const { discounts } = useLoaderData<typeof loader>()
+	const { discounts, amountOfActiveDiscounts } = useLoaderData<typeof loader>()
 	const isAdmin = true
 
 	const divRef = useRef<HTMLDivElement>(null)
@@ -110,7 +111,7 @@ export default function DiscountsPage() {
 				<div className="grid gap-4 md:grid-cols-2 md:gap-8">
 					<DataCard
 						title={'Descuentos Activos'}
-						value={'666'}
+						value={amountOfActiveDiscounts.toString()}
 						icon={'tag'}
 						subtext={'22 descuentos expiran pronto.'}
 					/>
