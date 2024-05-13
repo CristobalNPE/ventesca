@@ -196,7 +196,7 @@ export default function ItemRoute() {
 			</div>
 			<Spacer size="4xs" />
 
-			<div className="grid gap-4  lg:grid-cols-7 lg:gap-6 2xl:grid-cols-3">
+			<div className="grid  gap-4 lg:grid-cols-7 lg:gap-6 2xl:grid-cols-3">
 				<div className="col-span-3 grid auto-rows-max items-start gap-4 lg:col-span-4 lg:gap-6 2xl:col-span-2">
 					<Card>
 						<CardHeader>
@@ -347,21 +347,20 @@ export default function ItemRoute() {
 									  ? `${allAssociatedDiscounts.length} Descuentos asociados.`
 									  : `${allAssociatedDiscounts.length} Descuento asociado.`}
 							</CardTitle>
-							<CardDescription>
-								{allAssociatedDiscounts.map(discount => (
-									<div
-										className="flex items-center gap-1 text-xs"
-										key={discount.id}
-									>
-										<Icon name="tag" />
-										<span>{discount.name}</span>
-									</div>
-								))}
-							</CardDescription>
+							<CardDescription></CardDescription>
 						</CardHeader>
-						{isAdmin && (
-							<CardContent className="flex justify-end"></CardContent>
-						)}
+
+						<CardContent className="flex flex-col gap-1">
+							{allAssociatedDiscounts.map(discount => (
+								<div
+									className="flex items-center gap-1 text-xs"
+									key={discount.id}
+								>
+									<Icon name="tag" />
+									<span>{discount.name}</span>
+								</div>
+							))}
+						</CardContent>
 					</Card>
 					<Card className="relative">
 						<CardHeader className="">
@@ -461,34 +460,29 @@ function BreadCrumbs() {
 
 function DeleteItemConfirmationModal({ itemId }: { itemId: string }) {
 	return (
-		<div className="flex w-full gap-4">
-			<AlertDialog>
-				<AlertDialogTrigger asChild>
-					<Button
-						variant={'outline'}
-						className="flex w-full items-center gap-2"
-					>
-						<Icon name="trash" />
-						<span>Eliminar</span>
-					</Button>
-				</AlertDialogTrigger>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							Confirmar eliminación de articulo
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							Esta acción no se puede deshacer. Por favor confirme que desea
-							eliminar el articulo.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter className="flex gap-6">
-						<AlertDialogCancel>Cancelar</AlertDialogCancel>
-						<DeleteItem id={itemId} />
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</div>
+		// <div className="flex w-full gap-4">
+		<AlertDialog>
+			<AlertDialogTrigger asChild>
+				<Button variant={'outline'} className="flex w-full items-center gap-2">
+					<Icon name="trash" />
+					<span>Eliminar</span>
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Confirmar eliminación de articulo</AlertDialogTitle>
+					<AlertDialogDescription>
+						Esta acción no se puede deshacer. Por favor confirme que desea
+						eliminar el articulo.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter className="flex gap-6">
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<DeleteItem id={itemId} />
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+		// </div>
 	)
 }
 
