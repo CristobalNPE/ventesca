@@ -389,7 +389,7 @@ export default function CreateDiscount() {
 									initialValue={fields.discountApplicationMethod.initialValue}
 								/>
 							</div>
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid sm:grid-cols-2 gap-4">
 								{fields.discountType.value === DiscountType.FIXED ? (
 									<Field
 										labelProps={{ children: 'Valor descuento fijo' }}
