@@ -75,6 +75,7 @@ import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, useUser } from './utils/user.ts'
 import { parseWithZod } from '@conform-to/zod'
+import { Spacer } from './components/spacer.tsx'
 
 type NavigationLink = {
 	name: string
@@ -266,7 +267,7 @@ function App() {
 			icon: 'circle-dot-dashed',
 		},
 		{
-			name: 'Reportes de Ventas',
+			name: 'Transacciones',
 			path: 'reports',
 			icon: 'file-bar-chart',
 		},
@@ -419,6 +420,9 @@ function App() {
 				{/* !!FIX	COLORS PLEASE */}
 				{/* <main className="h-[calc(99%-4rem)] overflow-y-auto  p-4 sm:p-5 md:p-7"> */}
 				<main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7">
+					<div className="xl:hidden ">
+						<Spacer size="xs" />
+					</div>
 					<div className="mx-auto h-full max-w-[120rem]">
 						<Outlet />
 					</div>
@@ -456,7 +460,7 @@ function UserDropdown() {
 						to={`/users/${user.username}`}
 						// this is for progressive enhancement
 						onClick={e => e.preventDefault()}
-						className="flex items-center gap-2"
+						className="flex items-center  gap-2"
 					>
 						<img
 							className="h-8 w-8 rounded-full border-2 border-foreground/20 object-cover p-[2px]"
@@ -666,7 +670,7 @@ function SideBar({
 					<Button
 						size={'icon'}
 						variant={'default'}
-						className="absolute left-2 top-2 opacity-50 ring-4 xl:hidden"
+						className="absolute left-6 top-6 opacity-50 ring-4 xl:hidden"
 					>
 						<Icon className="text-2xl" name="layout-sidebar-left-expand" />
 						<span className="sr-only">Expandir Menu</span>
