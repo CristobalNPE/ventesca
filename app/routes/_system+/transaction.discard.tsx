@@ -13,8 +13,8 @@ import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { destroyCurrentTransaction } from '#app/utils/transaction.server.ts'
-import { TRANSACTION_STATUS_DISCARDED } from '../transaction+/index.tsx'
 import { parseWithZod } from '@conform-to/zod'
+import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 
 //! ONLY ADMIN SHOULD BE ABLE TO ACTUALLY DELETE THE TRANSACTION. WHEN TRANSACTION IS DISCARDED FROM THE SALES PAGE, IT SHOULD BE ONLY FLAGGED AS DISCARDED.
 const DeleteFormSchema = z.object({
@@ -56,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		where: { id: transaction.id },
 		data: {
 			isDiscarded: true,
-			status: TRANSACTION_STATUS_DISCARDED,
+			status: TransactionStatus.DISCARDED,
 			completedAt: new Date(),
 		},
 	})

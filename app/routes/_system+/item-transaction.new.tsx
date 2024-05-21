@@ -6,6 +6,13 @@ import {
 } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
+import { Label } from '#app/components/ui/label.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
 import {
 	forwardRef,
 	useEffect,
@@ -15,28 +22,30 @@ import {
 	useState,
 } from 'react'
 import { z } from 'zod'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { Label } from '#app/components/ui/label.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse, useDebounce } from '#app/utils/misc.tsx'
-import { getTransactionId } from '#app/utils/transaction.server.ts'
-import { TYPE_SELL } from '../transaction+/_types/item-transactionType.ts'
+import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
+import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	throw redirect('/sell')
+	throw redirect('/transaction')
 }
 const SearchSchema = z.object({
 	search: z.number(),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
-	await requireUserId(request)
-	const transactionId = await getTransactionId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
-	invariantResponse(transactionId, 'Debe haber una venta en progreso.')
+	const currentTransaction = await prisma.transaction.findFirst({
+		where: {
+			sellerId: userId,
+			businessId: businessId,
+			status: TransactionStatus.PENDING,
+		},
+		select: { id: true },
+	})
+
+	invariantResponse(currentTransaction, 'Debe haber una venta en progreso.')
 
 	const formData = await request.formData()
 
@@ -52,7 +61,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const { search } = result.data
 
 	const item = await prisma.item.findFirst({
-		where: { code: search },
+		where: { code: search, businessId },
 		select: {
 			id: true,
 			sellingPrice: true,
@@ -66,7 +75,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	//Check if there is an itemTransaction with that item already
 	const itemTransaction = await prisma.itemTransaction.findFirst({
 		where: {
-			transactionId,
+			transactionId: currentTransaction.id,
 			itemId: item.id,
 		},
 	})
@@ -79,11 +88,11 @@ export async function action({ request }: ActionFunctionArgs) {
 	//Create the default ItemTransaction
 	await prisma.itemTransaction.create({
 		data: {
-			type: TYPE_SELL,
+			type: ItemTransactionType.SELL,
 			item: { connect: { id: item.id } },
-			transaction: { connect: { id: transactionId } },
+			transaction: { connect: { id: currentTransaction.id } },
 			quantity: 1,
-			totalPrice: item.sellingPrice ?? 0, //Can be null because of bad DB data, but we don't want to crash the app.
+			totalPrice: item.sellingPrice,
 			totalDiscount: 0,
 		},
 		select: {

@@ -15,19 +15,16 @@ import {
 } from '#app/components/ui/table.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
-import {
-	TRANSACTION_STATUS_COMPLETED,
-	TRANSACTION_STATUS_DISCARDED,
-	TRANSACTION_STATUS_PENDING,
-	type TransactionStatus,
-	TransactionStatusSchema,
 
-} from '../transaction+/index.tsx'
 import {
 	PaymentMethod,
 	PaymentMethodSchema,
 } from '../transaction+/_types/payment-method.ts'
 import { ConfirmDeleteTransaction } from '../transaction+/transaction-panel.tsx'
+import {
+	TransactionStatus,
+	TransactionStatusSchema,
+} from '../transaction+/_types/transaction-status.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const transactionReport = await prisma.transaction.findUnique({
@@ -40,7 +37,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			completedAt: true,
 			total: true,
 			seller: { select: { name: true } },
-			items: {
+			itemTransactions: {
 				select: {
 					id: true,
 					quantity: true,
@@ -111,7 +108,7 @@ export default function ReportRoute() {
 					</div>
 					{shouldShowCompletedAt && (
 						<span className="font-bold">
-							{transactionReport.status === TRANSACTION_STATUS_DISCARDED
+							{transactionReport.status === TransactionStatus.DISCARDED
 								? 'Cancelada el  '
 								: 'Completada el '}
 							{format(
@@ -124,7 +121,7 @@ export default function ReportRoute() {
 				</div>
 				<div className="my-4 flex items-center justify-between gap-4">
 					<div className="flex flex-col gap-2">
-						{transactionReport.status === TRANSACTION_STATUS_COMPLETED && (
+						{transactionReport.status === TransactionStatus.FINISHED && (
 							<TransactionTotalCard total={transactionReport.total} />
 						)}
 						<TransactionPaymentMethodCard paymentMethod={paymentMethod} />
@@ -150,7 +147,7 @@ export default function ReportRoute() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{transactionReport.items.map(itemTransaction => (
+					{transactionReport.itemTransactions.map(itemTransaction => (
 						<TableRow key={itemTransaction.id}>
 							<TableCell className="font-medium">
 								{itemTransaction.item?.code}
@@ -168,7 +165,7 @@ export default function ReportRoute() {
 				</TableBody>
 			</Table>
 			<div className="mt-4 flex justify-end gap-4">
-				{transactionReport.status === TRANSACTION_STATUS_PENDING && (
+				{transactionReport.status === TransactionStatus.PENDING && (
 					<ConfirmDeleteTransaction transactionId={transactionReport.id} />
 				)}
 				<Button asChild variant={'outline'}>
@@ -187,15 +184,15 @@ const TransactionStatusCard = ({ status }: { status: TransactionStatus }) => {
 		<div
 			className={cn(
 				'flex size-28 flex-col items-center justify-center gap-2 rounded-md p-2 uppercase tracking-tight',
-				status === TRANSACTION_STATUS_COMPLETED && 'bg-primary/50',
-				status === TRANSACTION_STATUS_PENDING && 'bg-orange-400/50',
-				status === TRANSACTION_STATUS_DISCARDED && 'bg-destructive/50',
+				status === TransactionStatus.FINISHED && 'bg-primary/50',
+				status === TransactionStatus.PENDING && 'bg-orange-400/50',
+				status === TransactionStatus.DISCARDED && 'bg-destructive/50',
 			)}
 		>
 			<div className="text-6xl">
-				{status === TRANSACTION_STATUS_COMPLETED && <Icon name="checks" />}
-				{status === TRANSACTION_STATUS_PENDING && <Icon name="update" />}
-				{status === TRANSACTION_STATUS_DISCARDED && <Icon name="cross-1" />}
+				{status === TransactionStatus.FINISHED && <Icon name="checks" />}
+				{status === TransactionStatus.PENDING && <Icon name="update" />}
+				{status === TransactionStatus.DISCARDED && <Icon name="cross-1" />}
 			</div>
 			{status}
 		</div>
@@ -213,9 +210,9 @@ const TransactionIdCard = ({
 		<div
 			className={cn(
 				'shrink-0  rounded-md p-1 text-lg uppercase',
-				status === TRANSACTION_STATUS_COMPLETED && 'bg-primary/10',
-				status === TRANSACTION_STATUS_PENDING && 'bg-orange-400/10',
-				status === TRANSACTION_STATUS_DISCARDED && 'bg-destructive/10',
+				status === TransactionStatus.FINISHED && 'bg-primary/10',
+				status === TransactionStatus.PENDING && 'bg-orange-400/10',
+				status === TransactionStatus.DISCARDED && 'bg-destructive/10',
 			)}
 		>
 			ID: {id}

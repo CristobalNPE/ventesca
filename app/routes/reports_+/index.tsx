@@ -13,11 +13,7 @@ import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import {
-	TRANSACTION_STATUS_COMPLETED,
-	TRANSACTION_STATUS_DISCARDED,
-	TRANSACTION_STATUS_PENDING,
-} from '../transaction+/index.tsx'
+import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -148,7 +144,7 @@ const columns: ColumnDef<{}>[] = [
 		},
 		cell: ({ row }) => {
 			const shouldShowTotal =
-				row.getValue('status') === TRANSACTION_STATUS_COMPLETED
+				row.getValue('status') === TransactionStatus.FINISHED
 			return (
 				<div className="text-left font-bold">
 					{shouldShowTotal && formatCurrency(row.getValue('total'))}
@@ -179,11 +175,11 @@ const columns: ColumnDef<{}>[] = [
 				<div
 					className={cn(
 						'',
-						row.getValue('status') === TRANSACTION_STATUS_PENDING &&
+						row.getValue('status') === TransactionStatus.PENDING &&
 							'text-orange-400',
-						row.getValue('status') === TRANSACTION_STATUS_COMPLETED &&
+						row.getValue('status') === TransactionStatus.FINISHED &&
 							'text-primary',
-						row.getValue('status') === TRANSACTION_STATUS_DISCARDED &&
+						row.getValue('status') === TransactionStatus.DISCARDED &&
 							'text-destructive',
 					)}
 				>

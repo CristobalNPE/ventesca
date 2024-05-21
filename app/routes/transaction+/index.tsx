@@ -8,23 +8,14 @@ import {
 import { useLoaderData } from '@remix-run/react'
 
 import { Spacer } from '#app/components/spacer.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import {
-	destroyCurrentTransaction,
-	getTransactionId,
-	transactionKey,
-	transactionSessionStorage,
-} from '#app/utils/transaction.server.ts'
+import { destroyCurrentTransaction } from '#app/utils/transaction.server.ts'
 import React, { createRef, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { ItemReader } from '../_system+/item-transaction.new.tsx'
-import {
-	PAYMENT_METHOD_CASH,
-	PaymentMethodSchema,
-} from './_types/payment-method.ts'
+import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
 
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -36,6 +27,9 @@ import {
 } from '#app/components/ui/drawer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
+import { TransactionDetailsSchema } from './_types/TransactionData.ts'
+import { ItemTransactionType } from './_types/item-transactionType.ts'
+import { TransactionStatus } from './_types/transaction-status.ts'
 import {
 	DiscountsPanel,
 	PaymentMethodPanel,
@@ -44,175 +38,140 @@ import {
 	TransactionOverviewPanel,
 } from './transaction-panel.tsx'
 
-//? REFACTOR INTO ITS OWN SELL FOLDER, THIS FILE AS INDEX, AND SEPARATE INTO DIFFERENT COMPONENTS/TYPES/ETC
-
-export const TRANSACTION_STATUS_PENDING = 'Pendiente'
-export const TRANSACTION_STATUS_COMPLETED = 'Finalizada'
-export const TRANSACTION_STATUS_DISCARDED = 'Cancelada'
-
-const transactionTypes = [
-	TRANSACTION_STATUS_PENDING,
-	TRANSACTION_STATUS_COMPLETED,
-	TRANSACTION_STATUS_DISCARDED,
-] as const
-export const TransactionStatusSchema = z.enum(transactionTypes)
-export type TransactionStatus = z.infer<typeof TransactionStatusSchema>
+const transactionDetails = {
+	id: true,
+	status: true,
+	createdAt: true,
+	paymentMethod: true,
+	totalDiscount: true,
+	total: true,
+	subtotal: true,
+	seller: { select: { name: true } },
+	itemTransactions: {
+		select: {
+			id: true,
+			type: true,
+			quantity: true,
+			totalPrice: true,
+			totalDiscount: true,
+			item: {
+				select: {
+					id: true,
+					code: true,
+					name: true,
+					sellingPrice: true,
+					stock: true,
+					discounts: true,
+				},
+			},
+		},
+	},
+}
 
 async function createNewTransaction(userId: string, businessId: string) {
 	const newTransaction = await prisma.transaction.create({
 		data: {
 			seller: { connect: { id: userId } },
-			status: TRANSACTION_STATUS_PENDING,
-			paymentMethod: PAYMENT_METHOD_CASH,
+			status: TransactionStatus.PENDING,
+			paymentMethod: PaymentMethod.CASH,
 			totalDiscount: 0,
 			subtotal: 0,
 			total: 0,
 			business: { connect: { id: businessId } },
 		},
-		select: {
-			id: true,
-			status: true,
-			createdAt: true,
-			paymentMethod: true,
-			total: true,
-			seller: { select: { name: true } },
-			items: {
-				select: {
-					id: true,
-					type: true,
-					totalDiscount: true,
-					item: {
-						select: {
-							id: true,
-							code: true,
-							name: true,
-							sellingPrice: true,
-							stock: true,
-							discounts: true,
-						},
-					},
-					quantity: true,
-					totalPrice: true,
-				},
-			},
-		},
+		select: transactionDetails,
 	})
 
 	return newTransaction
 }
 
 async function fetchTransactionDetails(transactionId: string) {
-	return prisma.transaction.findUnique({
+	const transaction = await prisma.transaction.findUniqueOrThrow({
 		where: { id: transactionId },
-		select: {
-			id: true,
-			status: true,
-			createdAt: true,
-			paymentMethod: true,
-			totalDiscount: true,
-			total: true,
-			seller: { select: { name: true } },
-			items: {
-				select: {
-					id: true,
-					type: true,
-					quantity: true,
-					totalPrice: true,
-					totalDiscount: true,
-					item: {
-						select: {
-							id: true,
-							code: true,
-							name: true,
-							sellingPrice: true,
-							stock: true,
-							discounts: true,
-						},
-					},
-				},
-			},
-		},
+		select: transactionDetails,
 	})
+
+	//update totals before serving to front end
+	const discount = transaction.itemTransactions
+		.filter(
+			itemTransaction => itemTransaction.type === ItemTransactionType.PROMO,
+		)
+		.reduce((acc, itemTransaction) => acc + itemTransaction.totalDiscount, 0)
+
+	const total = transaction.itemTransactions.reduce(
+		(acc, itemTransaction) => acc + itemTransaction.totalPrice,
+		0,
+	)
+	const subtotal = total + discount
+
+	const updatedTransaction = await prisma.transaction.update({
+		where: { id: transactionId },
+		data: {
+			totalDiscount: discount,
+			total: total,
+			subtotal: subtotal,
+		},
+		select: transactionDetails,
+	})
+
+	return updatedTransaction
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const transactionId = await getTransactionId(request)
 	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
-	const { businessId } = await prisma.user.findUniqueOrThrow({
-		where: { id: userId },
-		select: { businessId: true },
-	})
-
-	async function respondWithNewTransaction(
-		newTransaction: Awaited<ReturnType<typeof createNewTransaction>>,
-	) {
-		const transactionSession = await transactionSessionStorage.getSession(
-			request.headers.get('cookie'),
-		)
-		transactionSession.set(transactionKey, newTransaction.id)
-
-		return json(
-			{ transaction: newTransaction },
-			{
-				headers: {
-					'Set-Cookie':
-						await transactionSessionStorage.commitSession(transactionSession),
-				},
-			},
-		)
-	}
-
-	if (!transactionId) {
-		console.log('There was no transactionId in Cookie, creating new one...')
-		const newTransaction = await createNewTransaction(userId, businessId)
-
-		return respondWithNewTransaction(newTransaction)
-	}
-
-	//check for the transaction to belong to the current loggedIn user
-	const currentSellerTransaction = await prisma.transaction.findUnique({
-		where: { id: transactionId, sellerId: userId, businessId: businessId },
+	const pendingTransaction = await prisma.transaction.findFirst({
+		where: {
+			sellerId: userId,
+			businessId: businessId,
+			status: TransactionStatus.PENDING,
+		},
 		select: { id: true },
 	})
 
-	if (!currentSellerTransaction) {
-		console.log(
-			"The transaction in the cookie didn't belong to current user...",
-		)
-		const newTransaction = await createNewTransaction(userId, businessId)
-		return respondWithNewTransaction(newTransaction)
-	}
+	const transaction = pendingTransaction
+		? await fetchTransactionDetails(pendingTransaction.id)
+		: await createNewTransaction(userId, businessId)
 
-	//Transaction belongs to current user, fetch and return it.
+	const availableItemDiscounts = transaction.itemTransactions.flatMap(
+		itemTransaction =>
+			itemTransaction.item.discounts.map(discount => discount.id),
+	)
 
-	const transactionDetails = await fetchTransactionDetails(transactionId)
-	invariantResponse(transactionDetails, 'No es posible cargar la transacción')
-	return json({ transaction: transactionDetails })
+	const uniqueDiscountIds = [...new Set(availableItemDiscounts)]
+
+	const availableDiscounts = await prisma.discount.findMany({
+		where: { id: { in: uniqueDiscountIds }, isActive: true },
+		select: { id: true, name: true },
+	})
+
+	return json({
+		transaction,
+		availableDiscounts,
+	})
 }
 
 const SetPaymentMethodSchema = z.object({
 	intent: z.string(),
+	transactionId: z.string(),
 	paymentMethod: PaymentMethodSchema,
 })
 
 const CompleteTransactionSchema = z.object({
 	intent: z.string(),
-	total: z.coerce.number(),
-	subtotal: z.coerce.number(),
-	totalDiscount: z.coerce.number(),
+	transactionId: z.string(),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
-	const transactionId = await getTransactionId(request)
-	invariantResponse(transactionId, 'No es posible cargar la transacción.')
 
 	if (intent === 'set-payment-method') {
 		const setPaymentResult = SetPaymentMethodSchema.safeParse({
 			intent: formData.get('intent'),
+			transactionId: formData.get('transactionId'),
 			paymentMethod: formData.get('payment-method'),
 		})
 		if (!setPaymentResult.success) {
@@ -226,7 +185,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				},
 			)
 		}
-		const { paymentMethod } = setPaymentResult.data
+		const { paymentMethod, transactionId } = setPaymentResult.data
 
 		await prisma.transaction.update({
 			where: { id: transactionId },
@@ -239,9 +198,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (intent === 'complete-transaction') {
 		const completeTransactionResult = CompleteTransactionSchema.safeParse({
 			intent: formData.get('intent'),
-			total: formData.get('total'),
-			subtotal: formData.get('subtotal'),
-			totalDiscount: formData.get('totalDiscount'),
+			transactionId: formData.get('transactionId'),
 		})
 
 		if (!completeTransactionResult.success) {
@@ -255,15 +212,11 @@ export async function action({ request }: ActionFunctionArgs) {
 				},
 			)
 		}
-		const { total, subtotal, totalDiscount } = completeTransactionResult.data
+		const { transactionId } = completeTransactionResult.data
 		await prisma.transaction.update({
 			where: { id: transactionId },
 			data: {
-				status: TRANSACTION_STATUS_COMPLETED,
-				total,
-				subtotal,
-				totalDiscount,
-
+				status: TransactionStatus.FINISHED,
 				completedAt: new Date(),
 			},
 		})
@@ -300,63 +253,13 @@ export const isDiscountActive = (discount: SerializeFrom<Discount>) => {
 export default function SellRoute() {
 	//! CHECK OTHER FILTERS AND ADD THE TOLOWERCASE() WHERE NEEDED.
 
-	const { transaction } = useLoaderData<typeof loader>()
+	const { transaction, availableDiscounts } = useLoaderData<typeof loader>()
 
 	const currentPaymentMethod = PaymentMethodSchema.parse(
 		transaction.paymentMethod,
 	)
 
-	let allItemTransactions = transaction.items
-
-	function hasMinQuantity(
-		discount: SerializeFrom<Discount> | null | undefined,
-	): discount is SerializeFrom<Discount> {
-		return discount?.minQuantity !== undefined
-	}
-
-	// const validDiscounts = allItemTransactions.flatMap(itemTransaction => {
-	// 	const familyDiscount = itemTransaction.item?.category.discount
-	// 	const itemDiscount = itemTransaction.item?.discount
-
-	// 	const isValidFamilyDiscount =
-	// 		hasMinQuantity(familyDiscount) &&
-	// 		familyDiscount.minQuantity <= itemTransaction.quantity
-	// 	const isValidItemDiscount =
-	// 		hasMinQuantity(itemDiscount) &&
-	// 		itemDiscount.minQuantity <= itemTransaction.quantity
-
-	// 	const allDiscounts: SerializeFrom<Discount>[] = []
-	// 	if (isValidFamilyDiscount) {
-	// 		allDiscounts.push(familyDiscount)
-	// 	}
-	// 	if (isValidItemDiscount) {
-	// 		allDiscounts.push(itemDiscount)
-	// 	}
-
-	// 	const validDiscounts = allDiscounts.filter(Boolean).filter(isDiscountActive)
-	// 	return validDiscounts
-	// })
-
-	//!There is a bug when I activate a promo based on the item quantity, and then decrease the amount.
-	//!The type of the transaction is updated, but the discount still shows in the panel until another submit is made.
-
-	//? JUST FOR TESTING
-	const discounts = new Array<SerializeFrom<Discount>>()
-
-	// const discounts = validDiscounts.filter(
-	// 	(discount, index, discounts) =>
-	// 		discounts.findIndex(d => d.id === discount.id) === index,
-	// )
-
-	const discount = allItemTransactions
-		.map(itemTransaction => itemTransaction.totalDiscount)
-		.reduce((a, b) => a + b, 0)
-
-	const total = allItemTransactions
-		.map(itemTransaction => itemTransaction.totalPrice)
-		.reduce((a, b) => a + b, 0)
-
-	const subtotal = total + discount
+	let allItemTransactions = transaction.itemTransactions
 
 	// This is so we can focus the last element in the array automatically
 	const itemRefs = useRef<React.RefObject<HTMLDivElement>[]>([])
@@ -429,19 +332,19 @@ export default function SellRoute() {
 
 			<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
 				<TransactionIdPanel transactionId={transaction.id} />
-				<PaymentMethodPanel currentPaymentMethod={currentPaymentMethod} />
-				<DiscountsPanel activeDiscounts={discounts} />
+				<PaymentMethodPanel
+					transactionId={transaction.id}
+					currentPaymentMethod={currentPaymentMethod}
+				/>
+				<DiscountsPanel activeDiscounts={availableDiscounts} />
 				<TransactionOverviewPanel
-					subtotal={subtotal}
-					discount={discount}
-					total={total}
+					subtotal={transaction.subtotal}
+					discount={transaction.totalDiscount}
+					total={transaction.total}
 				/>
 
 				<TransactionOptionsPanel
-					transaction={{ transaction }}
-					total={total}
-					subtotal={subtotal}
-					totalDiscount={discount}
+					transaction={TransactionDetailsSchema.parse(transaction)}
 				/>
 			</div>
 
@@ -456,19 +359,19 @@ export default function SellRoute() {
 
 					<div className="mx-auto flex w-[20rem] flex-col justify-between gap-4 ">
 						<TransactionIdPanel transactionId={transaction.id} />
-						<PaymentMethodPanel currentPaymentMethod={currentPaymentMethod} />
-						<DiscountsPanel activeDiscounts={discounts} />
+						<PaymentMethodPanel
+							transactionId={transaction.id}
+							currentPaymentMethod={currentPaymentMethod}
+						/>
+						<DiscountsPanel activeDiscounts={availableDiscounts} />
 						<TransactionOverviewPanel
-							subtotal={subtotal}
-							discount={discount}
-							total={total}
+							subtotal={transaction.subtotal}
+							discount={transaction.totalDiscount}
+							total={transaction.total}
 						/>
 
 						<TransactionOptionsPanel
-							transaction={{ transaction }}
-							total={total}
-							subtotal={subtotal}
-							totalDiscount={discount}
+							transaction={TransactionDetailsSchema.parse(transaction)}
 						/>
 					</div>
 					<DrawerFooter></DrawerFooter>

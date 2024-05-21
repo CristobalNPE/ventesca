@@ -1,5 +1,4 @@
 import { Icon } from '#app/components/ui/icon.tsx'
-
 import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
@@ -13,9 +12,6 @@ import { useSpinDelay } from 'spin-delay'
 import {
 	ItemTransactionType,
 	ItemTransactionTypeSchema,
-	TYPE_PROMO,
-	TYPE_RETURN,
-	TYPE_SELL,
 } from '../_types/item-transactionType.ts'
 import {
 	QuantitySelector,
@@ -26,28 +22,28 @@ import {
 	UPDATE_IT_TYPE,
 } from './itemTransaction-typeToggle.tsx'
 
-//? it should only allow to change to promo if there are available discounts
-
 type CategoryProps = {
 	id: string
 	name: string
-	discount: Discount | null
 }
 
 export type ItemProps = {
 	id: string
 	code: number
-	name: string | null
-	sellingPrice: number | null
+	name: string
+	sellingPrice: number
 	stock: number
-	discounts: Discount[] 
+	discounts: Discount[]
 	category: CategoryProps
 }
 
 type ItemTransactionRowProps = {
 	item: SerializeFrom<ItemProps>
 	itemTransaction: SerializeFrom<
-		Pick<ItemTransactionModel, 'id' | 'quantity' | 'type' | 'totalPrice'>
+		Pick<
+			ItemTransactionModel,
+			'id' | 'quantity' | 'type' | 'totalPrice' | 'totalDiscount'
+		>
 	>
 	itemReaderRef: React.RefObject<HTMLInputElement>
 }
@@ -56,9 +52,6 @@ export const ItemTransaction = forwardRef<
 	HTMLDivElement,
 	ItemTransactionRowProps
 >(({ item, itemTransaction, itemReaderRef }, ref) => {
-	// const [totalPrice, setTotalPrice] = useState(item.sellingPrice || 0)
-	const totalPrice = itemTransaction.totalPrice
-	// const [isFocused, setIsFocused] = useState(false)
 	const [quantity, setQuantity] = useState(itemTransaction.quantity)
 
 	const currentItemTransactionType = ItemTransactionTypeSchema.parse(
@@ -67,6 +60,18 @@ export const ItemTransaction = forwardRef<
 
 	const [itemTransactionType, setItemTransactionType] =
 		useState<ItemTransactionType>(currentItemTransactionType)
+
+	const itemTransactionDiscounts = item.discounts.filter(
+		discount => discount.isActive,
+	)
+
+	const isAnyItemDiscountApplicable = itemTransactionDiscounts.some(
+		discount => quantity >= discount.minimumQuantity,
+	)
+
+	const applicableItemDiscounts = item.discounts.filter(
+		discount => quantity >= discount.minimumQuantity,
+	)
 
 	// Check the status of submissions that modify the item transaction to know when to show the spinner.
 	const updateFetchersKeys = [
@@ -85,111 +90,6 @@ export const ItemTransaction = forwardRef<
 		delay: 150,
 		minDuration: 500,
 	})
-	/////////////////////////////////
-
-	// function hasMinQuantity(
-	// 	discount: SerializeFrom<Discount> | null | undefined,
-	// ): discount is SerializeFrom<Discount> {
-	// 	return discount?.minQuantity !== undefined
-	// }
-
-	// function isValidDiscount(
-	// 	discount: SerializeFrom<Discount> | null | undefined,
-	// ): discount is SerializeFrom<Discount> {
-	// 	return (
-	// 		hasMinQuantity(discount) &&
-	// 		discount.minQuantity <= itemTransaction.quantity
-	// 	)
-	// }
-
-	const isItemDiscountApplicable = false
-		// Boolean(item.discount) &&
-		// isValidDiscount(item.discount) &&
-		// isDiscountActive(item.discount)
-
-	// const isFamilyDiscountApplicable =
-	// 	Boolean(item.category.discount) &&
-	// 	isValidDiscount(item.category.discount) &&
-	// 	isDiscountActive(item.category.discount)
-
-	// function calculateDiscounts() {
-	// 	if (!isItemDiscountApplicable) return { familyDiscount: 0, itemDiscount: 0 }
-
-	// 	const categoryDiscount = item.category.discount
-	// 	// const itemDiscount = item.discount
-	// 	const sellingPrice = item.sellingPrice ?? 0
-
-	// 	let totalCategoryDiscount = 0
-	// 	let totalItemDiscount = 0
-
-	// 	if (categoryDiscount) {
-	// 		totalCategoryDiscount = calculateDiscount(
-	// 			categoryDiscount,
-	// 			sellingPrice,
-	// 			quantity,
-	// 		)
-	// 	}
-
-	// 	if (itemDiscount) {
-	// 		totalItemDiscount = calculateDiscount(
-	// 			itemDiscount,
-	// 			sellingPrice,
-	// 			quantity,
-	// 		)
-	// 	}
-
-	// 	return {
-	// 		categoryDiscount: totalCategoryDiscount,
-	// 		itemDiscount: totalItemDiscount,
-	// 	}
-	// }
-
-	// const { itemDiscount } = calculateDiscounts() ?? {}
-
-	// const applicableItemDiscounts = isItemDiscountApplicable
-	// 	? itemDiscount ?? 0
-	// 	: 0
-	// const totalDiscounts =
-	// 	itemTransactionType === TYPE_PROMO ? applicableItemDiscounts : 0
-
-	// useEffect(() => {
-	// 	if (transactionType === TYPE_RETURN && totalPrice > 0) {
-	// 		setTotalPrice(totalPrice * -1)
-	// 	}
-	// 	if (transactionType !== TYPE_RETURN && totalPrice < 0) {
-	// 		setTotalPrice(totalPrice * -1)
-	// 	}
-	// }, [transactionType, totalPrice])
-
-	// const fetcherKey = `it-${itemTransaction.id}`
-
-	// const fetcher = useFetcher({ key: fetcherKey })
-	// const isLoading = fetcher.state !== 'idle'
-
-	// const quantityChanged = itemTransaction.quantity !== quantity
-	// const typeChanged = itemTransaction.type !== transactionType
-
-
-
-
-	//! TAKE A LOOK FOR DISCOUNTS
-	// useEffect(() => {
-	// 	if (item.sellingPrice && transactionType === TYPE_SELL) {
-	// 		setTotalPrice(item.sellingPrice * quantity)
-	// 	}
-
-	// 	if (item.sellingPrice && transactionType === TYPE_PROMO) {
-	// 		let priceAfterDiscounts = item.sellingPrice * quantity
-	// 		if (isFamilyDiscountApplicable) {
-	// 			priceAfterDiscounts = priceAfterDiscounts - familyDiscount!
-	// 		}
-
-	// 		if (isItemDiscountApplicable) {
-	// 			priceAfterDiscounts = priceAfterDiscounts - itemDiscount!
-	// 		}
-	// 		setTotalPrice(priceAfterDiscounts)
-	// 	}
-	// }, [quantity, item.sellingPrice, transactionType])
 
 	const rowRef = ref
 
@@ -206,16 +106,16 @@ export const ItemTransaction = forwardRef<
 				break
 			case 'V':
 			case 'v':
-				setItemTransactionType(TYPE_SELL)
+				setItemTransactionType(ItemTransactionType.SELL)
 				break
 			case 'D':
 			case 'd':
-				setItemTransactionType(TYPE_RETURN)
+				setItemTransactionType(ItemTransactionType.RETURN)
 				break
 			case 'P':
 			case 'p':
 				event.preventDefault()
-				setItemTransactionType(TYPE_PROMO)
+				setItemTransactionType(ItemTransactionType.PROMO)
 				break
 			case 'Enter':
 				event.preventDefault()
@@ -258,7 +158,7 @@ export const ItemTransaction = forwardRef<
 			<div className="flex items-center gap-8 ">
 				<div className="flex w-[6.5rem] flex-col ">
 					<span className="text-xs text-muted-foreground">Precio unitario</span>
-					<span>{formatCurrency(item.sellingPrice)}</span>
+					<span className="font-thin">{formatCurrency(item.sellingPrice)}</span>
 				</div>
 				<QuantitySelector
 					min={1}
@@ -267,14 +167,49 @@ export const ItemTransaction = forwardRef<
 					setQuantity={setQuantity}
 					itemTransactionId={itemTransaction.id}
 				/>
+				{itemTransactionType === ItemTransactionType.PROMO ? (
+					<div
+						className={cn(
+							'flex w-[6.5rem]  flex-col text-right text-xs text-muted-foreground',
+							isAnyItemDiscountApplicable && 'text-foreground',
+						)}
+					>
+						<span className="text-xs text-muted-foreground">
+							Descuentos ({applicableItemDiscounts.length})
+						</span>
+						<span className="font-thin">
+							{formatCurrency(itemTransaction.totalDiscount)}
+						</span>
+					</div>
+				) : (
+					<div
+						className={cn(
+							'flex w-[6.5rem]  flex-col text-right text-xs text-muted-foreground',
+							isAnyItemDiscountApplicable && 'text-foreground',
+						)}
+					>
+						{applicableItemDiscounts.length !== 0 && (
+							<span className="text-xs text-muted-foreground">
+								<span className="font-semibold text-foreground">
+									{applicableItemDiscounts.length}
+								</span>{' '}
+								{applicableItemDiscounts.length === 1
+									? 'descuento disponible.'
+									: 'descuentos disponibles.'}
+							</span>
+						)}
+					</div>
+				)}
 				<div className="flex w-[6.5rem]  flex-col text-right">
 					<span className="text-xs text-muted-foreground">Total</span>
-					<span className="font-bold">{formatCurrency(totalPrice)}</span>
+					<span className="font-bold">
+						{formatCurrency(itemTransaction.totalPrice)}
+					</span>
 				</div>
 			</div>
 			<ItemTransactionTypeToggle
 				itemTransactionId={itemTransaction.id}
-				isPromoApplicable={isItemDiscountApplicable}
+				isPromoApplicable={isAnyItemDiscountApplicable}
 				itemTransactionType={itemTransactionType}
 				setItemTransactionType={setItemTransactionType}
 			/>
@@ -292,30 +227,6 @@ export const ItemTransaction = forwardRef<
 })
 ItemTransaction.displayName = 'ItemTransactionRow'
 
-// const calculateDiscount = (
-// 	discount: SerializeFrom<Discount>,
-// 	itemPrice: number,
-// 	quantity: number,
-// ) => {
-// 	if (discount.target === DISCOUNT_TARGET_UNIT) {
-// 		if (discount.type === DISCOUNT_TYPE_FIXED) {
-// 			return discount.value * quantity
-// 		}
-// 		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
-// 			return ((itemPrice * discount.value) / 100) * quantity
-// 		}
-// 	}
-// 	if (discount.target === DISCOUNT_TARGET_TOTAL) {
-// 		if (discount.type === DISCOUNT_TYPE_FIXED) {
-// 			return discount.value
-// 		}
-// 		if (discount.type === DISCOUNT_TYPE_PERCENTAGE) {
-// 			return (itemPrice * quantity * discount.value) / 100
-// 		}
-// 	}
-// 	return 0
-// }
-
 const ItemTransactionCard = React.forwardRef<
 	HTMLDivElement,
 	React.HTMLAttributes<HTMLDivElement>
@@ -324,7 +235,7 @@ const ItemTransactionCard = React.forwardRef<
 		ref={ref}
 		tabIndex={0}
 		className={cn(
-			'relative rounded-md bg-secondary p-3 shadow-sm outline-none transition-all duration-300 focus:brightness-90 dark:focus:brightness-150 border',
+			'relative rounded-md border bg-secondary p-3 shadow-sm outline-none transition-all duration-300 focus:brightness-90 dark:focus:brightness-150',
 			className,
 		)}
 		{...props}

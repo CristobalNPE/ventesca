@@ -4,11 +4,8 @@ import { useEffect } from 'react'
 import { z } from 'zod'
 import { itemTransactionTypeColors } from '../_constants/itemTransactionTypesColors.ts'
 import {
+	ItemTransactionType,
 	ItemTransactionTypeSchema,
-	TYPE_PROMO,
-	TYPE_RETURN,
-	TYPE_SELL,
-	type ItemTransactionType,
 } from '../_types/item-transactionType.ts'
 
 export const UPDATE_IT_TYPE = 'update-it-type'
@@ -36,12 +33,16 @@ export const ItemTransactionTypeToggle = ({
 	const cycleState = () => {
 		let nextState: ItemTransactionType
 
-		if (itemTransactionType === TYPE_SELL) {
-			nextState = TYPE_RETURN
-		} else if (itemTransactionType === TYPE_RETURN) {
-			nextState = isPromoApplicable ? TYPE_PROMO : TYPE_SELL
+		if (itemTransactionType === ItemTransactionType.SELL) {
+			nextState = ItemTransactionType.RETURN
+		} else if (itemTransactionType === ItemTransactionType.RETURN) {
+			nextState = isPromoApplicable
+				? ItemTransactionType.PROMO
+				: ItemTransactionType.SELL
 		} else {
-			nextState = isPromoApplicable ? TYPE_SELL : TYPE_RETURN
+			nextState = isPromoApplicable
+				? ItemTransactionType.SELL
+				: ItemTransactionType.RETURN
 		}
 
 		setItemTransactionType(nextState)
@@ -49,8 +50,11 @@ export const ItemTransactionTypeToggle = ({
 
 	//When the promo stops being applicable, it changes back to TYPE_SELL
 	useEffect(() => {
-		if (itemTransactionType === TYPE_PROMO && !isPromoApplicable) {
-			setItemTransactionType(TYPE_SELL)
+		if (
+			itemTransactionType === ItemTransactionType.PROMO &&
+			!isPromoApplicable
+		) {
+			setItemTransactionType(ItemTransactionType.SELL)
 		}
 	}, [isPromoApplicable, itemTransactionType])
 
@@ -73,12 +77,12 @@ export const ItemTransactionTypeToggle = ({
 		<div
 			className={cn(
 				'flex w-[4rem] cursor-pointer select-none items-center justify-center rounded-sm p-1 text-xs font-bold uppercase tracking-wider text-background',
-				itemTransactionType === TYPE_SELL &&
-					itemTransactionTypeColors[TYPE_SELL],
-				itemTransactionType === TYPE_RETURN &&
-					itemTransactionTypeColors[TYPE_RETURN],
-				itemTransactionType === TYPE_PROMO &&
-					itemTransactionTypeColors[TYPE_PROMO],
+				itemTransactionType === ItemTransactionType.SELL &&
+					itemTransactionTypeColors[ItemTransactionType.SELL],
+				itemTransactionType === ItemTransactionType.RETURN &&
+					itemTransactionTypeColors[ItemTransactionType.RETURN],
+				itemTransactionType === ItemTransactionType.PROMO &&
+					itemTransactionTypeColors[ItemTransactionType.PROMO],
 			)}
 			onClick={cycleState}
 			tabIndex={-1}

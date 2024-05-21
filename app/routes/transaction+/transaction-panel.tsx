@@ -11,7 +11,6 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { loader as mainTransactionLoader } from '#app/routes/transaction+/index.js'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Discount } from '@prisma/client'
 import { SerializeFrom } from '@remix-run/node'
@@ -19,13 +18,14 @@ import { Link, useFetcher, useNavigate } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import React from 'react'
+import { useSpinDelay } from 'spin-delay'
 import { DiscardTransaction } from '../_system+/transaction.discard.tsx'
 import { paymentMethodIcons } from './_constants/paymentMethodIcons.ts'
+import { TransactionDetails } from './_types/TransactionData.ts'
 import {
 	allPaymentMethods,
 	type PaymentMethod,
 } from './_types/payment-method.ts'
-import { useSpinDelay } from 'spin-delay'
 
 export function TransactionIdPanel({
 	transactionId,
@@ -34,7 +34,7 @@ export function TransactionIdPanel({
 }) {
 	return (
 		<PanelCard>
-			<div className="select-none absolute -top-4 w-fit rounded-md bg-card px-3 py-1 text-xs">
+			<div className="absolute -top-4 w-fit select-none rounded-md bg-card px-3 py-1 text-xs">
 				ID Transacción
 			</div>
 			<span className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary">
@@ -80,7 +80,7 @@ export function TransactionOverviewPanel({
 export const DiscountsPanel = ({
 	activeDiscounts,
 }: {
-	activeDiscounts: SerializeFrom<Discount>[]
+	activeDiscounts: SerializeFrom<Pick<Discount, 'id' | 'name'>>[]
 }) => {
 	const navigate = useNavigate()
 
@@ -105,7 +105,7 @@ export const DiscountsPanel = ({
 									className="w-full cursor-pointer select-none px-1 hover:bg-secondary "
 									onClick={() => navigate(`/discounts/${discount.id}`)}
 								>
-									{discount.description}
+									{discount.name}
 								</li>
 							)
 						})}
@@ -125,7 +125,9 @@ export const DiscountsPanel = ({
 
 export const PaymentMethodPanel = ({
 	currentPaymentMethod,
+	transactionId,
 }: {
+	transactionId: string
 	currentPaymentMethod: PaymentMethod
 }) => {
 	const fetcher = useFetcher({ key: 'set-paymentMethod' })
@@ -157,6 +159,7 @@ export const PaymentMethodPanel = ({
 						htmlFor={paymentMethodType}
 					>
 						<input type="hidden" name="intent" value="set-payment-method" />
+						<input type="hidden" name="transactionId" value={transactionId} />
 						<input
 							disabled={isSubmitting}
 							defaultChecked={currentPaymentMethod === paymentMethodType}
@@ -181,58 +184,38 @@ export const PaymentMethodPanel = ({
 
 export const TransactionOptionsPanel = ({
 	transaction,
-	total,
-	subtotal,
-	totalDiscount,
 }: {
-	transaction: SerializeFrom<typeof mainTransactionLoader>
-	total: number
-	subtotal: number
-	totalDiscount: number
+	transaction: TransactionDetails
 }) => {
-	const { transaction: finishedTransaction } = transaction
 	return (
 		<PanelCard>
 			<div className="flex gap-4">
-				<GenerateTransactionReport transactionId={finishedTransaction.id} />
-				<ConfirmDeleteTransaction transactionId={finishedTransaction.id} />
+				<GenerateTransactionReport transactionId={transaction.id} />
+				<ConfirmDeleteTransaction transactionId={transaction.id} />
 			</div>
-			<ConfirmFinishTransaction
-				transaction={transaction}
-				total={total}
-				subtotal={subtotal}
-				totalDiscount={totalDiscount}
-			/>
+
+			<ConfirmFinishTransaction transaction={transaction} />
 		</PanelCard>
 	)
 }
 
 const ConfirmFinishTransaction = ({
 	transaction,
-	total,
-	subtotal,
-	totalDiscount,
 }: {
-	transaction: SerializeFrom<typeof mainTransactionLoader>
-	total: number
-	subtotal: number
-	totalDiscount: number
+	transaction: TransactionDetails
 }) => {
-	const { transaction: finishedTransaction } = transaction
 	const fetcher = useFetcher({ key: 'complete-transaction' })
 	const isSubmitting = fetcher.state !== 'idle'
 
 	const formData = new FormData()
 	formData.append('intent', 'complete-transaction')
-	formData.append('total', total.toString())
-	formData.append('subtotal', subtotal.toString())
-	formData.append('totalDiscount', totalDiscount.toString())
+	formData.append('transactionId', transaction.id)
 
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
 				<Button
-					disabled={finishedTransaction.items.length === 0}
+					disabled={transaction.itemTransactions.length === 0}
 					size={'lg'}
 					className="text-md mt-6 flex h-[3rem] w-full  gap-2 font-bold "
 				>
@@ -245,14 +228,14 @@ const ConfirmFinishTransaction = ({
 					<AlertDialogTitle className="flex items-center gap-4">
 						Confirmar Transacción{' '}
 						<span className="rounded-md bg-primary/10 p-1 text-sm uppercase">
-							{finishedTransaction.id}
+							{transaction.id}
 						</span>
 					</AlertDialogTitle>
 					<AlertDialogDescription asChild>
 						<div>
 							Confirme los datos de la venta para ingreso:
 							<div className="fex mt-4 flex-col gap-1">
-								{finishedTransaction.items.map(itemTransaction => {
+								{transaction.itemTransactions.map(itemTransaction => {
 									if (itemTransaction.item) {
 										return (
 											<div className="flex gap-4" key={itemTransaction.id}>
@@ -276,7 +259,7 @@ const ConfirmFinishTransaction = ({
 							<div className="mt-4 flex flex-col gap-1 ">
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Vendedor:</span>
-									<span>{finishedTransaction.seller?.name}</span>
+									<span>{transaction.seller.name}</span>
 								</div>
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Fecha:</span>
@@ -288,11 +271,11 @@ const ConfirmFinishTransaction = ({
 								</div>
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Método de Pago:</span>
-									<span>{finishedTransaction.paymentMethod}</span>
+									<span>{transaction.paymentMethod}</span>
 								</div>
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Total:</span>
-									<span>{formatCurrency(total)}</span>
+									<span>{formatCurrency(transaction.total)}</span>
 								</div>
 							</div>
 						</div>

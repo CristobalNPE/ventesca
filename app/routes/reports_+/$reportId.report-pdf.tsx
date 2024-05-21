@@ -7,10 +7,11 @@ import {
 	renderToStream,
 } from '@react-pdf/renderer'
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
-import { TYPE_RETURN } from '#app/components/item-transaction-row.tsx'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { TRANSACTION_STATUS_COMPLETED } from '../transaction+/index.tsx'
+import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
+import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+
 export type TransactionReportDataType = {
 	id: string
 	status: string
@@ -25,7 +26,7 @@ export type TransactionReportDataType = {
 	seller: {
 		name: string
 	}
-	items: Array<{
+	itemTransactions: Array<{
 		id: string
 		quantity: number
 		type: string
@@ -63,7 +64,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 			totalDiscount: true,
 			paymentMethod: true,
 			seller: { select: { name: true } },
-			items: {
+			itemTransactions: {
 				select: {
 					id: true,
 					quantity: true,
@@ -196,10 +197,10 @@ const styles = StyleSheet.create({
 })
 
 const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
-	const calculatePreTotal = (items: TransactionReportDataType['items']) => {
+	const calculatePreTotal = (items: TransactionReportDataType['itemTransactions']) => {
 		let preTotal = 0
 		items.forEach(item => {
-			if (item.type === TYPE_RETURN) {
+			if (item.type === ItemTransactionType.RETURN) {
 				preTotal -= item.quantity * item.item.sellingPrice
 			} else {
 				preTotal += item.quantity * item.item.sellingPrice
@@ -208,7 +209,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 		return preTotal
 	}
 
-	const shouldUsePreTotal = data.status !== TRANSACTION_STATUS_COMPLETED
+	const shouldUsePreTotal = data.status !== TransactionStatus.FINISHED
 
 	return (
 		<Document>
@@ -249,29 +250,29 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 
 				{/* Table for Items */}
 				<View style={styles.table}>
-					{data.items.map((item, index) => (
+					{data.itemTransactions.map((itemTransaction, index) => (
 						<View key={index} style={styles.tableRow}>
 							{/* Define each column */}
 							<View style={styles.mainTableCol}>
-								<Text style={styles.tableCell}>{item.item.name}</Text>
+								<Text style={styles.tableCell}>{itemTransaction.item.name}</Text>
 							</View>
 							{/* More columns for other details like quantity, price, etc. */}
 							<View style={styles.tableCol}>
-								<Text style={styles.tableCell}>{item.quantity}</Text>
+								<Text style={styles.tableCell}>{itemTransaction.quantity}</Text>
 							</View>
 							<View style={styles.tableCol}>
 								<Text style={styles.tableCell}>
-									{formatCurrency(item.totalPrice)}
+									{formatCurrency(itemTransaction.totalPrice)}
 								</Text>
 							</View>
 							<View style={styles.tableCol}>
-								<Text style={styles.tableCell}>{item.type}</Text>
+								<Text style={styles.tableCell}>{itemTransaction.type}</Text>
 							</View>
 						</View>
 					))}
 				</View>
 				<View style={styles.footer}>
-					{data.status === TRANSACTION_STATUS_COMPLETED && (
+					{data.status === TransactionStatus.FINISHED && (
 						<>
 							<View style={styles.footerSection}>
 								<Text style={styles.footerTextTitle}>Subtotal:</Text>{' '}
@@ -291,7 +292,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 						<Text style={styles.footerTextTitle}>Total:</Text>
 						<Text style={styles.footerText}>
 							{shouldUsePreTotal
-								? formatCurrency(calculatePreTotal(data.items))
+								? formatCurrency(calculatePreTotal(data.itemTransactions))
 								: formatCurrency(data.total)}{' '}
 							CLP
 						</Text>

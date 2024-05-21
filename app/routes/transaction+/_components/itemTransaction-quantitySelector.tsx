@@ -1,6 +1,7 @@
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
+import { useDebounce } from '#app/utils/misc.tsx'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
@@ -32,6 +33,9 @@ export const QuantitySelector = ({
 	})
 	const isSubmitting = itemTransactionQuantityFetcher.state !== 'idle'
 
+
+
+
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = parseInt(event.target.value, 10)
 		if (!isNaN(newValue) && newValue >= min && newValue <= max) {
@@ -41,22 +45,17 @@ export const QuantitySelector = ({
 
 	//Apply update on change, after a short delay to allow the user to modify the amount
 	useEffect(() => {
-		const timeOutUpdate = setTimeout(
-			() =>
-				itemTransactionQuantityFetcher.submit(
-					{
-						intent: UPDATE_IT_QUANTITY,
-						itemTransactionId: itemTransactionId,
-						itemTransactionQuantity: quantity,
-					},
-					{
-						method: 'post',
-						action: '/transaction/edit',
-					},
-				),
-			750,
+		itemTransactionQuantityFetcher.submit(
+			{
+				intent: UPDATE_IT_QUANTITY,
+				itemTransactionId: itemTransactionId,
+				itemTransactionQuantity: quantity,
+			},
+			{
+				method: 'post',
+				action: '/transaction/edit',
+			},
 		)
-		return () => clearTimeout(timeOutUpdate)
 	}, [quantity])
 
 	const increaseValue = () => {
@@ -87,7 +86,8 @@ export const QuantitySelector = ({
 				type="number"
 				value={quantity}
 				onChange={handleInputChange}
-				disabled={isSubmitting}
+				
+				disabled={true}
 			/>
 
 			<Button

@@ -71,22 +71,22 @@ model ItemAnalytics {
 }
 
 model Transaction {
-  id            String            @id @default(cuid())
-  status        String // e.g. pending, cancled, completed
-  paymentMethod String // e.g. cash, credit, debit
-  subtotal      Int
-  total         Int
-  totalDiscount Int
-  discounts     Discount[]
-  isDiscarded   Boolean           @default(false)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  completedAt   DateTime          @default(now())
-  items         ItemTransaction[]
-  seller        User              @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  sellerId      String
-  business      Business          @relation(fields: [businessId], references: [id])
-  businessId    String
+  id               String            @id @default(cuid())
+  status           String // e.g. pending, cancled, completed
+  paymentMethod    String // e.g. cash, credit, debit
+  subtotal         Int
+  total            Int
+  totalDiscount    Int
+  discounts        Discount[]
+  isDiscarded      Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  completedAt      DateTime          @default(now())
+  itemTransactions ItemTransaction[]
+  seller           User              @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId         String
+  business         Business          @relation(fields: [businessId], references: [id])
+  businessId       String
 }
 
 model ItemTransaction {
