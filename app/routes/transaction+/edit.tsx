@@ -133,7 +133,6 @@ function calculateTotals(
 	let totalDiscountToApply = 0
 
 	for (let discount of itemTransaction.item.discounts) {
-		console.log(discount.value)
 		totalDiscountToApply += calculateDiscountValue(
 			discount,
 			itemTransaction,
@@ -176,14 +175,8 @@ function calculateDiscountValue(
 			}
 		}
 		if (discount.type === DiscountType.PERCENTAGE) {
-			if (discount.applicationMethod === DiscountApplicationMethod.BY_ITEM) {
-				discountTotalValue =
-					((discount.value * itemSellingPrice) / 100) * itemTransaction.quantity
-			}
-			if (discount.applicationMethod === DiscountApplicationMethod.TO_TOTAL) {
-				discountTotalValue =
-					(itemTransaction.quantity * itemSellingPrice * discount.value) / 100
-			}
+			discountTotalValue =
+				(itemTransaction.quantity * itemSellingPrice * discount.value) / 100
 		}
 	}
 
