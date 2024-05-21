@@ -283,7 +283,7 @@ export default function CreateDiscount() {
 			porcentualValue: DEFAULT_PERCENTAGE_DISCOUNT_VALUE,
 			discountScope: DiscountScope.GLOBAL,
 			discountType: DiscountType.FIXED,
-			discountApplicationMethod: DiscountApplicationMethod.BY_ITEM,
+			discountApplicationMethod: DiscountApplicationMethod.TO_TOTAL,
 		},
 	})
 
@@ -338,17 +338,14 @@ export default function CreateDiscount() {
 										{
 											label: 'Global',
 											value: DiscountScope.GLOBAL,
-											// icon: 'world',
 										},
 										{
 											label: 'Por Categoría',
 											value: DiscountScope.CATEGORY,
-											// icon: 'shapes',
 										},
 										{
 											label: 'Por Articulo',
 											value: DiscountScope.SINGLE_ITEM,
-											// icon: 'package',
 										},
 									]}
 									name={fields.discountScope.name}
@@ -360,12 +357,10 @@ export default function CreateDiscount() {
 										{
 											label: 'Fijo',
 											value: DiscountType.FIXED,
-											// icon: 'circle-dollar-sign',
 										},
 										{
 											label: 'Porcentaje',
 											value: DiscountType.PERCENTAGE,
-											// icon: 'percentage',
 										},
 									]}
 									name={fields.discountType.name}
@@ -373,23 +368,30 @@ export default function CreateDiscount() {
 								/>
 								<SelectTab
 									label="Método de aplicación"
-									options={[
-										{
-											label: 'Por Articulo',
-											value: DiscountApplicationMethod.BY_ITEM,
-											// icon: 'circle-dollar-sign',
-										},
-										{
-											label: 'Al Total',
-											value: DiscountApplicationMethod.TO_TOTAL,
-											// icon: 'percentage',
-										},
-									]}
+									options={
+										fields.discountType.value === DiscountType.FIXED
+											? [
+													{
+														label: 'Por Articulo',
+														value: DiscountApplicationMethod.BY_ITEM,
+													},
+													{
+														label: 'Al Total',
+														value: DiscountApplicationMethod.TO_TOTAL,
+													},
+											  ]
+											: [
+													{
+														label: 'Al Total',
+														value: DiscountApplicationMethod.TO_TOTAL,
+													},
+											  ]
+									}
 									name={fields.discountApplicationMethod.name}
 									initialValue={fields.discountApplicationMethod.initialValue}
 								/>
 							</div>
-							<div className="grid sm:grid-cols-2 gap-4">
+							<div className="grid gap-4 sm:grid-cols-2">
 								{fields.discountType.value === DiscountType.FIXED ? (
 									<Field
 										labelProps={{ children: 'Valor descuento fijo' }}
