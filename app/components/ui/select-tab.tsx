@@ -1,3 +1,4 @@
+import { cn } from '#app/utils/misc.tsx'
 import { Icon, IconName } from './icon.tsx'
 
 type SelectTabOption = {
@@ -26,7 +27,10 @@ export const SelectTab = ({
 				{options.map((option, index) => (
 					<label
 						key={option.value}
-						className="flex w-[50%] cursor-pointer items-center justify-center gap-2 rounded-md border-primary bg-background p-2 text-center  capitalize underline-offset-2 transition-colors duration-200 has-[:checked]:bg-accent  has-[:checked]:font-bold has-[:checked]:underline"
+						className={cn(
+							'flex w-[50%] cursor-pointer items-center justify-center gap-2 rounded-md border-primary bg-background p-2 text-center  capitalize underline-offset-2 transition-colors duration-200 has-[:checked]:bg-accent  has-[:checked]:font-bold has-[:checked]:underline',
+							options.length === 1 && 'w-full',
+						)}
 						htmlFor={option.value}
 					>
 						<input
