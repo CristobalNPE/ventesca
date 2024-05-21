@@ -1,14 +1,14 @@
 import { getFormProps, useForm } from '@conform-to/react'
 
-import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
-import { useActionData, useFetcher } from '@remix-run/react'
-import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { invariantResponse } from '#app/utils/misc.tsx'
 import { parseWithZod } from '@conform-to/zod'
+import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
+import { Form, useActionData, useFetcher } from '@remix-run/react'
+import { z } from 'zod'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-item-transaction'),
@@ -16,7 +16,7 @@ const DeleteFormSchema = z.object({
 })
 
 export async function loader() {
-	throw redirect('/sell')
+	throw redirect('/transaction')
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -48,25 +48,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.itemTransaction.delete({ where: { id: itemTransaction.id } })
 
-	return json({ result: submission.reply() })
+	return redirect("/transaction")
 }
 
-export function DeleteItemTransaction({
-	id,
-	onClick,
-}: {
-	id: string
-	onClick?: () => void
-}) {
+export function DeleteItemTransaction({ id }: { id: string }) {
+	// const fetcher = useFetcher<typeof action>({
+	// 	key: `delete-item-transaction-${id}`,
+	// })
 	const actionData = useActionData<typeof action>()
-	const fetcher = useFetcher()
+	// const isPending = fetcher.state !== 'idle'
 	const [form] = useForm({
 		id: 'delete-item-transaction',
 		lastResult: actionData?.result,
 	})
 
 	return (
-		<fetcher.Form
+		<Form
 			method="POST"
 			action="/item-transaction/delete"
 			{...getFormProps(form)}
@@ -79,10 +76,10 @@ export function DeleteItemTransaction({
 				value="delete-item-transaction"
 				tabIndex={-1}
 				variant={'ghost'}
-				onClick={onClick}
+				className=""
 			>
 				<Icon name="cross-1" />
 			</Button>
-		</fetcher.Form>
+		</Form>
 	)
 }
