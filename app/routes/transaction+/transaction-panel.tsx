@@ -14,11 +14,12 @@ import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Discount } from '@prisma/client'
 import { SerializeFrom } from '@remix-run/node'
-import { Link, useFetcher, useNavigate } from '@remix-run/react'
+import { Link, useFetcher } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import React from 'react'
 import { useSpinDelay } from 'spin-delay'
+import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
 import { DiscardTransaction } from '../_system+/transaction.discard.tsx'
 import { paymentMethodIcons } from './_constants/paymentMethodIcons.ts'
 import { TransactionDetails } from './_types/TransactionData.ts'
@@ -80,10 +81,21 @@ export function TransactionOverviewPanel({
 export const DiscountsPanel = ({
 	activeDiscounts,
 }: {
-	activeDiscounts: SerializeFrom<Pick<Discount, 'id' | 'name'>>[]
+	activeDiscounts: SerializeFrom<
+		Pick<
+			Discount,
+			| 'id'
+			| 'name'
+			| 'description'
+			| 'validFrom'
+			| 'validUntil'
+			| 'applicationMethod'
+			| 'type'
+			| 'minimumQuantity'
+			| 'value'
+		>
+	>[]
 }) => {
-	const navigate = useNavigate()
-
 	return (
 		<div className="relative flex w-full flex-1  flex-col gap-1 rounded-md bg-muted p-2  ">
 			{activeDiscounts.length === 0 ? (
@@ -99,15 +111,7 @@ export const DiscountsPanel = ({
 					</div>
 					<ul className="mt-1 flex flex-col font-semibold tracking-tight">
 						{activeDiscounts.map(discount => {
-							return (
-								<li
-									key={discount.id}
-									className="w-full cursor-pointer select-none px-1 hover:bg-secondary "
-									onClick={() => navigate(`/discounts/${discount.id}`)}
-								>
-									{discount.name}
-								</li>
-							)
+							return <DiscountSheet key={discount.id} discount={discount} />
 						})}
 					</ul>
 				</ScrollArea>
