@@ -26,6 +26,7 @@ import {
 	DrawerTrigger,
 } from '#app/components/ui/drawer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
+import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
 import { TransactionDetailsSchema } from './_types/TransactionData.ts'
 import { ItemTransactionType } from './_types/item-transactionType.ts'
@@ -38,7 +39,7 @@ import {
 	TransactionOverviewPanel,
 } from './transaction-panel.tsx'
 
-const transactionDetails = {
+const transactionDetailsSelect = {
 	id: true,
 	status: true,
 	createdAt: true,
@@ -68,6 +69,20 @@ const transactionDetails = {
 	},
 }
 
+const discountDetailsSelect = {
+	id: true,
+	name: true,
+	description: true,
+	applicationMethod: true,
+	type: true,
+	scope: true,
+	minimumQuantity: true,
+	validFrom: true,
+	validUntil: true,
+	value: true,
+	isActive: true,
+}
+
 async function createNewTransaction(userId: string, businessId: string) {
 	const newTransaction = await prisma.transaction.create({
 		data: {
@@ -79,7 +94,7 @@ async function createNewTransaction(userId: string, businessId: string) {
 			total: 0,
 			business: { connect: { id: businessId } },
 		},
-		select: transactionDetails,
+		select: transactionDetailsSelect,
 	})
 
 	return newTransaction
@@ -88,7 +103,7 @@ async function createNewTransaction(userId: string, businessId: string) {
 async function fetchTransactionDetails(transactionId: string) {
 	const transaction = await prisma.transaction.findUniqueOrThrow({
 		where: { id: transactionId },
-		select: transactionDetails,
+		select: transactionDetailsSelect,
 	})
 
 	//update totals before serving to front end
@@ -111,7 +126,7 @@ async function fetchTransactionDetails(transactionId: string) {
 			total: total,
 			subtotal: subtotal,
 		},
-		select: transactionDetails,
+		select: transactionDetailsSelect,
 	})
 
 	return updatedTransaction
@@ -136,19 +151,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const availableItemDiscounts = transaction.itemTransactions.flatMap(
 		itemTransaction =>
-			itemTransaction.item.discounts.map(discount => discount.id),
+			itemTransaction.item.discounts
+				.filter(
+					discount => itemTransaction.quantity >= discount.minimumQuantity,
+				)
+				.map(discount => discount.id),
 	)
 
 	const uniqueDiscountIds = [...new Set(availableItemDiscounts)]
 
 	const availableDiscounts = await prisma.discount.findMany({
 		where: { id: { in: uniqueDiscountIds }, isActive: true },
-		select: { id: true, name: true },
+		select: discountDetailsSelect,
+	})
+
+	const globalDiscounts = await prisma.discount.findMany({
+		where: { scope: DiscountScope.GLOBAL },
+		select: discountDetailsSelect,
 	})
 
 	return json({
 		transaction,
-		availableDiscounts,
+		availableDiscounts: [...availableDiscounts, ...globalDiscounts],
+		globalDiscounts,
 	})
 }
 
@@ -253,7 +278,8 @@ export const isDiscountActive = (discount: SerializeFrom<Discount>) => {
 export default function SellRoute() {
 	//! CHECK OTHER FILTERS AND ADD THE TOLOWERCASE() WHERE NEEDED.
 
-	const { transaction, availableDiscounts } = useLoaderData<typeof loader>()
+	const { transaction, availableDiscounts, globalDiscounts } =
+		useLoaderData<typeof loader>()
 
 	const currentPaymentMethod = PaymentMethodSchema.parse(
 		transaction.paymentMethod,
@@ -319,6 +345,7 @@ export default function SellRoute() {
 								return (
 									<ItemTransaction
 										itemTransaction={itemTransaction}
+										globalDiscounts={globalDiscounts}
 										key={itemTransaction.item.id}
 										item={itemTransaction.item as SerializeFrom<ItemProps>}
 										itemReaderRef={itemReaderRef}
