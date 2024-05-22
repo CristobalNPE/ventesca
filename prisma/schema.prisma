@@ -72,11 +72,12 @@ model ItemAnalytics {
 
 model Transaction {
   id               String            @id @default(cuid())
-  status           String // e.g. pending, cancled, completed
+  status           String // e.g. pending, canceled, completed
   paymentMethod    String // e.g. cash, credit, debit
   subtotal         Int
   total            Int
   totalDiscount    Int
+  directDiscount   Int
   discounts        Discount[]
   isDiscarded      Boolean           @default(false)
   createdAt        DateTime          @default(now())
