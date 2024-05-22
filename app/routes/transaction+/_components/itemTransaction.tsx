@@ -46,12 +46,27 @@ type ItemTransactionRowProps = {
 		>
 	>
 	itemReaderRef: React.RefObject<HTMLInputElement>
+	globalDiscounts: SerializeFrom<
+		Pick<
+			Discount,
+			| 'id'
+			| 'name'
+			| 'description'
+			| 'applicationMethod'
+			| 'type'
+			| 'minimumQuantity'
+			| 'validFrom'
+			| 'validUntil'
+			| 'value'
+			| 'isActive'
+		>
+	>[]
 }
 
 export const ItemTransaction = forwardRef<
 	HTMLDivElement,
 	ItemTransactionRowProps
->(({ item, itemTransaction, itemReaderRef }, ref) => {
+>(({ item, itemTransaction, itemReaderRef, globalDiscounts }, ref) => {
 	const [quantity, setQuantity] = useState(itemTransaction.quantity)
 
 	const currentItemTransactionType = ItemTransactionTypeSchema.parse(
@@ -61,18 +76,19 @@ export const ItemTransaction = forwardRef<
 	const [itemTransactionType, setItemTransactionType] =
 		useState<ItemTransactionType>(currentItemTransactionType)
 
-	const itemTransactionDiscounts = item.discounts.filter(
+	const itemDiscounts = [
+		...item.discounts.filter(discount => quantity >= discount.minimumQuantity),
+		...globalDiscounts.filter(discount => quantity >= discount.minimumQuantity),
+	]
+
+	const applicableItemDiscounts = itemDiscounts.filter(
 		discount => discount.isActive,
 	)
 
-	const isAnyItemDiscountApplicable = itemTransactionDiscounts.some(
-		discount => quantity >= discount.minimumQuantity,
-	)
-
-	const applicableItemDiscounts = item.discounts.filter(
-		discount => quantity >= discount.minimumQuantity,
-	)
-
+	const isAnyItemDiscountApplicable = applicableItemDiscounts.length > 0
+	// const isAnyItemDiscountApplicable = itemTransactionDiscounts.some(
+	// 	discount => quantity >= discount.minimumQuantity,
+	// )
 	// Check the status of submissions that modify the item transaction to know when to show the spinner.
 	const updateFetchersKeys = [
 		`${UPDATE_IT_TYPE}-${itemTransaction.id}`,
