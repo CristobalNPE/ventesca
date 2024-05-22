@@ -13,10 +13,13 @@ import { ItemTransactionType } from './_types/item-transactionType.ts'
 import { Discount, ItemTransaction } from '@prisma/client'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 import { DiscountApplicationMethod } from '../_discounts+/_types/discount-applicationMethod.ts'
+import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 
 export async function loader() {
 	return redirect('/transaction')
 }
+
+//!Discounts may not be taking into account isActive!!!!!!!!!!!!!!!!!!!!!!!!!
 
 type ItemTransactionWithRelations = ItemTransaction & {
 	item: {
@@ -67,7 +70,7 @@ async function handleUpdateType(formData: FormData) {
 			},
 		})) as ItemTransactionWithRelations
 
-	const { totalPrice, totalDiscount } = calculateTotals(
+	const { totalPrice, totalDiscount } = await calculateTotals(
 		currentItemTransaction,
 		itemTransactionType,
 	)
@@ -108,7 +111,7 @@ async function handleUpdateQuantity(formData: FormData) {
 			},
 		})) as ItemTransactionWithRelations
 
-	const { totalPrice, totalDiscount } = calculateTotals(
+	const { totalPrice, totalDiscount } = await calculateTotals(
 		{ ...currentItemTransaction, quantity: itemTransactionQuantity },
 		currentItemTransaction.type as ItemTransactionType,
 	)
@@ -125,14 +128,19 @@ async function handleUpdateQuantity(formData: FormData) {
 	return json({ status: 'ok' } as const, { status: 200 })
 }
 
-function calculateTotals(
+async function calculateTotals(
 	itemTransaction: ItemTransactionWithRelations,
 	transactionType: ItemTransactionType,
 ) {
 	let totalPrice = itemTransaction.item.sellingPrice * itemTransaction.quantity
 	let totalDiscountToApply = 0
 
-	for (let discount of itemTransaction.item.discounts) {
+	const allDiscounts = [
+		...itemTransaction.item.discounts,
+		...(await getGlobalDiscounts()),
+	]
+
+	for (let discount of allDiscounts) {
 		totalDiscountToApply += calculateDiscountValue(
 			discount,
 			itemTransaction,
@@ -181,4 +189,9 @@ function calculateDiscountValue(
 	}
 
 	return discountTotalValue
+}
+async function getGlobalDiscounts() {
+	return await prisma.discount.findMany({
+		where: { scope: DiscountScope.GLOBAL },
+	})
 }
