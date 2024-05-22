@@ -44,6 +44,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { getFormProps, useForm } from '@conform-to/react'
 import { parseWithZod } from '@conform-to/zod'
+import { Discount } from '@prisma/client'
 import { Link } from '@remix-run/react'
 import { format, formatDistance, formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -53,15 +54,14 @@ import { DiscountDescriptionEditModal } from './__discounts-editors/description-
 import { DiscountNameEditModal } from './__discounts-editors/name-editor.tsx'
 import { DiscountMinquantityEditModal } from './__discounts-editors/quantity-editor.tsx'
 import { DiscountTypeEditModal } from './__discounts-editors/type-editor.tsx'
+import { DiscountValidperiodEditModal } from './__discounts-editors/validPeriod-editor.tsx'
 import { DiscountValueEditModal } from './__discounts-editors/value-editor.tsx'
 import { discountAppmethodNames } from './_constants/discountAppmethodNames.ts'
 import { discountTypeNames } from './_constants/discountTypeNames.ts'
 import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
+import { DiscountScope } from './_types/discount-reach.ts'
 import { DiscountType } from './_types/discount-type.ts'
 import { DiscountItemsList } from './discounts.item-picker.tsx'
-import { DiscountValidperiodEditModal } from './__discounts-editors/validPeriod-editor.tsx'
-import { DiscountScope } from './_types/discount-reach.ts'
-import { Discount } from '@prisma/client'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-discount'),
@@ -156,6 +156,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		},
 	})
 }
+
+
 
 export default function DiscountRoute() {
 	const isAdmin = true
