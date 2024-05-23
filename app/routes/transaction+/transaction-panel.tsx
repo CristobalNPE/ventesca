@@ -1,32 +1,17 @@
-import {
-	AlertDialog,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '#app/components/ui/alert-dialog.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Discount } from '@prisma/client'
 import { SerializeFrom } from '@remix-run/node'
-import { Link, useFetcher } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { Link } from '@remix-run/react'
 import React from 'react'
-import { useSpinDelay } from 'spin-delay'
 import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
-import { DiscardTransaction } from '../_system+/transaction.discard.tsx'
-import { paymentMethodIcons } from './_constants/paymentMethodIcons.ts'
+
 import { TransactionDetails } from './_types/TransactionData.ts'
-import {
-	allPaymentMethods,
-	type PaymentMethod,
-} from './_types/payment-method.ts'
+import { DirectDiscount, RemoveDirectDiscount } from './direct-discount.tsx'
+import { DiscardTransaction } from './discard-transaction.tsx'
+import { FinishTransaction } from './finish-transaction.tsx'
 
 export function TransactionIdPanel({
 	transactionId,
@@ -80,6 +65,9 @@ export function TransactionOverviewPanel({
 
 export const DiscountsPanel = ({
 	activeDiscounts,
+	transactionId,
+	transactionTotal,
+	directDiscount,
 }: {
 	activeDiscounts: SerializeFrom<
 		Pick<
@@ -93,8 +81,12 @@ export const DiscountsPanel = ({
 			| 'type'
 			| 'minimumQuantity'
 			| 'value'
+			| 'scope'
 		>
 	>[]
+	transactionId: string
+	transactionTotal: number
+	directDiscount: number
 }) => {
 	return (
 		<div className="relative flex w-full flex-1  flex-col gap-1 rounded-md bg-muted p-2  ">
@@ -118,71 +110,20 @@ export const DiscountsPanel = ({
 			)}
 
 			<div>
-				{/* This will be its own component that opens a modal and changes to set the current direct discount */}
-				<Button className="h-8 w-full " variant={'outline'}>
-					<Icon className="mr-2" name="tag" /> Descuento Directo
-				</Button>
+				{/* Should render discount dialog or delete discount button depending if there is or not a direct discount assigned */}
+				{directDiscount ? (
+					<RemoveDirectDiscount
+						transactionId={transactionId}
+						directDiscount={directDiscount}
+					/>
+				) : (
+					<DirectDiscount
+						transactionId={transactionId}
+						transactionTotal={transactionTotal}
+					/>
+				)}
 			</div>
 		</div>
-	)
-}
-
-export const PaymentMethodPanel = ({
-	currentPaymentMethod,
-	transactionId,
-}: {
-	transactionId: string
-	currentPaymentMethod: PaymentMethod
-}) => {
-	const fetcher = useFetcher({ key: 'set-paymentMethod' })
-	const isSubmitting = fetcher.state === 'submitting'
-	const showSpinner = useSpinDelay(isSubmitting, {
-		delay: 150,
-		minDuration: 500,
-	})
-
-	return (
-		<PanelCard className="relative">
-			{showSpinner && (
-				<div className="absolute inset-0 z-20 flex animate-spin  items-center justify-center ">
-					<Icon className="text-2xl" name="update" />
-				</div>
-			)}
-			<fetcher.Form
-				action="/transaction"
-				method="post"
-				className={cn(
-					'flex justify-between',
-					showSpinner && 'opacity-50 blur-sm brightness-50',
-				)}
-			>
-				{allPaymentMethods.map((paymentMethodType, index) => (
-					<label
-						className={`flex w-[5rem] cursor-pointer select-none flex-col items-center justify-center gap-1 rounded-md bg-card p-2 transition-colors duration-150 hover:bg-primary/20 has-[:checked]:bg-primary/90 has-[:checked]:text-background  has-[:disabled]:hover:bg-card `}
-						key={index}
-						htmlFor={paymentMethodType}
-					>
-						<input type="hidden" name="intent" value="set-payment-method" />
-						<input type="hidden" name="transactionId" value={transactionId} />
-						<input
-							disabled={isSubmitting}
-							defaultChecked={currentPaymentMethod === paymentMethodType}
-							className="appearance-none"
-							type="radio"
-							name={'payment-method'}
-							value={paymentMethodType}
-							id={paymentMethodType}
-							onChange={e => fetcher.submit(e.currentTarget.form)}
-						/>
-						<Icon
-							className="text-xl"
-							name={paymentMethodIcons[paymentMethodType]}
-						/>
-						<span className="text-sm">{paymentMethodType}</span>
-					</label>
-				))}
-			</fetcher.Form>
-		</PanelCard>
 	)
 }
 
@@ -195,147 +136,10 @@ export const TransactionOptionsPanel = ({
 		<PanelCard>
 			<div className="flex gap-4">
 				<GenerateTransactionReport transactionId={transaction.id} />
-				<ConfirmDeleteTransaction transactionId={transaction.id} />
+				<DiscardTransaction id={transaction.id} />
 			</div>
-
-			<ConfirmFinishTransaction transaction={transaction} />
+			<FinishTransaction transaction={transaction} />
 		</PanelCard>
-	)
-}
-
-const ConfirmFinishTransaction = ({
-	transaction,
-}: {
-	transaction: TransactionDetails
-}) => {
-	const fetcher = useFetcher({ key: 'complete-transaction' })
-	const isSubmitting = fetcher.state !== 'idle'
-
-	const formData = new FormData()
-	formData.append('intent', 'complete-transaction')
-	formData.append('transactionId', transaction.id)
-
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger asChild>
-				<Button
-					disabled={transaction.itemTransactions.length === 0}
-					size={'lg'}
-					className="text-md mt-6 flex h-[3rem] w-full  gap-2 font-bold "
-				>
-					<Icon className="flex-shrink-0" name="circle-check" size="xl" />
-					<span className="leading-tight">Ingresar Venta</span>
-				</Button>
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle className="flex items-center gap-4">
-						Confirmar Transacción{' '}
-						<span className="rounded-md bg-primary/10 p-1 text-sm uppercase">
-							{transaction.id}
-						</span>
-					</AlertDialogTitle>
-					<AlertDialogDescription asChild>
-						<div>
-							Confirme los datos de la venta para ingreso:
-							<div className="fex mt-4 flex-col gap-1">
-								{transaction.itemTransactions.map(itemTransaction => {
-									if (itemTransaction.item) {
-										return (
-											<div className="flex gap-4" key={itemTransaction.id}>
-												<div className="flex flex-1 gap-2 overflow-clip ">
-													<span className="font-bold">
-														{itemTransaction.quantity}x
-													</span>
-													<span className="uppercase">
-														{itemTransaction.item.name}
-													</span>
-												</div>
-												<span className="w-[4rem] text-right">
-													{formatCurrency(itemTransaction.totalPrice)}
-												</span>
-											</div>
-										)
-									}
-									return null
-								})}
-							</div>
-							<div className="mt-4 flex flex-col gap-1 ">
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Vendedor:</span>
-									<span>{transaction.seller.name}</span>
-								</div>
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Fecha:</span>
-									<span>
-										{format(new Date(), "d 'de' MMMM 'del' yyyy'", {
-											locale: es,
-										})}
-									</span>
-								</div>
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Método de Pago:</span>
-									<span>{transaction.paymentMethod}</span>
-								</div>
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Total:</span>
-									<span>{formatCurrency(transaction.total)}</span>
-								</div>
-							</div>
-						</div>
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter className="mt-4 flex gap-6">
-					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					{isSubmitting ? (
-						<Button className="w-[13rem]" disabled>
-							<Icon name="update" className="mr-2 animate-spin opacity-80" />
-							Confirmando Transacción
-						</Button>
-					) : (
-						<Button
-							className="w-[13rem]"
-							onClick={() => fetcher.submit(formData, { method: 'POST' })}
-						>
-							<Icon name="checks" className="mr-2" />
-							Confirmar y Finalizar
-						</Button>
-					)}
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-	)
-}
-
-export const ConfirmDeleteTransaction = ({
-	transactionId,
-}: {
-	transactionId: string
-}) => {
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger asChild>
-				<Button
-					variant={'destructive'}
-					className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5"
-				>
-					<Icon name="trash" className="flex-none text-2xl" />{' '}
-					<span className="leading-tight">Descartar Transacción</span>
-				</Button>
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Confirmar descarte de transacción</AlertDialogTitle>
-					<AlertDialogDescription>
-						Por favor confirme que desea descartar esta transacción
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter className="flex gap-6">
-					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<DiscardTransaction id={transactionId} />
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
 	)
 }
 
@@ -359,7 +163,7 @@ const GenerateTransactionReport = ({
 	)
 }
 
-const PanelCard = React.forwardRef<
+export const PanelCard = React.forwardRef<
 	HTMLDivElement,
 	React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
