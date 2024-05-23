@@ -1,4 +1,3 @@
-import { type Discount } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -11,9 +10,7 @@ import { Spacer } from '#app/components/spacer.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { destroyCurrentTransaction } from '#app/utils/transaction.server.ts'
 import React, { createRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { ItemReader } from '../_system+/item-transaction.new.tsx'
 import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
 
@@ -26,6 +23,7 @@ import {
 	DrawerTrigger,
 } from '#app/components/ui/drawer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
+import { formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
 import { TransactionDetailsSchema } from './_types/TransactionData.ts'
@@ -33,11 +31,33 @@ import { ItemTransactionType } from './_types/item-transactionType.ts'
 import { TransactionStatus } from './_types/transaction-status.ts'
 import {
 	DiscountsPanel,
-	PaymentMethodPanel,
 	TransactionIdPanel,
 	TransactionOptionsPanel,
 	TransactionOverviewPanel,
 } from './transaction-panel.tsx'
+
+import { parseWithZod } from '@conform-to/zod'
+import {
+	DISCARD_TRANSACTION_KEY,
+	DiscardTransactionSchema,
+} from './discard-transaction.tsx'
+import {
+	FINISH_TRANSACTION_KEY,
+	FinishTransactionSchema,
+} from './finish-transaction.tsx'
+import {
+	PaymentMethodPanel,
+	SET_TRANSACTION_PAYMENT_METHOD_KEY,
+	SetPaymentMethodSchema,
+} from './set-payment-method.tsx'
+import {
+	APPLY_DIRECT_DISCOUNT_KEY,
+	DirectDiscountSchema,
+	REMOVE_DIRECT_DISCOUNT_KEY,
+	RemoveDirectDiscountSchema,
+} from './direct-discount.tsx'
+import { DiscountType } from '../_discounts+/_types/discount-type.ts'
+import { z } from 'zod'
 
 const transactionDetailsSelect = {
 	id: true,
@@ -45,6 +65,7 @@ const transactionDetailsSelect = {
 	createdAt: true,
 	paymentMethod: true,
 	totalDiscount: true,
+	directDiscount: true,
 	total: true,
 	subtotal: true,
 	seller: { select: { name: true } },
@@ -90,6 +111,7 @@ async function createNewTransaction(userId: string, businessId: string) {
 			status: TransactionStatus.PENDING,
 			paymentMethod: PaymentMethod.CASH,
 			totalDiscount: 0,
+			directDiscount: 0,
 			subtotal: 0,
 			total: 0,
 			business: { connect: { id: businessId } },
@@ -113,11 +135,13 @@ async function fetchTransactionDetails(transactionId: string) {
 		)
 		.reduce((acc, itemTransaction) => acc + itemTransaction.totalDiscount, 0)
 
-	const total = transaction.itemTransactions.reduce(
-		(acc, itemTransaction) => acc + itemTransaction.totalPrice,
-		0,
-	)
-	const subtotal = total + discount
+	const total =
+		transaction.itemTransactions.reduce(
+			(acc, itemTransaction) => acc + itemTransaction.totalPrice,
+			0,
+		) - transaction.directDiscount
+
+	const subtotal = total + discount + transaction.directDiscount
 
 	const updatedTransaction = await prisma.transaction.update({
 		where: { id: transactionId },
@@ -177,107 +201,42 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	})
 }
 
-const SetPaymentMethodSchema = z.object({
-	intent: z.string(),
-	transactionId: z.string(),
-	paymentMethod: PaymentMethodSchema,
-})
-
-const CompleteTransactionSchema = z.object({
-	intent: z.string(),
-	transactionId: z.string(),
-})
-
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
 
-	if (intent === 'set-payment-method') {
-		const setPaymentResult = SetPaymentMethodSchema.safeParse({
-			intent: formData.get('intent'),
-			transactionId: formData.get('transactionId'),
-			paymentMethod: formData.get('payment-method'),
-		})
-		if (!setPaymentResult.success) {
-			return json(
-				{
-					status: 'error',
-					errors: setPaymentResult.error.flatten(),
-				} as const,
-				{
-					status: 400,
-				},
-			)
+	invariantResponse(intent, 'Intent should be defined.')
+
+	switch (intent) {
+		case DISCARD_TRANSACTION_KEY: {
+			return await handleDiscardTransaction(formData)
 		}
-		const { paymentMethod, transactionId } = setPaymentResult.data
-
-		await prisma.transaction.update({
-			where: { id: transactionId },
-			data: { paymentMethod },
-		})
-
-		return json({ status: 'success' } as const)
-	}
-
-	if (intent === 'complete-transaction') {
-		const completeTransactionResult = CompleteTransactionSchema.safeParse({
-			intent: formData.get('intent'),
-			transactionId: formData.get('transactionId'),
-		})
-
-		if (!completeTransactionResult.success) {
-			return json(
-				{
-					status: 'error',
-					errors: completeTransactionResult.error.flatten(),
-				} as const,
-				{
-					status: 400,
-				},
-			)
+		case SET_TRANSACTION_PAYMENT_METHOD_KEY: {
+			return await handleSetPaymentMethod(formData)
 		}
-		const { transactionId } = completeTransactionResult.data
-		await prisma.transaction.update({
-			where: { id: transactionId },
-			data: {
-				status: TransactionStatus.FINISHED,
-				completedAt: new Date(),
-			},
-		})
-
-		return redirectWithToast(
-			`/reports/${transactionId}`,
-			{
-				type: 'success',
-				title: 'Transacción Completa',
-				description: `Venta completada bajo ID de transacción: [${transactionId.toUpperCase()}].`,
-			},
-			{
-				headers: {
-					'Set-Cookie': await destroyCurrentTransaction(request),
-				},
-			},
-		)
+		case FINISH_TRANSACTION_KEY: {
+			return await handleFinishTransaction(formData)
+		}
+		case APPLY_DIRECT_DISCOUNT_KEY: {
+			return await handleDirectDiscount(formData)
+		}
+		case REMOVE_DIRECT_DISCOUNT_KEY: {
+			return await handleRemoveDirectDiscount(formData)
+		}
 	}
-
-	return json({ status: 'error', errors: ['Not a Valid Intent'] } as const, {
-		status: 400,
-	})
 }
 
-export const isDiscountActive = (discount: SerializeFrom<Discount>) => {
-	const now = new Date()
-	const validFrom = new Date(discount.validFrom)
-	const validUntil = new Date(discount.validUntil)
-	const isValid = validFrom <= now && validUntil >= now
+// export const isDiscountActive = (discount: SerializeFrom<Discount>) => {
+// 	const now = new Date()
+// 	const validFrom = new Date(discount.validFrom)
+// 	const validUntil = new Date(discount.validUntil)
+// 	const isValid = validFrom <= now && validUntil >= now
 
-	return isValid && discount.isActive
-}
+// 	return isValid && discount.isActive
+// }
 
-export default function SellRoute() {
-	//! CHECK OTHER FILTERS AND ADD THE TOLOWERCASE() WHERE NEEDED.
-
+export default function TransactionRoute() {
 	const { transaction, availableDiscounts, globalDiscounts } =
 		useLoaderData<typeof loader>()
 
@@ -363,10 +322,15 @@ export default function SellRoute() {
 					transactionId={transaction.id}
 					currentPaymentMethod={currentPaymentMethod}
 				/>
-				<DiscountsPanel activeDiscounts={availableDiscounts} />
+				<DiscountsPanel
+					activeDiscounts={availableDiscounts}
+					transactionId={transaction.id}
+					transactionTotal={transaction.total}
+					directDiscount={transaction.directDiscount}
+				/>
 				<TransactionOverviewPanel
 					subtotal={transaction.subtotal}
-					discount={transaction.totalDiscount}
+					discount={transaction.totalDiscount + transaction.directDiscount}
 					total={transaction.total}
 				/>
 
@@ -390,10 +354,15 @@ export default function SellRoute() {
 							transactionId={transaction.id}
 							currentPaymentMethod={currentPaymentMethod}
 						/>
-						<DiscountsPanel activeDiscounts={availableDiscounts} />
+						<DiscountsPanel
+							activeDiscounts={availableDiscounts}
+							transactionId={transaction.id}
+							transactionTotal={transaction.total}
+							directDiscount={transaction.directDiscount}
+						/>
 						<TransactionOverviewPanel
 							subtotal={transaction.subtotal}
-							discount={transaction.totalDiscount}
+							discount={transaction.totalDiscount + transaction.directDiscount}
 							total={transaction.total}
 						/>
 
@@ -406,4 +375,160 @@ export default function SellRoute() {
 			</Drawer>
 		</div>
 	)
+}
+
+async function handleDiscardTransaction(formData: FormData) {
+	const submission = parseWithZod(formData, {
+		schema: DiscardTransactionSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { transactionId } = submission.value
+
+	const transaction = await prisma.transaction.findUniqueOrThrow({
+		select: { id: true },
+		where: { id: transactionId },
+	})
+
+	await prisma.transaction.update({
+		where: { id: transaction.id },
+		data: {
+			isDiscarded: true,
+			status: TransactionStatus.DISCARDED,
+			completedAt: new Date(),
+		},
+	})
+	return redirectWithToast(`/reports`, {
+		type: 'success',
+		title: 'Transacción Descartada',
+		description: `Transacción ${transaction.id} ha sido descartada.`,
+	})
+}
+
+async function handleSetPaymentMethod(formData: FormData) {
+	const submission = await parseWithZod(formData, {
+		schema: SetPaymentMethodSchema,
+	})
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { transactionId, paymentMethod } = submission.value
+
+	await prisma.transaction.update({
+		where: { id: transactionId },
+		data: { paymentMethod },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function handleFinishTransaction(formData: FormData) {
+	const submission = await parseWithZod(formData, {
+		schema: FinishTransactionSchema,
+	})
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+	const { transactionId } = submission.value
+
+	await prisma.transaction.update({
+		where: { id: transactionId },
+		data: {
+			status: TransactionStatus.FINISHED,
+			completedAt: new Date(),
+		},
+	})
+
+	return redirectWithToast(`/reports/${transactionId}`, {
+		type: 'success',
+		title: 'Transacción Completa',
+		description: `Venta completada bajo ID de transacción: [${transactionId.toUpperCase()}].`,
+	})
+}
+
+async function handleDirectDiscount(formData: FormData) {
+	const submission = await parseWithZod(formData, {
+		schema: DirectDiscountSchema.superRefine(async (data, ctx) => {
+			const currentTransaction = await prisma.transaction.findUniqueOrThrow({
+				where: { id: data.transactionId },
+				select: { total: true },
+			})
+
+			//El valor del descuento cuando es fijo, no puede ser mayor al total de la transacción.
+			if (
+				data.discountType === DiscountType.FIXED &&
+				data.discountValue > currentTransaction.total
+			) {
+				ctx.addIssue({
+					path: ['discountValue'],
+					code: z.ZodIssueCode.custom,
+					message: `El descuento no puede superar el valor total ( ${formatCurrency(
+						currentTransaction.total,
+					)} )`,
+				})
+			}
+
+			//Si el descuento es porcentual, el valor debe estar entre 1 y 100
+			if (
+				data.discountType === DiscountType.PERCENTAGE &&
+				!(data.discountValue >= 1 && data.discountValue <= 100)
+			) {
+				ctx.addIssue({
+					path: ['discountValue'],
+					code: z.ZodIssueCode.custom,
+					message: 'Un descuento porcentual debe estar entre 1% y 100%.',
+				})
+			}
+		}),
+		async: true,
+	})
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { transactionId, totalDirectDiscount } = submission.value
+
+	await prisma.transaction.update({
+		where: { id: transactionId },
+		data: { directDiscount: totalDirectDiscount },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function handleRemoveDirectDiscount(formData: FormData) {
+	const submission = await parseWithZod(formData, {
+		schema: RemoveDirectDiscountSchema,
+	})
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { transactionId } = submission.value
+
+	await prisma.transaction.update({
+		where: { id: transactionId },
+		data: { directDiscount: 0 },
+	})
+
+	return json({ result: submission.reply() })
 }
