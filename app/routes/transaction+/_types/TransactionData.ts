@@ -45,6 +45,7 @@ export const TransactionDetailsSchema = z.object({
 	paymentMethod: z.string(),
 	totalDiscount: z.number(),
 	total: z.number(),
+	directDiscount: z.number(),
 	subtotal: z.number(),
 	seller: SellerSchema,
 	itemTransactions: z.array(ItemTransactionSchema),
