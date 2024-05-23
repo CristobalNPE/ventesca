@@ -20,7 +20,7 @@ import {
 	PaymentMethod,
 	PaymentMethodSchema,
 } from '../transaction+/_types/payment-method.ts'
-import { ConfirmDeleteTransaction } from '../transaction+/transaction-panel.tsx'
+
 import {
 	TransactionStatus,
 	TransactionStatusSchema,
@@ -165,9 +165,9 @@ export default function ReportRoute() {
 				</TableBody>
 			</Table>
 			<div className="mt-4 flex justify-end gap-4">
-				{transactionReport.status === TransactionStatus.PENDING && (
-					<ConfirmDeleteTransaction transactionId={transactionReport.id} />
-				)}
+				{/* {transactionReport.status === TransactionStatus.PENDING && (
+					// <ConfirmDeleteTransaction transactionId={transactionReport.id} />
+				)} */}
 				<Button asChild variant={'outline'}>
 					<Link target="_blank" reloadDocument to={'report-pdf'}>
 						<Icon name="report-money" className="mr-2" />
