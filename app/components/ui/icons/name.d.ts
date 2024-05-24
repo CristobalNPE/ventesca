@@ -27,6 +27,7 @@ export type IconName =
 	| 'circle-percentage'
 	| 'clock-up'
 	| 'clock'
+	| 'copy'
 	| 'credit-card'
 	| 'cross-1'
 	| 'currency-dollar'
