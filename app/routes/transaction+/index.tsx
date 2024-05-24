@@ -58,6 +58,7 @@ import {
 } from './direct-discount.tsx'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 import { z } from 'zod'
+import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 
 const transactionDetailsSelect = {
 	id: true,
@@ -194,9 +195,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		select: discountDetailsSelect,
 	})
 
+	const allDiscounts = [...availableDiscounts, ...globalDiscounts]
+
+	for (let discount of allDiscounts) {
+		await updateDiscountValidity(discount)
+	}
+	
 	return json({
 		transaction,
-		availableDiscounts: [...availableDiscounts, ...globalDiscounts],
+		availableDiscounts: allDiscounts,
 		globalDiscounts,
 	})
 }
@@ -226,15 +233,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		}
 	}
 }
-
-// export const isDiscountActive = (discount: SerializeFrom<Discount>) => {
-// 	const now = new Date()
-// 	const validFrom = new Date(discount.validFrom)
-// 	const validUntil = new Date(discount.validUntil)
-// 	const isValid = validFrom <= now && validUntil >= now
-
-// 	return isValid && discount.isActive
-// }
 
 export default function TransactionRoute() {
 	const { transaction, availableDiscounts, globalDiscounts } =
