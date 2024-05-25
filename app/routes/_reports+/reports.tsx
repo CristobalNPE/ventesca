@@ -261,7 +261,7 @@ function TransactionReportsTable({
 								<TableRow
 									key={transaction.id}
 									className={cn(
-										'duration-0 hover:bg-background',
+										'duration-0 hover:bg-secondary/30',
 										location.pathname.includes(transaction.id) &&
 											'bg-secondary/50 hover:bg-secondary/50',
 									)}
