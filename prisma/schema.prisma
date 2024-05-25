@@ -17,6 +17,8 @@ model Category {
   items       Item[]
   business    Business @relation(fields: [businessId], references: [id])
   businessId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Supplier {
