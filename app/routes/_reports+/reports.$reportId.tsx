@@ -17,11 +17,15 @@ import {
 } from '#app/components/ui/card.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { Separator } from '#app/components/ui/separator.tsx'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { requireUserId } from '#app/utils/auth.server.ts'
 import { itemTransactionTypeColors } from '../transaction+/_constants/itemTransactionTypesColors.ts'
 import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
+import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+
+
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
+	await requireUserId(request)
 	const transactionReport = await prisma.transaction.findUnique({
 		where: { id: params.reportId },
 		select: {
@@ -108,10 +112,10 @@ export default function ReportRoute() {
 									key={itemTransaction.id}
 									className="flex items-center justify-between"
 								>
-									<div className='flex items-center gap-2'>
+									<div className="flex items-center gap-2">
 										<span
 											className={cn(
-												'opacity-70 text-xs uppercase text-background rounded-sm px-[1px] w-[3rem] text-center',
+												'w-[3rem] rounded-sm px-[1px] text-center text-xs uppercase text-background opacity-70',
 												`${
 													itemTransactionTypeColors[
 														itemTransaction.type as ItemTransactionType
