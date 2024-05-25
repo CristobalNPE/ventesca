@@ -3,9 +3,9 @@ import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
 
 //config:
-const NUMBER_OF_CATEGORIES = 5
-const NUMBER_OF_SUPPLIERS = 10
-const NUMBER_OF_PRODUCTS = 50
+const NUMBER_OF_CATEGORIES = 25
+const NUMBER_OF_SUPPLIERS = 15
+const NUMBER_OF_PRODUCTS = 5000
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -106,8 +106,20 @@ async function seed() {
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
 		},
 	})
+	const user3 = await prisma.user.create({
+		select: { id: true, businessId: true },
+		data: {
+			business: { connect: { id: testBusiness.id } },
+			email: 'suno@dev.com',
+			username: 'suno',
+			name: 'Sunito Sunero',
+			password: { create: createPassword('suno123') },
 
-	users.push(user1, user2)
+			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
+		},
+	})
+
+	users.push(user1, user2, user3)
 	console.timeEnd(`🐨 Created test users`)
 
 	console.time(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
@@ -118,7 +130,7 @@ async function seed() {
 			await prisma.category.create({
 				data: {
 					code,
-					description: `${faker.commerce.department()}-${business.id}`,
+					description: `${faker.commerce.productAdjective()} ${faker.commerce.department()}`,
 					business: { connect: { id: business.id } },
 				},
 			})
@@ -169,7 +181,7 @@ async function seed() {
 
 		for (let i = 0; i < NUMBER_OF_PRODUCTS; i++) {
 			let price =
-				Math.round(faker.number.int({ min: 1000, max: 50000 }) / 100) * 100
+				Math.round(faker.number.int({ min: 1000, max: 10500 }) / 100) * 100
 			let sellingPrice = price * faker.number.int({ min: 2, max: 3 })
 			let stock = faker.number.int({ min: 0, max: 99 })
 			let isActive = price > 0 && sellingPrice > 0 && stock > 0
