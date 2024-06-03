@@ -9,9 +9,9 @@ import React from 'react'
 import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
 
 import { TransactionDetails } from './_types/TransactionData.ts'
-import { DirectDiscount, RemoveDirectDiscount } from './direct-discount.tsx'
-import { DiscardTransaction } from './discard-transaction.tsx'
-import { FinishTransaction } from './finish-transaction.tsx'
+import { DirectDiscount, RemoveDirectDiscount } from './__direct-discount.tsx'
+import { DiscardTransaction } from './__discard-transaction.tsx'
+import { FinishTransaction } from './__finish-transaction.tsx'
 
 export function TransactionIdPanel({
 	transactionId,
