@@ -40,22 +40,22 @@ import { parseWithZod } from '@conform-to/zod'
 import {
 	DISCARD_TRANSACTION_KEY,
 	DiscardTransactionSchema,
-} from './discard-transaction.tsx'
+} from './__discard-transaction.tsx'
 import {
 	FINISH_TRANSACTION_KEY,
 	FinishTransactionSchema,
-} from './finish-transaction.tsx'
+} from './__finish-transaction.tsx'
 import {
 	PaymentMethodPanel,
 	SET_TRANSACTION_PAYMENT_METHOD_KEY,
 	SetPaymentMethodSchema,
-} from './set-payment-method.tsx'
+} from './__set-payment-method.tsx'
 import {
 	APPLY_DIRECT_DISCOUNT_KEY,
 	DirectDiscountSchema,
 	REMOVE_DIRECT_DISCOUNT_KEY,
 	RemoveDirectDiscountSchema,
-} from './direct-discount.tsx'
+} from './__direct-discount.tsx'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 import { z } from 'zod'
 import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
@@ -200,7 +200,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	for (let discount of allDiscounts) {
 		await updateDiscountValidity(discount)
 	}
-	
+
 	return json({
 		transaction,
 		availableDiscounts: allDiscounts,
@@ -442,13 +442,35 @@ async function handleFinishTransaction(formData: FormData) {
 	}
 	const { transactionId } = submission.value
 
-	await prisma.transaction.update({
+	const transaction = await prisma.transaction.update({
 		where: { id: transactionId },
 		data: {
 			status: TransactionStatus.FINISHED,
 			completedAt: new Date(),
 		},
+		select: { itemTransactions: true, status: true },
 	})
+
+	//update analytics for every item involved in the transaction
+	for (let itemTransaction of transaction.itemTransactions) {
+		if (transaction.status === TransactionStatus.FINISHED) {
+			await prisma.itemAnalytics.upsert({
+				where: { itemId: itemTransaction.itemId },
+				update: {
+					totalProfit: { increment: itemTransaction.totalPrice },
+					totalSales:
+						itemTransaction.type === ItemTransactionType.RETURN
+							? { decrement: itemTransaction.quantity }
+							: { increment: itemTransaction.quantity },
+				},
+				create: {
+					item: { connect: { id: itemTransaction.itemId } },
+					totalProfit: itemTransaction.totalPrice,
+					totalSales: itemTransaction.quantity,
+				},
+			})
+		}
+	}
 
 	return redirectWithToast(`/reports/${transactionId}`, {
 		type: 'success',
