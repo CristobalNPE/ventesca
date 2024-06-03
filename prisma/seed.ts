@@ -1,3 +1,4 @@
+import { ItemTransactionType } from '#app/routes/transaction+/_types/item-transactionType.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
@@ -5,7 +6,8 @@ import { faker } from '@faker-js/faker'
 //config:
 const NUMBER_OF_CATEGORIES = 25
 const NUMBER_OF_SUPPLIERS = 15
-const NUMBER_OF_PRODUCTS = 5000
+const NUMBER_OF_PRODUCTS = 2000
+const NUMBER_OF_TRANSACTIONS = 20000
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -44,9 +46,16 @@ async function seed() {
 		},
 		select: { id: true },
 	})
+	const testBusiness3 = await prisma.business.create({
+		data: {
+			name: faker.company.name(),
+		},
+		select: { id: true },
+	})
 
 	allBusinesses.push(testBusiness)
 	allBusinesses.push(testBusiness2)
+
 	console.log(allBusinesses)
 
 	console.timeEnd('🏫 Created testing business')
@@ -114,6 +123,19 @@ async function seed() {
 			username: 'suno',
 			name: 'Sunito Sunero',
 			password: { create: createPassword('suno123') },
+
+			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
+		},
+	})
+
+	const emptyUser = await prisma.user.create({
+		select: { id: true, businessId: true },
+		data: {
+			business: { connect: { id: testBusiness3.id } },
+			email: 'empty@dev.com',
+			username: 'empty',
+			name: 'Empty User',
+			password: { create: createPassword('empty123') },
 
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
 		},
@@ -216,6 +238,135 @@ async function seed() {
 
 	console.timeEnd(`🛒 Created ${NUMBER_OF_PRODUCTS} products per business...`)
 
+	console.time(`💰 Created ${NUMBER_OF_TRANSACTIONS} transactions per business`)
+
+	const transactionStatuses = [
+		'Finalizada',
+		'Finalizada',
+		'Finalizada',
+		'Cancelada',
+	]
+	const paymentMethods = ['Contado', 'Crédito', 'Débito']
+
+	for (let business of allBusinesses) {
+		for (let i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
+			const status = getRandomValue(transactionStatuses)
+
+			let startDate = new Date()
+			startDate.setHours(0, 0, 0, 0)
+			const completedDate = faker.date.between({
+				from: startDate.setFullYear(startDate.getFullYear() - 1),
+				to: new Date(),
+			})
+
+			const sellers = await prisma.user.findMany({
+				where: { businessId: business.id },
+				select: { id: true },
+			})
+
+			const sellerIds = sellers.map(seller => seller.id)
+
+			const createdTransaction = await prisma.transaction.create({
+				data: {
+					status: status,
+					business: { connect: { id: business.id } },
+					paymentMethod: getRandomValue(paymentMethods),
+					subtotal: 0,
+					total: 0,
+					totalDiscount: 0,
+					directDiscount: 0,
+					isDiscarded: status === 'Cancelada',
+					createdAt: subtractMinutes(completedDate, 10),
+					updatedAt: completedDate,
+					completedAt: completedDate,
+					seller: { connect: { id: getRandomValue(sellerIds) } },
+				},
+			})
+
+			const totalItemTransactions = faker.number.int({ min: 1, max: 15 })
+			let totalItemPrice = 0
+
+			for (let index = 0; index < totalItemTransactions; index++) {
+				const itemForTransaction = await prisma.item.findFirst({
+					where: {
+						code: faker.number.int({ min: 1, max: NUMBER_OF_PRODUCTS }),
+					},
+					select: { id: true },
+				})
+				if (!itemForTransaction) continue
+
+				const createdItemTransaction = await prisma.itemTransaction
+					.create({
+						data: {
+							quantity: faker.number.int({ min: 2, max: 10 }),
+							type: 'Venta',
+							totalPrice: 0,
+							totalDiscount: 0,
+							createdAt: completedDate,
+							item: {
+								connect: {
+									id: itemForTransaction.id,
+								},
+							},
+							transaction: {
+								connect: { id: createdTransaction.id },
+							},
+						},
+						select: {
+							id: true,
+							quantity: true,
+							item: true,
+							itemId: true,
+							type: true,
+							totalPrice: true,
+						},
+					})
+					.catch(e => null)
+
+				if (createdItemTransaction) {
+					totalItemPrice =
+						createdItemTransaction.item.sellingPrice *
+						createdItemTransaction.quantity
+
+					await prisma.itemTransaction.update({
+						where: { id: createdItemTransaction.id },
+						data: { totalPrice: totalItemPrice },
+					})
+					await prisma.itemAnalytics.upsert({
+						where: { itemId: createdItemTransaction.itemId },
+						update: {
+							totalProfit: { increment: createdItemTransaction.totalPrice },
+							totalSales:
+								createdItemTransaction.type === ItemTransactionType.RETURN
+									? { decrement: createdItemTransaction.quantity }
+									: { increment: createdItemTransaction.quantity },
+						},
+						create: {
+							item: { connect: { id: createdItemTransaction.itemId } },
+							totalProfit: createdItemTransaction.totalPrice,
+							totalSales: createdItemTransaction.quantity,
+						},
+					})
+				}
+			}
+			const transactionTotal = await prisma.itemTransaction.aggregate({
+				where: { transactionId: createdTransaction.id },
+				_sum: { totalPrice: true },
+			})
+			await prisma.transaction.update({
+				where: { id: createdTransaction.id },
+				data: {
+					subtotal: transactionTotal._sum.totalPrice ?? 0,
+					total: transactionTotal._sum.totalPrice ?? 0,
+				},
+			})
+		}
+	}
+
+	console.timeEnd(
+		`💰 Created ${NUMBER_OF_TRANSACTIONS} transactions per business`,
+	)
+
 	console.timeEnd(`🌱 Database has been seeded`)
 }
 
@@ -254,4 +405,14 @@ function generateFakeRUT() {
 	let rut = rutWithoutVerifier + '-' + verifierDigit
 
 	return rut
+}
+function getRandomValue(array: string[]): string {
+	const randomIndex = Math.floor(Math.random() * array.length)
+	return array[randomIndex]
+}
+
+function subtractMinutes(date: Date, minutesToSubtract: number): Date {
+	const result = new Date(date)
+	result.setMinutes(result.getMinutes() - minutesToSubtract)
+	return result
 }
