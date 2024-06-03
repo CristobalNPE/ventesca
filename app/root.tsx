@@ -76,6 +76,12 @@ import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, useUser } from './utils/user.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { Spacer } from './components/spacer.tsx'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from './components/ui/tooltip.tsx'
 
 type NavigationLink = {
 	name: string
@@ -605,20 +611,33 @@ function SideBar({
 	businessName: string
 	businessLogo?: string
 }) {
+	const businessNameIsBig = businessName.length >= 10
+	const businessNameIsBigger = businessName.length >= 20
+
 	return (
 		<>
 			<div className="relative hidden w-[17.5rem]  flex-col  bg-background px-4 pb-8 pt-3 xl:flex ">
-				<div className="flex select-none items-center gap-2 ">
-					<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
-					<div>
-						<h1 className="text-2xl font-black uppercase tracking-tight">
-							Ventesca
-						</h1>
-						<h3 className="text-sm leading-tight text-muted-foreground">
-							{businessName}
-						</h3>
-					</div>
-				</div>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<div className="flex select-none items-center gap-2 ">
+								<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
+								<h1
+									className={cn(
+										'text-2xl font-black uppercase tracking-tight',
+										businessNameIsBig && 'text-xl',
+										businessNameIsBigger && 'text-lg',
+									)}
+								>
+									{businessName}
+								</h1>
+							</div>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Impulsado por VENTESCA</p>
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 				<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
 					<div className="flex flex-col gap-2">
 						{navigationLinks.map(link => {
