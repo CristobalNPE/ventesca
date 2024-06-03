@@ -7,7 +7,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Progress } from '#app/components/ui/progress.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import {
 	Table,
@@ -19,31 +18,65 @@ import {
 } from '#app/components/ui/table.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { cn } from '#app/utils/misc.tsx'
+import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
 import { Category } from '@prisma/client'
-import { LoaderFunctionArgs, SerializeFrom, json } from '@remix-run/node'
-import { Outlet, useLoaderData, useLocation } from '@remix-run/react'
+import {
+	ActionFunctionArgs,
+	LoaderFunctionArgs,
+	SerializeFrom,
+	json,
+	redirectDocument
+} from '@remix-run/node'
+import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { parseWithZod } from '@conform-to/zod'
+import { endOfWeek, startOfWeek } from 'date-fns'
+import { z } from 'zod'
+import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import {
+	CREATE_CATEGORY_KEY,
+	CreateCategoryDialog,
+	CreateCategorySchema,
+} from './__new-category.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
+
+	const weeklyProfits = await getWeeklyProfitsPerCategory(businessId)
+
+	const categoryWithTopProfits = weeklyProfits[0]
 
 	const categories = await prisma.category.findMany({
 		where: { businessId },
 		select: { id: true, code: true, description: true },
 	})
 
-	return json({ categories })
+	return json({ categories, categoryWithTopProfits })
 }
 
-export default function TransactionReportsRoute() {
+export async function action({ request }: ActionFunctionArgs) {
+	const userId = await requireUserId(request) //!Should be require with permissions
+	const businessId = await getBusinessId(userId)
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+	invariantResponse(intent, 'Intent should be defined.')
+
+	switch (intent) {
+		case CREATE_CATEGORY_KEY: {
+			return await handleCreateCategory(formData, businessId)
+		}
+	}
+}
+
+export default function CategoriesRoute() {
 	const isAdmin = true
 
-	const { categories } = useLoaderData<typeof loader>()
+	const { categories, categoryWithTopProfits } = useLoaderData<typeof loader>()
 
 	return (
 		<main className=" h-full">
@@ -52,24 +85,48 @@ export default function TransactionReportsRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="grid h-[93%]  gap-4 lg:grid-cols-3">
+			<div className="grid h-[93%]  items-start gap-4 lg:grid-cols-3">
 				<div className="grid gap-4 lg:col-span-1">
-					<Card>
-						<CardHeader className="pb-2">
-							<CardDescription>This Week</CardDescription>
-							<CardTitle className="text-4xl">$1,329</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="text-xs text-muted-foreground">
-								+25% from last week
-							</div>
-						</CardContent>
-						<CardFooter>
-							<Progress value={25} aria-label="25% increase" />
-						</CardFooter>
-					</Card>
+					{/* FIX THIS TO SHOW PROPER UI WHEN NO ELEMENTS */}
+					{categoryWithTopProfits ? (
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription>Mayores ingresos esta semana</CardDescription>
+								<CardTitle className="flex  items-center justify-between text-3xl">
+									<Link to={categoryWithTopProfits.id} className=" text-2xl">
+										{categoryWithTopProfits.description}
+									</Link>
+									<span className="text-muted-foreground">
+										{formatCurrency(categoryWithTopProfits.totalProfit)}
+									</span>
+								</CardTitle>
+							</CardHeader>
+							<CardContent></CardContent>
+							<CardFooter>
+								<CreateCategoryDialog />
+							</CardFooter>
+						</Card>
+					) : (
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription></CardDescription>
+								<CardTitle></CardTitle>
+							</CardHeader>
+							<CardContent></CardContent>
+							<CardFooter>
+								<Button className="flex w-full items-center gap-2">
+									<Icon name="plus" />
+									<span>Registrar Nueva Categoría</span>
+								</Button>
+							</CardFooter>
+						</Card>
+					)}
 
-					<CategoriesTable categories={categories} />
+					{categories.length > 0 ? (
+						<CategoriesTable categories={categories} />
+					) : (
+						<div>Sin categorías :(</div>
+					)}
 				</div>
 				<div className="lg:col-span-2">
 					<Outlet />
@@ -143,4 +200,103 @@ function CategoriesTable({
 			</CardContent>
 		</Card>
 	)
+}
+
+async function getWeeklyProfitsPerCategory(businessId: string) {
+	let startDate = new Date()
+
+	const currentWeekStartDate = startOfWeek(startDate)
+	const currentWeekEndDate = endOfWeek(startDate)
+
+	const itemTransactions = await prisma.itemTransaction.findMany({
+		where: {
+			transaction: { businessId },
+			createdAt: {
+				gte: currentWeekStartDate,
+				lte: currentWeekEndDate,
+			},
+		},
+		include: {
+			item: {
+				include: {
+					category: true,
+				},
+			},
+			transaction: true,
+		},
+	})
+
+	type CategoryProfit = {
+		category: Category
+		totalProfit: number
+	}
+
+	const categoryProfits: { [key: string]: CategoryProfit } =
+		itemTransactions.reduce(
+			(acc, itemTransaction) => {
+				const { item, totalPrice, transaction } = itemTransaction
+				const profit =
+					transaction.status === TransactionStatus.FINISHED ? totalPrice : 0
+
+				if (!acc[item.category.id]) {
+					acc[item.category.id] = {
+						category: item.category,
+						totalProfit: 0,
+					}
+				}
+				acc[item.category.id].totalProfit += profit
+				return acc
+			},
+			{} as { [key: string]: CategoryProfit },
+		)
+
+	const result = Object.values(categoryProfits).map(
+		({ category, totalProfit }) => ({
+			...category,
+			totalProfit,
+		}),
+	)
+	result.sort((a, b) => b.totalProfit - a.totalProfit)
+
+	return result
+}
+
+async function handleCreateCategory(formData: FormData, businessId: string) {
+	const submission = await parseWithZod(formData, {
+		schema: CreateCategorySchema.superRefine(async (data, ctx) => {
+			const categoryByCode = await prisma.category.findFirst({
+				select: { id: true, code: true },
+				where: { businessId, code: data.code },
+			})
+
+			if (categoryByCode) {
+				ctx.addIssue({
+					path: ['code'],
+					code: z.ZodIssueCode.custom,
+					message: 'El código ya existe.',
+				})
+			}
+		}),
+
+		async: true,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { code, description } = submission.value
+
+	const createdCategory = await prisma.category.create({
+		data: {
+			code,
+			description,
+			business: { connect: { id: businessId } },
+		},
+	})
+
+	return redirectDocument(`/categories/${createdCategory.id}`)
 }
