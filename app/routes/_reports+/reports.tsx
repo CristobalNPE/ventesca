@@ -39,6 +39,7 @@ import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { PaginationBar } from '#app/components/pagination-bar.tsx'
 
 //MOVE THIS OUT OF HERE
 
@@ -67,6 +68,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 	const url = new URL(request.url)
+	const $top = Number(url.searchParams.get('$top')) || 10
+	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const period = url.searchParams.get('period')?.toLowerCase()
 
 	let startDate = new Date()
@@ -96,7 +99,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			break
 	}
 
-	const transactions = await prisma.transaction.findMany({
+	const numberOfTransactionsPromise = prisma.transaction.count({
+		where: {
+			businessId,
+			// Add date filter if startDate and endDate are defined
+			...(startDate &&
+				endDate && { createdAt: { gte: startDate, lte: endDate } }),
+		},
+	})
+
+	const transactionsPromise = prisma.transaction.findMany({
+		take: $top,
+		skip: $skip,
 		select: {
 			id: true,
 			createdAt: true,
@@ -113,13 +127,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		orderBy: { createdAt: 'desc' },
 	})
 
-	return json({ transactions })
+	const [numberOfTransactions, transactions] = await Promise.all([
+		numberOfTransactionsPromise,
+		transactionsPromise,
+	])
+
+	return json({ transactions, numberOfTransactions })
 }
 
 export default function TransactionReportsRoute() {
 	const isAdmin = true
 
-	const { transactions } = useLoaderData<typeof loader>()
+	const { transactions, numberOfTransactions } = useLoaderData<typeof loader>()
 	const { search } = useLocation()
 	const periodParam = new URLSearchParams(search).get('period')
 
@@ -130,10 +149,10 @@ export default function TransactionReportsRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="grid h-[93%]  gap-4 lg:grid-cols-3">
-				<div className="grid gap-4 lg:col-span-2">
-					<div className="grid gap-4 xl:grid-cols-2 ">
-						<Card>
+			<div className="flex h-[93%] flex-col gap-4 xl:flex-row ">
+				<div className="flex w-full flex-1 flex-col    gap-4   ">
+					<div className="flex flex-col gap-4 lg:flex-row">
+						<Card className="w-full">
 							<CardHeader className="pb-2">
 								<CardDescription>This Week</CardDescription>
 								<CardTitle className="text-4xl">$1,329</CardTitle>
@@ -147,7 +166,7 @@ export default function TransactionReportsRoute() {
 								<Progress value={25} aria-label="25% increase" />
 							</CardFooter>
 						</Card>
-						<Card>
+						<Card className="w-full">
 							<CardHeader className="pb-2">
 								<CardDescription>This Week</CardDescription>
 								<CardTitle className="text-4xl">$1,329</CardTitle>
@@ -163,7 +182,7 @@ export default function TransactionReportsRoute() {
 						</Card>
 					</div>
 					<div className="flex justify-between">
-						<div className="flex items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
+						<div className="flex h-fit items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
 							{allTimePeriods.map((period, i) => (
 								<NavLink
 									key={i}
@@ -207,9 +226,12 @@ export default function TransactionReportsRoute() {
 							</Button>
 						</div>
 					</div>
-					<TransactionReportsTable transactions={transactions} />
+					<TransactionReportsTable
+						transactions={transactions}
+						totalTransactions={numberOfTransactions}
+					/>
 				</div>
-				<div className="">
+				<div className="w-full xl:w-[30rem]">
 					<Outlet />
 				</div>
 			</div>
@@ -228,23 +250,31 @@ type TransactionWithSellerName = Pick<
 
 function TransactionReportsTable({
 	transactions,
+	totalTransactions,
 }: {
 	transactions: SerializeFrom<TransactionWithSellerName>[]
+	totalTransactions: number
 }) {
 	const location = useLocation()
 
 	return (
-		<Card>
-			<CardHeader className="px-7">
-				<CardTitle>Transacciones</CardTitle>
-				<CardDescription>
-					Ultimas {transactions.length} transacciones ingresadas en sistema.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<ScrollArea className="relative h-[25rem]  rounded-t-sm">
-					<Table>
-						<TableHeader className="sticky top-0 rounded-t-sm bg-secondary">
+		<ScrollArea className=" h-fit rounded-sm">
+			<Card className=" min-h-[40rem]">
+				<CardHeader className="sticky top-0 z-30 flex justify-between bg-card px-7 md:flex-row ">
+					<div className="w-fit">
+						<CardTitle>Transacciones</CardTitle>
+						{transactions.length > 1 ? (
+							<CardDescription>
+								Mostrando {transactions.length} de {totalTransactions}{' '}
+								transacciones.
+							</CardDescription>
+						) : null}
+					</div>
+					<PaginationBar total={totalTransactions} />
+				</CardHeader>
+				<CardContent>
+					<Table className="relative rounded-sm">
+						<TableHeader className="sticky top-20  z-30 rounded-sm bg-secondary">
 							<TableRow>
 								<TableHead></TableHead>
 								<TableHead>ID</TableHead>
@@ -310,8 +340,8 @@ function TransactionReportsTable({
 							))}
 						</TableBody>
 					</Table>
-				</ScrollArea>
-			</CardContent>
-		</Card>
+				</CardContent>
+			</Card>
+		</ScrollArea>
 	)
 }
