@@ -25,7 +25,7 @@ import {
 	LoaderFunctionArgs,
 	SerializeFrom,
 	json,
-	redirectDocument
+	redirectDocument,
 } from '@remix-run/node'
 import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 
@@ -114,10 +114,7 @@ export default function CategoriesRoute() {
 							</CardHeader>
 							<CardContent></CardContent>
 							<CardFooter>
-								<Button className="flex w-full items-center gap-2">
-									<Icon name="plus" />
-									<span>Registrar Nueva Categoría</span>
-								</Button>
+								<CreateCategoryDialog />
 							</CardFooter>
 						</Card>
 					)}
