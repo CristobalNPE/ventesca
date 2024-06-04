@@ -18,7 +18,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const query = url.searchParams.get('query')
 
 	if (!query) {
-		const categories = await prisma.family.findMany({
+		const categories = await prisma.category.findMany({
 			select: {
 				id: true,
 				description: true,
@@ -29,7 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return json({ categories })
 	}
 
-	const categories = await prisma.family.findMany({
+	const categories = await prisma.category.findMany({
 		where: {
 			OR: [{ description: { contains: query } }],
 		},

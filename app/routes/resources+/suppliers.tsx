@@ -19,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const query = url.searchParams.get('query')
 
 	if (!query) {
-		const suppliers = await prisma.provider.findMany({
+		const suppliers = await prisma.supplier.findMany({
 			select: {
 				id: true,
 				name: true,
@@ -32,7 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return json({ suppliers })
 	}
 
-	const suppliers = await prisma.provider.findMany({
+	const suppliers = await prisma.supplier.findMany({
 		where: {
 			OR: [{ rut: { contains: query } }, { fantasyName: { contains: query } }],
 		},
