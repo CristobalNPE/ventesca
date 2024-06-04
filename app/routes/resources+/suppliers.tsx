@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { Input } from '#app/components/ui/input.tsx'
 import { SelectModal } from '#app/components/ui/select-modal.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
 export type SelectedSupplier = {
@@ -14,12 +14,14 @@ export type SelectedSupplier = {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 	const url = new URL(request.url)
 	const query = url.searchParams.get('query')
 
 	if (!query) {
 		const suppliers = await prisma.supplier.findMany({
+			where: { businessId },
 			select: {
 				id: true,
 				name: true,
@@ -34,6 +36,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const suppliers = await prisma.supplier.findMany({
 		where: {
+			businessId,
 			OR: [{ rut: { contains: query } }, { fantasyName: { contains: query } }],
 		},
 		select: {
