@@ -1,8 +1,8 @@
-import * as SelectPrimitive from '@radix-ui/react-select'
 import * as React from 'react'
+import * as SelectPrimitive from '@radix-ui/react-select'
 
 import { cn } from '#app/utils/misc.tsx'
-import { Icon } from './icon.tsx'
+import { Icon } from './icon'
 
 const Select = SelectPrimitive.Root
 
@@ -24,7 +24,7 @@ const SelectTrigger = React.forwardRef<
 	>
 		{children}
 		<SelectPrimitive.Icon asChild>
-			<Icon name="chevron-down" className="h-4 w-4 opacity-50" />
+			<Icon className="h-4 w-4 opacity-50" name="chevron-down" />
 		</SelectPrimitive.Icon>
 	</SelectPrimitive.Trigger>
 ))

@@ -1,11 +1,10 @@
+import * as React from 'react'
 import { type DialogProps } from '@radix-ui/react-dialog'
 import { Command as CommandPrimitive } from 'cmdk'
-import * as React from 'react'
 
 import { cn } from '#app/utils/misc.tsx'
-
-import { Dialog, DialogContent } from './dialog.tsx'
-import { Icon } from './icon.tsx'
+import { Dialog, DialogContent } from '#app/components/ui/dialog'
+import { Icon } from './icon'
 
 const Command = React.forwardRef<
 	React.ElementRef<typeof CommandPrimitive>,
@@ -119,7 +118,7 @@ const CommandItem = React.forwardRef<
 	<CommandPrimitive.Item
 		ref={ref}
 		className={cn(
-			'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+			'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50',
 			className,
 		)}
 		{...props}
