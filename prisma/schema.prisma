@@ -10,74 +10,167 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Category {
+  id          String   @id @default(cuid())
+  code        Int
+  description String
+  items       Item[]
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  businessId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Supplier {
+  id          String    @id @default(cuid())
+  rut         String
+  name        String
+  address     String
+  city        String
+  fantasyName String
+  phone       String
+  email       String
+  items       Item[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  business    Business? @relation(fields: [businessId], references: [id])
+  businessId  String?
+}
+
+model Item {
+  id            String            @id @default(cuid())
+  isActive      Boolean
+  code          Int
+  name          String
+  sellingPrice  Float
+  price         Float
+  stock         Int
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  category      Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  categoryId    String
+  supplier      Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  supplierId    String
+  transactions  ItemTransaction[]
+  discounts     Discount[]
+  business      Business          @relation(fields: [businessId], references: [id])
+  businessId    String
+  itemAnalytics ItemAnalytics?
+}
+
+model ItemAnalytics {
+  id          String @id @default(cuid())
+  item        Item   @relation(fields: [itemId], references: [id])
+  itemId      String @unique
+  totalProfit Float  @default(0)
+  totalSales  Int    @default(0)
+  // averagePrice   Float
+  // leastSoldDate  DateTime?
+  // mostProfitData DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id               String            @id @default(cuid())
+  status           String // e.g. pending, canceled, completed
+  paymentMethod    String // e.g. cash, credit, debit
+  subtotal         Int
+  total            Int
+  totalDiscount    Int
+  directDiscount   Int
+  discounts        Discount[]
+  isDiscarded      Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  completedAt      DateTime          @default(now())
+  itemTransactions ItemTransaction[]
+  seller           User              @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId         String
+  business         Business          @relation(fields: [businessId], references: [id])
+  businessId       String
+}
+
+model ItemTransaction {
+  id            String      @id @default(cuid())
+  quantity      Int
+  type          String // e.g. sale, loan, return
+  totalPrice    Int
+  totalDiscount Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId        String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  transactionId String
+
+  @@unique([itemId, transactionId])
+}
+
+model Discount {
+  id                String        @id @default(cuid())
+  name              String
+  description       String
+  type              String // e.g. FIXED AMOUNT, PERCENTAGE
+  scope             String // e.g. SingleItem, Category
+  applicationMethod String // e.g. to-total, by-item
+  minimumQuantity   Int
+  value             Int
+  validFrom         DateTime
+  validUntil        DateTime
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  business          Business      @relation(fields: [businessId], references: [id])
+  businessId        String
+  items             Item[]
+  transactions      Transaction[]
+}
+
+model Business {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  items        Item[]
+  transactions Transaction[]
+  categories   Category[]
+  suppliers    Supplier[]
+  discounts    Discount[]
+  users        User[]
+}
+
 model User {
-  id       String  @id @default(cuid())
-  email    String  @unique
-  username String  @unique
-  name     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  image       UserImage?
-  password    Password?
-  notes       Note[]
-  roles       Role[]
-  sessions    Session[]
-  connections Connection[]
-}
-
-model Note {
-  id      String @id @default(cuid())
-  title   String
-  content String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  ownerId String
-
-  images NoteImage[]
-
-  // non-unique foreign key
-  @@index([ownerId])
-  // This helps our order by in the user search a LOT
-  @@index([ownerId, updatedAt])
-}
-
-model NoteImage {
-  id          String  @id @default(cuid())
-  altText     String?
-  contentType String
-  blob        Bytes
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  noteId String
-
-  // non-unique foreign key
-  @@index([noteId])
+  id           String        @id @default(cuid())
+  email        String        @unique
+  username     String        @unique
+  name         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  image        UserImage?
+  password     Password?
+  roles        Role[]
+  sessions     Session[]
+  connections  Connection[]
+  transactions Transaction[]
+  business     Business      @relation(fields: [businessId], references: [id])
+  businessId   String
 }
 
 model UserImage {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   altText     String?
   contentType String
   blob        Bytes
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId      String   @unique
 }
 
 model Password {
-  hash String
-
+  hash   String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String @unique
 }

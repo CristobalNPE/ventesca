@@ -5,6 +5,17 @@ import { useSpinDelay } from 'spin-delay'
 import { extendTailwindMerge } from 'tailwind-merge'
 import { extendedTheme } from './extended-theme.ts'
 
+export function formatCurrency(amountToFormat: number | null) {
+	const amount = amountToFormat ? amountToFormat : 0
+	const formatted = new Intl.NumberFormat('es-CL', {
+		style: 'currency',
+		currency: 'CLP',
+	}).format(amount)
+
+	return formatted
+}
+
+
 export function getUserImgSrc(imageId?: string | null) {
 	return imageId ? `/resources/user-images/${imageId}` : '/img/user.png'
 }

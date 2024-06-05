@@ -8,10 +8,12 @@ import { StatusButton } from './ui/status-button.tsx'
 
 export function SearchBar({
 	status,
+	onFocus,
 	autoFocus = false,
 	autoSubmit = false,
 }: {
 	status: 'idle' | 'pending' | 'success' | 'error'
+	onFocus?: () => void
 	autoFocus?: boolean
 	autoSubmit?: boolean
 }) {
@@ -20,7 +22,7 @@ export function SearchBar({
 	const submit = useSubmit()
 	const isSubmitting = useIsPending({
 		formMethod: 'GET',
-		formAction: '/users',
+		formAction: '/system/inventory',
 	})
 
 	const handleFormChange = useDebounce((form: HTMLFormElement) => {
@@ -30,7 +32,7 @@ export function SearchBar({
 	return (
 		<Form
 			method="GET"
-			action="/users"
+			action="/system/inventory"
 			className="flex flex-wrap items-center justify-center gap-2"
 			onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
 		>
@@ -39,12 +41,13 @@ export function SearchBar({
 					Search
 				</Label>
 				<Input
-					type="search"
+					onFocus={onFocus}
+					type="number"
 					name="search"
 					id={id}
 					defaultValue={searchParams.get('search') ?? ''}
-					placeholder="Search"
-					className="w-full"
+					placeholder="Búsqueda Código"
+					className="w-[10rem] sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
 					autoFocus={autoFocus}
 				/>
 			</div>
@@ -53,9 +56,10 @@ export function SearchBar({
 					type="submit"
 					status={isSubmitting ? 'pending' : status}
 					className="flex w-full items-center justify-center"
+					size="sm"
 				>
-					<Icon name="magnifying-glass" size="md" />
-					<span className="sr-only">Search</span>
+					<Icon name="scan-barcode" size="md" />
+					<span className="sr-only">Buscar</span>
 				</StatusButton>
 			</div>
 		</Form>
