@@ -13,6 +13,7 @@ import {
 	CommandEmpty,
 	CommandGroup,
 	CommandItem,
+	CommandList,
 } from '#app/components/ui/command.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
@@ -177,26 +178,27 @@ export function CategoryPicker({
 										</div>
 									</div>
 								</div>
-
-								<CommandEmpty>Sin coincidencias.</CommandEmpty>
-								<CommandGroup className="max-h-[15rem] overflow-y-auto">
-									{categories.map(category => (
-										<CommandItem
-											key={category.id}
-											className="flex cursor-pointer gap-5 rounded-md p-1 hover:bg-primary/20 "
-											onSelect={() => {
-												addCategory(category)
-												setIsSearchBoxOpen(false)
-												formRef.current?.reset()
-											}}
-										>
-											<span className="w-[2.5rem] font-bold">
-												{category.code}
-											</span>
-											<span className="flex-1 ">{category.description}</span>
-										</CommandItem>
-									))}
-								</CommandGroup>
+								<CommandList>
+									<CommandEmpty>Sin coincidencias.</CommandEmpty>
+									<CommandGroup className="max-h-[15rem] overflow-y-auto">
+										{categories.map(category => (
+											<CommandItem
+												key={category.id}
+												className="flex cursor-pointer gap-5 rounded-md p-1 hover:bg-primary/20 "
+												onSelect={() => {
+													addCategory(category)
+													setIsSearchBoxOpen(false)
+													formRef.current?.reset()
+												}}
+											>
+												<span className="w-[2.5rem] font-bold">
+													{category.code}
+												</span>
+												<span className="flex-1 ">{category.description}</span>
+											</CommandItem>
+										))}
+									</CommandGroup>
+								</CommandList>
 							</Command>
 						</PopoverContent>
 					</Popover>

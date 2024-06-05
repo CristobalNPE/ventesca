@@ -13,6 +13,7 @@ import {
 	CommandEmpty,
 	CommandGroup,
 	CommandItem,
+	CommandList,
 } from '#app/components/ui/command.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
@@ -174,23 +175,27 @@ export function ItemPicker({
 									</div>
 								</div>
 
-								<CommandEmpty>Sin coincidencias.</CommandEmpty>
-								<CommandGroup className="max-h-[15rem] overflow-y-auto">
-									{items.map(item => (
-										<CommandItem
-											key={item.id}
-											className="flex cursor-pointer gap-5 rounded-md p-1 hover:bg-primary/20 "
-											onSelect={() => {
-												addItem(item)
-												setIsSearchBoxOpen(false)
-												formRef.current?.reset()
-											}}
-										>
-											<span className="w-[2.5rem] font-bold">{item.code}</span>
-											<span className="flex-1 ">{item.name}</span>
-										</CommandItem>
-									))}
-								</CommandGroup>
+								<CommandList>
+									<CommandEmpty>Sin coincidencias.</CommandEmpty>
+									<CommandGroup className="max-h-[15rem] overflow-y-auto">
+										{items.map(item => (
+											<CommandItem
+												key={item.id}
+												className="flex cursor-pointer gap-5 rounded-md p-1 hover:bg-primary/20 "
+												onSelect={() => {
+													addItem(item)
+													setIsSearchBoxOpen(false)
+													formRef.current?.reset()
+												}}
+											>
+												<span className="w-[2.5rem] font-bold">
+													{item.code}
+												</span>
+												<span className="flex-1 ">{item.name}</span>
+											</CommandItem>
+										))}
+									</CommandGroup>
+								</CommandList>
 							</Command>
 						</PopoverContent>
 					</Popover>
