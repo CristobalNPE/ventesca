@@ -14,16 +14,7 @@ import React, { createRef, useEffect, useRef, useState } from 'react'
 import { ItemReader } from '../_system+/item-transaction.new.tsx'
 import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
 
-import { Button } from '#app/components/ui/button.tsx'
-import {
-	Drawer,
-	DrawerContent,
-	DrawerFooter,
-	DrawerHeader,
-	DrawerTrigger,
-} from '#app/components/ui/drawer.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
 import { TransactionDetailsSchema } from './_types/TransactionData.ts'
@@ -37,6 +28,16 @@ import {
 } from './transaction-panel.tsx'
 
 import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import { z } from 'zod'
+import { DiscountType } from '../_discounts+/_types/discount-type.ts'
+import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
+import {
+	APPLY_DIRECT_DISCOUNT_KEY,
+	DirectDiscountSchema,
+	REMOVE_DIRECT_DISCOUNT_KEY,
+	RemoveDirectDiscountSchema,
+} from './__direct-discount.tsx'
 import {
 	DISCARD_TRANSACTION_KEY,
 	DiscardTransactionSchema,
@@ -50,15 +51,6 @@ import {
 	SET_TRANSACTION_PAYMENT_METHOD_KEY,
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
-import {
-	APPLY_DIRECT_DISCOUNT_KEY,
-	DirectDiscountSchema,
-	REMOVE_DIRECT_DISCOUNT_KEY,
-	RemoveDirectDiscountSchema,
-} from './__direct-discount.tsx'
-import { DiscountType } from '../_discounts+/_types/discount-type.ts'
-import { z } from 'zod'
-import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 
 const transactionDetailsSelect = {
 	id: true,
@@ -337,40 +329,7 @@ export default function TransactionRoute() {
 				/>
 			</div>
 
-			<Drawer>
-				<DrawerTrigger asChild>
-					<Button className="absolute bottom-5 right-5 flex rounded-full outline outline-4 xl:hidden">
-						<Icon className="text-2xl" name="moneybag" />
-					</Button>
-				</DrawerTrigger>
-				<DrawerContent>
-					<DrawerHeader></DrawerHeader>
-
-					<div className="mx-auto flex w-[20rem] flex-col justify-between gap-4 ">
-						<TransactionIdPanel transactionId={transaction.id} />
-						<PaymentMethodPanel
-							transactionId={transaction.id}
-							currentPaymentMethod={currentPaymentMethod}
-						/>
-						<DiscountsPanel
-							activeDiscounts={availableDiscounts}
-							transactionId={transaction.id}
-							transactionTotal={transaction.total}
-							directDiscount={transaction.directDiscount}
-						/>
-						<TransactionOverviewPanel
-							subtotal={transaction.subtotal}
-							discount={transaction.totalDiscount + transaction.directDiscount}
-							total={transaction.total}
-						/>
-
-						<TransactionOptionsPanel
-							transaction={TransactionDetailsSchema.parse(transaction)}
-						/>
-					</div>
-					<DrawerFooter></DrawerFooter>
-				</DrawerContent>
-			</Drawer>
+		
 		</div>
 	)
 }

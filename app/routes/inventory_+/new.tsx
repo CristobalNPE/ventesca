@@ -90,7 +90,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const { code, name } = submission.value
 
-	let defaultSupplier = await prisma.supplier.findUnique({
+	let defaultSupplier = await prisma.supplier.findFirst({
 		where: { rut: DEFAULT_SUPPLIER },
 	})
 

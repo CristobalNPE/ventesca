@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, json } from '@remix-run/node'
 import { z } from 'zod'
 import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
+
 import { prisma } from '#app/utils/db.server.ts'
 import {
 	CategoryEditorSchema,
@@ -44,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserId(request)
 
 	const formData = await request.formData()
-	await validateCSRF(formData, request.headers)
+
 
 	const intent = formData.get('intent')
 

@@ -1,7 +1,7 @@
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse } from '#app/utils/misc.tsx'
+
 import {
 	ActionFunctionArgs,
 	json,
@@ -48,6 +48,7 @@ import {
 } from './__edit-category.tsx'
 import { z } from 'zod'
 import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
+import { invariantResponse } from '@epic-web/invariant'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -118,7 +119,7 @@ export default function CategoryRoute() {
 						mostSoldItem.quantitySoldPreviousWeek) /
 						mostSoldItem.quantitySoldPreviousWeek) *
 						100,
-			  )
+				)
 			: undefined
 
 	return (
@@ -295,7 +296,6 @@ async function getMostSoldItemInCategoryData(
 	if (!items || items.length === 0) {
 		return null
 	}
-	console.log('no items entered anyway')
 
 	const oneWeekBeforeStartDate = startOfWeek(subWeeks(startDate, 1))
 	const oneWeekBeforeEndDate = endOfWeek(subWeeks(startDate, 1))
@@ -327,7 +327,10 @@ async function getMostSoldItemInCategoryData(
 		(a, b) => b.totalQuantitySold - a.totalQuantitySold,
 	)
 
-	const mostSoldItem = itemsWithTotalQuantitySold[0]
+	const mostSoldItem =
+		itemsWithTotalQuantitySold.length > 0 ? itemsWithTotalQuantitySold[0] : null
+
+	if (!mostSoldItem) return null
 
 	const previousWeekData = await prisma.itemTransaction.findMany({
 		where: {

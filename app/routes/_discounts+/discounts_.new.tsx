@@ -9,7 +9,7 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
-import { invariant, useIsPending } from '#app/utils/misc.tsx'
+import {  useIsPending } from '#app/utils/misc.tsx'
 import { ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { Form, Link, useActionData } from '@remix-run/react'
 import { useState } from 'react'
@@ -40,6 +40,7 @@ import {
 } from './_types/discount-applicationMethod.ts'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { CategoryPicker } from './discounts.category-picker.tsx'
+import { invariant } from '@epic-web/invariant'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
 const DEFAULT_FIXED_DISCOUNT_VALUE = 0

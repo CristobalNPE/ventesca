@@ -4,11 +4,11 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse } from '#app/utils/misc.tsx'
 import { parseWithZod } from '@conform-to/zod'
 import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
 import { Form, useActionData, useFetcher } from '@remix-run/react'
 import { z } from 'zod'
+import { invariantResponse } from '@epic-web/invariant'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-item-transaction'),
@@ -48,7 +48,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.itemTransaction.delete({ where: { id: itemTransaction.id } })
 
-	return redirect("/transaction")
+	return redirect('/transaction')
 }
 
 export function DeleteItemTransaction({ id }: { id: string }) {

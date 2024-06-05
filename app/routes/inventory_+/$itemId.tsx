@@ -36,12 +36,7 @@ import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import {
-	cn,
-	formatCurrency,
-	invariantResponse,
-	useIsPending,
-} from '#app/utils/misc.tsx'
+import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { getFormProps, useForm } from '@conform-to/react'
 
@@ -55,8 +50,10 @@ import {
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+
+import { invariantResponse } from '@epic-web/invariant'
 import { z } from 'zod'
+import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { CategoryEditModal } from './__item-editors/category-editor.tsx'
 import { CodeEditModal } from './__item-editors/code-editor.tsx'
 import { ItemNameEditModal } from './__item-editors/name-editor.tsx'
@@ -65,7 +62,6 @@ import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
-import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -344,8 +340,8 @@ export default function ItemRoute() {
 								{allAssociatedDiscounts.length === 0
 									? `Sin descuentos asociados.`
 									: allAssociatedDiscounts.length > 1
-									  ? `${allAssociatedDiscounts.length} Descuentos asociados.`
-									  : `${allAssociatedDiscounts.length} Descuento asociado.`}
+										? `${allAssociatedDiscounts.length} Descuentos asociados.`
+										: `${allAssociatedDiscounts.length} Descuento asociado.`}
 							</CardTitle>
 							<CardDescription></CardDescription>
 						</CardHeader>
@@ -460,7 +456,6 @@ function BreadCrumbs() {
 
 function DeleteItemConfirmationModal({ itemId }: { itemId: string }) {
 	return (
-		// <div className="flex w-full gap-4">
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
 				<Button variant={'outline'} className="flex w-full items-center gap-2">
@@ -482,7 +477,6 @@ function DeleteItemConfirmationModal({ itemId }: { itemId: string }) {
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
-		// </div>
 	)
 }
 
@@ -496,7 +490,6 @@ export function DeleteItem({ id }: { id: string }) {
 
 	return (
 		<Form method="POST" {...getFormProps(form)}>
-			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={id} />
 			<StatusButton
 				type="submit"

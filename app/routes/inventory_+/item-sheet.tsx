@@ -1,6 +1,6 @@
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { cn, formatCurrency, invariant } from '#app/utils/misc.tsx'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 
 import {
 	Sheet,
@@ -16,6 +16,7 @@ import { Link, useFetcher } from '@remix-run/react'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import React from 'react'
+import { invariant } from '@epic-web/invariant'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)

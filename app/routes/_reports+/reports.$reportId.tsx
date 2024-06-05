@@ -1,7 +1,7 @@
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
@@ -21,8 +21,7 @@ import { requireUserId } from '#app/utils/auth.server.ts'
 import { itemTransactionTypeColors } from '../transaction+/_constants/itemTransactionTypesColors.ts'
 import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
-
-
+import { invariantResponse } from '@epic-web/invariant'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -182,8 +181,8 @@ export default function ReportRoute() {
 										transactionReport.status === TransactionStatus.DISCARDED
 											? 'cross-1'
 											: transactionReport.status === TransactionStatus.PENDING
-											  ? 'update'
-											  : 'checks'
+												? 'update'
+												: 'checks'
 									}
 									className="h-4 w-4"
 								/>

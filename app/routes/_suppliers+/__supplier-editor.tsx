@@ -1,17 +1,12 @@
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { prisma } from '#app/utils/db.server.ts'
 import { useIsPending } from '#app/utils/misc.tsx'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { type Supplier } from '@prisma/client'
 import {
-	json,
-	redirect,
-	type ActionFunctionArgs,
-	type SerializeFrom,
+	type SerializeFrom
 } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
-import { clean, validate } from '@validatecl/rut'
 import { z } from 'zod'
 
 import {
@@ -22,13 +17,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import {type action} from './__supplier-editor.server.tsx'
 
 import { ErrorList, Field } from '#app/components/forms.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { Button } from '#app/components/ui/button.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 
-const SupplierEditorSchema = z.object({
+export const SupplierInfoEditSchema = z.object({
 	id: z.string().optional(),
 	rut: z.string({ required_error: 'Campo obligatorio' }),
 	name: z.string({ required_error: 'Campo obligatorio' }),
@@ -39,75 +34,7 @@ const SupplierEditorSchema = z.object({
 	email: z.string({ required_error: 'Campo obligatorio' }).email(),
 })
 
-export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserId(request)
-	const businessId = await getBusinessId(userId)
-	const formData = await request.formData()
 
-	const submission = await parseWithZod(formData, {
-		schema: SupplierEditorSchema.superRefine(async (data, ctx) => {
-			const supplierByRut = await prisma.supplier.findFirst({
-				select: { id: true, rut: true },
-				where: { businessId, rut: data.rut },
-			})
-
-			if (supplierByRut && supplierByRut.id !== data.id) {
-				ctx.addIssue({
-					path: ['rut'],
-					code: z.ZodIssueCode.custom,
-					message: 'Ya existe un proveedor con este RUT.',
-				})
-			}
-
-			if (!validate(data.rut)) {
-				ctx.addIssue({
-					path: ['rut'],
-					code: z.ZodIssueCode.custom,
-					message: 'RUT inválido.',
-				})
-			}
-		}),
-		async: true,
-	})
-
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { address, city, email, fantasyName, name, phone, rut, id } =
-		submission.value
-
-	const cleanedRut = clean(rut)
-
-	const updatedSupplier = await prisma.supplier.upsert({
-		select: { id: true },
-		where: { id: id ?? '__new_supplier__' },
-		create: {
-			rut: cleanedRut ?? rut,
-			name,
-			address,
-			city,
-			fantasyName,
-			phone,
-			email,
-			business: { connect: { id: businessId } },
-		},
-		update: {
-			rut: cleanedRut ?? rut,
-			name,
-			address,
-			city,
-			fantasyName,
-			phone,
-			email,
-		},
-	})
-
-	return redirect(`/suppliers/${updatedSupplier.id}`)
-}
 
 export function SupplierEditor({
 	supplier,
@@ -131,10 +58,10 @@ export function SupplierEditor({
 
 	const [form, fields] = useForm({
 		id: 'provider-editor',
-		constraint: getZodConstraint(SupplierEditorSchema),
+		constraint: getZodConstraint(SupplierInfoEditSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: SupplierEditorSchema })
+			return parseWithZod(formData, { schema: SupplierInfoEditSchema })
 		},
 		defaultValue: {
 			rut: supplier?.rut ?? '',

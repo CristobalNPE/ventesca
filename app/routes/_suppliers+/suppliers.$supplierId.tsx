@@ -1,17 +1,5 @@
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { prisma } from '#app/utils/db.server.ts'
-import { formatChileanRUT, invariantResponse } from '#app/utils/misc.tsx'
-import {
-	ActionFunctionArgs,
-	json,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-
 import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
@@ -20,8 +8,19 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import { Icon, IconName } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import {
+	ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Link, useLoaderData } from '@remix-run/react'
+import { format as formatRut } from '@validatecl/rut'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import {
@@ -31,14 +30,15 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
 import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
 import {
 	DELETE_SUPPLIER_KEY,
 	DeleteSupplier,
 	DeleteSupplierSchema,
 } from './__delete-supplier.tsx'
-import { parseWithZod } from '@conform-to/zod'
-import { redirectWithToast } from '#app/utils/toast.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -93,7 +93,7 @@ export default function SupplierRoute() {
 								className="flex items-center justify-center gap-1"
 							>
 								<Icon className="shrink-0" name="id-badge-2" />
-								{formatChileanRUT(supplier.rut)}
+								{formatRut(supplier.rut)}
 							</Badge>
 						</div>
 						<Button
@@ -154,7 +154,7 @@ export default function SupplierRoute() {
 					<DetailsCard
 						icon={'id-badge-2'}
 						description={'RUT'}
-						data={formatChileanRUT(supplier.rut)}
+						data={formatRut(supplier.rut)}
 					/>
 					<DetailsCard
 						icon={'user'}

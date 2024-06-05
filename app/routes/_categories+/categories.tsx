@@ -18,7 +18,7 @@ import {
 } from '#app/components/ui/table.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency, invariantResponse } from '#app/utils/misc.tsx'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Category } from '@prisma/client'
 import {
 	ActionFunctionArgs,
@@ -41,6 +41,7 @@ import {
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
+import { invariantResponse } from '@epic-web/invariant'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -241,7 +242,9 @@ async function getWeeklyProfitsPerCategory(businessId: string) {
 						totalProfit: 0,
 					}
 				}
+
 				acc[item.category.id].totalProfit += profit
+
 				return acc
 			},
 			{} as { [key: string]: CategoryProfit },

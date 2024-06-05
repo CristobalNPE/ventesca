@@ -154,7 +154,7 @@ const GenerateTransactionReport = ({
 				target="_blank"
 				reloadDocument
 				to={`/reports/${transactionId}/report-pdf`}
-				className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5 text-center"
+				className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5 text-center text-wrap"
 			>
 				<Icon className="flex-none text-2xl" name="report-money" />{' '}
 				<span className="leading-tight">Generar Reporte</span>

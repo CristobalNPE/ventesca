@@ -1,10 +1,11 @@
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse } from '#app/utils/misc.tsx'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { SupplierEditor, action } from './__supplier-editor.tsx'
+import { SupplierEditor } from './__supplier-editor.tsx'
+import {action} from './__supplier-editor.server.tsx'
+import { invariantResponse } from '@epic-web/invariant'
 
 export { action }
 export async function loader({ request, params }: LoaderFunctionArgs) {

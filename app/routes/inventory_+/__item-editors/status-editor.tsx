@@ -1,7 +1,7 @@
 import { getFormProps, useForm } from '@conform-to/react'
 
 import { useFetcher } from '@remix-run/react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+
 import { z } from 'zod'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '../edit.tsx'
@@ -46,7 +46,6 @@ export function EditStatus({
 				{...getFormProps(form)}
 				action={'/inventory/edit'}
 			>
-				<AuthenticityTokenInput />
 				<input type="hidden" name="itemId" value={itemId} />
 				<input type="hidden" name="status" value={STATUS_DISABLED} />
 				<StatusButton
@@ -73,7 +72,6 @@ export function EditStatus({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-			<AuthenticityTokenInput />
 			<input type="hidden" name="itemId" value={itemId} />
 			<input type="hidden" name="status" value={STATUS_ENABLED} />
 			<StatusButton

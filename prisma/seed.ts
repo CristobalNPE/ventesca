@@ -4,10 +4,10 @@ import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
 
 //config:
-const NUMBER_OF_CATEGORIES = 25
-const NUMBER_OF_SUPPLIERS = 15
-const NUMBER_OF_PRODUCTS = 2000
-const NUMBER_OF_TRANSACTIONS = 20000
+const NUMBER_OF_CATEGORIES = 5
+const NUMBER_OF_SUPPLIERS = 5
+const NUMBER_OF_PRODUCTS = 50
+const NUMBER_OF_TRANSACTIONS = 200
 
 async function seed() {
 	console.log('🌱 Seeding...')

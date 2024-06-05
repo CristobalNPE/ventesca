@@ -41,8 +41,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const categorySearchAsNumber = Number(categorySearch) || null
 
 	if (categorySearch === null) return null
-	console.log(url.searchParams.getAll(''))
-	console.log(categorySearch)
 
 	const categorySearchByNameButTooShort =
 		categorySearchAsNumber === null && categorySearch.length <= 2
@@ -69,6 +67,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		orderBy: { code: 'asc' },
 	})
 
+	console.log(categories)
 	return json({ categories })
 }
 
@@ -92,6 +91,7 @@ export function CategoryPicker({
 	})
 
 	const categories = fetcher.data?.categories ?? []
+
 	type Category = (typeof categories)[0]
 
 	const [addedCategories, setAddedCategories] = useState<Category[]>([])

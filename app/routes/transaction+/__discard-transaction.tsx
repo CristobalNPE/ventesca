@@ -42,7 +42,7 @@ export function DiscardTransaction({ id }: { id: string }) {
 			<AlertDialogTrigger asChild>
 				<Button
 					variant={'destructive'}
-					className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5"
+					className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5 text-center text-wrap"
 				>
 					<Icon name="trash" className="flex-none text-2xl" />{' '}
 					<span className="leading-tight">Descartar Transacción</span>

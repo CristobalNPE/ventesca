@@ -7,12 +7,13 @@ import { ErrorList } from '#app/components/forms.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
-import { validateCSRF } from '#app/utils/csrf.server.ts'
+
 import { prisma } from '#app/utils/db.server.ts'
-import { invariantResponse, useIsPending } from '#app/utils/misc.tsx'
+import { useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { destroyCurrentTransaction } from '#app/utils/transaction.server.ts'
+
 import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
 
 //! ONLY ADMIN SHOULD BE ABLE TO ACTUALLY DELETE THE TRANSACTION. WHEN TRANSACTION IS DISCARDED FROM THE SALES PAGE, IT SHOULD BE ONLY FLAGGED AS DISCARDED.
 const DeleteFormSchema = z.object({
@@ -27,7 +28,7 @@ export async function loader() {
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserId(request)
 	const formData = await request.formData()
-	await validateCSRF(formData, request.headers)
+
 	const submission = parseWithZod(formData, {
 		schema: DeleteFormSchema,
 	})
@@ -51,19 +52,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	await prisma.transaction.delete({ where: { id: transaction.id } })
 
-	return redirectWithToast(
-		`/reports`,
-		{
-			type: 'success',
-			title: 'Transacción Eliminada',
-			description: `Transacción ${transaction.id} ha sido eliminada permanentemente .`,
-		},
-		{
-			headers: {
-				'Set-Cookie': await destroyCurrentTransaction(request),
-			},
-		},
-	)
+	return redirectWithToast(`/reports`, {
+		type: 'success',
+		title: 'Transacción Eliminada',
+		description: `Transacción ${transaction.id} ha sido eliminada permanentemente .`,
+	})
 }
 
 export function DeleteTransaction({ id }: { id: string }) {

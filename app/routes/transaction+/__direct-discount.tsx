@@ -140,43 +140,6 @@ export function DirectDiscount({
 					<ErrorList errors={form.errors} id={form.errorId} />
 				</fetcher.Form>
 
-				{/* <div className="text-muted-foreground">
-					<div className="flex justify-between">
-						<span>Valor previo:</span>
-						<span className="w-[10rem]  overflow-x-clip">
-							{formatCurrency(transactionTotal)}
-						</span>
-					</div>
-					{isDiscountTypeFixed ? (
-						<div className="flex justify-between">
-							<span>
-								Valor descuento{' '}
-								{discountTypeNames[fields.discountType.value as DiscountType]}:
-							</span>
-							<span className="w-[10rem]  overflow-x-clip">
-								{formatCurrency(Number(fields.discountValue.value))}
-							</span>
-						</div>
-					) : (
-						<div className="flex justify-between">
-							<span>
-								Valor descuento{' '}
-								{discountTypeNames[fields.discountType.value as DiscountType]}:
-							</span>
-							<span className="w-[10rem]  overflow-x-clip">
-								{Number(fields.discountValue.value)}%
-							</span>
-						</div>
-					)}
-					<div className="flex justify-between text-foreground">
-						<span>Valor final:</span>{' '}
-						<span className="w-[10rem]  overflow-x-clip">
-							{formatCurrency(totalDirectDiscount)}
-						</span>
-					</div>
-				</div>
-				<Spacer size="4xs" /> */}
-
 				<StatusButton
 					form={form.id}
 					type="submit"

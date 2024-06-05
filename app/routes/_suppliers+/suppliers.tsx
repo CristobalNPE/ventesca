@@ -17,7 +17,8 @@ import {
 } from '#app/components/ui/table.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatChileanRUT } from '#app/utils/misc.tsx'
+import { cn } from '#app/utils/misc.tsx'
+import { format as formatRut } from '@validatecl/rut'
 import { Supplier } from '@prisma/client'
 import { LoaderFunctionArgs, SerializeFrom, json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
@@ -126,7 +127,7 @@ function SuppliersTable({
 										</Button>
 									</TableCell>
 									<TableCell className="text-xs uppercase">
-										{formatChileanRUT(supplier.rut)}
+										{formatRut(supplier.rut)}
 									</TableCell>
 
 									<TableCell className="text-right font-semibold">

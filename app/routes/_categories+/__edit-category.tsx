@@ -66,8 +66,8 @@ export function EditCategory({ id }: { id: string }) {
 			return parseWithZod(formData, { schema: EditCategorySchema })
 		},
 		defaultValue: {
-			code: categoryData.code,
-			description: categoryData.description,
+			code: categoryData?.code,
+			description: categoryData?.description,
 		},
 	})
 
