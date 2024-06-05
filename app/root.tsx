@@ -8,14 +8,11 @@ import {
 	combineHeaders,
 	getDomainUrl,
 	getUserImgSrc,
-	invariantResponse,
 } from '#app/utils/misc.tsx'
-import { getFormProps, useForm } from '@conform-to/react'
 
-import { cssBundleHref } from '@remix-run/css-bundle'
 import {
+	LoaderFunctionArgs,
 	json,
-	type DataFunctionArgs,
 	type HeadersFunction,
 	type LinksFunction,
 	type MetaFunction,
@@ -24,26 +21,21 @@ import {
 	Form,
 	Link,
 	Links,
-	LiveReload,
 	Meta,
 	NavLink,
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	useFetcher,
-	useFetchers,
 	useLoaderData,
 	useSubmit,
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
 import { useRef } from 'react'
-import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 import { z } from 'zod'
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
-import { ErrorList } from './components/forms.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
-import { EpicToaster } from './components/toaster.tsx'
+
 import { Button } from './components/ui/button.tsx'
 import {
 	DropdownMenu,
@@ -59,29 +51,29 @@ import {
 	SheetContent,
 	SheetTrigger,
 } from './components/ui/sheet.tsx'
-import fontStyleSheetUrl from './styles/font.css'
-import tailwindStyleSheetUrl from './styles/tailwind.css'
+import tailwindStyleSheetUrl from './styles/tailwind.css?url'
+import fontStyleSheetUrl from './styles/font.css?url'
 import { getUserId, logout } from './utils/auth.server.ts'
-import { ClientHintCheck, getHints, useHints } from './utils/client-hints.tsx'
-import { csrf } from './utils/csrf.server.ts'
+import { ClientHintCheck, getHints } from './utils/client-hints.tsx'
 import { prisma } from './utils/db.server.ts'
 import { getEnv } from './utils/env.server.ts'
 import { honeypot } from './utils/honeypot.server.ts'
 
-import { useNonce } from './utils/nonce-provider.ts'
-import { useRequestInfo } from './utils/request-info.ts'
-import { getTheme, setTheme, type Theme } from './utils/theme.server.ts'
-import { makeTimings, time } from './utils/timing.server.ts'
-import { getToast } from './utils/toast.server.ts'
-import { useOptionalUser, useUser } from './utils/user.ts'
-import { parseWithZod } from '@conform-to/zod'
 import { Spacer } from './components/spacer.tsx'
+import { useToast } from './components/toaster.tsx'
+import { EpicToaster } from './components/ui/sonner.tsx'
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from './components/ui/tooltip.tsx'
+import { ThemeSwitch, useTheme } from './routes/resources+/theme-switch.tsx'
+import { useNonce } from './utils/nonce-provider.ts'
+import { getTheme, type Theme } from './utils/theme.server.ts'
+import { makeTimings, time } from './utils/timing.server.ts'
+import { getToast } from './utils/toast.server.ts'
+import { useOptionalUser, useUser } from './utils/user.ts'
 
 type NavigationLink = {
 	name: string
@@ -94,9 +86,6 @@ export const links: LinksFunction = () => {
 		// Preload svg sprite as a resource to avoid render blocking
 		{ rel: 'preload', href: iconsHref, as: 'image' },
 		// Preload CSS as a resource to avoid render blocking
-		{ rel: 'preload', href: fontStyleSheetUrl, as: 'style' },
-		{ rel: 'preload', href: tailwindStyleSheetUrl, as: 'style' },
-		cssBundleHref ? { rel: 'preload', href: cssBundleHref, as: 'style' } : null,
 		{ rel: 'mask-icon', href: '/favicons/mask-icon.svg' },
 		{
 			rel: 'alternate icon',
@@ -113,7 +102,6 @@ export const links: LinksFunction = () => {
 		{ rel: 'icon', type: 'image/svg+xml', href: '/favicons/favicon.svg' },
 		{ rel: 'stylesheet', href: fontStyleSheetUrl },
 		{ rel: 'stylesheet', href: tailwindStyleSheetUrl },
-		cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
 	].filter(Boolean)
 }
 
@@ -124,7 +112,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	]
 }
 
-export async function loader({ request }: DataFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
 	const timings = makeTimings('root loader')
 	const userId = await time(() => getUserId(request), {
 		timings,
@@ -154,7 +142,7 @@ export async function loader({ request }: DataFunctionArgs) {
 						where: { id: userId },
 					}),
 				{ timings, type: 'find user', desc: 'find user in root' },
-		  )
+			)
 		: null
 	if (userId && !user) {
 		console.info('something weird happened')
@@ -164,7 +152,6 @@ export async function loader({ request }: DataFunctionArgs) {
 	}
 	const { toast, headers: toastHeaders } = await getToast(request)
 	const honeyProps = honeypot.getInputProps()
-	const [csrfToken, csrfCookieHeader] = await csrf.commitToken()
 
 	return json(
 		{
@@ -175,19 +162,16 @@ export async function loader({ request }: DataFunctionArgs) {
 				path: new URL(request.url).pathname,
 				userPrefs: {
 					theme: getTheme(request),
-					//save here the state of the sidebar.
 				},
 			},
 			ENV: getEnv(),
 			toast,
 			honeyProps,
-			csrfToken,
 		},
 		{
 			headers: combineHeaders(
 				{ 'Server-Timing': timings.toString() },
 				toastHeaders,
-				csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : null,
 			),
 		},
 	)
@@ -204,39 +188,80 @@ const ThemeFormSchema = z.object({
 	theme: z.enum(['system', 'light', 'dark']),
 })
 
-export async function action({ request }: DataFunctionArgs) {
-	const formData = await request.formData()
-	const submission = parseWithZod(formData, {
-		schema: ThemeFormSchema,
-	})
-	invariantResponse(submission.status === 'success', 'Invalid theme received')
+// export async function action({ request }: DataFunctionArgs) {
+// 	const formData = await request.formData()
+// 	const submission = parseWithZod(formData, {
+// 		schema: ThemeFormSchema,
+// 	})
+// 	invariantResponse(submission.status === 'success', 'Invalid theme received')
 
-	const { theme } = submission.value
+// 	const { theme } = submission.value
 
-	const responseInit = {
-		headers: { 'set-cookie': setTheme(theme) },
-	}
-	return json({ result: submission.reply() }, responseInit)
-}
+// 	const responseInit = {
+// 		headers: { 'set-cookie': setTheme(theme) },
+// 	}
+// 	return json({ result: submission.reply() }, responseInit)
+// }
+
+// function Document({
+// 	children,
+// 	nonce,
+// 	theme = 'light',
+// 	env = {},
+// }: {
+// 	children: React.ReactNode
+// 	nonce: string
+// 	theme?: Theme
+// 	env?: Record<string, string>
+// }) {
+// 	return (
+// 		<html lang="en" className={`${theme} h-[100dvh] overflow-hidden`}>
+// 			<head>
+// 				<ClientHintCheck nonce={nonce} />
+// 				<Meta />
+// 				<meta charSet="utf-8" />
+// 				<meta name="viewport" content="width=device-width,initial-scale=1" />
+// 				<Links />
+// 			</head>
+// 			<body className="bg-background text-foreground">
+// 				{children}
+// 				<script
+// 					nonce={nonce}
+// 					dangerouslySetInnerHTML={{
+// 						__html: `window.ENV = ${JSON.stringify(env)}`,
+// 					}}
+// 				/>
+// 				<ScrollRestoration nonce={nonce} />
+// 				<Scripts nonce={nonce} />
+// 				<LiveReload nonce={nonce} />
+// 			</body>
+// 		</html>
+// 	)
+// }
 
 function Document({
 	children,
 	nonce,
 	theme = 'light',
 	env = {},
+	allowIndexing = true,
 }: {
 	children: React.ReactNode
 	nonce: string
 	theme?: Theme
 	env?: Record<string, string>
+	allowIndexing?: boolean
 }) {
 	return (
-		<html lang="en" className={`${theme} h-[100dvh] overflow-hidden`}>
+		<html lang="es" className={`${theme} h-[100dvh] overflow-hidden`}>
 			<head>
 				<ClientHintCheck nonce={nonce} />
 				<Meta />
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width,initial-scale=1" />
+				{allowIndexing ? null : (
+					<meta name="robots" content="noindex, nofollow" />
+				)}
 				<Links />
 			</head>
 			<body className="bg-background text-foreground">
@@ -249,7 +274,6 @@ function Document({
 				/>
 				<ScrollRestoration nonce={nonce} />
 				<Scripts nonce={nonce} />
-				<LiveReload nonce={nonce} />
 			</body>
 		</html>
 	)
@@ -260,6 +284,8 @@ function App() {
 	const nonce = useNonce()
 	const user = useOptionalUser()
 	const theme = useTheme()
+
+	useToast(data.toast)
 
 	const navigationLinks: NavigationLink[] = [
 		{
@@ -322,109 +348,7 @@ function App() {
 						businessName={businessName}
 					/>
 				)}
-				{/* <div className="flex-1 overflow-auto bg-background"> */}
-				{/* <header className="sticky top-0 z-50 flex h-[4rem]  items-center justify-between gap-8 border-b bg-background p-8">
-						<Sheet>
-							<SheetTrigger asChild>
-								<Button size={'icon'} variant={'outline'} className="xl:hidden">
-									<Icon className="text-xl" name="layout-sidebar-left-expand" />
-									<span className="sr-only">Expandir Menu</span>
-								</Button>
-							</SheetTrigger>
-							<SheetContent side="left" className="sm:max-w-xs">
-								<nav className=" flex h-full flex-col justify-around gap-6">
-									<div className="flex flex-col gap-2">
-										{navigationLinks.map(link => {
-											return (
-												<SheetClose
-													className="group flex"
-													asChild
-													key={link.name}
-												>
-													<NavLink
-														className={({ isActive }) =>
-															cn(
-																'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
-																isActive &&
-																	'bg-foreground/20 text-foreground hover:text-foreground',
-															)
-														}
-														to={link.path}
-													>
-														<Icon size="md" className="" name={link.icon} />
-														<span>{link.name}</span>
-													</NavLink>
-												</SheetClose>
-											)
-										})}
-									</div>
-									<div>
-										{secondaryLinks.map(link => {
-											return (
-												<SheetClose
-													className="group flex"
-													asChild
-													key={link.name}
-												>
-													<NavLink
-														className={({ isActive }) =>
-															cn(
-																'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
-																isActive &&
-																	'bg-foreground/20 text-foreground hover:text-foreground',
-															)
-														}
-														to={link.path}
-													>
-														<Icon size="md" className="" name={link.icon} />
-														<span>{link.name}</span>
-													</NavLink>
-												</SheetClose>
-											)
-										})}
-									</div>
-									<div className="flex flex-col gap-2">
-										<ThemeSwitch
-											userPreference={data.requestInfo.userPrefs.theme}
-										/>
-										{user && <UserDropdown />}
-									</div>
-								</nav>
-							</SheetContent>
-						</Sheet>
 
-						<NavLink
-							className={({ isActive }) =>
-								cn(
-									'text-md flex w-full select-none items-center  justify-center gap-3 rounded-sm bg-background px-12 py-2 font-bold ring-2 ring-primary-foreground transition-colors hover:bg-primary/60 *:hover:text-foreground sm:w-fit',
-									isActive && 'bg-primary/60 *:text-foreground ',
-								)
-							}
-							to={'transaction'}
-						>
-							<Icon
-								size="md"
-								className="text-primary"
-								name={'circle-dollar-sign'}
-							/>
-
-							<span className="hidden md:flex">{'Punto de Venta'}</span>
-						</NavLink>
-						<div className="flex gap-1 text-sm font-bold">
-							SIZE:
-							<span className="hidden xl:flex">XL</span>
-							<span className="hidden lg:flex xl:hidden">LG</span>
-							<span className="hidden md:flex lg:hidden">MD</span>
-							<span className="hidden sm:flex md:hidden">SM</span>
-							<span className="xs:flex hidden sm:hidden">XS</span>
-						</div>
-						<div className=" hidden gap-2 xl:flex">
-							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
-							{user && <UserDropdown />}
-						</div>
-					</header> */}
-				{/* !!FIX	COLORS PLEASE */}
-				{/* <main className="h-[calc(99%-4rem)] overflow-y-auto  p-4 sm:p-5 md:p-7"> */}
 				<main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7">
 					<div className="xl:hidden ">
 						<Spacer size="xs" />
@@ -435,7 +359,7 @@ function App() {
 				</main>
 				{/* </div> */}
 			</div>
-			<EpicToaster toast={data.toast} />
+			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
 		</Document>
 	)
@@ -444,11 +368,9 @@ function App() {
 function AppWithProviders() {
 	const data = useLoaderData<typeof loader>()
 	return (
-		<AuthenticityTokenProvider token={data.csrfToken}>
-			<HoneypotProvider {...data.honeyProps}>
-				<App />
-			</HoneypotProvider>
-		</AuthenticityTokenProvider>
+		<HoneypotProvider {...data.honeyProps}>
+			<App />
+		</HoneypotProvider>
 	)
 }
 
@@ -469,7 +391,7 @@ function UserDropdown() {
 						className="flex items-center  gap-2"
 					>
 						<img
-							className="h-8 w-8 rounded-full border-2 border-foreground/20 object-cover p-[2px]"
+							className="h-8 w-8 rounded-full object-cover"
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
@@ -524,79 +446,79 @@ function UserDropdown() {
  * @returns the user's theme preference, or the client hint theme if the user
  * has not set a preference.
  */
-export function useTheme() {
-	const hints = useHints()
-	const requestInfo = useRequestInfo()
-	const optimisticMode = useOptimisticThemeMode()
-	if (optimisticMode) {
-		return optimisticMode === 'system' ? hints.theme : optimisticMode
-	}
-	return requestInfo.userPrefs.theme ?? hints.theme
-}
+// export function useTheme() {
+// 	const hints = useHints()
+// 	const requestInfo = useRequestInfo()
+// 	const optimisticMode = useOptimisticThemeMode()
+// 	if (optimisticMode) {
+// 		return optimisticMode === 'system' ? hints.theme : optimisticMode
+// 	}
+// 	return requestInfo.userPrefs.theme ?? hints.theme
+// }
 
 /**
  * If the user's changing their theme mode preference, this will return the
  * value it's being changed to.
  */
-export function useOptimisticThemeMode() {
-	const fetchers = useFetchers()
-	const themeFetcher = fetchers.find(f => f.formAction === '/')
+// export function useOptimisticThemeMode() {
+// 	const fetchers = useFetchers()
+// 	const themeFetcher = fetchers.find(f => f.formAction === '/')
 
-	if (themeFetcher && themeFetcher.formData) {
-		const submission = parseWithZod(themeFetcher.formData, {
-			schema: ThemeFormSchema,
-		})
-		if (submission.status === 'success') {
-			return submission.value.theme
-		}
-	}
-}
+// 	if (themeFetcher && themeFetcher.formData) {
+// 		const submission = parseWithZod(themeFetcher.formData, {
+// 			schema: ThemeFormSchema,
+// 		})
+// 		if (submission.status === 'success') {
+// 			return submission.value.theme
+// 		}
+// 	}
+// }
 
-function ThemeSwitch({ userPreference }: { userPreference?: Theme | null }) {
-	const fetcher = useFetcher<typeof action>()
+// function ThemeSwitch({ userPreference }: { userPreference?: Theme | null }) {
+// 	const fetcher = useFetcher<typeof action>()
 
-	const [form] = useForm({
-		id: 'theme-switch',
-		lastResult: fetcher.data?.result,
-	})
+// 	const [form] = useForm({
+// 		id: 'theme-switch',
+// 		lastResult: fetcher.data?.result,
+// 	})
 
-	const optimisticMode = useOptimisticThemeMode()
-	const mode = optimisticMode ?? userPreference ?? 'system'
-	const nextMode =
-		mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system'
-	const modeLabel = {
-		light: (
-			<Icon name="sun">
-				<span className="sr-only">Light</span>
-			</Icon>
-		),
-		dark: (
-			<Icon name="moon">
-				<span className="sr-only">Dark</span>
-			</Icon>
-		),
-		system: (
-			<Icon name="laptop">
-				<span className="sr-only">System</span>
-			</Icon>
-		),
-	}
+// 	const optimisticMode = useOptimisticThemeMode()
+// 	const mode = optimisticMode ?? userPreference ?? 'system'
+// 	const nextMode =
+// 		mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system'
+// 	const modeLabel = {
+// 		light: (
+// 			<Icon name="sun">
+// 				<span className="sr-only">Light</span>
+// 			</Icon>
+// 		),
+// 		dark: (
+// 			<Icon name="moon">
+// 				<span className="sr-only">Dark</span>
+// 			</Icon>
+// 		),
+// 		system: (
+// 			<Icon name="laptop">
+// 				<span className="sr-only">System</span>
+// 			</Icon>
+// 		),
+// 	}
 
-	return (
-		<fetcher.Form method="POST" {...getFormProps(form)}>
-			<input type="hidden" name="theme" value={nextMode} />
-			<div className="flex gap-2">
-				<button
-					type="submit"
-					className="flex h-8 w-8 cursor-pointer items-center justify-center"
-				>
-					{modeLabel[mode]}
-				</button>
-			</div>
-			<ErrorList errors={form.errors} id={form.errorId} />
-		</fetcher.Form>
-	)
-}
+// 	return (
+// 		<fetcher.Form method="POST" {...getFormProps(form)}>
+// 			<input type="hidden" name="theme" value={nextMode} />
+// 			<div className="flex gap-2">
+// 				<button
+// 					type="submit"
+// 					className="flex h-8 w-8 cursor-pointer items-center justify-center"
+// 				>
+// 					{modeLabel[mode]}
+// 				</button>
+// 			</div>
+// 			<ErrorList errors={form.errors} id={form.errorId} />
+// 		</fetcher.Form>
+// 	)
+// }
 
 function SideBar({
 	themeUserPreference,
