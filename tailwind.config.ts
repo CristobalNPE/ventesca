@@ -3,6 +3,7 @@ import animatePlugin from 'tailwindcss-animate'
 import radixPlugin from 'tailwindcss-radix'
 import { marketingPreset } from './app/routes/_marketing+/tailwind-preset'
 import { extendedTheme } from './app/utils/extended-theme.ts'
+import defaultTheme from 'tailwindcss/defaultTheme.js'
 
 export default {
 	content: ['./app/**/*.{ts,tsx,jsx,js}'],
@@ -15,7 +16,12 @@ export default {
 				'2xl': '1400px',
 			},
 		},
-		extend: extendedTheme,
+		extend: {
+			...extendedTheme,
+			fontFamily: {
+				sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],
+			},
+		},
 	},
 	presets: [marketingPreset],
 	plugins: [animatePlugin, radixPlugin],
