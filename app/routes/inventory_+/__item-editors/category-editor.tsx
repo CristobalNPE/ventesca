@@ -2,7 +2,6 @@ import { getFormProps, useForm } from '@conform-to/react'
 
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
@@ -55,7 +54,7 @@ export function CategoryEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-			<AuthenticityTokenInput />
+
 			<input type="hidden" name="itemId" value={id} />
 			{targetValue && (
 				<input type="hidden" name="categoryId" value={targetValue.id} />

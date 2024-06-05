@@ -1,6 +1,6 @@
 import { useActionData, useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
-import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+
 import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
@@ -68,7 +68,7 @@ export function StockEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-			<AuthenticityTokenInput />
+
 			<input type="hidden" name="itemId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
