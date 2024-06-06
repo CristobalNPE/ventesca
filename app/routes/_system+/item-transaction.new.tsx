@@ -98,7 +98,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		} as const)
 	}
 
-	//Check if there is an itemTransaction with that item already
 	const itemTransaction = await prisma.itemTransaction.findFirst({
 		where: {
 			transactionId: currentTransaction.id,
@@ -107,7 +106,6 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 
 	if (itemTransaction) {
-		//consider sending a message to the user that the item is already in the transaction
 		return json({
 			status: 'error',
 			message: 'El articulo ya se encuentra en la transacción.',
@@ -174,17 +172,12 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 		const data = fetcher.data
 		const isSubmitting = fetcher.state !== 'idle'
 
-		
-
 		const innerRef = useRef<HTMLInputElement>(null)
 		useImperativeHandle(ref, () => innerRef.current!)
 
-		
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
 			fetcher.submit(form)
 		}, 400)
-
-	
 
 		useEffect(() => {
 			if (data?.status === 'success' && fetcher.state === 'idle') {
@@ -254,27 +247,49 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Toggle
+								className={cn(
+									'',
+									isAutoSubmit &&
+										'duration-[10000ms] animate-pulse bg-background brightness-150',
+								)}
 								variant={'outline'}
 								pressed={isAutoSubmit}
 								onPressedChange={() => setIsAutoSubmit(prevState => !prevState)}
-								aria-label="activar escaneo automático"
+								aria-label={
+									isAutoSubmit
+										? 'Desactivar escaneo automático'
+										: 'Activar escaneo automático'
+								}
 							>
 								<Icon name="scan-barcode" />
 							</Toggle>
 						</TooltipTrigger>
 						<TooltipContent>
-							<p>Activar escaneo automático</p>
+							<p>
+								{isAutoSubmit
+									? 'Desactivar escaneo automático'
+									: 'Activar escaneo automático'}
+							</p>
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>
 
-				{(data?.status && data?.status !== 'success') ? (
+				{data?.status && data?.status !== 'success' ? (
 					<div
 						className={cn(
-							'flex select-none items-center gap-1 rounded-md bg-destructive p-2 text-xs text-foreground', data?.status === 'warn' && "bg-primary text-primary-foreground"
+							'flex select-none items-center gap-1 rounded-md bg-destructive p-2 text-xs text-foreground',
+							data?.status === 'warn' && 'bg-primary text-primary-foreground',
 						)}
 					>
-						<Icon name="exclamation-circle" size="sm" className="flex-none" />
+						<Icon
+							name={
+								data.status === 'error'
+									? 'exclamation-circle'
+									: 'alert-triangle'
+							}
+							size="sm"
+							className="flex-none"
+						/>
 						<span>{data?.message}</span>
 					</div>
 				) : null}
