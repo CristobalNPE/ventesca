@@ -12,7 +12,7 @@ import { Label } from '#app/components/ui/label.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { useDebounce } from '#app/utils/misc.tsx'
+import { cn, useDebounce } from '#app/utils/misc.tsx'
 import {
 	forwardRef,
 	useEffect,
@@ -25,6 +25,13 @@ import { z } from 'zod'
 import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 import { invariantResponse } from '@epic-web/invariant'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '#app/components/ui/tooltip.tsx'
+import { Toggle } from '#app/components/ui/toggle.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	throw redirect('/transaction')
@@ -55,9 +62,16 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 
 	if (!result.success) {
-		return json({ status: 'error', errors: result.error.flatten() } as const, {
-			status: 400,
-		})
+		return json(
+			{
+				status: 'error',
+				errors: result.error.flatten(),
+				message: 'error',
+			} as const,
+			{
+				status: 400,
+			},
+		)
 	}
 	const { search } = result.data
 
@@ -67,10 +81,21 @@ export async function action({ request }: ActionFunctionArgs) {
 			id: true,
 			sellingPrice: true,
 			stock: true,
+			isActive: true,
 		},
 	})
 	if (!item) {
-		return json({ status: 'not-found' } as const)
+		return json({
+			status: 'error',
+			message: 'El articulo no se encuentra en el registro de inventario.',
+		} as const)
+	}
+
+	if (!item.isActive) {
+		return json({
+			status: 'error',
+			message: 'El articulo no se encuentra activo.',
+		} as const)
 	}
 
 	//Check if there is an itemTransaction with that item already
@@ -83,11 +108,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	if (itemTransaction) {
 		//consider sending a message to the user that the item is already in the transaction
-		return json({ status: 'duplicated' } as const)
+		return json({
+			status: 'error',
+			message: 'El articulo ya se encuentra en la transacción.',
+		} as const)
 	}
 
 	//Create the default ItemTransaction
-	await prisma.itemTransaction.create({
+	const createdItemTransaction = await prisma.itemTransaction.create({
 		data: {
 			type: ItemTransactionType.SELL,
 			item: { connect: { id: item.id } },
@@ -113,7 +141,17 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return json({ status: 'success' } as const)
+	if (createdItemTransaction.item.stock < 1) {
+		return json({
+			status: 'warn',
+			message: `Articulo "${createdItemTransaction.item.name}" se encuentra sin stock.`,
+		} as const)
+	}
+
+	return json({
+		status: 'success',
+		message: `Articulo "${createdItemTransaction.item.name}" agregado con éxito`,
+	} as const)
 }
 
 type ItemReaderProps = {
@@ -125,32 +163,28 @@ type ItemReaderProps = {
 
 export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 	({ status, onFocus, autoFocus = false, autoSubmit = false }, ref) => {
+		const [isAutoSubmit, setIsAutoSubmit] = useState(autoSubmit)
+
 		const id = useId()
 
 		const [value, setValue] = useState('')
-		const fetcher = useFetcher<typeof action>({ key: 'add-item-transaction' })
+		const fetcher = useFetcher<typeof action>({
+			key: `add-item-transaction-ID${id}`,
+		})
 		const data = fetcher.data
 		const isSubmitting = fetcher.state !== 'idle'
 
-		const [message, setMessage] = useState<string | null>(null)
+		
 
 		const innerRef = useRef<HTMLInputElement>(null)
 		useImperativeHandle(ref, () => innerRef.current!)
 
-		useEffect(() => {
-			if (data?.status === 'success') setMessage(null)
-			if (data?.status === 'not-found') setMessage('Artículo no registrado.')
-			if (data?.status === 'duplicated')
-				setMessage('Artículo ya está en la lista.')
-		}, [data?.status])
-
+		
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
 			fetcher.submit(form)
 		}, 400)
 
-		useEffect(() => {
-			setMessage(null)
-		}, [value])
+	
 
 		useEffect(() => {
 			if (data?.status === 'success' && fetcher.state === 'idle') {
@@ -163,9 +197,10 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 				}
 			}
 		}, [data?.status, fetcher.state])
+		console.log(isAutoSubmit)
 
 		return (
-			<div className="relative ">
+			<div className="flex items-center gap-4">
 				<fetcher.Form
 					onSubmit={e => {
 						e.preventDefault()
@@ -173,12 +208,12 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 					}}
 					method="POST"
 					action="/item-transaction/new"
-					className="flex  items-center justify-center gap-2 rounded-md border-[1px] border-secondary bg-background"
-					onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
+					className="flex  items-center  gap-2 rounded-md border-2 bg-background"
+					onChange={e => isAutoSubmit && handleFormChange(e.currentTarget)}
 				>
-					<div className="flex-1">
+					<div className="">
 						<Label htmlFor={id} className="sr-only">
-							Search
+							Búsqueda articulo
 						</Label>
 						<Input
 							value={value}
@@ -187,32 +222,62 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 							type="number"
 							name="search"
 							id={id}
-							placeholder="Búsqueda Código"
+							placeholder="Código articulo"
 							className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
 							autoFocus={autoFocus}
 							disabled={isSubmitting}
 						/>
 					</div>
-					<div>
-						<StatusButton
-							type="submit"
-							status={isSubmitting ? 'pending' : status}
-							className="flex w-full items-center justify-center border-none"
-							variant={'outline'}
-							size="sm"
-						>
-							<Icon name="scan-barcode" size="md" />
-							<span className="sr-only">Buscar</span>
-						</StatusButton>
+					<div className="flex">
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<StatusButton
+										type="submit"
+										status={isSubmitting ? 'pending' : status}
+										className="flex w-full items-center justify-center border-none"
+										variant={'outline'}
+										size="sm"
+									>
+										<Icon name="scan" size="md" />
+										<span className="sr-only">Buscar</span>
+									</StatusButton>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Buscar articulo</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				</fetcher.Form>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Toggle
+								variant={'outline'}
+								pressed={isAutoSubmit}
+								onPressedChange={() => setIsAutoSubmit(prevState => !prevState)}
+								aria-label="activar escaneo automático"
+							>
+								<Icon name="scan-barcode" />
+							</Toggle>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Activar escaneo automático</p>
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 
-				{message && (
-					<div className="absolute right-14 top-[10px] flex select-none items-center gap-1 rounded-md bg-destructive/30 p-1 text-xs text-foreground">
+				{(data?.status && data?.status !== 'success') ? (
+					<div
+						className={cn(
+							'flex select-none items-center gap-1 rounded-md bg-destructive p-2 text-xs text-foreground', data?.status === 'warn' && "bg-primary text-primary-foreground"
+						)}
+					>
 						<Icon name="exclamation-circle" size="sm" className="flex-none" />
-						<span>{message}</span>
+						<span>{data?.message}</span>
 					</div>
-				)}
+				) : null}
 			</div>
 		)
 	},
