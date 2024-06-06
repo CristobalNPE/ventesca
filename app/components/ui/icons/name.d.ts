@@ -74,6 +74,7 @@ export type IconName =
 	| "reset"
 	| "route"
 	| "scan-barcode"
+	| "scan"
 	| "settings"
 	| "shapes"
 	| "sun"
