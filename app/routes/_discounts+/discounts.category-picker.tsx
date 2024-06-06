@@ -83,7 +83,7 @@ export function CategoryPicker({
 	const id = useId()
 	const errorId = errors?.length ? `${id}-error` : undefined
 
-	const fetcher = useFetcher<typeof loader>({ key: 'category-search' })
+	const fetcher = useFetcher<typeof loader>({ key: `category-search-ID${id}` }) 
 
 	const isSubmitting = fetcher.state !== 'idle'
 	const showSpin = useSpinDelay(isSubmitting, {

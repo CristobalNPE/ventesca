@@ -82,7 +82,7 @@ export function ItemPicker({
 	const id = useId()
 	const errorId = errors?.length ? `${id}-error` : undefined
 
-	const fetcher = useFetcher<typeof loader>({ key: 'item-search' })
+	const fetcher = useFetcher<typeof loader>({ key: `item-search-ID${id}` })
 
 	const isSubmitting = fetcher.state !== 'idle'
 	const showSpin = useSpinDelay(isSubmitting, {
