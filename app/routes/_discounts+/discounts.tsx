@@ -36,7 +36,8 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { useId, useRef } from 'react'
-import { updateDiscountValidity } from './discounts_.$discountId.tsx'
+import { updateDiscountValidity } from './discounts_.$discountId'
+
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

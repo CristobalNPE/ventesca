@@ -31,7 +31,7 @@ import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import { z } from 'zod'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
-import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
+
 import {
 	APPLY_DIRECT_DISCOUNT_KEY,
 	DirectDiscountSchema,
@@ -51,6 +51,7 @@ import {
 	SET_TRANSACTION_PAYMENT_METHOD_KEY,
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
+import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 
 const transactionDetailsSelect = {
 	id: true,
@@ -362,7 +363,7 @@ async function handleDiscardTransaction(formData: FormData) {
 		},
 	})
 	return redirectWithToast(`/reports`, {
-		type: 'success',
+		type: 'message',
 		title: 'Transacción Descartada',
 		description: `Transacción ${transaction.id} ha sido descartada.`,
 	})
