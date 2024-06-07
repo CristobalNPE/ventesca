@@ -288,7 +288,7 @@ export default function TransactionRoute() {
 				{/* //? I need to redo the item reader, change its width and add good feedback for when, for example, there is no stock or the item is not active */}
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
 				<Spacer size="4xs" />
-				<div className="flex flex-col gap-2  overflow-y-auto sm:max-h-[calc(100%-4rem)]">
+				<div className="flex flex-col gap-2 no-scrollbar overflow-y-auto no-sc sm:max-h-[calc(100%-4rem)]">
 					{transaction &&
 						allItemTransactions.map((itemTransaction, index) => {
 							if (itemTransaction.item) {
