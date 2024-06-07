@@ -52,6 +52,7 @@ import {
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
 import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 
 const transactionDetailsSelect = {
 	id: true,
@@ -285,12 +286,11 @@ export default function TransactionRoute() {
 	return (
 		<div className="flex h-full flex-1  gap-12">
 			<div className="flex-1 ">
-				{/* //? I need to redo the item reader, change its width and add good feedback for when, for example, there is no stock or the item is not active */}
 				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
 				<Spacer size="4xs" />
-				<div className="flex flex-col gap-2 no-scrollbar overflow-y-auto no-sc sm:max-h-[calc(100%-4rem)]">
-					{transaction &&
-						allItemTransactions.map((itemTransaction, index) => {
+				{allItemTransactions.length > 0 ? (
+					<div className="no-scrollbar flex flex-col gap-2 overflow-y-auto sm:max-h-[calc(100%-4rem)]">
+						{allItemTransactions.map((itemTransaction, index) => {
 							if (itemTransaction.item) {
 								return (
 									<ItemTransaction
@@ -304,7 +304,16 @@ export default function TransactionRoute() {
 								)
 							} else return null
 						})}
-				</div>
+					</div>
+				) : (
+					<div className="no-scrollbar flex h-[calc(100%-4rem)] flex-col items-center justify-center  gap-2  rounded-md border-2 border-dashed text-xl font-semibold text-muted-foreground">
+						<Icon className="text-2xl" name="scan" />
+						<h1>
+							Ingrese el código de articulo para agregarlo a la transacción en
+							curso.
+						</h1>
+					</div>
+				)}
 			</div>
 
 			<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
@@ -329,8 +338,6 @@ export default function TransactionRoute() {
 					transaction={TransactionDetailsSchema.parse(transaction)}
 				/>
 			</div>
-
-		
 		</div>
 	)
 }
