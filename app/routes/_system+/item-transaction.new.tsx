@@ -251,7 +251,7 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 								className={cn(
 									'border-2 border-foreground',
 									isAutoSubmit &&
-										'duration-[10000ms] border-secondary  bg-foreground text-background brightness-150 hover:bg-muted-foreground hover:text-accent',
+										'border-secondary  bg-foreground text-background brightness-150 hover:bg-muted-foreground hover:text-accent',
 								)}
 								variant={'outline'}
 								pressed={isAutoSubmit}
