@@ -82,19 +82,20 @@ export async function action({ request }: ActionFunctionArgs) {
 			sellingPrice: true,
 			stock: true,
 			isActive: true,
+			code: true,
 		},
 	})
 	if (!item) {
 		return json({
 			status: 'error',
-			message: 'El articulo no se encuentra en el registro de inventario.',
+			message: `Articulo código [${search}] no se encuentra en el registro de inventario.`,
 		} as const)
 	}
 
 	if (!item.isActive) {
 		return json({
 			status: 'error',
-			message: 'El articulo no se encuentra activo.',
+			message: 'Articulo no se encuentra activo.',
 		} as const)
 	}
 
@@ -108,7 +109,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (itemTransaction) {
 		return json({
 			status: 'error',
-			message: 'El articulo ya se encuentra en la transacción.',
+			message: `Articulo código [${item.code}] ya se encuentra en la transacción.`,
 		} as const)
 	}
 
@@ -142,13 +143,13 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (createdItemTransaction.item.stock < 1) {
 		return json({
 			status: 'warn',
-			message: `Articulo "${createdItemTransaction.item.name}" se encuentra sin stock.`,
+			message: `Articulo código [${createdItemTransaction.item.code}] se encuentra sin stock.`,
 		} as const)
 	}
 
 	return json({
 		status: 'success',
-		message: `Articulo "${createdItemTransaction.item.name}" agregado con éxito`,
+		message: `Articulo código [${createdItemTransaction.item.code}] agregado con éxito`,
 	} as const)
 }
 
@@ -248,9 +249,9 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 						<TooltipTrigger asChild>
 							<Toggle
 								className={cn(
-									'',
+									'border-2 border-foreground',
 									isAutoSubmit &&
-										'duration-[10000ms] animate-pulse bg-background brightness-150',
+										'duration-[10000ms] border-secondary  bg-foreground text-background brightness-150 hover:bg-muted-foreground hover:text-accent',
 								)}
 								variant={'outline'}
 								pressed={isAutoSubmit}
@@ -277,7 +278,7 @@ export const ItemReader = forwardRef<HTMLInputElement, ItemReaderProps>(
 				{data?.status && data?.status !== 'success' ? (
 					<div
 						className={cn(
-							'flex select-none items-center gap-1 rounded-md bg-destructive p-2 text-xs text-foreground',
+							'flex select-none items-center gap-2 rounded-md bg-destructive p-2 text-xs text-destructive-foreground',
 							data?.status === 'warn' && 'bg-primary text-primary-foreground',
 						)}
 					>
