@@ -123,7 +123,7 @@ export default function CategoryRoute() {
 			: undefined
 
 	return (
-		<Card className="flex h-full flex-col overflow-hidden">
+		<Card className="flex h-full flex-col overflow-hidden animate-slide-left">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
