@@ -39,6 +39,8 @@ import {
 	DeleteSupplier,
 	DeleteSupplierSchema,
 } from './__delete-supplier.tsx'
+import { userHasRole, useUser } from '#app/utils/user.ts'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -66,7 +68,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	await requireUserId(request) //!Should be require with permissions
+	await requireUserWithRole(request, 'Administrador')
 	// const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
@@ -80,9 +82,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function SupplierRoute() {
 	const { supplier } = useLoaderData<typeof loader>()
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
 
 	return (
-		<Card className="flex h-full flex-col overflow-hidden animate-slide-left">
+		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
@@ -113,36 +117,43 @@ export default function SupplierRoute() {
 					</CardDescription>
 				</div>
 
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button size={'sm'} className="h-7 w-7" variant={'outline'}>
-							<Icon className="shrink-0" name="dots-vertical" />
-							<span className="sr-only">Opciones</span>
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent className="flex flex-col gap-2 " align="end">
-						<DropdownMenuItem asChild>
-							<Button asChild size="sm" variant="outline" className="h-8 gap-1">
-								<Link to={'edit'}>
-									<Icon name="update" className="h-3.5 w-3.5" />
-									<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-										Editar proveedor
-									</span>
-								</Link>
+				{isAdmin ? (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button size={'sm'} className="h-7 w-7" variant={'outline'}>
+								<Icon className="shrink-0" name="dots-vertical" />
+								<span className="sr-only">Opciones</span>
 							</Button>
-						</DropdownMenuItem>
-						<DropdownMenuItem asChild>
-							{/* <ChangeItemsCategory /> */}
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem asChild>
-							<DeleteSupplier
-								id={supplier.id}
-								numberOfItems={supplier.items.length}
-							/>
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent className="flex flex-col gap-2 " align="end">
+							<DropdownMenuItem asChild>
+								<Button
+									asChild
+									size="sm"
+									variant="outline"
+									className="h-8 gap-1"
+								>
+									<Link to={'edit'}>
+										<Icon name="update" className="h-3.5 w-3.5" />
+										<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+											Editar proveedor
+										</span>
+									</Link>
+								</Button>
+							</DropdownMenuItem>
+							<DropdownMenuItem asChild>
+								{/* <ChangeItemsCategory /> */}
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem asChild>
+								<DeleteSupplier
+									id={supplier.id}
+									numberOfItems={supplier.items.length}
+								/>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				) : null}
 			</CardHeader>
 			<CardContent className="grid flex-1 gap-10 p-6 text-sm xl:grid-cols-5">
 				<div className="col-span-3 flex flex-col gap-4">

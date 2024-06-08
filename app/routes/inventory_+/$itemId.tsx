@@ -62,6 +62,7 @@ import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
+import { userHasRole, useUser } from '#app/utils/user.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -146,7 +147,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ItemRoute() {
-	const isAdmin = true
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
 	const { item, globalDiscounts } = useLoaderData<typeof loader>()
 
 	const allAssociatedDiscounts = [...globalDiscounts, ...item.discounts]

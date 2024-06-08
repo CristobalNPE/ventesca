@@ -38,13 +38,12 @@ import {
 } from './__item-editors/supplier-editor.tsx'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { parseWithZod } from '@conform-to/zod'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export async function action({ request }: ActionFunctionArgs) {
-	//should require with admin permission later
-	const userId = await requireUserId(request)
+	const userId = await requireUserWithRole(request, 'Administrador')
 
 	const formData = await request.formData()
-
 
 	const intent = formData.get('intent')
 

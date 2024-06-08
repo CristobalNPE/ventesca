@@ -4,12 +4,13 @@ import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { SupplierEditor } from './__supplier-editor.tsx'
-import {action} from './__supplier-editor.server.tsx'
+import { action } from './__supplier-editor.server.tsx'
 import { invariantResponse } from '@epic-web/invariant'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export { action }
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	const userId = await requireUserId(request)
+	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 
 	const supplier = await prisma.supplier.findFirst({
