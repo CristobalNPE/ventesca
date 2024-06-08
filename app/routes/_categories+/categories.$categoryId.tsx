@@ -49,6 +49,8 @@ import {
 import { z } from 'zod'
 import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
 import { invariantResponse } from '@epic-web/invariant'
+import { userHasRole, useUser } from '#app/utils/user.ts'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	await requireUserId(request)
@@ -91,7 +93,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserId(request) //!Should be require with permissions
+	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
@@ -109,6 +111,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function CategoryRoute() {
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
 	const { category, categoryItems, mostSoldItem } =
 		useLoaderData<typeof loader>()
 
@@ -123,7 +127,7 @@ export default function CategoryRoute() {
 			: undefined
 
 	return (
-		<Card className="flex h-full flex-col overflow-hidden animate-slide-left">
+		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
@@ -154,29 +158,31 @@ export default function CategoryRoute() {
 					</CardDescription>
 				</div>
 
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button size={'sm'} className="h-7 w-7" variant={'outline'}>
-							<Icon className="shrink-0" name="dots-vertical" />
-							<span className="sr-only">Opciones</span>
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent className="flex flex-col gap-2 " align="end">
-						<DropdownMenuItem asChild>
-							<EditCategory id={category.id} />
-						</DropdownMenuItem>
-						<DropdownMenuItem asChild>
-							<ChangeItemsCategory />
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem asChild>
-							<DeleteCategory
-								id={category.id}
-								numberOfItems={category.items.length}
-							/>
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+				{isAdmin ? (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button size={'sm'} className="h-7 w-7" variant={'outline'}>
+								<Icon className="shrink-0" name="dots-vertical" />
+								<span className="sr-only">Opciones</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent className="flex flex-col gap-2 " align="end">
+							<DropdownMenuItem asChild>
+								<EditCategory id={category.id} />
+							</DropdownMenuItem>
+							<DropdownMenuItem asChild>
+								<ChangeItemsCategory />
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem asChild>
+								<DeleteCategory
+									id={category.id}
+									numberOfItems={category.items.length}
+								/>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				) : null}
 			</CardHeader>
 			{categoryItems && mostSoldItem ? (
 				<CardContent className="grid flex-1 gap-10 p-6 text-sm xl:grid-cols-5">
