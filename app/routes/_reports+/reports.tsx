@@ -40,6 +40,7 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
+import { useUser, userHasRole } from '#app/utils/user.ts'
 
 //MOVE THIS OUT OF HERE
 
@@ -99,9 +100,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			break
 	}
 
+	const { roles: userRoles } = await prisma.user.findFirstOrThrow({
+		where: { id: userId },
+		select: { roles: true },
+	})
+
+	const isAdmin = userRoles.map(role => role.name).includes('Administrador')
+
 	const numberOfTransactionsPromise = prisma.transaction.count({
 		where: {
 			businessId,
+			...(!isAdmin && { sellerId: userId }),
 			// Add date filter if startDate and endDate are defined
 			...(startDate &&
 				endDate && { createdAt: { gte: startDate, lte: endDate } }),
@@ -120,6 +129,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 		where: {
 			businessId,
+			...(!isAdmin && { sellerId: userId }),
 			// Add date filter if startDate and endDate are defined
 			...(startDate &&
 				endDate && { createdAt: { gte: startDate, lte: endDate } }),
@@ -136,8 +146,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function TransactionReportsRoute() {
-	const isAdmin = true
-
 	const { transactions, numberOfTransactions } = useLoaderData<typeof loader>()
 	const { search } = useLocation()
 	const periodParam = new URLSearchParams(search).get('period')
@@ -149,8 +157,8 @@ export default function TransactionReportsRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="flex h-[93%] flex-col gap-4 xl:flex-row ">
-				<div className="flex w-full flex-1 flex-col    gap-4   ">
+			<div className="flex h-[85dvh] flex-col gap-4 xl:flex-row ">
+				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
 					<div className="flex flex-col gap-4 lg:flex-row">
 						<Card className="w-full">
 							<CardHeader className="pb-2">
@@ -256,92 +264,104 @@ function TransactionReportsTable({
 	totalTransactions: number
 }) {
 	const location = useLocation()
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
+
+	if (transactions.length === 0) {
+		return (
+			<div className="flex h-full items-center justify-center rounded-sm bg-card text-muted-foreground">
+				<p>Sin transacciones durante este periodo.</p>
+			</div>
+		)
+	}
 
 	return (
-		<ScrollArea className=" h-fit rounded-sm">
-			<Card className=" min-h-[40rem]">
-				<CardHeader className="sticky top-0 z-30 flex justify-between bg-card px-7 md:flex-row ">
-					<div className="w-fit">
-						<CardTitle>Transacciones</CardTitle>
-						{transactions.length > 1 ? (
-							<CardDescription>
-								Mostrando {transactions.length} de {totalTransactions}{' '}
-								transacciones.
-							</CardDescription>
-						) : null}
-					</div>
-					<PaginationBar total={totalTransactions} />
-				</CardHeader>
-				<CardContent>
-					<Table className="relative rounded-sm">
-						<TableHeader className="sticky top-20  z-30 rounded-sm bg-secondary">
-							<TableRow>
-								<TableHead></TableHead>
-								<TableHead>ID</TableHead>
+		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
+			<CardHeader className="sticky top-0 z-10 justify-between bg-card px-7 md:flex-row">
+				<div className="w-fit">
+					<CardTitle>Transacciones</CardTitle>
+					{transactions.length > 1 ? (
+						<CardDescription>
+							Mostrando {transactions.length} de {totalTransactions}{' '}
+							transacciones.
+						</CardDescription>
+					) : null}
+				</div>
+				<PaginationBar total={totalTransactions} />
+			</CardHeader>
+			<CardContent>
+				<Table className="relative rounded-sm">
+					<TableHeader className="sticky top-[5.7rem] rounded-t-sm bg-secondary">
+						<TableRow>
+							<TableHead></TableHead>
+							<TableHead>ID</TableHead>
+							{isAdmin ? (
 								<TableHead className="hidden sm:table-cell">Vendedor</TableHead>
-								<TableHead className="hidden sm:table-cell">
-									Fecha Inicio
-								</TableHead>
-								<TableHead className="hidden md:table-cell">Estado</TableHead>
-								<TableHead className="text-right">Total</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{transactions.map(transaction => (
-								<TableRow
-									key={transaction.id}
-									className={cn(
-										'duration-0 hover:bg-secondary/30',
-										location.pathname.includes(transaction.id) &&
-											'bg-secondary/50 hover:bg-secondary/50',
-									)}
-								>
-									<TableCell className="text-xs uppercase">
-										<Button size={'sm'} className="h-7 w-7" asChild>
-											<LinkWithParams
-												className={''}
-												preserveSearch
-												to={transaction.id}
-											>
-												<span className="sr-only">Detalles transacción</span>
-												<Icon className="shrink-0" name="file-text" />
-											</LinkWithParams>
-										</Button>
-									</TableCell>
-									<TableCell className="text-xs uppercase">
-										{transaction.id}
-									</TableCell>
+							) : null}
+							<TableHead className="hidden sm:table-cell">
+								Fecha Inicio
+							</TableHead>
+							<TableHead className="hidden md:table-cell">Estado</TableHead>
+							<TableHead className="text-right">Total</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{transactions.map(transaction => (
+							<TableRow
+								key={transaction.id}
+								className={cn(
+									'duration-0 hover:bg-secondary/30',
+									location.pathname.includes(transaction.id) &&
+										'bg-secondary/50 hover:bg-secondary/50',
+								)}
+							>
+								<TableCell className="text-xs uppercase">
+									<Button size={'sm'} className="h-7 w-7" asChild>
+										<LinkWithParams
+											className={''}
+											preserveSearch
+											to={transaction.id}
+										>
+											<span className="sr-only">Detalles transacción</span>
+											<Icon className="shrink-0" name="file-text" />
+										</LinkWithParams>
+									</Button>
+								</TableCell>
+								<TableCell className="text-xs uppercase">
+									{transaction.id}
+								</TableCell>
+								{isAdmin ? (
 									<TableCell className="hidden sm:table-cell">
 										{transaction.seller.name}
 									</TableCell>
-									<TableCell className="hidden sm:table-cell">
-										{format(new Date(transaction.createdAt), "dd'/'MM'/'yyyy", {
-											locale: es,
-										})}
-									</TableCell>
-									<TableCell className="hidden md:table-cell">
-										<Badge
-											className={cn(
-												'text-xs',
-												transaction.status === TransactionStatus.DISCARDED &&
-													'text-destructive',
-												transaction.status === TransactionStatus.PENDING &&
-													'text-orange-400',
-											)}
-											variant="outline"
-										>
-											{transaction.status}
-										</Badge>
-									</TableCell>
-									<TableCell className="text-right">
-										{formatCurrency(transaction.total)}
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</CardContent>
-			</Card>
-		</ScrollArea>
+								) : null}
+								<TableCell className="hidden sm:table-cell">
+									{format(new Date(transaction.createdAt), "dd'/'MM'/'yyyy", {
+										locale: es,
+									})}
+								</TableCell>
+								<TableCell className="hidden md:table-cell">
+									<Badge
+										className={cn(
+											'text-xs',
+											transaction.status === TransactionStatus.DISCARDED &&
+												'text-destructive',
+											transaction.status === TransactionStatus.PENDING &&
+												'text-orange-400',
+										)}
+										variant="outline"
+									>
+										{transaction.status}
+									</Badge>
+								</TableCell>
+								<TableCell className="text-right">
+									{formatCurrency(transaction.total)}
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</CardContent>
+		</Card>
 	)
 }

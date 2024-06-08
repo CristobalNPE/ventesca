@@ -7,7 +7,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import {
 	Table,
 	TableBody,
@@ -22,17 +21,20 @@ import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { Category } from '@prisma/client'
 import {
 	ActionFunctionArgs,
-	LoaderFunctionArgs,
-	SerializeFrom,
 	json,
+	LoaderFunctionArgs,
 	redirectDocument,
+	SerializeFrom,
 } from '@remix-run/node'
 import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { userHasRole, useUser } from '#app/utils/user.ts'
 import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
 import { endOfWeek, startOfWeek } from 'date-fns'
 import { z } from 'zod'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
@@ -41,7 +43,6 @@ import {
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
-import { invariantResponse } from '@epic-web/invariant'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -60,7 +61,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserId(request) //!Should be require with permissions
+	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
@@ -75,7 +76,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function CategoriesRoute() {
-	const isAdmin = true
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
 
 	const { categories, categoryWithTopProfits } = useLoaderData<typeof loader>()
 
@@ -86,9 +88,9 @@ export default function CategoriesRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="grid h-[93%]  items-start gap-4 lg:grid-cols-3">
-				<div className="grid gap-4 lg:col-span-1">
-					{/* FIX THIS TO SHOW PROPER UI WHEN NO ELEMENTS */}
+			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
+				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+				
 					{categoryWithTopProfits ? (
 						<Card>
 							<CardHeader className="pb-2">
@@ -103,9 +105,11 @@ export default function CategoriesRoute() {
 								</CardTitle>
 							</CardHeader>
 							<CardContent></CardContent>
-							<CardFooter>
-								<CreateCategoryDialog />
-							</CardFooter>
+							{isAdmin ? (
+								<CardFooter>
+									<CreateCategoryDialog />
+								</CardFooter>
+							) : null}
 						</Card>
 					) : (
 						<Card>
@@ -120,11 +124,7 @@ export default function CategoriesRoute() {
 						</Card>
 					)}
 
-					{categories.length > 0 ? (
-						<CategoriesTable categories={categories} />
-					) : (
-						<div>Sin categorías :(</div>
-					)}
+					<CategoriesTable categories={categories} />
 				</div>
 				<div className="lg:col-span-2">
 					<Outlet />
@@ -141,60 +141,66 @@ function CategoriesTable({
 }) {
 	const location = useLocation()
 
+	if (categories.length === 0) {
+		return (
+			<div className="flex h-full items-center justify-center rounded-sm bg-card text-muted-foreground">
+				<p>Aun no existen categorías registradas en sistema.</p>
+			</div>
+		)
+	}
+
 	return (
-		<Card>
-			<CardHeader className="px-7">
+		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
+			<CardHeader className="sticky top-0 z-10 bg-card px-7">
 				<CardTitle>Categorías registradas</CardTitle>
 				<CardDescription>
 					Actualmente existen {categories.length} categorías registradas en
 					sistema.
 				</CardDescription>
 			</CardHeader>
-			<CardContent>
-				<ScrollArea className="relative h-[25rem]  rounded-t-sm">
-					<Table>
-						<TableHeader className="sticky top-0 rounded-t-sm bg-secondary">
-							<TableRow>
-								<TableHead></TableHead>
-								<TableHead>Código</TableHead>
+			<CardContent className="">
+				<Table className="">
+					<TableHeader className="sticky top-[6.1rem] rounded-t-sm bg-secondary">
+						<TableRow>
+							<TableHead></TableHead>
+							<TableHead>Código</TableHead>
 
-								<TableHead className="text-right">Descripción</TableHead>
+							<TableHead className="text-right">Descripción</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody className="">
+						{categories.map(category => (
+							<TableRow
+								key={category.id}
+								className={cn(
+									'duration-0 hover:bg-secondary/30',
+									location.pathname.includes(category.id) &&
+										'bg-secondary/50 hover:bg-secondary/50',
+								)}
+							>
+								<TableCell className="text-xs uppercase">
+									<Button size={'sm'} className="h-7 w-7" asChild>
+										<LinkWithParams
+											className={''}
+											preserveSearch
+											to={category.id}
+										>
+											<span className="sr-only">Detalles categoría</span>
+											<Icon className="shrink-0" name="file-text" />
+										</LinkWithParams>
+									</Button>
+								</TableCell>
+								<TableCell className="text-xs uppercase">
+									{category.code}
+								</TableCell>
+
+								<TableCell className="text-right">
+									{category.description}
+								</TableCell>
 							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{categories.map(category => (
-								<TableRow
-									key={category.id}
-									className={cn(
-										'duration-0 hover:bg-secondary/30',
-										location.pathname.includes(category.id) &&
-											'bg-secondary/50 hover:bg-secondary/50',
-									)}
-								>
-									<TableCell className="text-xs uppercase">
-										<Button size={'sm'} className="h-7 w-7" asChild>
-											<LinkWithParams
-												className={''}
-												preserveSearch
-												to={category.id}
-											>
-												<span className="sr-only">Detalles categoría</span>
-												<Icon className="shrink-0" name="file-text" />
-											</LinkWithParams>
-										</Button>
-									</TableCell>
-									<TableCell className="text-xs uppercase">
-										{category.code}
-									</TableCell>
-
-									<TableCell className="text-right">
-										{category.description}
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</ScrollArea>
+						))}
+					</TableBody>
+				</Table>
 			</CardContent>
 		</Card>
 	)
