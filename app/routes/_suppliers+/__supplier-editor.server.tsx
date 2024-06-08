@@ -6,9 +6,10 @@ import { z } from 'zod'
 
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { SupplierInfoEditSchema } from './__supplier-editor'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserId(request)
+	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 
