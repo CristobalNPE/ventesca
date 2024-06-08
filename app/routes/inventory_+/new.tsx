@@ -22,6 +22,7 @@ import { ITEM_NAME_MAX, ITEM_NAME_MIN } from './__item-editors/name-editor.tsx'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 const DEFAULT_SUPPLIER = 'Desconocido'
 const DEFAULT_CATEGORY = 'General'
@@ -53,8 +54,7 @@ export async function loader() {
 	throw redirect('/inventory')
 }
 export async function action({ request }: ActionFunctionArgs) {
-	//TODO: SHOULD BE USER WITH PERMISSION
-	const userId = await requireUserId(request)
+	const userId = await requireUserWithRole(request, 'Administrador')
 	const formData = await request.formData()
 
 	const { businessId } = await prisma.user.findUniqueOrThrow({
