@@ -4,10 +4,10 @@ import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
 
 //config:
-const NUMBER_OF_CATEGORIES = 5
-const NUMBER_OF_SUPPLIERS = 5
-const NUMBER_OF_PRODUCTS = 50
-const NUMBER_OF_TRANSACTIONS = 200
+const NUMBER_OF_CATEGORIES = 25
+const NUMBER_OF_SUPPLIERS = 55
+const NUMBER_OF_PRODUCTS = 500
+const NUMBER_OF_TRANSACTIONS = 10000
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -18,16 +18,19 @@ async function seed() {
 	console.timeEnd('🧹 Cleaned up the database...')
 
 	console.time('🔑 Created permissions...')
-	const entities = ['user', 'item', 'category', 'provider']
+	const entities = ['user', 'business']
 	const actions = ['create', 'read', 'update', 'delete']
 	const accesses = ['own', 'any'] as const
+
+	let permissionsToCreate = []
 	for (const entity of entities) {
 		for (const action of actions) {
 			for (const access of accesses) {
-				await prisma.permission.create({ data: { entity, action, access } })
+				permissionsToCreate.push({ entity, action, access })
 			}
 		}
 	}
+	await prisma.permission.createMany({ data: permissionsToCreate })
 	console.timeEnd('🔑 Created permissions...')
 
 	console.time('🏫 Created testing business')
@@ -40,30 +43,14 @@ async function seed() {
 		select: { id: true },
 	})
 
-	const testBusiness2 = await prisma.business.create({
-		data: {
-			name: faker.company.name(),
-		},
-		select: { id: true },
-	})
-	const testBusiness3 = await prisma.business.create({
-		data: {
-			name: faker.company.name(),
-		},
-		select: { id: true },
-	})
-
 	allBusinesses.push(testBusiness)
-	allBusinesses.push(testBusiness2)
-
-	console.log(allBusinesses)
 
 	console.timeEnd('🏫 Created testing business')
 
 	console.time('👑 Created roles...')
 	await prisma.role.create({
 		data: {
-			name: 'admin',
+			name: 'Administrador',
 			permissions: {
 				connect: await prisma.permission.findMany({
 					select: { id: true },
@@ -74,11 +61,22 @@ async function seed() {
 	})
 	await prisma.role.create({
 		data: {
-			name: 'user',
+			name: 'Vendedor',
 			permissions: {
 				connect: await prisma.permission.findMany({
 					select: { id: true },
 					where: { access: 'own' },
+				}),
+			},
+		},
+	})
+	await prisma.role.create({
+		data: {
+			name: 'SuperUser',
+			permissions: {
+				connect: await prisma.permission.findMany({
+					select: { id: true },
+					where: { access: 'any' },
 				}),
 			},
 		},
@@ -89,21 +87,41 @@ async function seed() {
 	console.time(`🐨 Created test users`)
 
 	const users = []
-
-	const user1 = await prisma.user.create({
+	const superuser = await prisma.user.create({
 		select: { id: true, businessId: true },
 		data: {
-			business: { connect: { id: testBusiness2.id } },
+			business: { connect: { id: testBusiness.id } },
+			email: 'superuser@ventesca.super',
+			username: 'superuser',
+			name: 'SuperUser Ventesca System',
+			password: { create: createPassword('super123') },
+
+			roles: {
+				connect: [
+					{ name: 'Administrador' },
+					{ name: 'Vendedor' },
+					{ name: 'SuperUser' },
+				],
+			},
+		},
+	})
+
+	const adminTest = await prisma.user.create({
+		select: { id: true, businessId: true },
+		data: {
+			business: { connect: { id: testBusiness.id } },
 			email: 'admin@admin.dev',
 			username: 'admin',
 			name: 'Administrador Sistema',
 			password: { create: createPassword('admin123') },
 
-			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
+			roles: {
+				connect: [{ name: 'Administrador' }, { name: 'Vendedor' }],
+			},
 		},
 	})
 
-	const user2 = await prisma.user.create({
+	const sellerTest1 = await prisma.user.create({
 		select: { id: true, businessId: true },
 		data: {
 			business: { connect: { id: testBusiness.id } },
@@ -112,10 +130,10 @@ async function seed() {
 			name: 'Cristobal Pulgar Estay',
 			password: { create: createPassword('cris123') },
 
-			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
+			roles: { connect: { name: 'Vendedor' } },
 		},
 	})
-	const user3 = await prisma.user.create({
+	const sellerTest2 = await prisma.user.create({
 		select: { id: true, businessId: true },
 		data: {
 			business: { connect: { id: testBusiness.id } },
@@ -124,24 +142,11 @@ async function seed() {
 			name: 'Sunito Sunero',
 			password: { create: createPassword('suno123') },
 
-			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
+			roles: { connect: { name: 'Vendedor' } },
 		},
 	})
 
-	const emptyUser = await prisma.user.create({
-		select: { id: true, businessId: true },
-		data: {
-			business: { connect: { id: testBusiness3.id } },
-			email: 'empty@dev.com',
-			username: 'empty',
-			name: 'Empty User',
-			password: { create: createPassword('empty123') },
-
-			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
-		},
-	})
-
-	users.push(user1, user2, user3)
+	users.push(superuser, adminTest, sellerTest1, sellerTest2)
 	console.timeEnd(`🐨 Created test users`)
 
 	console.time(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
