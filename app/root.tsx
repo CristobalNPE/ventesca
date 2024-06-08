@@ -329,6 +329,14 @@ function UserDropdown() {
 	const user = useUser()
 	const submit = useSubmit()
 	const formRef = useRef<HTMLFormElement>(null)
+
+	const getUserRole = (roles:string[]) => {
+    if (roles.includes('SuperUser')) return 'SuperUser';
+    if (roles.includes('Administrador')) return 'Administrador';
+    return 'Vendedor';
+};
+
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -349,7 +357,7 @@ function UserDropdown() {
 								{user.name ?? user.username}
 							</span>
 							<span className="text-body-xs font-bold text-foreground/60">
-								Vendedor
+								{getUserRole(user.roles.map(rol => rol.name))}
 							</span>
 						</div>
 					</Link>
