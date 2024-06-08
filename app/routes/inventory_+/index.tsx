@@ -133,13 +133,13 @@ export default function InventoryRoute() {
 		useLoaderData<typeof loader>()
 
 	return (
-		<main className="flex flex-col">
+		<main className="flex  flex-col">
 			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
 				<h1 className="text-xl font-semibold">Administración de Inventario</h1>
 				{isAdmin && <CreateItemDialog />}
 			</div>
 			<Spacer size={'4xs'} />
-			<div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+			<div className="grid  gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
 				<DataCard
 					title={'Artículos Disponibles'}
 					value={`${totalActiveItems}`}
