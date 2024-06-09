@@ -317,3 +317,67 @@ export async function downloadFile(url: string, retries: number = 0) {
 		return downloadFile(url, retries + 1)
 	}
 }
+
+export function getBrowserInfo(request: Request) {
+	const userAgent = request.headers.get('user-agent')
+	let browserName: string
+	let fullVersion: string
+	let osName: string
+	let offset: number
+
+	if (!userAgent) {
+		return {
+			browser: 'Desconocido',
+			version: 'Version desconocida',
+			os: 'S.O. Desconocido',
+		}
+	}
+
+	// Detect browser name and version
+	if ((offset = userAgent.indexOf('Chrome')) !== -1) {
+		browserName = 'Chrome'
+		fullVersion = userAgent.substring(offset + 7)
+	} else if ((offset = userAgent.indexOf('Safari')) !== -1) {
+		browserName = 'Safari'
+		fullVersion = userAgent.substring(offset + 7)
+	} else if ((offset = userAgent.indexOf('Firefox')) !== -1) {
+		browserName = 'Firefox'
+		fullVersion = userAgent.substring(offset + 8)
+	} else if ((offset = userAgent.indexOf('MSIE')) !== -1) {
+		browserName = 'Microsoft Internet Explorer'
+		fullVersion = userAgent.substring(offset + 5)
+	} else {
+		browserName = 'Desconocido'
+		fullVersion = 'Version desconocida'
+	}
+
+	// Detect OS
+	if (userAgent.indexOf('Android') !== -1) {
+		osName = 'Android'
+	} else if (
+		userAgent.indexOf('iPhone') !== -1 ||
+		userAgent.indexOf('iPad') !== -1 ||
+		userAgent.indexOf('iPod') !== -1
+	) {
+		osName = 'iOS'
+	} else if (userAgent.indexOf('Win') !== -1) {
+		osName = 'Windows'
+	} else if (userAgent.indexOf('Mac') !== -1) {
+		osName = 'MacOS'
+	} else if (userAgent.indexOf('X11') !== -1) {
+		osName = 'UNIX'
+	} else if (userAgent.indexOf('Linux') !== -1) {
+		osName = 'Linux'
+	} else osName = 'Desconocido'
+
+	const version =
+		fullVersion !== 'Version desconocida'
+			? fullVersion.split(' ')[0] // Extract only the version number
+			: 'Version desconocida'
+
+	return {
+		browser: browserName,
+		version: version!,
+		os: osName,
+	}
+}
