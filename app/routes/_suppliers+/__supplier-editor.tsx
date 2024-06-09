@@ -3,9 +3,7 @@ import { useIsPending } from '#app/utils/misc.tsx'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { type Supplier } from '@prisma/client'
-import {
-	type SerializeFrom
-} from '@remix-run/node'
+import { type SerializeFrom } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
 import { z } from 'zod'
 
@@ -17,7 +15,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import {type action} from './__supplier-editor.server.tsx'
+import { type action } from './__supplier-editor.server.tsx'
 
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -33,8 +31,6 @@ export const SupplierInfoEditSchema = z.object({
 	phone: z.string({ required_error: 'Campo obligatorio' }),
 	email: z.string({ required_error: 'Campo obligatorio' }).email(),
 })
-
-
 
 export function SupplierEditor({
 	supplier,
@@ -75,7 +71,7 @@ export function SupplierEditor({
 	})
 
 	return (
-		<Card className="flex h-full flex-col overflow-hidden animate-slide-left">
+		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden ">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
@@ -88,7 +84,7 @@ export function SupplierEditor({
 					</CardDescription>
 				</div>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="flex-1">
 				<Form
 					className="flex flex-1 flex-col gap-4 p-6 text-sm "
 					method="POST"
@@ -97,7 +93,6 @@ export function SupplierEditor({
 					{supplier ? (
 						<input type="hidden" name="id" value={supplier.id} />
 					) : null}
-					{/* <div className="col-span-2 flex flex-col gap-4"> */}
 
 					<div className="col-span-1 grid grid-cols-2">
 						<Field
@@ -182,11 +177,7 @@ export function SupplierEditor({
 							errors={fields.email.errors}
 						/>
 					</div>
-					{/* </div> */}
 
-					{/* <div className="col-span-2 flex flex-col gap-3"> */}
-
-					{/* </div> */}
 					<ErrorList id={form.errorId} errors={form.errors} />
 				</Form>
 			</CardContent>
@@ -204,7 +195,6 @@ export function SupplierEditor({
 				>
 					{supplier ? 'Actualizar registro' : 'Registrar Proveedor'}
 				</StatusButton>
-				{/* </div> */}
 			</CardFooter>
 		</Card>
 	)
