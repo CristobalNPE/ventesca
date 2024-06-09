@@ -73,7 +73,7 @@ import { useNonce } from './utils/nonce-provider.ts'
 import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
-import { useOptionalUser, useUser } from './utils/user.ts'
+import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
 
 type NavigationLink = {
 	name: string
@@ -232,6 +232,7 @@ function App() {
 	const data = useLoaderData<typeof loader>()
 	const nonce = useNonce()
 	const user = useOptionalUser()
+	const isAdmin = user ? userHasRole(user, 'Administrador') : false
 	const theme = useTheme()
 
 	useToast(data.toast)
@@ -272,6 +273,21 @@ function App() {
 			path: 'suppliers',
 			icon: 'users',
 		},
+		//Admin only routes
+		...(isAdmin
+			? ([
+					{
+						name: 'Empresa',
+						path: 'business',
+						icon: 'briefcase',
+					},
+					{
+						name: 'Vendedores',
+						path: 'sellers',
+						icon: 'user-dollar',
+					},
+				] as NavigationLink[])
+			: []),
 	]
 
 	const secondaryLinks: NavigationLink[] = [
@@ -330,12 +346,11 @@ function UserDropdown() {
 	const submit = useSubmit()
 	const formRef = useRef<HTMLFormElement>(null)
 
-	const getUserRole = (roles:string[]) => {
-    if (roles.includes('SuperUser')) return 'SuperUser';
-    if (roles.includes('Administrador')) return 'Administrador';
-    return 'Vendedor';
-};
-
+	const getUserRole = (roles: string[]) => {
+		if (roles.includes('SuperUser')) return 'SuperUser'
+		if (roles.includes('Administrador')) return 'Administrador'
+		return 'Vendedor'
+	}
 
 	return (
 		<DropdownMenu>
