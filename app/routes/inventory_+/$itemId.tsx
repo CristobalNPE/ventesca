@@ -34,7 +34,7 @@ import {
 } from '#app/components/ui/hover-card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
@@ -51,6 +51,7 @@ import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { formatRelative, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+import { userHasRole, useUser } from '#app/utils/user.ts'
 import { invariantResponse } from '@epic-web/invariant'
 import { z } from 'zod'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
@@ -62,12 +63,13 @@ import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
 import { EditStatus } from './__item-editors/status-editor.tsx'
 import { StockEditModal } from './__item-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
-import { userHasRole, useUser } from '#app/utils/user.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
+
 	const itemPromise = prisma.item.findUnique({
-		where: { id: params.itemId },
+		where: { id: params.itemId, businessId },
 		select: {
 			id: true,
 			isActive: true,
