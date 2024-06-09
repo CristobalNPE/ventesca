@@ -186,12 +186,22 @@ export default function CategoryRoute() {
 					/>
 				</div>
 				<div className="col-span-2 flex flex-col gap-3">
-					<Button className="flex items-center gap-1" variant={'outline'}>
+					<Button className="flex items-center gap-2" variant={'outline'}>
+						<Icon name="password" />
+						<span>Regenerar Contraseña</span>
+						{/* Abrir dialog que indique que se enviara un correo al vendedor con su nueva pass y que se cerraran todas las sesiones. */}
+					</Button>
+
+					<Button className="flex items-center gap-2" variant={'outline'}>
 						<Icon name="lock" />
 						<span>Bloquear Cuenta</span>
 					</Button>
 
-					<p>{seller.sessions.length > 0 ? "Sesiones activas":"Sin sesiones activas."}</p>
+					<p>
+						{seller.sessions.length > 0
+							? 'Sesiones activas'
+							: 'Sin sesiones activas.'}
+					</p>
 					{seller.sessions.map(session => (
 						<SessionInfoCard session={session} />
 					))}
