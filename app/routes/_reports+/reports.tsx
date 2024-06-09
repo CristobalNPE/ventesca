@@ -318,6 +318,7 @@ function TransactionReportsTable({
 								<TableCell className="text-xs uppercase">
 									<Button size={'sm'} className="h-7 w-7" asChild>
 										<LinkWithParams
+										prefetch={'intent'}
 											className={''}
 											preserveSearch
 											to={transaction.id}
