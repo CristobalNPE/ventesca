@@ -22,7 +22,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireAnonymous, sessionKey, signup } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { checkHoneypot } from '#app/utils/honeypot.server.ts'
-import { useIsPending } from '#app/utils/misc.tsx'
+import { getBrowserInfo, useIsPending } from '#app/utils/misc.tsx'
 import { authSessionStorage } from '#app/utils/session.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import {
@@ -66,7 +66,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
 	const email = await requireOnboardingEmail(request)
+	const browserInfo = getBrowserInfo(request)
 	const formData = await request.formData()
+
 	checkHoneypot(formData)
 	const submission = await parseWithZod(formData, {
 		schema: intent =>
@@ -79,14 +81,14 @@ export async function action({ request }: ActionFunctionArgs) {
 					ctx.addIssue({
 						path: ['username'],
 						code: z.ZodIssueCode.custom,
-						message: 'A user already exists with this username',
+						message: 'Este nombre de usuario ya se encuentra registrado.',
 					})
 					return
 				}
 			}).transform(async data => {
 				if (intent !== null) return { ...data, session: null }
 
-				const session = await signup({ ...data, email })
+				const session = await signup({ ...data, email, browserInfo })
 				return { ...data, session }
 			}),
 		async: true,
@@ -120,13 +122,16 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	return redirectWithToast(
 		safeRedirect(redirectTo),
-		{ title: 'Welcome', description: 'Thanks for signing up!' },
+		{
+			title: 'Bienvenido',
+			description: 'Gracias por tu registro en Ventesca.',
+		},
 		{ headers },
 	)
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Setup Epic Notes Account' }]
+	return [{ title: 'Registrar cuenta en Ventesca' }]
 }
 
 export default function OnboardingRoute() {
@@ -149,11 +154,14 @@ export default function OnboardingRoute() {
 
 	return (
 		<div className="container flex min-h-full flex-col justify-center pb-32 pt-20">
-			<div className="mx-auto w-full max-w-lg">
+			<div className="mx-auto w-full max-w-xl">
 				<div className="flex flex-col gap-3 text-center">
-					<h1 className="text-h1">Welcome aboard {data.email}!</h1>
+					<div>
+						<h1 className="text-h1">Registro en Ventesca</h1>
+						<h5 className="text-h5 text-muted-foreground">{data.email}</h5>
+					</div>
 					<p className="text-body-md text-muted-foreground">
-						Please enter your details.
+						Por favor ingrese los detalles de su cuenta.
 					</p>
 				</div>
 				<Spacer size="xs" />
@@ -164,7 +172,10 @@ export default function OnboardingRoute() {
 				>
 					<HoneypotInputs />
 					<Field
-						labelProps={{ htmlFor: fields.username.id, children: 'Username' }}
+						labelProps={{
+							htmlFor: fields.username.id,
+							children: 'Nombre de usuario',
+						}}
 						inputProps={{
 							...getInputProps(fields.username, { type: 'text' }),
 							autoComplete: 'username',
@@ -173,7 +184,7 @@ export default function OnboardingRoute() {
 						errors={fields.username.errors}
 					/>
 					<Field
-						labelProps={{ htmlFor: fields.name.id, children: 'Name' }}
+						labelProps={{ htmlFor: fields.name.id, children: 'Nombre' }}
 						inputProps={{
 							...getInputProps(fields.name, { type: 'text' }),
 							autoComplete: 'name',
@@ -181,7 +192,7 @@ export default function OnboardingRoute() {
 						errors={fields.name.errors}
 					/>
 					<Field
-						labelProps={{ htmlFor: fields.password.id, children: 'Password' }}
+						labelProps={{ htmlFor: fields.password.id, children: 'Contraseña' }}
 						inputProps={{
 							...getInputProps(fields.password, { type: 'password' }),
 							autoComplete: 'new-password',
@@ -192,7 +203,7 @@ export default function OnboardingRoute() {
 					<Field
 						labelProps={{
 							htmlFor: fields.confirmPassword.id,
-							children: 'Confirm Password',
+							children: 'Confirmar Contraseña',
 						}}
 						inputProps={{
 							...getInputProps(fields.confirmPassword, { type: 'password' }),
@@ -216,7 +227,7 @@ export default function OnboardingRoute() {
 					<CheckboxField
 						labelProps={{
 							htmlFor: fields.remember.id,
-							children: 'Remember me',
+							children: 'Recordarme',
 						}}
 						buttonProps={getInputProps(fields.remember, { type: 'checkbox' })}
 						errors={fields.remember.errors}
@@ -232,7 +243,7 @@ export default function OnboardingRoute() {
 							type="submit"
 							disabled={isPending}
 						>
-							Create an account
+							Crear cuenta
 						</StatusButton>
 					</div>
 				</Form>
