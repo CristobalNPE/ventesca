@@ -11,7 +11,7 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 //Exported constants for consistency on item-creation
-export const CODE_MAX = 999999
+export const CODE_MAX = Number.MAX_VALUE
 export const CODE_MIN = 0
 
 export const UPDATE_CODE_KEY = 'update-code'
