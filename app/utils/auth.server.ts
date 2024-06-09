@@ -32,7 +32,6 @@ export async function getBusinessId(userId: string) {
 	return businessId
 }
 
-
 export async function getUserId(request: Request) {
 	const authSession = await authSessionStorage.getSession(
 		request.headers.get('cookie'),
@@ -83,15 +82,24 @@ export async function requireAnonymous(request: Request) {
 export async function login({
 	username,
 	password,
+	browserInfo,
 }: {
 	username: User['username']
 	password: string
+	browserInfo: {
+		browser: string
+		version: string 
+		os: string
+	}
 }) {
 	const user = await verifyUserPassword({ username }, password)
 	if (!user) return null
 	const session = await prisma.session.create({
 		select: { id: true, expirationDate: true, userId: true },
 		data: {
+			os: browserInfo.os,
+			browser: browserInfo.browser,
+			version: browserInfo.version ?? 'Version Desconocida',
 			expirationDate: getSessionExpirationDate(),
 			userId: user.id,
 		},
@@ -124,28 +132,38 @@ export async function signup({
 	username,
 	password,
 	name,
+	browserInfo,
 }: {
 	email: User['email']
 	username: User['username']
 	name: User['name']
 	password: string
+	browserInfo: {
+		browser: string
+		version: string 
+		os: string
+	}
 }) {
 	const hashedPassword = await getPasswordHash(password)
 
 	const session = await prisma.session.create({
 		data: {
 			expirationDate: getSessionExpirationDate(),
+			os: browserInfo.os,
+			browser: browserInfo.browser,
+			version: browserInfo.version ?? 'Version Desconocida',
 			user: {
 				create: {
 					email: email.toLowerCase(),
 					username: username.toLowerCase(),
 					name,
-					roles: { connect: { name: 'user' } },
+					roles: { connect: { name: 'Administrador' } },
 					password: {
 						create: {
 							hash: hashedPassword,
 						},
 					},
+					business: { create: { name: `Empresa de ${name}` } },
 				},
 			},
 		},
