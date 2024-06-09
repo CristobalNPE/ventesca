@@ -17,16 +17,17 @@ import {
 } from '#app/components/ui/card.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { Separator } from '#app/components/ui/separator.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { itemTransactionTypeColors } from '../transaction+/_constants/itemTransactionTypesColors.ts'
 import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 import { invariantResponse } from '@epic-web/invariant'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 	const transactionReport = await prisma.transaction.findUnique({
-		where: { id: params.reportId },
+		where: { id: params.reportId, businessId },
 		select: {
 			id: true,
 			status: true,
@@ -58,7 +59,7 @@ export default function ReportRoute() {
 	const { transactionReport } = useLoaderData<typeof loader>()
 
 	return (
-		<Card className="flex h-[85dvh] flex-col overflow-hidden animate-slide-left">
+		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
 			<CardHeader className="flex flex-row items-start bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
