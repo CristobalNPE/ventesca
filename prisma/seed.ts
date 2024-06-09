@@ -4,10 +4,10 @@ import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
 
 //config:
-const NUMBER_OF_CATEGORIES = 25
-const NUMBER_OF_SUPPLIERS = 55
-const NUMBER_OF_PRODUCTS = 500
-const NUMBER_OF_TRANSACTIONS = 10000
+const NUMBER_OF_CATEGORIES = 12
+const NUMBER_OF_SUPPLIERS = 10
+const NUMBER_OF_PRODUCTS = 100
+const NUMBER_OF_TRANSACTIONS = 1000
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -90,7 +90,7 @@ async function seed() {
 	const superuser = await prisma.user.create({
 		select: { id: true, businessId: true },
 		data: {
-			business: { connect: { id: testBusiness.id } },
+			business: { create: { name: 'SUPER BUSINESS' } },
 			email: 'superuser@ventesca.super',
 			username: 'superuser',
 			name: 'SuperUser Ventesca System',
