@@ -355,7 +355,7 @@ function TransactionReportsTable({
 										{transaction.status}
 									</Badge>
 								</TableCell>
-								<TableCell className="text-right">
+								<TableCell className="text-right font-bold">
 									{formatCurrency(transaction.total)}
 								</TableCell>
 							</TableRow>
