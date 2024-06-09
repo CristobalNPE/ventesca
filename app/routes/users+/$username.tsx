@@ -1,17 +1,16 @@
-import { json, type DataFunctionArgs } from '@remix-run/node'
+import { invariantResponse } from '@epic-web/invariant'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { Form, Link, useLoaderData, type MetaFunction } from '@remix-run/react'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getUserImgSrc, invariantResponse } from '#app/utils/misc.tsx'
+import { getUserImgSrc } from '#app/utils/misc.tsx'
+import { useOptionalUser } from '#app/utils/user.ts'
 
-export async function loader({ params, request }: DataFunctionArgs) {
-	const userId = await requireUserId(request)
-
-	const user = await prisma.user.findUnique({
+export async function loader({ params }: LoaderFunctionArgs) {
+	const user = await prisma.user.findFirst({
 		select: {
 			id: true,
 			name: true,
@@ -20,11 +19,11 @@ export async function loader({ params, request }: DataFunctionArgs) {
 			image: { select: { id: true } },
 		},
 		where: {
-			id: userId,
+			username: params.username,
 		},
 	})
 
-	invariantResponse(user, 'No se encuentra el usuario', { status: 404 })
+	invariantResponse(user, 'User not found', { status: 404 })
 
 	return json({ user, userJoinedDisplay: user.createdAt.toLocaleDateString() })
 }
@@ -33,6 +32,8 @@ export default function ProfileRoute() {
 	const data = useLoaderData<typeof loader>()
 	const user = data.user
 	const userDisplayName = user.name ?? user.username
+	const loggedInUser = useOptionalUser()
+	const isLoggedInUser = data.user.id === loggedInUser?.id
 
 	return (
 		<div className="container mb-48 mt-36 flex flex-col items-center justify-center">
@@ -58,28 +59,38 @@ export default function ProfileRoute() {
 						<h1 className="text-center text-h2">{userDisplayName}</h1>
 					</div>
 					<p className="mt-2 text-center text-muted-foreground">
-						Activado {data.userJoinedDisplay}
+						Joined {data.userJoinedDisplay}
 					</p>
-
-					<Form action="/logout" method="POST" className="mt-3">
-						<Button type="submit" variant="link" size="pill">
-							<Icon name="exit" className="scale-125 max-md:scale-150">
-								Cerrar Sesión
-							</Icon>
-						</Button>
-					</Form>
-
+					{isLoggedInUser ? (
+						<Form action="/logout" method="POST" className="mt-3">
+							<Button type="submit" variant="link" size="pill">
+								<Icon name="exit" className="scale-125 max-md:scale-150">
+									Logout
+								</Icon>
+							</Button>
+						</Form>
+					) : null}
 					<div className="mt-10 flex gap-4">
-						<Button asChild>
-							<Link to="notes" prefetch="intent">
-								Mis Estadísticas
-							</Link>
-						</Button>
-						<Button asChild>
-							<Link to="/settings/profile" prefetch="intent">
-								Editar perfil
-							</Link>
-						</Button>
+						{isLoggedInUser ? (
+							<>
+								<Button asChild>
+									<Link to="notes" prefetch="intent">
+										My notes
+									</Link>
+								</Button>
+								<Button asChild>
+									<Link to="/settings/profile" prefetch="intent">
+										Edit profile
+									</Link>
+								</Button>
+							</>
+						) : (
+							<Button asChild>
+								<Link to="notes" prefetch="intent">
+									{userDisplayName}'s notes
+								</Link>
+							</Button>
+						)}
 					</div>
 				</div>
 			</div>
