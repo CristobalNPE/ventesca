@@ -90,7 +90,6 @@ export default function CategoriesRoute() {
 
 			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
 				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-				
 					{categoryWithTopProfits ? (
 						<Card>
 							<CardHeader className="pb-2">
@@ -111,18 +110,14 @@ export default function CategoriesRoute() {
 								</CardFooter>
 							) : null}
 						</Card>
-					) : (
+					) : isAdmin ? (
 						<Card>
 							<CardHeader className="pb-2">
-								<CardDescription></CardDescription>
-								<CardTitle></CardTitle>
+								<CreateCategoryDialog />
 							</CardHeader>
 							<CardContent></CardContent>
-							<CardFooter>
-								<CreateCategoryDialog />
-							</CardFooter>
 						</Card>
-					)}
+					) : null}
 
 					<CategoriesTable categories={categories} />
 				</div>
@@ -181,6 +176,7 @@ function CategoriesTable({
 								<TableCell className="text-xs uppercase">
 									<Button size={'sm'} className="h-7 w-7" asChild>
 										<LinkWithParams
+											prefetch={'intent'}
 											className={''}
 											preserveSearch
 											to={category.id}
