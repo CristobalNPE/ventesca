@@ -26,7 +26,7 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
@@ -111,10 +111,11 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
 	const discount = await prisma.discount.findUnique({
-		where: { id: params.discountId },
+		where: { id: params.discountId, businessId },
 		select: {
 			id: true,
 			name: true,

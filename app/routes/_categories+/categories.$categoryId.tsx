@@ -32,9 +32,14 @@ import {
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
 import { Progress } from '#app/components/ui/progress.tsx'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { userHasRole, useUser } from '#app/utils/user.ts'
 import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
 import { Item } from '@prisma/client'
+import { z } from 'zod'
+import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 import {
 	DELETE_CATEGORY_KEY,
@@ -46,17 +51,13 @@ import {
 	EditCategory,
 	EditCategorySchema,
 } from './__edit-category.tsx'
-import { z } from 'zod'
-import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
-import { invariantResponse } from '@epic-web/invariant'
-import { userHasRole, useUser } from '#app/utils/user.ts'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
 	const category = await prisma.category.findUnique({
-		where: { id: params.categoryId },
+		where: { id: params.categoryId, businessId },
 		select: {
 			id: true,
 			code: true,
@@ -191,7 +192,10 @@ export default function CategoryRoute() {
 							<CardHeader className="pb-2">
 								<CardDescription>Articulo mas vendido</CardDescription>
 								<CardTitle className="text-4xl">
-									<Link to={`/inventory/${mostSoldItem.id}`}>
+									<Link
+										prefetch={'intent'}
+										to={`/inventory/${mostSoldItem.id}`}
+									>
 										{mostSoldItem.name}
 									</Link>
 								</CardTitle>

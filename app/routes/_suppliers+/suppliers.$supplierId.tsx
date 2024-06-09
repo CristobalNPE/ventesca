@@ -10,7 +10,7 @@ import {
 } from '#app/components/ui/card.tsx'
 import { Icon, IconName } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
 	ActionFunctionArgs,
@@ -41,12 +41,14 @@ import {
 } from './__delete-supplier.tsx'
 import { userHasRole, useUser } from '#app/utils/user.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { DetailsCard } from '#app/components/details-card.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
 	const supplier = await prisma.supplier.findUnique({
-		where: { id: params.supplierId },
+		where: { id: params.supplierId, businessId },
 		select: {
 			id: true,
 			address: true,
@@ -235,26 +237,6 @@ export default function SupplierRoute() {
 				</div>
 			</CardFooter>
 		</Card>
-	)
-}
-
-function DetailsCard({
-	icon,
-	description,
-	data,
-}: {
-	icon: IconName
-	description: string
-	data: string | number
-}) {
-	return (
-		<div className="flex gap-4 p-2">
-			<Icon className="text-3xl" name={icon} />
-			<div>
-				<div className="font-semibold text-muted-foreground">{description}</div>
-				<div className="text-lg">{data}</div>
-			</div>
-		</div>
 	)
 }
 
