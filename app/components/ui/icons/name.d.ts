@@ -71,6 +71,7 @@ export type IconName =
 	| "moon"
 	| "more-horizontal"
 	| "package"
+	| "password"
 	| "pencil-1"
 	| "pencil-2"
 	| "percentage"
