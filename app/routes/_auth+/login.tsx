@@ -45,11 +45,12 @@ export async function action({ request }: ActionFunctionArgs) {
 			LoginFormSchema.transform(async (data, ctx) => {
 				if (intent !== null) return { ...data, session: null }
 
-				const session = await login({...data, browserInfo})
+				const session = await login({ ...data, browserInfo })
+
 				if (!session) {
 					ctx.addIssue({
 						code: z.ZodIssueCode.custom,
-						message: 'Invalid username or password',
+						message: 'Usuario o contraseña incorrectas.',
 					})
 					return z.NEVER
 				}
