@@ -158,7 +158,7 @@ export const ItemTransaction = forwardRef<
 	return (
 		<ItemTransactionCard
 			className={cn(
-				'flex flex-col gap-3 sm:flex-row sm:items-center  sm:gap-8 animate-slide-left ',
+				'flex flex-col gap-3 sm:flex-row sm:items-center  sm:gap-8  ',
 				isItemTransactionUpdating &&
 					'pointer-events-none animate-pulse duration-1000',
 			)}
