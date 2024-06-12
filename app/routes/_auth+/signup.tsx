@@ -95,15 +95,17 @@ export function SignupEmail({
 		<E.Html lang="en" dir="ltr">
 			<E.Container>
 				<h1>
-					<E.Text>Welcome to Epic Notes!</E.Text>
+					<E.Text>Bienvenido a Ventesca.</E.Text>
 				</h1>
 				<p>
 					<E.Text>
-						Here's your verification code: <strong>{otp}</strong>
+						Este es su código de verificación: <strong>{otp}</strong>
 					</E.Text>
 				</p>
 				<p>
-					<E.Text>Or click the link to get started:</E.Text>
+					<E.Text>
+						También puede hacer click en el siguiente link para comenzar:
+					</E.Text>
 				</p>
 				<E.Link href={onboardingUrl}>{onboardingUrl}</E.Link>
 			</E.Container>
@@ -112,7 +114,7 @@ export function SignupEmail({
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Sign Up | Epic Notes' }]
+	return [{ title: 'Registro | Ventesca' }]
 }
 
 export default function SignupRoute() {
