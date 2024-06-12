@@ -38,6 +38,7 @@ import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { z } from 'zod'
 import { getFormProps, useForm } from '@conform-to/react'
 import { getBusinessId } from '#app/utils/auth.server.ts'
+import { useId } from 'react'
 
 const DeleteSellerSessionSchema = z.object({
 	sessionId: z.string(),
@@ -65,8 +66,10 @@ type SellerActionArgs = {
 	formData: FormData
 }
 const deleteSellerSessionActionIntent = 'delete-seller-session'
-// const signOutOfSessionsActionIntent = 'sign-out-of-sessions'
-// const deleteDataActionIntent = 'delete-data'
+const blockSellerAccountActionIntent = 'block-seller-account'
+const unblockSellerAccountActionIntent = 'unblock-seller-account'
+const deleteSellerAccountActionIntent = 'delete-seller-account'
+const editSellerAccountActionIntent = 'edit-seller-account'
 
 export async function action({ request, params }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -80,14 +83,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		case deleteSellerSessionActionIntent: {
 			return deleteSellerSessionAction({ request, sellerId, formData })
 		}
+		case blockSellerAccountActionIntent: {
+			return blockSellerAccountAction(sellerId)
+		}
+		case unblockSellerAccountActionIntent: {
+			return unblockSellerAccountAction(sellerId)
+		}
 	}
 }
 
-export default function CategoryRoute() {
+export default function SellerRoute() {
 	const { seller } = useLoaderData<typeof loader>()
-
-	// console.log(seller.connections)
-	// console.log(seller.sessions)
 
 	return (
 		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
@@ -182,28 +188,26 @@ export default function CategoryRoute() {
 					<DetailsCard
 						icon={'laptop'}
 						description={'Estado de cuenta'}
-						data={'Activa'}
+						data={seller.isActive ? 'Activa' : 'Bloqueada'}
 					/>
 				</div>
 				<div className="col-span-2 flex flex-col gap-3">
-					<Button className="flex items-center gap-2" variant={'outline'}>
-						<Icon name="password" />
-						<span>Regenerar Contraseña</span>
-						{/* Abrir dialog que indique que se enviara un correo al vendedor con su nueva pass y que se cerraran todas las sesiones. */}
+					<Button variant={'outline'}>
+						<Icon className="mr-2" name="trash" />
+						Eliminar Permanentemente
 					</Button>
-
-					<Button className="flex items-center gap-2" variant={'outline'}>
-						<Icon name="lock" />
-						<span>Bloquear Cuenta</span>
+					<Button variant={'outline'}>
+						<Icon className="mr-2" name="update" />
+						Modificar Datos
 					</Button>
-
+					<ToggleBlockSellerAccount isUserActive={seller.isActive} />
 					<p>
 						{seller.sessions.length > 0
 							? 'Sesiones activas'
 							: 'Sin sesiones activas.'}
 					</p>
 					{seller.sessions.map(session => (
-						<SessionInfoCard session={session} />
+						<SessionInfoCard key={session.id} session={session} />
 					))}
 				</div>
 			</CardContent>
@@ -281,7 +285,7 @@ function SessionInfoCard({
 			</div>
 			<TooltipProvider>
 				<Tooltip>
-					<TooltipTrigger>
+					<TooltipTrigger asChild>
 						<fetcher.Form method="POST" {...getFormProps(form)}>
 							<input type="hidden" name="sessionId" value={session.id} />
 							<StatusButton
@@ -295,7 +299,7 @@ function SessionInfoCard({
 								status={
 									fetcher.state !== 'idle' ? 'pending' : form.status ?? 'idle'
 								}
-								className="h-7 w-7"
+								className="flex h-7 w-7 items-center justify-center"
 							>
 								<Icon name="exit" />
 							</StatusButton>
@@ -332,4 +336,67 @@ async function deleteSellerSessionAction({
 	return json({
 		result: submission.reply(),
 	})
+}
+
+function ToggleBlockSellerAccount({ isUserActive }: { isUserActive: boolean }) {
+	const id = useId()
+	const fetcher = isUserActive
+		? useFetcher<typeof blockSellerAccountAction>({
+				key: `${blockSellerAccountActionIntent}-ID${id}`,
+			})
+		: useFetcher<typeof unblockSellerAccountAction>({
+				key: `${unblockSellerAccountActionIntent}-ID${id}`,
+			})
+
+	return (
+		<fetcher.Form method="POST">
+			{isUserActive ? (
+				<StatusButton
+					type="submit"
+					name="intent"
+					value={blockSellerAccountActionIntent}
+					variant={'outline'}
+					status={fetcher.state !== 'idle' ? 'pending' : 'idle'}
+					className="w-full "
+				>
+					<Icon className="mr-2" name="lock" />
+					<span>Bloquear Cuenta</span>
+				</StatusButton>
+			) : (
+				<StatusButton
+					type="submit"
+					name="intent"
+					value={unblockSellerAccountActionIntent}
+					variant={'outline'}
+					status={fetcher.state !== 'idle' ? 'pending' : 'idle'}
+					className="w-full"
+					iconName={'lock-open'}
+				>
+					<Icon className="mr-2" name="lock-open" />
+					<span>Desbloquear Cuenta</span>
+				</StatusButton>
+			)}
+		</fetcher.Form>
+	)
+}
+
+async function blockSellerAccountAction(sellerId: string) {
+	await prisma.session.deleteMany({
+		where: { userId: sellerId },
+	})
+
+	await prisma.user.update({
+		data: { isActive: false },
+		where: { id: sellerId },
+	})
+
+	return json({ status: 'success' })
+}
+async function unblockSellerAccountAction(sellerId: string) {
+	await prisma.user.update({
+		data: { isActive: true },
+		where: { id: sellerId },
+	})
+
+	return json({ status: 'success' })
 }
