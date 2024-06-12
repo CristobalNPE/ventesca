@@ -88,12 +88,13 @@ export async function login({
 	password: string
 	browserInfo: {
 		browser: string
-		version: string 
+		version: string
 		os: string
 	}
 }) {
 	const user = await verifyUserPassword({ username }, password)
 	if (!user) return null
+
 	const session = await prisma.session.create({
 		select: { id: true, expirationDate: true, userId: true },
 		data: {
@@ -140,7 +141,7 @@ export async function signup({
 	password: string
 	browserInfo: {
 		browser: string
-		version: string 
+		version: string
 		os: string
 	}
 }) {
@@ -251,7 +252,7 @@ export async function verifyUserPassword(
 ) {
 	const userWithPassword = await prisma.user.findUnique({
 		where,
-		select: { id: true, password: { select: { hash: true } } },
+		select: { id: true, password: { select: { hash: true } }, isActive: true },
 	})
 
 	if (!userWithPassword || !userWithPassword.password) {
@@ -260,9 +261,33 @@ export async function verifyUserPassword(
 
 	const isValid = await bcrypt.compare(password, userWithPassword.password.hash)
 
-	if (!isValid) {
+	//Temporary put isActive check here to avoid login in blocked users.
+
+	if (!isValid || !userWithPassword.isActive) {
 		return null
 	}
 
 	return { id: userWithPassword.id }
 }
+
+// export async function verifyUserPassword(
+// 	where: Pick<User, 'username'> | Pick<User, 'id'>,
+// 	password: Password['hash'],
+// ) {
+// 	const userWithPassword = await prisma.user.findUnique({
+// 		where,
+// 		select: { id: true, password: { select: { hash: true } } },
+// 	})
+
+// 	if (!userWithPassword || !userWithPassword.password) {
+// 		return null
+// 	}
+
+// 	const isValid = await bcrypt.compare(password, userWithPassword.password.hash)
+
+// 	if (!isValid) {
+// 		return null
+// 	}
+
+// 	return { id: userWithPassword.id }
+// }
