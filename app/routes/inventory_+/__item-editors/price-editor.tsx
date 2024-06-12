@@ -1,3 +1,5 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 
@@ -8,8 +10,6 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { Editor } from '../../../components/editor.tsx'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 const PRICE_MAX = 9999999
 const PRICE_MIN = 0

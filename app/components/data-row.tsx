@@ -1,5 +1,5 @@
 import { cn } from '#app/utils/misc.tsx'
-import { Icon, IconName } from './ui/icon.tsx'
+import { Icon, type IconName } from './ui/icon.tsx'
 
 export function DataRow({
 	icon,

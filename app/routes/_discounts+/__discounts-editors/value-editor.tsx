@@ -1,13 +1,13 @@
-import { IconName } from '#app/components/ui/icon.tsx'
-import { useFetcher } from '@remix-run/react'
-import { z } from 'zod'
-import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
-import { useState } from 'react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { ErrorList, Field } from '#app/components/forms.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
+import { useState } from 'react'
+import { z } from 'zod'
 import { Editor } from '#app/components/editor.tsx'
+import { ErrorList, Field } from '#app/components/forms.tsx'
+import { type IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
 
 export const DISCOUNT_FIXED_VALUE_MAX = 1_000_000
 export const DISCOUNT_PORCENTUAL_VALUE_MAX = 100

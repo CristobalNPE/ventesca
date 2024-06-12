@@ -1,7 +1,11 @@
-import { Icon } from '#app/components/ui/icon.tsx'
-import { cn } from '#app/utils/misc.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useSpinDelay } from 'spin-delay'
+import { z } from 'zod'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { type action } from '#app/routes/transaction+/index.tsx'
+import { cn } from '#app/utils/misc.tsx'
 import { paymentMethodIcons } from './_constants/paymentMethodIcons.ts'
 import {
 	PaymentMethodSchema,
@@ -9,10 +13,6 @@ import {
 	type PaymentMethod,
 } from './_types/payment-method.ts'
 import { PanelCard } from './transaction-panel.tsx'
-import { z } from 'zod'
-import { action } from '#app/routes/transaction+/index.tsx'
-import { getZodConstraint } from '@conform-to/zod'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 
 export const SET_TRANSACTION_PAYMENT_METHOD_KEY = 'set-payment-method'
 

@@ -1,7 +1,7 @@
-import { SupplierEditor } from './__supplier-editor.tsx'
-import {action} from './__supplier-editor.server.tsx'
+import { type LoaderFunctionArgs } from '@remix-run/node'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { LoaderFunctionArgs } from '@remix-run/node'
+import {action} from './__supplier-editor.server.tsx'
+import { SupplierEditor } from './__supplier-editor.tsx'
 
 export { action }
 export async function loader({request}:LoaderFunctionArgs){

@@ -1,6 +1,3 @@
-import { Icon } from '#app/components/ui/icon.tsx'
-import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	type Discount,
 	type ItemTransaction as ItemTransactionModel,
@@ -9,6 +6,9 @@ import { type SerializeFrom } from '@remix-run/node'
 import { useFetchers } from '@remix-run/react'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { useSpinDelay } from 'spin-delay'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { DeleteItemTransaction } from '#app/routes/_system+/item-transaction.delete.tsx'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	ItemTransactionType,
 	ItemTransactionTypeSchema,
@@ -152,7 +152,7 @@ export const ItemTransaction = forwardRef<
 				}
 			}
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 	}, [rowRef, item.stock])
 
 	return (

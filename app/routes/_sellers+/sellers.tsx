@@ -1,4 +1,19 @@
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import { Category, type Role, type User, type UserImage } from '@prisma/client'
+import {
+	ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+	redirectDocument,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
+import { endOfWeek, startOfWeek } from 'date-fns'
+import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
@@ -7,6 +22,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import {
 	Table,
 	TableBody,
@@ -18,27 +34,11 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, getUserImgSrc } from '#app/utils/misc.tsx'
-import { Category, Role, User, UserImage } from '@prisma/client'
-import {
-	ActionFunctionArgs,
-	json,
-	LoaderFunctionArgs,
-	redirectDocument,
-	SerializeFrom,
-} from '@remix-run/node'
-import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import { endOfWeek, startOfWeek } from 'date-fns'
-import { z } from 'zod'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
-import { Badge } from '#app/components/ui/badge.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')

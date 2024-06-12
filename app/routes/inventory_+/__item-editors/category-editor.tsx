@@ -1,5 +1,6 @@
 import { getFormProps, useForm } from '@conform-to/react'
 
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -12,7 +13,6 @@ import {
 	type SelectedCategory,
 } from '#app/routes/resources+/categories.tsx'
 import { Editor } from '../../../components/editor.tsx'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
 export const UPDATE_CATEGORY_KEY = 'update-category'
 

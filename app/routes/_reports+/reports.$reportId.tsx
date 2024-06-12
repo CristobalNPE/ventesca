@@ -1,11 +1,9 @@
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import { invariantResponse } from '@epic-web/invariant'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { Button } from '#app/components/ui/button.tsx'
 
 import {
 	Card,
@@ -15,13 +13,15 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { Separator } from '#app/components/ui/separator.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { itemTransactionTypeColors } from '../transaction+/_constants/itemTransactionTypesColors.ts'
-import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
+import { type ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
-import { invariantResponse } from '@epic-web/invariant'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

@@ -53,7 +53,7 @@ export function Editor({
 		if (fetcher.state === 'idle' && fetcher.data?.result.status === 'success') {
 			setOpen(false)
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 	}, [fetcher])
 
 	const isMobile = false

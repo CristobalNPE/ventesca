@@ -1,3 +1,16 @@
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import {
+	type ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Link, useLoaderData } from '@remix-run/react'
+import { format as formatRut } from '@validatecl/rut'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { DetailsCard } from '#app/components/details-card.tsx'
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -8,21 +21,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import {
-	ActionFunctionArgs,
-	json,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
-import { format as formatRut } from '@validatecl/rut'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -30,18 +28,20 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
+import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
+import { userHasRole, useUser } from '#app/utils/user.ts'
 import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
 import {
 	DELETE_SUPPLIER_KEY,
 	DeleteSupplier,
 	DeleteSupplierSchema,
 } from './__delete-supplier.tsx'
-import { userHasRole, useUser } from '#app/utils/user.ts'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { DetailsCard } from '#app/components/details-card.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

@@ -1,9 +1,9 @@
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
 
 export const UPDATE_IT_QUANTITY = 'update-it-quantity'
 

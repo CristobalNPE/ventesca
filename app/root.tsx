@@ -1,17 +1,5 @@
 import {
-	Icon,
-	href as iconsHref,
-	type IconName,
-} from '#app/components/ui/icon.tsx'
-import {
-	cn,
-	combineHeaders,
-	getDomainUrl,
-	getUserImgSrc,
-} from '#app/utils/misc.tsx'
-
-import {
-	LoaderFunctionArgs,
+	type LoaderFunctionArgs,
 	json,
 	type HeadersFunction,
 	type LinksFunction,
@@ -33,9 +21,23 @@ import { withSentry } from '@sentry/remix'
 import { useRef } from 'react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 import { z } from 'zod'
+import {
+	Icon,
+	href as iconsHref,
+	type IconName,
+} from '#app/components/ui/icon.tsx'
+import {
+	cn,
+	combineHeaders,
+	getDomainUrl,
+	getUserImgSrc,
+} from '#app/utils/misc.tsx'
+
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
 
+import { Spacer } from './components/spacer.tsx'
+import { useToast } from './components/toaster.tsx'
 import { Button } from './components/ui/button.tsx'
 import {
 	DropdownMenu,
@@ -51,16 +53,6 @@ import {
 	SheetContent,
 	SheetTrigger,
 } from './components/ui/sheet.tsx'
-import tailwindStyleSheetUrl from './styles/tailwind.css?url'
-import fontStyleSheetUrl from './styles/font.css?url'
-import { getUserId, logout } from './utils/auth.server.ts'
-import { ClientHintCheck, getHints } from './utils/client-hints.tsx'
-import { prisma } from './utils/db.server.ts'
-import { getEnv } from './utils/env.server.ts'
-import { honeypot } from './utils/honeypot.server.ts'
-
-import { Spacer } from './components/spacer.tsx'
-import { useToast } from './components/toaster.tsx'
 import { EpicToaster } from './components/ui/sonner.tsx'
 import {
 	Tooltip,
@@ -69,6 +61,14 @@ import {
 	TooltipTrigger,
 } from './components/ui/tooltip.tsx'
 import { ThemeSwitch, useTheme } from './routes/resources+/theme-switch.tsx'
+import fontStyleSheetUrl from './styles/font.css?url'
+import tailwindStyleSheetUrl from './styles/tailwind.css?url'
+import { getUserId, logout } from './utils/auth.server.ts'
+import { ClientHintCheck, getHints } from './utils/client-hints.tsx'
+import { prisma } from './utils/db.server.ts'
+import { getEnv } from './utils/env.server.ts'
+import { honeypot } from './utils/honeypot.server.ts'
+
 import { useNonce } from './utils/nonce-provider.ts'
 import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'

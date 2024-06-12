@@ -1,3 +1,7 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { Form, useActionData } from '@remix-run/react'
+import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -12,12 +16,8 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { action } from '#app/routes/_categories+/categories.tsx'
+import { type action } from '#app/routes/_categories+/categories.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { Form, useActionData } from '@remix-run/react'
-import { z } from 'zod'
 
 export const CREATE_CATEGORY_KEY = 'create-category'
 

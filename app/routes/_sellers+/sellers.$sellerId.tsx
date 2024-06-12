@@ -1,16 +1,27 @@
-import { prisma } from '#app/utils/db.server.ts'
-
+import { getFormProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import { type Session } from '@prisma/client'
 import {
-	ActionFunctionArgs,
+	type ActionFunctionArgs,
 	json,
-	SerializeFrom,
+	type SerializeFrom,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
+
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+import { useId } from 'react'
+import { z } from 'zod'
+import { DetailsCard } from '#app/components/details-card.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
+
+import { getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
@@ -19,14 +30,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-
-import { DetailsCard } from '#app/components/details-card.tsx'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { invariantResponse } from '@epic-web/invariant'
-import { getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
-import { Session } from '@prisma/client'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { Button } from '#app/components/ui/button.tsx'
 import {
 	Tooltip,
 	TooltipContent,
@@ -34,11 +37,8 @@ import {
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { z } from 'zod'
-import { getFormProps, useForm } from '@conform-to/react'
 import { getBusinessId } from '#app/utils/auth.server.ts'
-import { useId } from 'react'
+import { prisma } from '#app/utils/db.server.ts'
 
 const DeleteSellerSessionSchema = z.object({
 	sessionId: z.string(),

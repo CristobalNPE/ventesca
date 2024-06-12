@@ -1,17 +1,17 @@
+import { type Discount } from '@prisma/client'
+import { type SerializeFrom } from '@remix-run/node'
+import { Link } from '@remix-run/react'
+import React from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { Discount } from '@prisma/client'
-import { SerializeFrom } from '@remix-run/node'
-import { Link } from '@remix-run/react'
-import React from 'react'
 import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
 
-import { TransactionDetails } from './_types/TransactionData.ts'
 import { DirectDiscount, RemoveDirectDiscount } from './__direct-discount.tsx'
 import { DiscardTransaction } from './__discard-transaction.tsx'
 import { FinishTransaction } from './__finish-transaction.tsx'
+import { type TransactionDetails } from './_types/TransactionData.ts'
 
 export function TransactionIdPanel({
 	transactionId,

@@ -1,6 +1,11 @@
+import { getFormProps, useForm, useInputControl } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
+import { useState } from 'react'
+import { z } from 'zod'
 import { Editor } from '#app/components/editor.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import {
 	Select,
 	SelectContent,
@@ -10,14 +15,9 @@ import {
 } from '#app/components/ui/select.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
-import { getFormProps, useForm, useInputControl } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useFetcher } from '@remix-run/react'
-import { useState } from 'react'
-import { z } from 'zod'
 import { discountTypeNames } from '../_constants/discountTypeNames.ts'
 import {
-	DiscountType,
+	type DiscountType,
 	DiscountTypeSchema,
 	allDiscountTypes,
 } from '../_types/discount-type.ts'

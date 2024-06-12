@@ -1,4 +1,4 @@
-import { Icon, IconName } from "./ui/icon"
+import { Icon, type IconName } from "./ui/icon"
 
 export function DetailsCard({
 	icon,

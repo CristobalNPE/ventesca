@@ -1,5 +1,5 @@
 import { cn } from '#app/utils/misc.tsx'
-import { Icon, IconName } from './icon.tsx'
+import { Icon, type IconName } from './icon.tsx'
 
 type SelectTabOption = {
 	icon?: IconName

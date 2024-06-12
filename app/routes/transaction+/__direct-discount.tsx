@@ -1,3 +1,8 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
+import { useEffect, useState } from 'react'
+import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -12,13 +17,8 @@ import {
 import { Icon } from '#app/components/ui/icon.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { action } from '#app/routes/transaction+/index.tsx'
+import { type action } from '#app/routes/transaction+/index.tsx'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useFetcher } from '@remix-run/react'
-import { useEffect, useState } from 'react'
-import { z } from 'zod'
 import { discountTypeNames } from '../_discounts+/_constants/discountTypeNames.ts'
 import {
 	DiscountType,
@@ -70,7 +70,7 @@ export function DirectDiscount({
 		if (fetcher.state === 'idle' && fetcher.data?.result.status === 'success') {
 			setOpen(false)
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 	}, [fetcher])
 
 	const isDiscountTypeFixed = fields.discountType.value === DiscountType.FIXED

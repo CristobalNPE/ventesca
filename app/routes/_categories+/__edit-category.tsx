@@ -1,5 +1,9 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher, useLoaderData } from '@remix-run/react'
+import { useEffect, useState } from 'react'
+import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -15,18 +19,14 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
-	action,
-	loader,
+	type action,
+	type loader,
 } from '#app/routes/_categories+/categories.$categoryId.tsx'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useFetcher, useLoaderData } from '@remix-run/react'
-import { z } from 'zod'
 import {
 	CATEGORY_DESC_MAX,
 	CATEGORY_DESC_MIN,
 	CODE_MIN,
 } from './__new-category.tsx'
-import { useEffect, useState } from 'react'
 
 export const EDIT_CATEGORY_KEY = 'edit-category'
 
@@ -76,7 +76,7 @@ export function EditCategory({ id }: { id: string }) {
 		if (fetcher.state === 'idle' && fetcher.data?.result.status === 'success') {
 			setOpen(false)
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 	}, [fetcher])
 
 	return (

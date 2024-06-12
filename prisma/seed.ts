@@ -1,7 +1,7 @@
+import { faker } from '@faker-js/faker'
 import { ItemTransactionType } from '#app/routes/transaction+/_types/item-transactionType.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
-import { faker } from '@faker-js/faker'
 
 //config:
 const NUMBER_OF_CATEGORIES = 12

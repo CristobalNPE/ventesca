@@ -1,3 +1,5 @@
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -6,20 +8,30 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
+import React, { createRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import React, { createRef, useEffect, useRef, useState } from 'react'
+import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
+import { DiscountType } from '../_discounts+/_types/discount-type.ts'
+import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 import { ItemReader } from '../_system+/item-transaction.new.tsx'
+import {
+	APPLY_DIRECT_DISCOUNT_KEY,
+	DirectDiscountSchema,
+	REMOVE_DIRECT_DISCOUNT_KEY,
+	RemoveDirectDiscountSchema,
+} from './__direct-discount.tsx'
+import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
 import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
 
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
-import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
+import { TransactionStatus } from './_types/transaction-status.ts'
 import { TransactionDetailsSchema } from './_types/TransactionData.ts'
 import { ItemTransactionType } from './_types/item-transactionType.ts'
-import { TransactionStatus } from './_types/transaction-status.ts'
 import {
 	DiscountsPanel,
 	TransactionIdPanel,
@@ -27,17 +39,7 @@ import {
 	TransactionOverviewPanel,
 } from './transaction-panel.tsx'
 
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import { z } from 'zod'
-import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 
-import {
-	APPLY_DIRECT_DISCOUNT_KEY,
-	DirectDiscountSchema,
-	REMOVE_DIRECT_DISCOUNT_KEY,
-	RemoveDirectDiscountSchema,
-} from './__direct-discount.tsx'
 import {
 	DISCARD_TRANSACTION_KEY,
 	DiscardTransactionSchema,
@@ -51,8 +53,6 @@ import {
 	SET_TRANSACTION_PAYMENT_METHOD_KEY,
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
-import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
 
 const transactionDetailsSelect = {
 	id: true,

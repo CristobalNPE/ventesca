@@ -1,7 +1,10 @@
+import { type Discount } from '@prisma/client'
+import { type SerializeFrom } from '@remix-run/node'
+import { Link } from '@remix-run/react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { formatCurrency } from '#app/utils/misc.tsx'
-
 import {
 	Sheet,
 	SheetContent,
@@ -10,16 +13,13 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from '#app/components/ui/sheet.tsx'
-import { Discount } from '@prisma/client'
-import { Link } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { formatCurrency } from '#app/utils/misc.tsx'
+
 import { discountAppmethodNames } from './_constants/discountAppmethodNames.ts'
 import { discountTypeNames } from './_constants/discountTypeNames.ts'
 import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
-import { DiscountType } from './_types/discount-type.ts'
-import { SerializeFrom } from '@remix-run/node'
 import { DiscountScope } from './_types/discount-reach.ts'
+import { DiscountType } from './_types/discount-type.ts'
 
 export function DiscountSheet({
 	discount,

@@ -1,5 +1,12 @@
+import { type Transaction } from '@prisma/client'
+import { type LoaderFunctionArgs, type SerializeFrom, json } from '@remix-run/node'
+import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
@@ -16,6 +23,8 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { Progress } from '#app/components/ui/progress.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import {
@@ -29,18 +38,9 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { Transaction } from '@prisma/client'
-import { LoaderFunctionArgs, SerializeFrom, json } from '@remix-run/node'
-import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { useUser, userHasRole } from '#app/utils/user.ts'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { PaginationBar } from '#app/components/pagination-bar.tsx'
-import { useUser, userHasRole } from '#app/utils/user.ts'
 
 //MOVE THIS OUT OF HERE
 

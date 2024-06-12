@@ -1,3 +1,8 @@
+import { getFormProps, useForm } from '@conform-to/react'
+import { Form, useActionData } from '@remix-run/react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -12,14 +17,9 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { action } from '#app/routes/transaction+/index.tsx'
+import { type action } from '#app/routes/transaction+/index.tsx'
 import { formatCurrency, useIsPending } from '#app/utils/misc.tsx'
-import { getFormProps, useForm } from '@conform-to/react'
-import { Form, useActionData } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { z } from 'zod'
-import { TransactionDetails } from './_types/TransactionData.ts'
+import { type TransactionDetails } from './_types/TransactionData.ts'
 
 export const FINISH_TRANSACTION_KEY = 'finish-transaction'
 

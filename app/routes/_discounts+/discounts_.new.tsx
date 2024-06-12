@@ -1,4 +1,14 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { invariant } from '@epic-web/invariant'
+import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
+import { Form, Link, useActionData } from '@remix-run/react'
+import { addDays } from 'date-fns'
+import { useState } from 'react'
+import { type DateRange } from 'react-day-picker'
+import { z } from 'zod'
 import { Field } from '#app/components/forms.tsx'
+import { Spacer } from '#app/components/spacer.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -10,14 +20,13 @@ import {
 } from '#app/components/ui/card.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
 import {  useIsPending } from '#app/utils/misc.tsx'
-import { ActionFunctionArgs, json, redirect } from '@remix-run/node'
-import { Form, Link, useActionData } from '@remix-run/react'
-import { useState } from 'react'
-import { z } from 'zod'
+import {
+	DiscountApplicationMethod,
+	DiscountApplicationMethodSchema,
+} from './_types/discount-applicationMethod.ts'
 import { DiscountScope, DiscountScopeSchema } from './_types/discount-reach.ts'
 import { DiscountType, DiscountTypeSchema } from './_types/discount-type.ts'
 
-import { Spacer } from '#app/components/spacer.tsx'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -28,19 +37,10 @@ import {
 import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { addDays } from 'date-fns'
-import { DateRange } from 'react-day-picker'
 
-import { ItemPicker } from './discounts.item-picker.tsx'
-import {
-	DiscountApplicationMethod,
-	DiscountApplicationMethodSchema,
-} from './_types/discount-applicationMethod.ts'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { CategoryPicker } from './discounts.category-picker.tsx'
-import { invariant } from '@epic-web/invariant'
+import { ItemPicker } from './discounts.item-picker.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
 const DEFAULT_FIXED_DISCOUNT_VALUE = 0

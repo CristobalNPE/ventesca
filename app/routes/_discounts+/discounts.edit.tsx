@@ -1,25 +1,35 @@
-import { requireUserId } from '#app/utils/auth.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { ActionFunctionArgs, json } from '@remix-run/node'
-import {
-	DiscountNameEditorSchema,
-	UPDATE_DISCOUNT_NAME_KEY,
-} from './__discounts-editors/name-editor.tsx'
 import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import { type ActionFunctionArgs, json } from '@remix-run/node'
+import { z } from 'zod'
+import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { formatCurrency } from '#app/utils/misc.tsx'
+import {
+	DiscountAppmethodEditorSchema,
+	UPDATE_DISCOUNT_APPMETHOD_KEY,
+} from './__discounts-editors/applicationMethod-editor.tsx'
 import {
 	DiscountDescriptionEditorSchema,
 	REGENERATE_DISCOUNT_DESCRIPTION_KEY,
 	UPDATE_DISCOUNT_DESCRIPTION_KEY,
 } from './__discounts-editors/description-editor.tsx'
 import {
+	DiscountNameEditorSchema,
+	UPDATE_DISCOUNT_NAME_KEY,
+} from './__discounts-editors/name-editor.tsx'
+import {
 	DiscountMinquantityEditorSchema,
 	UPDATE_DISCOUNT_MINQUANTITY_KEY,
 } from './__discounts-editors/quantity-editor.tsx'
-import { buildDescription } from './discounts_.new.tsx'
-import { DiscountType } from './_types/discount-type.ts'
-import { DiscountScope } from './_types/discount-reach.ts'
-import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
+import {
+	DiscountTypeEditorSchema,
+	UPDATE_DISCOUNT_TYPE_KEY,
+} from './__discounts-editors/type-editor.tsx'
+import {
+	DiscountValidperiodEditorSchema,
+	UPDATE_DISCOUNT_VALIDPERIOD_KEY,
+} from './__discounts-editors/validPeriod-editor.tsx'
 import {
 	DISCOUNT_FIXED_VALUE_MAX,
 	DISCOUNT_FIXED_VALUE_MIN,
@@ -28,20 +38,10 @@ import {
 	DiscountValueEditorSchema,
 	UPDATE_DISCOUNT_VALUE_KEY,
 } from './__discounts-editors/value-editor.tsx'
-import { z } from 'zod'
-import {
-	DiscountTypeEditorSchema,
-	UPDATE_DISCOUNT_TYPE_KEY,
-} from './__discounts-editors/type-editor.tsx'
-import {
-	DiscountAppmethodEditorSchema,
-	UPDATE_DISCOUNT_APPMETHOD_KEY,
-} from './__discounts-editors/applicationMethod-editor.tsx'
-import {
-	DiscountValidperiodEditorSchema,
-	UPDATE_DISCOUNT_VALIDPERIOD_KEY,
-} from './__discounts-editors/validPeriod-editor.tsx'
-import { invariantResponse } from '@epic-web/invariant'
+import { type DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
+import { type DiscountScope } from './_types/discount-reach.ts'
+import { DiscountType } from './_types/discount-type.ts'
+import { buildDescription } from './discounts_.new.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	//should require with admin permission later

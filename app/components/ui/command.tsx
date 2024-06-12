@@ -1,9 +1,9 @@
-import * as React from 'react'
 import { type DialogProps } from '@radix-ui/react-dialog'
 import { Command as CommandPrimitive } from 'cmdk'
+import * as React from 'react'
 
-import { cn } from '#app/utils/misc.tsx'
 import { Dialog, DialogContent } from '#app/components/ui/dialog'
+import { cn } from '#app/utils/misc.tsx'
 import { Icon } from './icon'
 
 const Command = React.forwardRef<

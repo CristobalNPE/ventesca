@@ -1,6 +1,10 @@
+import { type Discount, type ItemTransaction } from '@prisma/client'
+import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { ActionFunctionArgs, json, redirect } from '@remix-run/node'
+import { DiscountApplicationMethod } from '../_discounts+/_types/discount-applicationMethod.ts'
+import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
+import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 import {
 	UPDATE_IT_QUANTITY,
 	UpdateItemTransactionQuantitySchema,
@@ -10,10 +14,6 @@ import {
 	UpdateItemTransactionTypeSchema,
 } from './_components/itemTransaction-typeToggle.tsx'
 import { ItemTransactionType } from './_types/item-transactionType.ts'
-import { Discount, ItemTransaction } from '@prisma/client'
-import { DiscountType } from '../_discounts+/_types/discount-type.ts'
-import { DiscountApplicationMethod } from '../_discounts+/_types/discount-applicationMethod.ts'
-import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 
 export async function loader() {
 	return redirect('/transaction')
