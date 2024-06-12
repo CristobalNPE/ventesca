@@ -18,8 +18,8 @@ export function DataCard({
 	subtext: string
 }) {
 	return (
-		<Card>
-			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+		<Card className='grow'>
+			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 ">
 				<CardTitle className="text-sm font-medium">{title}</CardTitle>
 				<Icon className="text-xl text-foreground/80" name={icon} />
 			</CardHeader>
