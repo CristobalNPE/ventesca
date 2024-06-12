@@ -41,7 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 
 	const url = new URL(request.url)
-	const $top = Number(url.searchParams.get('$top')) || 5
+	const $top = Number(url.searchParams.get('$top')) || 50
 	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const searchTerm = url.searchParams.get('search') ?? ''
 
@@ -133,45 +133,50 @@ export default function InventoryRoute() {
 		useLoaderData<typeof loader>()
 
 	return (
-		<main className="flex  flex-col">
+		<main className="flex h-full  flex-col">
 			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
 				<h1 className="text-xl font-semibold">Administración de Inventario</h1>
 				{isAdmin && <CreateItemDialog />}
 			</div>
 			<Spacer size={'4xs'} />
-			<div className="grid  gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-				<DataCard
-					title={'Artículos Disponibles'}
-					value={`${totalActiveItems}`}
-					icon={'package'}
-					subtext={`${totalItems} ${
-						totalItems === 1
-							? 'artículo registrados en sistema'
-							: 'artículos registrados en sistema'
-					} `}
-				/>
-				<DataCard
-					title={'Artículos Sin Stock'}
-					value={`${noStockItems}`}
-					icon={'box-off'}
-					subtext={`${lowStockItems} artículos próximos a agotarse`}
-				/>
-				<DataCard
-					title={'Mayores Ingresos'}
-					value={`${formatCurrency(102000)}`}
-					icon={'trending-up'}
-					subtext={'Zapatilla Nike 24 White'}
-				/>
-				<DataCard
-					title={'Menores Ingresos'}
-					value={`${formatCurrency(2000)}`}
-					icon={'trending-down'}
-					subtext={'Caja negra sin sentido'}
-				/>
-			</div>
-			<Spacer size={'4xs'} />
 
-			<ItemsTableCard totalItems={totalItems} items={items} />
+			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
+				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-3">
+					{/* Fix layout on small devices */}
+					<div className="flex flex-wrap justify-between gap-4">
+						<DataCard
+							title={'Artículos Disponibles'}
+							value={`${totalActiveItems}`}
+							icon={'package'}
+							subtext={`${totalItems} ${
+								totalItems === 1
+									? 'artículo registrados en sistema'
+									: 'artículos registrados en sistema'
+							} `}
+						/>
+						<DataCard
+							title={'Artículos Sin Stock'}
+							value={`${noStockItems}`}
+							icon={'box-off'}
+							subtext={`${lowStockItems} artículos próximos a agotarse`}
+						/>
+						<DataCard
+							title={'Mayores Ingresos'}
+							value={`${formatCurrency(102000)}`}
+							icon={'trending-up'}
+							subtext={'Zapatilla Nike 24 White'}
+						/>
+						<DataCard
+							title={'Menores Ingresos'}
+							value={`${formatCurrency(2000)}`}
+							icon={'trending-down'}
+							subtext={'Caja negra sin sentido'}
+						/>
+					</div>
+
+					<ItemsTableCard totalItems={totalItems} items={items} />
+				</div>
+			</div>
 		</main>
 	)
 }
@@ -196,20 +201,20 @@ function ItemsTableCard({
 	const navigate = useNavigate()
 
 	return (
-		<Card className="   xl:col-span-2">
-			<CardHeader className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
+		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
+			<CardHeader className="sticky top-0 z-10 flex flex-col items-center lg:items-start text-center lg:text-start gap-4 lg:flex-row justify-between bg-card px-7">
 				<div className="grid gap-2">
 					<CardTitle>Artículos</CardTitle>
 					<CardDescription>
 						Mostrando {items.length} de {totalItems} artículos registrados.
 					</CardDescription>
 				</div>
-
+				<PaginationBar total={totalItems} top={50} />
 				<InventorySearchBar status="idle" autoSubmit />
 			</CardHeader>
-			<CardContent className="h-full ">
+			<CardContent>
 				<Table>
-					<TableHeader>
+					<TableHeader className="sticky top-[6.1rem] rounded-t-sm bg-secondary">
 						<TableRow>
 							<TableHead>Descripción / Código</TableHead>
 							<TableHead className="hidden lg:table-cell">Categoría</TableHead>
@@ -247,9 +252,7 @@ function ItemsTableCard({
 					</TableBody>
 				</Table>
 			</CardContent>
-			<CardFooter className="flex justify-center md:justify-end">
-				<PaginationBar total={totalItems} />
-			</CardFooter>
+			<CardFooter></CardFooter>
 		</Card>
 	)
 }
