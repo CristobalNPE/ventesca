@@ -6,8 +6,8 @@ import { faker } from '@faker-js/faker'
 //config:
 const NUMBER_OF_CATEGORIES = 12
 const NUMBER_OF_SUPPLIERS = 10
-const NUMBER_OF_PRODUCTS = 100
-const NUMBER_OF_TRANSACTIONS = 1000
+const NUMBER_OF_PRODUCTS = 1000
+const NUMBER_OF_TRANSACTIONS = 100
 
 async function seed() {
 	console.log('🌱 Seeding...')
