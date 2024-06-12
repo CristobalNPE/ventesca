@@ -3,10 +3,10 @@ import { setSearchParamsString } from '#app/utils/misc.tsx'
 import { Button } from './ui/button.tsx'
 import { Icon } from './ui/icon.tsx'
 
-export function PaginationBar({ total }: { total: number }) {
+export function PaginationBar({ total,top }: { total: number,top:number }) {
 	const [searchParams] = useSearchParams()
 	const $skip = Number(searchParams.get('$skip')) || 0
-	const $top = Number(searchParams.get('$top')) || 5
+	const $top = Number(searchParams.get('$top')) || top
 	const totalPages = Math.ceil(total / $top)
 	const currentPage = Math.floor($skip / $top) + 1
 	const maxPages = 5
