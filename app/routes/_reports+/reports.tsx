@@ -123,6 +123,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		select: {
 			id: true,
 			createdAt: true,
+			completedAt: true,
 			status: true,
 			total: true,
 			seller: { select: { name: true } },
@@ -134,7 +135,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			...(startDate &&
 				endDate && { createdAt: { gte: startDate, lte: endDate } }),
 		},
-		orderBy: { createdAt: 'desc' },
+		orderBy: { completedAt: 'desc' },
 	})
 
 	const [numberOfTransactions, transactions] = await Promise.all([
@@ -157,7 +158,7 @@ export default function TransactionReportsRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="flex h-[85dvh] flex-col gap-4 xl:flex-row ">
+			<div className="flex xl:h-[85dvh] flex-col gap-4 xl:flex-row ">
 				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
 					<div className="flex flex-col gap-4 lg:flex-row">
 						<Card className="w-full">
@@ -249,7 +250,7 @@ export default function TransactionReportsRoute() {
 
 type TransactionWithSellerName = Pick<
 	Transaction,
-	'id' | 'createdAt' | 'status' | 'total'
+	'id' | 'completedAt' | 'status' | 'total'
 > & {
 	seller: {
 		name: string | null
@@ -287,7 +288,7 @@ function TransactionReportsTable({
 						</CardDescription>
 					) : null}
 				</div>
-				<PaginationBar total={totalTransactions} />
+				<PaginationBar top={10} total={totalTransactions} />
 			</CardHeader>
 			<CardContent>
 				<Table className="relative rounded-sm">
@@ -299,7 +300,7 @@ function TransactionReportsTable({
 								<TableHead className="hidden sm:table-cell">Vendedor</TableHead>
 							) : null}
 							<TableHead className="hidden sm:table-cell">
-								Fecha Inicio
+								Fecha Ingreso
 							</TableHead>
 							<TableHead className="hidden md:table-cell">Estado</TableHead>
 							<TableHead className="text-right">Total</TableHead>
@@ -318,7 +319,7 @@ function TransactionReportsTable({
 								<TableCell className="text-xs uppercase">
 									<Button size={'sm'} className="h-7 w-7" asChild>
 										<LinkWithParams
-										prefetch={'intent'}
+											prefetch={'intent'}
 											className={''}
 											preserveSearch
 											to={transaction.id}
@@ -337,7 +338,7 @@ function TransactionReportsTable({
 									</TableCell>
 								) : null}
 								<TableCell className="hidden sm:table-cell">
-									{format(new Date(transaction.createdAt), "dd'/'MM'/'yyyy", {
+									{format(new Date(transaction.completedAt), "dd'/'MM'/'yyyy", {
 										locale: es,
 									})}
 								</TableCell>
