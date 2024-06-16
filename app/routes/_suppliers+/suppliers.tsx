@@ -94,7 +94,7 @@ function SuppliersCard({
 }: {
 	suppliers: SerializeFrom<Pick<Supplier, 'id' | 'rut' | 'fantasyName'>>[]
 }) {
-	const location = useLocation()
+
 
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
@@ -191,42 +191,3 @@ function SupplierSearchBar({
 	)
 }
 
-// async function handleCreateCategory(formData: FormData, businessId: string) {
-// 	const submission = await parseWithZod(formData, {
-// 		schema: CreateCategorySchema.superRefine(async (data, ctx) => {
-// 			const categoryByCode = await prisma.category.findFirst({
-// 				select: { id: true, code: true },
-// 				where: { businessId, code: data.code },
-// 			})
-
-// 			if (categoryByCode) {
-// 				ctx.addIssue({
-// 					path: ['code'],
-// 					code: z.ZodIssueCode.custom,
-// 					message: 'El código ya existe.',
-// 				})
-// 			}
-// 		}),
-
-// 		async: true,
-// 	})
-
-// 	if (submission.status !== 'success') {
-// 		return json(
-// 			{ result: submission.reply() },
-// 			{ status: submission.status === 'error' ? 400 : 200 },
-// 		)
-// 	}
-
-// 	const { code, description } = submission.value
-
-// 	const createdCategory = await prisma.category.create({
-// 		data: {
-// 			code,
-// 			description,
-// 			business: { connect: { id: businessId } },
-// 		},
-// 	})
-
-// 	return redirectDocument(`/categories/${createdCategory.id}`)
-// }
