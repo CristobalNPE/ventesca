@@ -153,50 +153,29 @@ function CategoriesTable({
 					sistema.
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="">
-				<Table className="">
-					<TableHeader className="sticky top-[6.1rem] rounded-t-sm bg-secondary">
-						<TableRow>
-							<TableHead></TableHead>
-							<TableHead>Código</TableHead>
+			<CardContent className="flex flex-col gap-1 ">
+				{categories.map(category => (
+					<LinkWithParams
+						key={category.id}
+						prefetch={'intent'}
+						className={({ isActive }) =>
+							cn(
+								'flex flex-wrap items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
+								isActive && 'border-primary/10 bg-secondary',
+							)
+						}
+						preserveSearch
+						to={category.id}
+					>
+						<span className="flex-1 text-nowrap font-semibold">
+							{category.code}
+						</span>
 
-							<TableHead className="text-right">Descripción</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody className="">
-						{categories.map(category => (
-							<TableRow
-								key={category.id}
-								className={cn(
-									'duration-0 hover:bg-secondary/30',
-									location.pathname.includes(category.id) &&
-										'bg-secondary/50 hover:bg-secondary/50',
-								)}
-							>
-								<TableCell className="text-xs uppercase">
-									<Button size={'sm'} className="h-7 w-7" asChild>
-										<LinkWithParams
-											prefetch={'intent'}
-											className={''}
-											preserveSearch
-											to={category.id}
-										>
-											<span className="sr-only">Detalles categoría</span>
-											<Icon className="shrink-0" name="file-text" />
-										</LinkWithParams>
-									</Button>
-								</TableCell>
-								<TableCell className="text-xs uppercase">
-									{category.code}
-								</TableCell>
-
-								<TableCell className="text-right">
-									{category.description}
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
+						<span className="w-[15rem] text-nowrap  text-start  text-muted-foreground">
+							{category.description}
+						</span>
+					</LinkWithParams>
+				))}
 			</CardContent>
 		</Card>
 	)
