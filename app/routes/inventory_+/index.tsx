@@ -1,13 +1,3 @@
-import { Label } from '@radix-ui/react-label'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Form,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
-import { useId } from 'react'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -31,14 +21,25 @@ import {
 	TableHeader,
 	TableRow,
 } from '#app/components/ui/table.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
+import { Label } from '@radix-ui/react-label'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Form,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
+import { useId } from 'react'
 import { CreateItemDialog } from './new.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
+	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
 	const $top = Number(url.searchParams.get('$top')) || 50
@@ -54,57 +55,64 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		stock: true,
 		category: { select: { description: true } },
 	}
-	const whereBusiness = getWhereBusinessQuery(userId)
 
 	let itemsPromise
+	let totalItemsPromise
 
 	if (searchTermIsCode) {
-		itemsPromise = prisma.item
-			.findMany({
-				orderBy: { code: 'asc' },
-				select: { ...itemSelect },
+		const where = {
+			businessId,
+			code: parseInt(searchTerm),
+		}
 
-				where: {
-					...whereBusiness,
-					code: parseInt(searchTerm),
-				},
-			})
-			.then(u => u)
+		itemsPromise = prisma.item.findMany({
+			orderBy: { code: 'asc' },
+			select: { ...itemSelect },
+
+			where: {
+				businessId,
+				code: parseInt(searchTerm),
+			},
+		})
+
+		totalItemsPromise = prisma.item.count({ where })
 	} else {
-		itemsPromise = prisma.item
-			.findMany({
-				take: $top,
-				skip: $skip,
-				orderBy: { code: 'asc' },
-				select: { ...itemSelect },
-				where: {
-					...whereBusiness,
-					name: { contains: searchTerm },
-				},
-			})
-			.then(u => u)
+		const where = {
+			businessId,
+			name: { contains: searchTerm },
+		}
+
+		itemsPromise = prisma.item.findMany({
+			take: $top,
+			skip: $skip,
+			orderBy: { code: 'asc' },
+			select: { ...itemSelect },
+			where: {
+				businessId,
+				name: { contains: searchTerm },
+			},
+		})
+
+		totalItemsPromise = prisma.item.count({ where })
 	}
 
 	const totalActiveItemsPromise = prisma.item.count({
 		where: {
-			...whereBusiness,
+			businessId,
 			isActive: true,
 		},
-	})
-	const totalItemsPromise = prisma.item.count({
-		where: { ...whereBusiness },
 	})
 
 	const noStockItemsPromise = prisma.item.count({
 		where: {
-			...whereBusiness,
+			businessId,
 			stock: 0,
 		},
 	})
 
 	const lowStockItemsPromise = prisma.item.count({
 		where: {
-			...whereBusiness,
+			businessId,
 			stock: { lte: 5, gt: 0 },
 		},
 	})
@@ -202,7 +210,7 @@ function ItemsTableCard({
 
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
-			<CardHeader className="sticky top-0 z-10 flex flex-col items-center lg:items-start text-center lg:text-start gap-4 lg:flex-row justify-between bg-card px-7">
+			<CardHeader className="sticky top-0 z-10 flex flex-col items-center justify-between gap-4 bg-card px-7 text-center lg:flex-row lg:items-start lg:text-start">
 				<div className="grid gap-2">
 					<CardTitle>Artículos</CardTitle>
 					<CardDescription>
