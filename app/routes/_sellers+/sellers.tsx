@@ -145,8 +145,11 @@ function SellersTable({
 						key={seller.id}
 						prefetch={'intent'}
 						preserveSearch
-						className={
-							'flex items-center justify-between rounded-sm p-2 text-sm hover:bg-secondary '
+						className={({ isActive }) =>
+							cn(
+								'flex flex-wrap items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
+								isActive && 'border-primary/10 bg-secondary',
+							)
 						}
 						to={seller.id}
 					>
