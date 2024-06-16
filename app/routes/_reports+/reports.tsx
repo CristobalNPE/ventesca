@@ -1,8 +1,3 @@
-import { type Transaction } from '@prisma/client'
-import { type LoaderFunctionArgs, type SerializeFrom, json } from '@remix-run/node'
-import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -26,21 +21,26 @@ import {
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { Progress } from '#app/components/ui/progress.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '#app/components/ui/table.tsx'
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '#app/components/ui/tooltip.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useUser, userHasRole } from '#app/utils/user.ts'
+import { type Transaction } from '@prisma/client'
+import {
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+	json,
+} from '@remix-run/node'
+import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
-
 
 //MOVE THIS OUT OF HERE
 
@@ -158,7 +158,7 @@ export default function TransactionReportsRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="flex xl:h-[85dvh] flex-col gap-4 xl:flex-row ">
+			<div className="flex flex-col gap-4 xl:h-[85dvh] xl:flex-row ">
 				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
 					<div className="flex flex-col gap-4 lg:flex-row">
 						<Card className="w-full">
@@ -235,7 +235,7 @@ export default function TransactionReportsRoute() {
 							</Button>
 						</div>
 					</div>
-					<TransactionReportsTable
+					<TransactionReportsCard
 						transactions={transactions}
 						totalTransactions={numberOfTransactions}
 					/>
@@ -257,14 +257,13 @@ type TransactionWithSellerName = Pick<
 	}
 }
 
-function TransactionReportsTable({
+function TransactionReportsCard({
 	transactions,
 	totalTransactions,
 }: {
 	transactions: SerializeFrom<TransactionWithSellerName>[]
 	totalTransactions: number
 }) {
-	const location = useLocation()
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
 
@@ -290,79 +289,68 @@ function TransactionReportsTable({
 				</div>
 				<PaginationBar top={10} total={totalTransactions} />
 			</CardHeader>
-			<CardContent>
-				<Table className="relative rounded-sm">
-					<TableHeader className="sticky top-[5.7rem] rounded-t-sm bg-secondary">
-						<TableRow>
-							<TableHead></TableHead>
-							<TableHead>ID</TableHead>
-							{isAdmin ? (
-								<TableHead className="hidden sm:table-cell">Vendedor</TableHead>
-							) : null}
-							<TableHead className="hidden sm:table-cell">
-								Fecha Ingreso
-							</TableHead>
-							<TableHead className="hidden md:table-cell">Estado</TableHead>
-							<TableHead className="text-right">Total</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{transactions.map(transaction => (
-							<TableRow
-								key={transaction.id}
-								className={cn(
-									'duration-0 hover:bg-secondary/30',
-									location.pathname.includes(transaction.id) &&
-										'bg-secondary/50 hover:bg-secondary/50',
-								)}
-							>
-								<TableCell className="text-xs uppercase">
-									<Button size={'sm'} className="h-7 w-7" asChild>
-										<LinkWithParams
-											prefetch={'intent'}
-											className={''}
-											preserveSearch
-											to={transaction.id}
-										>
-											<span className="sr-only">Detalles transacción</span>
-											<Icon className="shrink-0" name="file-text" />
-										</LinkWithParams>
-									</Button>
-								</TableCell>
-								<TableCell className="text-xs uppercase">
-									{transaction.id}
-								</TableCell>
-								{isAdmin ? (
-									<TableCell className="hidden sm:table-cell">
-										{transaction.seller.name}
-									</TableCell>
-								) : null}
-								<TableCell className="hidden sm:table-cell">
-									{format(new Date(transaction.completedAt), "dd'/'MM'/'yyyy", {
-										locale: es,
-									})}
-								</TableCell>
-								<TableCell className="hidden md:table-cell">
-									<Badge
-										className={cn(
-											'text-xs',
-											transaction.status === TransactionStatus.DISCARDED &&
-												'text-destructive',
-											transaction.status === TransactionStatus.PENDING &&
-												'text-orange-400',
+			<CardContent className="flex flex-col gap-1 ">
+				{transactions.map(transaction => (
+					<LinkWithParams
+						key={transaction.id}
+						prefetch={'intent'}
+						className={({ isActive }) =>
+							cn(
+								'flex flex-col items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary sm:flex-row ',
+								isActive && 'border-primary/10 bg-secondary',
+							)
+						}
+						preserveSearch
+						to={transaction.id}
+					>
+						<span className="w-[15rem] text-nowrap font-semibold uppercase">
+							{transaction.id}
+						</span>
+
+						{isAdmin ? (
+							<span className="w-[15rem] text-nowrap  text-start  text-muted-foreground">
+								{transaction.seller.name}
+							</span>
+						) : null}
+
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span className="w-[15rem] text-nowrap  text-center  text-muted-foreground">
+										{format(
+											new Date(transaction.completedAt),
+											"dd'/'MM'/'yyyy",
+											{
+												locale: es,
+											},
 										)}
-										variant="outline"
-									>
-										{transaction.status}
-									</Badge>
-								</TableCell>
-								<TableCell className="text-right font-bold">
-									{formatCurrency(transaction.total)}
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
+									</span>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Fecha Ingreso</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+
+						<Badge
+							className={cn(
+								'text-xs',
+								transaction.status === TransactionStatus.DISCARDED &&
+									'text-destructive',
+								transaction.status === TransactionStatus.PENDING &&
+									'text-orange-400',
+							)}
+							variant="outline"
+						>
+							{transaction.status}
+						</Badge>
+						<span className="w-[15rem] text-nowrap text-center text-muted-foreground  sm:text-end">
+							{transaction.total !== 0
+								? formatCurrency(transaction.total)
+								: null}
+						</span>
+					</LinkWithParams>
+				))}
 			</CardContent>
 		</Card>
 	)
