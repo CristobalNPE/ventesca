@@ -119,7 +119,7 @@ export default function CategoriesRoute() {
 						</Card>
 					) : null}
 
-					<CategoriesTable categories={categories} />
+					<CategoriesCard categories={categories} />
 				</div>
 				<div className="lg:col-span-2">
 					<Outlet />
@@ -129,7 +129,7 @@ export default function CategoriesRoute() {
 	)
 }
 
-function CategoriesTable({
+function CategoriesCard({
 	categories,
 }: {
 	categories: SerializeFrom<Pick<Category, 'id' | 'code' | 'description'>>[]
