@@ -113,7 +113,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			...(!isAdmin && { sellerId: userId }),
 			// Add date filter if startDate and endDate are defined
 			...(startDate &&
-				endDate && { createdAt: { gte: startDate, lte: endDate } }),
+				endDate && { completedAt: { gte: startDate, lte: endDate } }),
 		},
 	})
 
@@ -133,7 +133,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			...(!isAdmin && { sellerId: userId }),
 			// Add date filter if startDate and endDate are defined
 			...(startDate &&
-				endDate && { createdAt: { gte: startDate, lte: endDate } }),
+				endDate && { completedAt: { gte: startDate, lte: endDate } }),
 		},
 		orderBy: { completedAt: 'desc' },
 	})
