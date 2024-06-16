@@ -1,7 +1,19 @@
 import { type Supplier } from '@prisma/client'
 import { Label } from '@radix-ui/react-label'
-import { json, type LoaderFunctionArgs, type SerializeFrom } from '@remix-run/node'
-import { Link, Outlet, useLoaderData, useLocation , Form, useSearchParams, useSubmit } from '@remix-run/react'
+import {
+	json,
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import {
+	Link,
+	Outlet,
+	useLoaderData,
+	useLocation,
+	Form,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
 import { format as formatRut } from '@validatecl/rut'
 import { useId } from 'react'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -31,7 +43,6 @@ import { cn } from '#app/utils/misc.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { useDebounce, useIsPending } from '#app/utils/misc.tsx'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -68,7 +79,7 @@ export default function SuppliersRoute() {
 							</Link>
 						</Button>
 					) : null}
-					<SuppliersTable suppliers={suppliers} />
+					<SuppliersCard suppliers={suppliers} />
 				</div>
 				<div className="lg:col-span-2">
 					<Outlet />
@@ -78,7 +89,7 @@ export default function SuppliersRoute() {
 	)
 }
 
-function SuppliersTable({
+function SuppliersCard({
 	suppliers,
 }: {
 	suppliers: SerializeFrom<Pick<Supplier, 'id' | 'rut' | 'fantasyName'>>[]
@@ -87,7 +98,7 @@ function SuppliersTable({
 
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
-			<CardHeader className="sticky top-0 z-10 bg-card px-7">
+			<CardHeader className="sticky top-0 z-10 mb-1 flex gap-3 bg-card px-7">
 				<CardTitle>Proveedores registrados</CardTitle>
 				<CardDescription>
 					Actualmente existen {suppliers.length} proveedores registrados en
@@ -95,49 +106,29 @@ function SuppliersTable({
 				</CardDescription>
 				<SupplierSearchBar status={'idle'} />
 			</CardHeader>
-			<CardContent>
-				<Table>
-					<TableHeader className="sticky top-[9rem] rounded-t-sm bg-secondary">
-						<TableRow>
-							<TableHead></TableHead>
-							<TableHead>RUT</TableHead>
-							<TableHead className="text-right">Empresa</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{suppliers.map(supplier => (
-							<TableRow
-								key={supplier.id}
-								className={cn(
-									'duration-0 hover:bg-secondary/30',
-									location.pathname.includes(supplier.id) &&
-										'bg-secondary/50 hover:bg-secondary/50',
-								)}
-							>
-								<TableCell className="text-xs uppercase">
-									<Button size={'sm'} className="h-7 w-7" asChild>
-										<LinkWithParams
-											prefetch={'intent'}
-											className={''}
-											preserveSearch
-											to={supplier.id}
-										>
-											<span className="sr-only">Detalles proveedor</span>
-											<Icon className="shrink-0" name="file-text" />
-										</LinkWithParams>
-									</Button>
-								</TableCell>
-								<TableCell className="text-xs uppercase">
-									{formatRut(supplier.rut)}
-								</TableCell>
+			<CardContent className="flex flex-col gap-1 ">
+				{suppliers.map(supplier => (
+					<LinkWithParams
+						key={supplier.id}
+						prefetch={'intent'}
+						className={({ isActive }) =>
+							cn(
+								'flex flex-wrap items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
+								isActive && 'border-primary/10 bg-secondary',
+							)
+						}
+						preserveSearch
+						to={supplier.id}
+					>
+						<span className="flex-1 text-nowrap font-semibold">
+							{formatRut(supplier.rut)}
+						</span>
 
-								<TableCell className="text-right font-semibold">
-									{supplier.fantasyName}
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
+						<span className="w-[15rem] text-nowrap  text-start  text-muted-foreground">
+							{supplier.fantasyName}
+						</span>
+					</LinkWithParams>
+				))}
 			</CardContent>
 		</Card>
 	)
