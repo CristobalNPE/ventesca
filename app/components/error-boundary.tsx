@@ -29,6 +29,10 @@ export function GeneralErrorBoundary({
 	captureRemixErrorBoundaryError(error)
 	const params = useParams()
 
+	// console.log(`Status handlers: ${statusHandlers}`)
+	// console.log(`Default handlers: ${defaultStatusHandler}`)
+	// console.log(`Unexpected handlers: ${unexpectedErrorHandler}`)
+
 	if (typeof document !== 'undefined') {
 		console.error(error)
 	}
@@ -41,6 +45,9 @@ export function GeneralErrorBoundary({
 						params,
 					})
 				: unexpectedErrorHandler(error)}
+
+			{/* {isRouteErrorResponse(error)?"true":"false"}
+				{JSON.stringify(error)} */}
 		</div>
 	)
 }
