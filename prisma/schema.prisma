@@ -72,6 +72,7 @@ model ItemAnalytics {
   updatedAt DateTime @updatedAt
 }
 
+//?? Maybe rename to Order
 model Transaction {
   id               String            @id @default(cuid())
   status           String // e.g. pending, canceled, completed
@@ -92,6 +93,7 @@ model Transaction {
   businessId       String
 }
 
+//?? Maybe rename to ItemOrder
 model ItemTransaction {
   id            String      @id @default(cuid())
   quantity      Int
@@ -142,11 +144,12 @@ model Business {
 }
 
 model User {
-  id       String  @id @default(cuid())
-  email    String  @unique
-  username String  @unique
-  name     String?
-  isActive Boolean @default(true)
+  id        String  @id @default(cuid())
+  email     String  @unique
+  username  String  @unique
+  name      String?
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
