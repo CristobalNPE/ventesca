@@ -303,12 +303,12 @@ function TransactionReportsCard({
 						preserveSearch
 						to={transaction.id}
 					>
-						<span className="w-[15rem] text-nowrap font-semibold uppercase">
+						<span className="w-[20rem] text-nowrap text-center sm:text-left font-semibold uppercase">
 							{transaction.id}
 						</span>
 
 						{isAdmin ? (
-							<span className="w-[15rem] text-nowrap  text-start  text-muted-foreground">
+							<span className="w-[15rem] text-nowrap  text-center  text-muted-foreground">
 								{transaction.seller.name}
 							</span>
 						) : null}
@@ -334,7 +334,7 @@ function TransactionReportsCard({
 
 						<Badge
 							className={cn(
-								'text-xs',
+								'text-xs ',
 								transaction.status === TransactionStatus.DISCARDED &&
 									'text-destructive',
 								transaction.status === TransactionStatus.PENDING &&
@@ -344,7 +344,7 @@ function TransactionReportsCard({
 						>
 							{transaction.status}
 						</Badge>
-						<span className="w-[15rem] text-nowrap text-center text-muted-foreground  sm:text-end">
+						<span className="w-[15rem] text-nowrap text-center text-muted-foreground font-semibold sm:text-end">
 							{transaction.total !== 0
 								? formatCurrency(transaction.total)
 								: null}
