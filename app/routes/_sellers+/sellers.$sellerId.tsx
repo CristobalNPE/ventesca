@@ -5,22 +5,29 @@ import { type Session } from '@prisma/client'
 import {
 	type ActionFunctionArgs,
 	json,
-	type SerializeFrom,
 	type LoaderFunctionArgs,
+	type SerializeFrom,
 } from '@remix-run/node'
 
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { redirect, useFetcher, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-import { useId } from 'react'
-import { z } from 'zod'
 import { DetailsCard } from '#app/components/details-card.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
+import { useId } from 'react'
+import { z } from 'zod'
 
-import { getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import {
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -30,15 +37,18 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 const DeleteSellerSessionSchema = z.object({
 	sessionId: z.string(),
@@ -88,6 +98,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		}
 		case unblockSellerAccountActionIntent: {
 			return unblockSellerAccountAction(sellerId)
+		}
+		case deleteSellerAccountActionIntent: {
+			return deleteSellerAccountAction(sellerId)
 		}
 	}
 }
@@ -192,10 +205,7 @@ export default function SellerRoute() {
 					/>
 				</div>
 				<div className="col-span-2 flex flex-col gap-3">
-					<Button variant={'outline'}>
-						<Icon className="mr-2" name="trash" />
-						Eliminar Permanentemente
-					</Button>
+					<DeleteSellerAccount />
 					<Button variant={'outline'}>
 						<Icon className="mr-2" name="update" />
 						Modificar Datos
@@ -392,6 +402,7 @@ async function blockSellerAccountAction(sellerId: string) {
 
 	return json({ status: 'success' })
 }
+
 async function unblockSellerAccountAction(sellerId: string) {
 	await prisma.user.update({
 		data: { isActive: true },
@@ -399,4 +410,60 @@ async function unblockSellerAccountAction(sellerId: string) {
 	})
 
 	return json({ status: 'success' })
+}
+
+function DeleteSellerAccount() {
+	const id = useId()
+	const fetcher = useFetcher<typeof blockSellerAccountAction>({
+		key: `${deleteSellerAccountActionIntent}-ID${id}`,
+	})
+
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild>
+				<Button variant={'outline'}>
+					<Icon className="mr-2" name="trash" />
+					Eliminar Permanentemente
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Confirmar eliminación de vendedor</AlertDialogTitle>
+					<AlertDialogDescription>
+						Esta acción no se puede revertir. La cuenta del vendedor se
+						eliminará de los registros y ya no podrá ser utilizada ni
+						administrada.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<fetcher.Form method="POST">
+						<StatusButton
+							type="submit"
+							name="intent"
+							value={deleteSellerAccountActionIntent}
+							variant={'destructive'}
+							status={fetcher.state !== 'idle' ? 'pending' : 'idle'}
+							className="w-full "
+						>
+							<Icon className="mr-2" name="lock" />
+							<span>Eliminar Permanentemente</span>
+						</StatusButton>
+					</fetcher.Form>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
+
+async function deleteSellerAccountAction(sellerId: string) {
+	await prisma.session.deleteMany({
+		where: { userId: sellerId },
+	})
+	await prisma.user.update({
+		data: { isActive: false, isDeleted: true },
+		where: { id: sellerId },
+	})
+
+	return redirect("/sellers")
 }
