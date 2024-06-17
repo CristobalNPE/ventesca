@@ -1,16 +1,3 @@
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import { Category, type Role, type User, type UserImage } from '@prisma/client'
-import {
-	ActionFunctionArgs,
-	json,
-	type LoaderFunctionArgs,
-	redirectDocument,
-	type SerializeFrom,
-} from '@remix-run/node'
-import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
-import { endOfWeek, startOfWeek } from 'date-fns'
-import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -18,34 +5,30 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '#app/components/ui/table.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency, getUserImgSrc } from '#app/utils/misc.tsx'
+import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
+import { type Role, type User, type UserImage } from '@prisma/client'
+import {
+	json,
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { userHasRole, useUser } from '#app/utils/user.ts'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 
 	const sellers = await prisma.user.findMany({
-		where: { businessId },
+		where: { businessId, isDeleted: false },
 		select: {
 			id: true,
 			username: true,
@@ -59,35 +42,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json({ sellers: sellers.filter(seller => seller.id !== userId) })
 }
 
-// export async function action({ request }: ActionFunctionArgs) {
-// 	const userId = await requireUserWithRole(request, 'Administrador')
-// 	const businessId = await getBusinessId(userId)
-// 	const formData = await request.formData()
-// 	const intent = formData.get('intent')
-
-// 	invariantResponse(intent, 'Intent should be defined.')
-
-// 	switch (intent) {
-// 		case CREATE_CATEGORY_KEY: {
-// 			return await handleCreateCategory(formData, businessId)
-// 		}
-// 	}
-// }
-
 export default function SellersRoute() {
 	const { sellers } = useLoaderData<typeof loader>()
-
-	if (sellers.length === 0) {
-		return (
-			<div className="flex flex-col gap-4 h-full items-center justify-center rounded-sm border border-dashed text-muted-foreground">
-				<p>Sin vendedores registrados en sistema.</p>
-				<Button className="flex items-center gap-2">
-					<Icon name="user-plus" />
-					<span>Registrar nuevo vendedor</span>
-				</Button>
-			</div>
-		)
-	}
 
 	return (
 		<main className=" h-full">
@@ -98,16 +54,31 @@ export default function SellersRoute() {
 
 			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
 				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-					<Card>
-						<CardHeader>
-							<Button className="flex items-center gap-2">
-								<Icon name="user-plus" />
-								<span>Registrar nuevo vendedor</span>
+					{sellers.length === 0 ? (
+						<div className="flex h-full flex-col items-center justify-center gap-4 rounded-sm border border-dashed text-muted-foreground">
+							<p>Sin vendedores registrados en sistema.</p>
+							<Button asChild className="flex items-center gap-2">
+								<Link to={'new'}>
+									<Icon name="user-plus" />
+									<span>Registrar nuevo vendedor</span>
+								</Link>
 							</Button>
-						</CardHeader>
-					</Card>
-
-					<SellersTable sellers={sellers} />
+						</div>
+					) : (
+						<>
+							<Card>
+								<CardHeader>
+									<Button asChild className="flex items-center gap-2">
+										<Link to={'new'}>
+											<Icon name="user-plus" />
+											<span>Registrar nuevo vendedor</span>
+										</Link>
+									</Button>
+								</CardHeader>
+							</Card>
+							<SellersCard sellers={sellers} />
+						</>
+					)}
 				</div>
 				<div className="lg:col-span-2">
 					<Outlet />
@@ -122,14 +93,11 @@ type SellerDisplayData = Pick<User, 'id' | 'name' | 'email' | 'username'> & {
 	image: UserImage | null
 }
 
-//Need to create custom type
-function SellersTable({
+function SellersCard({
 	sellers,
 }: {
 	sellers: SerializeFrom<SellerDisplayData>[]
 }) {
-	const location = useLocation()
-
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
 			<CardHeader className="sticky top-0 z-10 bg-card px-7">
