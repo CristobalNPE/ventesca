@@ -64,7 +64,7 @@ const DeleteFormSchema = z.object({
 	discountId: z.string(),
 })
 
-export async function updateDiscountValidity(
+ async function updateDiscountValidity(
 	discount: Pick<Discount, 'id' | 'validFrom' | 'validUntil'>,
 ) {
 	const currentDate = new Date()

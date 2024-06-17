@@ -191,9 +191,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const allDiscounts = [...availableDiscounts, ...globalDiscounts]
 
-	for (let discount of allDiscounts) {
-		await updateDiscountValidity(discount)
-	}
+	// for (let discount of allDiscounts) {
+	// 	await updateDiscountValidity(discount)
+	// }
 
 	return json({
 		transaction,

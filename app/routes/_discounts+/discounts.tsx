@@ -36,7 +36,7 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, useDebounce, useIsPending } from '#app/utils/misc.tsx'
-import { updateDiscountValidity } from './discounts_.$discountId'
+// import { updateDiscountValidity } from './discounts_.$discountId'
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -67,9 +67,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	})
 
 	//Check discounts state (isActive) before sending it to the page.
-	for (let discount of discounts) {
-		await updateDiscountValidity(discount)
-	}
+	// for (let discount of discounts) {
+	// 	await updateDiscountValidity(discount)
+	// }
 	const amountOfActiveDiscounts = await prisma.discount.count({
 		where: { isActive: true, businessId },
 	})
@@ -198,7 +198,7 @@ function DiscountsTableCard({
 				</Table>
 			</CardContent>
 			<CardFooter className="flex justify-center md:justify-end">
-				<PaginationBar total={totalDiscounts} />
+				<PaginationBar top={50} total={totalDiscounts} />
 			</CardFooter>
 		</Card>
 	)
