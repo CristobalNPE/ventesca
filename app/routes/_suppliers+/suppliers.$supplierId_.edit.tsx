@@ -43,7 +43,10 @@ export function ErrorBoundary() {
 	return (
 		<GeneralErrorBoundary
 			statusHandlers={{
-				404: ({ params }) => <p>Articulo con ID "{params.itemId}" no existe</p>,
+				404: ({ params }) => (
+					<p>Proveedor con ID "{params.supplierId}" no existe</p>
+				),
+				403: ({ params }) => <p>Sin autorización.</p>,
 			}}
 		/>
 	)
