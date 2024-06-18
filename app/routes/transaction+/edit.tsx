@@ -175,7 +175,7 @@ function calculateDiscountValue(
 
 	if (isEligibleForDiscount) {
 		if (discount.type === DiscountType.FIXED) {
-			if (discount.applicationMethod === DiscountApplicationMethod.BY_ITEM) {
+			if (discount.applicationMethod === DiscountApplicationMethod.BY_PRODUCT) {
 				discountTotalValue = itemTransaction.quantity * discount.value
 			}
 			if (discount.applicationMethod === DiscountApplicationMethod.TO_TOTAL) {

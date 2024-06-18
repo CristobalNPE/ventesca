@@ -39,7 +39,7 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
 import { CategoryPicker } from './discounts.category-picker.tsx'
-import { ItemPicker } from './discounts.item-picker.tsx'
+import { ProductPicker } from './discounts.product-picker.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
@@ -95,7 +95,7 @@ export function buildDescription(
 			: `${discountValue}%`
 
 	const descriptionScope =
-		discountScope === DiscountScope.SINGLE_ITEM
+		discountScope === DiscountScope.SINGLE_PRODUCT
 			? 'artículos seleccionados'
 			: discountScope === DiscountScope.CATEGORY
 			  ? `categorías seleccionadas`
@@ -117,7 +117,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const submission = await parseWithZod(formData, {
 		schema: NewDiscountSchema.superRefine(async (data, ctx) => {
 			if (
-				data.discountScope === DiscountScope.SINGLE_ITEM &&
+				data.discountScope === DiscountScope.SINGLE_PRODUCT &&
 				data.itemIds === undefined
 			) {
 				ctx.addIssue({
@@ -180,7 +180,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	fixedValue = fixedValue === undefined ? 0 : fixedValue
 	porcentualValue = porcentualValue === undefined ? 0 : porcentualValue
 
-	if (discountScope === DiscountScope.SINGLE_ITEM) {
+	if (discountScope === DiscountScope.SINGLE_PRODUCT) {
 		invariant(itemIds, 'Item IDs should be defined.')
 		const itemIdsArray = itemIds.split(',')
 
@@ -346,7 +346,7 @@ export default function CreateDiscount() {
 										},
 										{
 											label: 'Por Articulo',
-											value: DiscountScope.SINGLE_ITEM,
+											value: DiscountScope.SINGLE_PRODUCT,
 										},
 									]}
 									name={fields.discountScope.name}
@@ -374,7 +374,7 @@ export default function CreateDiscount() {
 											? [
 													{
 														label: 'Por Articulo',
-														value: DiscountApplicationMethod.BY_ITEM,
+														value: DiscountApplicationMethod.BY_PRODUCT,
 													},
 													{
 														label: 'Al Total',
@@ -467,8 +467,8 @@ export default function CreateDiscount() {
 				</Card>
 				{fields.discountScope.value !== DiscountScope.GLOBAL && (
 					<div>
-						{fields.discountScope.value === DiscountScope.SINGLE_ITEM ? (
-							<ItemPicker
+						{fields.discountScope.value === DiscountScope.SINGLE_PRODUCT ? (
+							<ProductPicker
 								errors={fields.itemIds.errors}
 								setAddedItemsIds={setAddedItemsIds}
 							/>

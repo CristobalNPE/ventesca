@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
 export enum DiscountScope {
-	SINGLE_ITEM = 'single-item',
+	SINGLE_PRODUCT = 'single-product',
 	CATEGORY = 'category',
 	GLOBAL = 'global',
 }
 
 const allDiscountScopes = [
-	DiscountScope.SINGLE_ITEM,
+	DiscountScope.SINGLE_PRODUCT,
 	DiscountScope.CATEGORY,
 	DiscountScope.GLOBAL,
 ] as const

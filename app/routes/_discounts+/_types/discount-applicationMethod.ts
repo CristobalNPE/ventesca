@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
 export enum DiscountApplicationMethod {
-	BY_ITEM = 'by-item',
+	BY_PRODUCT = 'by-product',
 	TO_TOTAL = 'to-total',
 }
 
 export const allDiscountApplicationMethods = [
-	DiscountApplicationMethod.BY_ITEM,
+	DiscountApplicationMethod.BY_PRODUCT,
 	DiscountApplicationMethod.TO_TOTAL,
 ] as const
 

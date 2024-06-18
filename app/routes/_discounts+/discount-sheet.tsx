@@ -81,8 +81,8 @@ export function DiscountSheet({
 							<span>Método de aplicación</span>
 						</div>
 						<span>
-							{discount.applicationMethod === DiscountApplicationMethod.BY_ITEM
-								? discountAppmethodNames[DiscountApplicationMethod.BY_ITEM]
+							{discount.applicationMethod === DiscountApplicationMethod.BY_PRODUCT
+								? discountAppmethodNames[DiscountApplicationMethod.BY_PRODUCT]
 								: discountAppmethodNames[DiscountApplicationMethod.TO_TOTAL]}
 						</span>
 					</div>

@@ -1,8 +1,3 @@
-import { type Item } from '@prisma/client'
-import { type SerializeFrom, json, type LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useFetcher } from '@remix-run/react'
-import { useEffect, useId, useRef, useState } from 'react'
-import { useSpinDelay } from 'spin-delay'
 import { ErrorList, type ListOfErrors } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -31,51 +26,58 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { useDebounce } from '#app/utils/misc.tsx'
+import { Product } from '@prisma/client'
+import {
+	json,
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { Link, useFetcher } from '@remix-run/react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { useSpinDelay } from 'spin-delay'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
-	const itemSearch = url.searchParams.get('item-search')
+	const productSearch = url.searchParams.get('product-search')
 
-	const itemSearchAsNumber = Number(itemSearch) || null
+	const productSearchAsNumber = Number(productSearch) || null
 
-	if (itemSearch === null) return null
-	console.log(url.searchParams.getAll(''))
-	console.log(itemSearch)
+	if (productSearch === null) return null
 
-	const itemSearchByNameButTooShort =
-		itemSearchAsNumber === null && itemSearch.length <= 2
+	const productSearchByNameButTooShort =
+		productSearchAsNumber === null && productSearch.length <= 2
 
-	if (itemSearchByNameButTooShort) return null
+	if (productSearchByNameButTooShort) return null
 
-	if (itemSearchAsNumber) {
-		const items = await prisma.item.findMany({
+	if (productSearchAsNumber) {
+		const products = await prisma.product.findMany({
 			select: { id: true, code: true, name: true, sellingPrice: true }, //Put this in a variable
-			where: { code: itemSearchAsNumber, businessId: businessId },
+			where: { code: productSearchAsNumber, businessId: businessId },
 
 			orderBy: { name: 'asc' },
 		})
 
-		return json({ items })
+		return json({ products })
 	}
 
-	const items = await prisma.item.findMany({
+	const products = await prisma.product.findMany({
 		select: { id: true, code: true, name: true, sellingPrice: true },
-		where: { name: { contains: itemSearch }, businessId: businessId },
+		where: { name: { contains: productSearch }, businessId: businessId },
 
 		orderBy: { code: 'asc' },
 	})
 
-	return json({ items })
+	return json({ products })
 }
 
-export function ItemPicker({
-	setAddedItemsIds,
+export function ProductPicker({
+	setAddedProductsIds,
 	errors,
 }: {
-	setAddedItemsIds: (ids: string) => void
+	setAddedProductsIds: (ids: string) => void
 	errors: ListOfErrors
 }) {
 	const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false)
@@ -90,33 +92,33 @@ export function ItemPicker({
 		minDuration: 500,
 	})
 
-	const items = fetcher.data?.items ?? []
-	type Item = (typeof items)[0]
+	const products = fetcher.data?.products ?? []
+	type Product = (typeof products)[0]
 
-	const [addedItems, setAddedItems] = useState<Item[]>([])
+	const [addedProducts, setAddedProducts] = useState<Product[]>([])
 
 	useEffect(() => {
-		setAddedItemsIds(addedItems.map(i => i.id).join(','))
-	}, [addedItems, setAddedItemsIds])
+		setAddedProductsIds(addedProducts.map(i => i.id).join(','))
+	}, [addedProducts, setAddedProductsIds])
 
-	const addItem = (item: Item) => {
-		if (!addedItems.find(i => i.id === item.id)) {
-			setAddedItems([...addedItems, item])
+	const addProduct = (product: Product) => {
+		if (!addedProducts.find(i => i.id === product.id)) {
+			setAddedProducts([...addedProducts, product])
 		}
 	}
 
-	const removeItem = (item: Item) => {
-		setAddedItems(addedItems.filter(i => i.id !== item.id))
+	const removeProduct = (product: Product) => {
+		setAddedProducts(addedProducts.filter(i => i.id !== product.id))
 	}
 
 	const formRef = useRef<HTMLFormElement>(null)
 
 	const handleFormChange = useDebounce((inputValue: string) => {
 		fetcher.submit(
-			{ 'item-search': inputValue ?? '' },
+			{ 'product-search': inputValue ?? '' },
 			{
 				method: 'get',
-				action: '/discounts/item-picker',
+				action: '/discounts/product-picker',
 			},
 		)
 		setIsSearchBoxOpen(true)
@@ -127,8 +129,10 @@ export function ItemPicker({
 			<CardHeader>
 				<CardTitle>
 					Artículos asociados{' '}
-					{addedItems.length > 0 && (
-						<span className="text-muted-foreground">({addedItems.length})</span>
+					{addedProducts.length > 0 && (
+						<span className="text-muted-foreground">
+							({addedProducts.length})
+						</span>
 					)}
 				</CardTitle>
 				<CardDescription>
@@ -157,7 +161,7 @@ export function ItemPicker({
 										</Label>
 										<Input
 											type="text"
-											name="item-search"
+											name="product-search"
 											id={id}
 											placeholder="Búsqueda por código o nombre"
 											className="border-none focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none"
@@ -178,20 +182,20 @@ export function ItemPicker({
 								<CommandList>
 									<CommandEmpty>Sin coincidencias.</CommandEmpty>
 									<CommandGroup className="max-h-[15rem] overflow-y-auto">
-										{items.map(item => (
+										{products.map(product => (
 											<CommandItem
-												key={item.id}
+												key={product.id}
 												className="flex cursor-pointer gap-5 rounded-md p-1 hover:bg-primary/20 "
 												onSelect={() => {
-													addItem(item)
+													addProduct(product)
 													setIsSearchBoxOpen(false)
 													formRef.current?.reset()
 												}}
 											>
 												<span className="w-[2.5rem] font-bold">
-													{item.code}
+													{product.code}
 												</span>
-												<span className="flex-1 ">{item.name}</span>
+												<span className="flex-1 ">{product.name}</span>
 											</CommandItem>
 										))}
 									</CommandGroup>
@@ -200,11 +204,11 @@ export function ItemPicker({
 						</PopoverContent>
 					</Popover>
 
-					{addedItems.length > 0 && (
+					{addedProducts.length > 0 && (
 						<DiscountItemsList
 							canRemove={true}
-							addedItems={addedItems}
-							removeItem={removeItem}
+							addedProducts={addedProducts}
+							removeProduct={removeProduct}
 						/>
 					)}
 				</div>
@@ -216,52 +220,52 @@ export function ItemPicker({
 	)
 }
 
-export type DiscountItemListItem = SerializeFrom<
-	Pick<Item, 'id' | 'code' | 'name' | 'sellingPrice'>
+export type DiscountListProduct = SerializeFrom<
+	Pick<Product, 'id' | 'code' | 'name' | 'sellingPrice'>
 >
 
 export function DiscountItemsList({
-	addedItems,
-	removeItem,
+	addedProducts,
+	removeProduct,
 	canRemove,
 	showDetailsLink = false,
 }: {
-	addedItems: DiscountItemListItem[]
-	removeItem?: (item: DiscountItemListItem) => void
+	addedProducts: DiscountListProduct[]
+	removeProduct?: (product: DiscountListProduct) => void
 	canRemove: boolean
 	showDetailsLink?: boolean
 }) {
 	return (
 		<div className="flex flex-col gap-1  ">
-			{addedItems.map(item => (
+			{addedProducts.map(product => (
 				<div
-					key={item.id}
+					key={product.id}
 					className="flex items-center justify-between gap-8 rounded-sm  bg-accent/50 p-2 "
 				>
 					<div className="flex  gap-1 text-base">
 						{showDetailsLink ? (
 							<Link
-								to={`/inventory/${item.id}`}
+								to={`/inventory/${product.id}`}
 								className="flex w-[4rem] items-center gap-1 text-muted-foreground hover:text-foreground"
 							>
 								<Icon className="shrink-0" name="scan-barcode" />{' '}
-								<span>{item.code}</span>
+								<span>{product.code}</span>
 							</Link>
 						) : (
 							<div className="flex w-[4rem] items-center gap-1 text-muted-foreground ">
 								<Icon className="shrink-0" name="scan-barcode" />{' '}
-								<span>{item.code}</span>
+								<span>{product.code}</span>
 							</div>
 						)}
-						<span>{item.name}</span>
+						<span>{product.name}</span>
 					</div>
 
-					{canRemove && removeItem && (
+					{canRemove && removeProduct && (
 						<Button
 							variant={'destructive'}
 							className="text-lg "
 							size={'icon'}
-							onClick={() => removeItem(item)}
+							onClick={() => removeProduct(product)}
 						>
 							<Icon name="trash" />
 							<span className="sr-only">Quitar articulo de la lista</span>

@@ -57,7 +57,7 @@ import { discountTypeNames } from './_constants/discountTypeNames.ts'
 import { DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
 import { DiscountScope } from './_types/discount-reach.ts'
 import { DiscountType } from './_types/discount-type.ts'
-import { DiscountItemsList } from './discounts.item-picker.tsx'
+import { DiscountItemsList } from './discounts.product-picker.tsx'
 
 const DeleteFormSchema = z.object({
 	intent: z.literal('delete-discount'),
@@ -126,7 +126,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			type: true,
 			applicationMethod: true,
 			value: true,
-			items: {
+			products: {
 				select: { id: true, name: true, code: true, sellingPrice: true },
 			},
 			createdAt: true,
@@ -275,8 +275,8 @@ export default function DiscountRoute() {
 								label="Método de aplicación"
 								value={
 									discount.applicationMethod ===
-									DiscountApplicationMethod.BY_ITEM
-										? discountAppmethodNames[DiscountApplicationMethod.BY_ITEM]
+									DiscountApplicationMethod.BY_PRODUCT
+										? discountAppmethodNames[DiscountApplicationMethod.BY_PRODUCT]
 										: discountAppmethodNames[DiscountApplicationMethod.TO_TOTAL]
 								}
 								isEditable={isAdmin}
@@ -374,7 +374,7 @@ export default function DiscountRoute() {
 								<span>Artículos asociados</span>{' '}
 								{discount.scope !== DiscountScope.GLOBAL ? (
 									<span className="text-md tracking-wide text-muted-foreground">
-										({discount.items.length})
+										({discount.products.length})
 									</span>
 								) : null}
 							</CardTitle>
@@ -389,12 +389,12 @@ export default function DiscountRoute() {
 								<ScrollArea
 									className={cn(
 										'h-fit rounded-sm p-3',
-										discount.items.length >= MAX_ITEMS_BEFORE_OVERFLOW &&
+										discount.products.length >= MAX_ITEMS_BEFORE_OVERFLOW &&
 											'h-[41rem]',
 									)}
 								>
 									<DiscountItemsList
-										addedItems={discount.items}
+										addedProducts={discount.products}
 										canRemove={false}
 										showDetailsLink
 									/>
