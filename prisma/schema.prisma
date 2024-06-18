@@ -11,14 +11,14 @@ datasource db {
 }
 
 model Category {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   code        Int
   description String
-  items       Item[]
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  products    Product[]
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   businessId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Supplier {
@@ -30,40 +30,40 @@ model Supplier {
   fantasyName String
   phone       String
   email       String
-  items       Item[]
+  products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   business    Business? @relation(fields: [businessId], references: [id])
   businessId  String?
 }
 
-model Item {
-  id            String            @id @default(cuid())
-  isActive      Boolean
-  code          Int
-  name          String
-  sellingPrice  Float
-  price         Float
-  stock         Int
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  category      Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  categoryId    String
-  supplier      Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  supplierId    String
-  transactions  ItemTransaction[]
-  discounts     Discount[]
-  business      Business          @relation(fields: [businessId], references: [id])
-  businessId    String
-  itemAnalytics ItemAnalytics?
+model Product {
+  id               String            @id @default(cuid())
+  isActive         Boolean
+  code             Int
+  name             String
+  sellingPrice     Float
+  price            Float
+  stock            Int
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  categoryId       String
+  supplier         Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  supplierId       String
+  productOrders    ProductOrder[]
+  discounts        Discount[]
+  business         Business          @relation(fields: [businessId], references: [id])
+  businessId       String
+  productAnalytics ProductAnalytics?
 }
 
-model ItemAnalytics {
-  id          String @id @default(cuid())
-  item        Item   @relation(fields: [itemId], references: [id])
-  itemId      String @unique
-  totalProfit Float  @default(0)
-  totalSales  Int    @default(0)
+model ProductAnalytics {
+  id          String  @id @default(cuid())
+  item        Product @relation(fields: [productId], references: [id])
+  productId   String  @unique
+  totalProfit Float   @default(0)
+  totalSales  Int     @default(0)
   // averagePrice   Float
   // leastSoldDate  DateTime?
   // mostProfitData DateTime?
@@ -72,46 +72,44 @@ model ItemAnalytics {
   updatedAt DateTime @updatedAt
 }
 
-//?? Maybe rename to Order
-model Transaction {
-  id               String            @id @default(cuid())
-  status           String // e.g. pending, canceled, completed
-  paymentMethod    String // e.g. cash, credit, debit
-  subtotal         Int
-  total            Int
-  totalDiscount    Int
-  directDiscount   Int
-  discounts        Discount[]
-  isDiscarded      Boolean           @default(false)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  completedAt      DateTime          @default(now())
-  itemTransactions ItemTransaction[]
-  seller           User              @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  sellerId         String
-  business         Business          @relation(fields: [businessId], references: [id])
-  businessId       String
+model Order {
+  id             String         @id @default(cuid())
+  status         String // e.g. pending, canceled, completed
+  paymentMethod  String // e.g. cash, credit, debit
+  subtotal       Int
+  total          Int
+  totalDiscount  Int
+  directDiscount Int
+  discounts      Discount[]
+  isDiscarded    Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  completedAt    DateTime       @default(now())
+  productOrders  ProductOrder[]
+  seller         User           @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId       String
+  business       Business       @relation(fields: [businessId], references: [id])
+  businessId     String
 }
 
-//?? Maybe rename to ItemOrder
-model ItemTransaction {
-  id            String      @id @default(cuid())
-  quantity      Int
-  type          String // e.g. sale, loan, return
-  totalPrice    Int
-  totalDiscount Int
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  itemId        String
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  transactionId String
+model ProductOrder {
+  id             String   @id @default(cuid())
+  quantity       Int
+  type           String // e.g. sale, loan, return
+  totalPrice     Int
+  totalDiscount  Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  productDetails Product  @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  productId      String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orderId        String
 
-  @@unique([itemId, transactionId])
+  @@unique([productId, orderId])
 }
 
 model Discount {
-  id                String        @id @default(cuid())
+  id                String    @id @default(cuid())
   name              String
   description       String
   type              String // e.g. FIXED AMOUNT, PERCENTAGE
@@ -121,26 +119,26 @@ model Discount {
   value             Int
   validFrom         DateTime
   validUntil        DateTime
-  isActive          Boolean       @default(true)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  business          Business      @relation(fields: [businessId], references: [id])
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  business          Business  @relation(fields: [businessId], references: [id])
   businessId        String
-  items             Item[]
-  transactions      Transaction[]
+  products          Product[]
+  orders            Order[]
 }
 
 model Business {
-  id           String        @id @default(cuid())
-  name         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  items        Item[]
-  transactions Transaction[]
-  categories   Category[]
-  suppliers    Supplier[]
-  discounts    Discount[]
-  users        User[]
+  id         String     @id @default(cuid())
+  name       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  products   Product[]
+  orders     Order[]
+  categories Category[]
+  suppliers  Supplier[]
+  discounts  Discount[]
+  users      User[]
 }
 
 model User {
@@ -154,14 +152,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  image        UserImage?
-  password     Password?
-  roles        Role[]
-  sessions     Session[]
-  connections  Connection[]
-  transactions Transaction[]
-  business     Business      @relation(fields: [businessId], references: [id])
-  businessId   String
+  image       UserImage?
+  password    Password?
+  roles       Role[]
+  sessions    Session[]
+  connections Connection[]
+  orders      Order[]
+  business    Business     @relation(fields: [businessId], references: [id])
+  businessId  String
 }
 
 model UserImage {
