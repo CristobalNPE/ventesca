@@ -22,7 +22,7 @@ import {
 	allDiscountTypes,
 } from '../_types/discount-type.ts'
 
-export const UPDATE_DISCOUNT_TYPE_KEY = 'update-discount-type'
+export const updateDiscountTypeActionIntent = 'update-discount-type'
 
 export const DiscountTypeEditorSchema = z.object({
 	discountId: z.string(),
@@ -40,14 +40,14 @@ export function DiscountTypeEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_DISCOUNT_TYPE_KEY })
+	const fetcher = useFetcher<typeof action>({ key: updateDiscountTypeActionIntent })
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_TYPE_KEY,
+		id: updateDiscountTypeActionIntent,
 		constraint: getZodConstraint(DiscountTypeEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -98,7 +98,7 @@ export function DiscountTypeEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_TYPE_KEY}
+			value={updateDiscountTypeActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -111,7 +111,7 @@ export function DiscountTypeEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_DISCOUNT_TYPE_KEY}
+			fetcherKey={updateDiscountTypeActionIntent}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

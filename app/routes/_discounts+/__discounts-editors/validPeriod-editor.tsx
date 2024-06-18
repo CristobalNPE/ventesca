@@ -13,7 +13,8 @@ import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
 
-export const UPDATE_DISCOUNT_VALIDPERIOD_KEY = 'update-discount-validperiod'
+export const updateDiscountValidPeriodActionIntent =
+	'update-discount-validperiod'
 const DEFAULT_RANGE = 7
 
 export const DiscountValidperiodEditorSchema = z.object({
@@ -34,7 +35,7 @@ export function DiscountValidperiodEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: UPDATE_DISCOUNT_VALIDPERIOD_KEY,
+		key: updateDiscountValidPeriodActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
@@ -42,7 +43,7 @@ export function DiscountValidperiodEditModal({
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_VALIDPERIOD_KEY,
+		id: updateDiscountValidPeriodActionIntent,
 		constraint: getZodConstraint(DiscountValidperiodEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -59,9 +60,9 @@ export function DiscountValidperiodEditModal({
 		discountPeriod?.from && discountPeriod?.to
 			? `${format(discountPeriod.from, "dd 'de' MMMM 'del' yyyy", {
 					locale: es,
-			  })} -- ${format(discountPeriod.to, "dd 'de' MMMM 'del' yyyy", {
+				})} -- ${format(discountPeriod.to, "dd 'de' MMMM 'del' yyyy", {
 					locale: es,
-			  })}`
+				})}`
 			: value
 
 	const renderedForm = (
@@ -102,7 +103,7 @@ export function DiscountValidperiodEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_VALIDPERIOD_KEY}
+			value={updateDiscountValidPeriodActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -115,7 +116,7 @@ export function DiscountValidperiodEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_DISCOUNT_VALIDPERIOD_KEY}
+			fetcherKey={updateDiscountValidPeriodActionIntent}
 			targetValue={formattedDates}
 			open={open}
 			setOpen={setOpen}

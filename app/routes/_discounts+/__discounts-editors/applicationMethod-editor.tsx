@@ -22,7 +22,7 @@ import {
 	allDiscountApplicationMethods,
 } from '../_types/discount-applicationMethod.ts'
 
-export const UPDATE_DISCOUNT_APPMETHOD_KEY = 'update-discount-appmethod'
+export const updateDiscountAppMethodActionIntent = 'update-discount-appmethod'
 
 export const DiscountAppmethodEditorSchema = z.object({
 	discountId: z.string(),
@@ -41,7 +41,7 @@ export function DiscountAppmethodEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: UPDATE_DISCOUNT_APPMETHOD_KEY,
+		key: updateDiscountAppMethodActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
@@ -49,7 +49,7 @@ export function DiscountAppmethodEditModal({
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_APPMETHOD_KEY,
+		id: updateDiscountAppMethodActionIntent,
 		constraint: getZodConstraint(DiscountAppmethodEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -103,7 +103,7 @@ export function DiscountAppmethodEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_APPMETHOD_KEY}
+			value={updateDiscountAppMethodActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -116,7 +116,7 @@ export function DiscountAppmethodEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_DISCOUNT_APPMETHOD_KEY}
+			fetcherKey={updateDiscountAppMethodActionIntent}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

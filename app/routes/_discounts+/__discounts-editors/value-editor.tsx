@@ -13,7 +13,7 @@ export const DISCOUNT_FIXED_VALUE_MAX = 1_000_000
 export const DISCOUNT_PORCENTUAL_VALUE_MAX = 100
 export const DISCOUNT_FIXED_VALUE_MIN = 100
 export const DISCOUNT_PORCENTUAL_VALUE_MIN = 1
-export const UPDATE_DISCOUNT_VALUE_KEY = 'update-discount-value'
+export const updateDiscountValueActionIntent = 'update-discount-value'
 
 export const DiscountValueEditorSchema = z.object({
 	discountId: z.string(),
@@ -37,7 +37,7 @@ export function DiscountValueEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: UPDATE_DISCOUNT_VALUE_KEY,
+		key: updateDiscountValueActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
@@ -45,7 +45,7 @@ export function DiscountValueEditModal({
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_VALUE_KEY,
+		id: updateDiscountValueActionIntent,
 		constraint: getZodConstraint(DiscountValueEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -88,7 +88,7 @@ export function DiscountValueEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_VALUE_KEY}
+			value={updateDiscountValueActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -101,7 +101,7 @@ export function DiscountValueEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_DISCOUNT_VALUE_KEY}
+			fetcherKey={updateDiscountValueActionIntent}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

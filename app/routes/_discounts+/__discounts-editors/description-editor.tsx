@@ -19,8 +19,9 @@ import { cn } from '#app/utils/misc.tsx'
 
 export const DISCOUNT_DESCRIPTION_MAX = 60
 export const DISCOUNT_DESCRIPTION_MIN = 5
-export const UPDATE_DISCOUNT_DESCRIPTION_KEY = 'update-discount-description'
-export const REGENERATE_DISCOUNT_DESCRIPTION_KEY =
+export const updateDiscountDescriptionActionIntent =
+	'update-discount-description'
+export const regenerateDiscountDescriptionActionIntent =
 	'regenerate-discount-description'
 
 export const DiscountDescriptionEditorSchema = z.object({
@@ -48,7 +49,7 @@ export function DiscountDescriptionEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: UPDATE_DISCOUNT_DESCRIPTION_KEY,
+		key: updateDiscountDescriptionActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
@@ -56,7 +57,7 @@ export function DiscountDescriptionEditModal({
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_DESCRIPTION_KEY,
+		id: updateDiscountDescriptionActionIntent,
 		constraint: getZodConstraint(DiscountDescriptionEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -99,7 +100,7 @@ export function DiscountDescriptionEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_DESCRIPTION_KEY}
+			value={updateDiscountDescriptionActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -123,7 +124,7 @@ export function DiscountDescriptionEditModal({
 								fetcher.submit(
 									{
 										discountId: id!,
-										intent: REGENERATE_DISCOUNT_DESCRIPTION_KEY,
+										intent: regenerateDiscountDescriptionActionIntent,
 									},
 									{
 										action: '/discounts/edit',
@@ -142,7 +143,7 @@ export function DiscountDescriptionEditModal({
 				</Tooltip>
 			</TooltipProvider>
 			<Editor
-				fetcherKey={UPDATE_DISCOUNT_DESCRIPTION_KEY}
+				fetcherKey={updateDiscountDescriptionActionIntent}
 				targetValue={targetValue}
 				open={open}
 				setOpen={setOpen}

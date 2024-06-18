@@ -11,7 +11,7 @@ import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
 
 export const DISCOUNT_MINQUANTITY_MAX = 100
 export const DISCOUNT_MINQUANTITY_MIN = 1
-export const UPDATE_DISCOUNT_MINQUANTITY_KEY = 'update-discount-minquantity'
+export const updateDiscountMinQuantityActionIntent = 'update-discount-minquantity'
 
 export const DiscountMinquantityEditorSchema = z.object({
 	discountId: z.string(),
@@ -40,7 +40,7 @@ export function DiscountMinquantityEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: UPDATE_DISCOUNT_MINQUANTITY_KEY,
+		key: updateDiscountMinQuantityActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
@@ -48,7 +48,7 @@ export function DiscountMinquantityEditModal({
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_MINQUANTITY_KEY,
+		id: updateDiscountMinQuantityActionIntent,
 		constraint: getZodConstraint(DiscountMinquantityEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -91,7 +91,7 @@ export function DiscountMinquantityEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_MINQUANTITY_KEY}
+			value={updateDiscountMinQuantityActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -104,7 +104,7 @@ export function DiscountMinquantityEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_DISCOUNT_MINQUANTITY_KEY}
+			fetcherKey={updateDiscountMinQuantityActionIntent}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

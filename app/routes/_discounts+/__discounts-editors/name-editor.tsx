@@ -11,7 +11,7 @@ import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
 
 export const DISCOUNT_NAME_MAX = 30
 export const DISCOUNT_NAME_MIN = 3
-export const UPDATE_DISCOUNT_NAME_KEY = 'update-discount-name'
+export const updateDiscountNameActionIntent = 'update-discount-name'
 
 export const DiscountNameEditorSchema = z.object({
 	discountId: z.string(),
@@ -38,14 +38,14 @@ export function DiscountNameEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_DISCOUNT_NAME_KEY })
+	const fetcher = useFetcher<typeof action>({ key: updateDiscountNameActionIntent })
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_DISCOUNT_NAME_KEY,
+		id: updateDiscountNameActionIntent,
 		constraint: getZodConstraint(DiscountNameEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -88,7 +88,7 @@ export function DiscountNameEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_DISCOUNT_NAME_KEY}
+			value={updateDiscountNameActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -101,7 +101,7 @@ export function DiscountNameEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_DISCOUNT_NAME_KEY}
+			fetcherKey={updateDiscountNameActionIntent}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}
