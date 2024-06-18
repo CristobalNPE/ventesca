@@ -27,7 +27,7 @@ import { z } from 'zod'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 import {
 	CREATE_CATEGORY_KEY,
 	CreateCategoryDialog,
@@ -177,21 +177,21 @@ async function getWeeklyProfitsPerCategory(businessId: string) {
 	const currentWeekStartDate = startOfWeek(startDate)
 	const currentWeekEndDate = endOfWeek(startDate)
 
-	const itemTransactions = await prisma.itemTransaction.findMany({
+	const productOrders = await prisma.productOrder.findMany({
 		where: {
-			transaction: { businessId },
+			order: { businessId },
 			createdAt: {
 				gte: currentWeekStartDate,
 				lte: currentWeekEndDate,
 			},
 		},
 		include: {
-			item: {
+			productDetails: {
 				include: {
 					category: true,
 				},
 			},
-			transaction: true,
+			order: true,
 		},
 	})
 
@@ -201,19 +201,18 @@ async function getWeeklyProfitsPerCategory(businessId: string) {
 	}
 
 	const categoryProfits: { [key: string]: CategoryProfit } =
-		itemTransactions.reduce(
-			(acc, itemTransaction) => {
-				const { item, totalPrice, transaction } = itemTransaction
-				const profit =
-					transaction.status === TransactionStatus.FINISHED ? totalPrice : 0
+		productOrders.reduce(
+			(acc, productOrder) => {
+				const { productDetails, totalPrice, order } = productOrder
+				const profit = order.status === OrderStatus.FINISHED ? totalPrice : 0
 
-				if (!acc[item.category.id]) {
-					acc[item.category.id] = {
-						category: item.category,
+				if (!acc[productDetails.category.id]) {
+					acc[productDetails.category.id] = {
+						category: productDetails.category,
 						totalProfit: 0,
 					}
 				}
-				let cat = acc[item.category.id]
+				let cat = acc[productDetails.category.id]
 
 				if (cat !== undefined) {
 					cat.totalProfit += profit

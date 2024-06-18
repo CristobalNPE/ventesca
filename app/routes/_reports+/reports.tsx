@@ -40,7 +40,7 @@ import {
 import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 
 //MOVE THIS OUT OF HERE
 
@@ -335,9 +335,9 @@ function TransactionReportsCard({
 						<Badge
 							className={cn(
 								'text-xs ',
-								transaction.status === TransactionStatus.DISCARDED &&
+								transaction.status === OrderStatus.DISCARDED &&
 									'text-destructive',
-								transaction.status === TransactionStatus.PENDING &&
+								transaction.status === OrderStatus.PENDING &&
 									'text-orange-400',
 							)}
 							variant="outline"

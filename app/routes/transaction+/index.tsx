@@ -29,7 +29,7 @@ import {
 import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
 import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
 
-import { TransactionStatus } from './_types/transaction-status.ts'
+import { OrderStatus } from './_types/order-status.ts'
 import { TransactionDetailsSchema } from './_types/TransactionData.ts'
 import { ItemTransactionType } from './_types/item-transactionType.ts'
 import {
@@ -103,7 +103,7 @@ async function createNewTransaction(userId: string, businessId: string) {
 	const newTransaction = await prisma.transaction.create({
 		data: {
 			seller: { connect: { id: userId } },
-			status: TransactionStatus.PENDING,
+			status: OrderStatus.PENDING,
 			paymentMethod: PaymentMethod.CASH,
 			totalDiscount: 0,
 			directDiscount: 0,
@@ -159,7 +159,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: {
 			sellerId: userId,
 			businessId: businessId,
-			status: TransactionStatus.PENDING,
+			status: OrderStatus.PENDING,
 		},
 		select: { id: true },
 	})
@@ -365,7 +365,7 @@ async function handleDiscardTransaction(formData: FormData) {
 		where: { id: transaction.id },
 		data: {
 			isDiscarded: true,
-			status: TransactionStatus.DISCARDED,
+			status: OrderStatus.DISCARDED,
 			completedAt: new Date(),
 		},
 	})
@@ -412,7 +412,7 @@ async function handleFinishTransaction(formData: FormData) {
 	const transaction = await prisma.transaction.update({
 		where: { id: transactionId },
 		data: {
-			status: TransactionStatus.FINISHED,
+			status: OrderStatus.FINISHED,
 			completedAt: new Date(),
 		},
 		select: { itemTransactions: true, status: true },
@@ -420,7 +420,7 @@ async function handleFinishTransaction(formData: FormData) {
 
 	//update analytics for every item involved in the transaction
 	for (let itemTransaction of transaction.itemTransactions) {
-		if (transaction.status === TransactionStatus.FINISHED) {
+		if (transaction.status === OrderStatus.FINISHED) {
 			await prisma.itemAnalytics.upsert({
 				where: { itemId: itemTransaction.itemId },
 				update: {

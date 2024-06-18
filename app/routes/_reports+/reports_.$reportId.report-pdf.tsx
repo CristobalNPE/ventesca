@@ -10,7 +10,7 @@ import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 
 export type TransactionReportDataType = {
 	id: string
@@ -209,7 +209,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 		return preTotal
 	}
 
-	const shouldUsePreTotal = data.status !== TransactionStatus.FINISHED
+	const shouldUsePreTotal = data.status !== OrderStatus.FINISHED
 
 	return (
 		<Document>
@@ -272,7 +272,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 					))}
 				</View>
 				<View style={styles.footer}>
-					{data.status === TransactionStatus.FINISHED && (
+					{data.status === OrderStatus.FINISHED && (
 						<>
 							<View style={styles.footerSection}>
 								<Text style={styles.footerTextTitle}>Subtotal:</Text>{' '}

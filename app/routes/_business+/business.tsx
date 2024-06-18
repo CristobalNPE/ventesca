@@ -4,14 +4,12 @@ import { prisma } from '#app/utils/db.server.ts'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
-
 import { requireUserWithRole } from '#app/utils/permissions.server.js'
 import { userHasRole, useUser } from '#app/utils/user.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
-
 
 	const business = await prisma.business.findUniqueOrThrow({
 		where: { id: businessId },

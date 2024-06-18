@@ -21,7 +21,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { itemTransactionTypeColors } from '../transaction+/_constants/itemTransactionTypesColors.ts'
 import { type ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -179,9 +179,9 @@ export default function ReportRoute() {
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<Icon
 									name={
-										transactionReport.status === TransactionStatus.DISCARDED
+										transactionReport.status === OrderStatus.DISCARDED
 											? 'cross-1'
-											: transactionReport.status === TransactionStatus.PENDING
+											: transactionReport.status === OrderStatus.PENDING
 												? 'update'
 												: 'checks'
 									}
@@ -194,9 +194,9 @@ export default function ReportRoute() {
 				</div>
 			</CardContent>
 			<CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
-				{transactionReport.status !== TransactionStatus.PENDING ? (
+				{transactionReport.status !== OrderStatus.PENDING ? (
 					<div className="text-xs text-muted-foreground">
-						{transactionReport.status === TransactionStatus.FINISHED
+						{transactionReport.status === OrderStatus.FINISHED
 							? 'Completada'
 							: 'Cancelada'}{' '}
 						el{' '}

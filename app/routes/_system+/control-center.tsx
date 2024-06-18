@@ -8,7 +8,7 @@ import {
 import { Icon } from '#app/components/ui/icon.tsx'
 import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	//Count items with 0 stock
@@ -48,7 +48,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const dailyEarnings = await prisma.transaction.groupBy({
 		by: ['completedAt'],
 		where: {
-			status: TransactionStatus.FINISHED,
+			status: OrderStatus.FINISHED,
 			completedAt: {
 				gte: startOfDay,
 				lt: new Date(),
@@ -62,7 +62,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const weeklyEarnings = await prisma.transaction.groupBy({
 		by: ['completedAt'],
 		where: {
-			status: TransactionStatus.FINISHED,
+			status: OrderStatus.FINISHED,
 			completedAt: {
 				gte: startOfWeek,
 				lt: endOfWeek,
@@ -76,7 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const monthlyEarnings = await prisma.transaction.groupBy({
 		by: ['completedAt'],
 		where: {
-			status: TransactionStatus.FINISHED,
+			status: OrderStatus.FINISHED,
 			completedAt: {
 				gte: startOfMonth,
 				lt: endOfMonth,

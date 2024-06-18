@@ -31,7 +31,7 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, useDebounce } from '#app/utils/misc.tsx'
 import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	throw redirect('/transaction')
@@ -48,7 +48,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		where: {
 			sellerId: userId,
 			businessId: businessId,
-			status: TransactionStatus.PENDING,
+			status: OrderStatus.PENDING,
 		},
 		select: { id: true },
 	})

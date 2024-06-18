@@ -1,21 +1,20 @@
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { prisma } from '#app/utils/db.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
-import { type Item } from '@prisma/client'
+import { Product } from '@prisma/client'
 import {
-	type ActionFunctionArgs,
 	json,
+	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { endOfWeek, format, startOfWeek, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { prisma } from '#app/utils/db.server.ts'
-
 
 import {
 	Card,
@@ -40,7 +39,7 @@ import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
 import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
-import { TransactionStatus } from '../transaction+/_types/transaction-status.ts'
+import { OrderStatus } from '../transaction+/_types/order-status.ts'
 import {
 	DELETE_CATEGORY_KEY,
 	DeleteCategory,
@@ -64,13 +63,13 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			description: true,
 			createdAt: true,
 			updatedAt: true,
-			items: { select: { id: true, code: true, name: true } },
+			products: { select: { id: true, code: true, name: true } },
 		},
 	})
 
 	invariantResponse(category, 'Not found', { status: 404 })
 
-	const categoryItems = await prisma.item.findMany({
+	const categoryProducts = await prisma.product.findMany({
 		where: { categoryId: params.categoryId },
 		select: { id: true, code: true, name: true },
 	})
@@ -80,16 +79,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	const currentWeekStartDate = startOfWeek(startDate)
 	const currentWeekEndDate = endOfWeek(startDate)
 
-	const mostSoldItem = await getMostSoldItemInCategoryData(
-		categoryItems,
+	const mostSoldProduct = await getMostSoldProductInCategoryData(
+		categoryProducts,
 		currentWeekStartDate,
 		currentWeekEndDate,
 	)
 
 	return json({
 		category,
-		categoryItems,
-		mostSoldItem,
+		categoryProducts,
+		mostSoldProduct,
 	})
 }
 
@@ -114,15 +113,15 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function CategoryRoute() {
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
-	const { category, categoryItems, mostSoldItem } =
+	const { category, categoryProducts, mostSoldProduct } =
 		useLoaderData<typeof loader>()
 
 	const percentageIncrease =
-		mostSoldItem && mostSoldItem.quantitySoldPreviousWeek !== 0
+		mostSoldProduct && mostSoldProduct.quantitySoldPreviousWeek !== 0
 			? Math.trunc(
-					((mostSoldItem.totalQuantitySold -
-						mostSoldItem.quantitySoldPreviousWeek) /
-						mostSoldItem.quantitySoldPreviousWeek) *
+					((mostSoldProduct.totalQuantitySold -
+						mostSoldProduct.quantitySoldPreviousWeek) /
+						mostSoldProduct.quantitySoldPreviousWeek) *
 						100,
 				)
 			: undefined
@@ -178,14 +177,14 @@ export default function CategoryRoute() {
 							<DropdownMenuItem asChild>
 								<DeleteCategory
 									id={category.id}
-									numberOfItems={category.items.length}
+									numberOfItems={category.products.length}
 								/>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				) : null}
 			</CardHeader>
-			{categoryItems && mostSoldItem ? (
+			{categoryProducts && mostSoldProduct ? (
 				<CardContent className="grid flex-1 gap-10 p-6 text-sm xl:grid-cols-5">
 					<div className="col-span-3">
 						<Card>
@@ -194,19 +193,19 @@ export default function CategoryRoute() {
 								<CardTitle className="text-4xl">
 									<Link
 										prefetch={'intent'}
-										to={`/inventory/${mostSoldItem.id}`}
+										to={`/inventory/${mostSoldProduct.id}`}
 									>
-										{mostSoldItem.name}
+										{mostSoldProduct.name}
 									</Link>
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
 								<div className="flex flex-col gap-1 text-xs text-muted-foreground">
 									<span>
-										{mostSoldItem.totalQuantitySold !== 1
-											? `${mostSoldItem.totalQuantitySold} unidades vendidas esta
+										{mostSoldProduct.totalQuantitySold !== 1
+											? `${mostSoldProduct.totalQuantitySold} unidades vendidas esta
 									semana.`
-											: `${mostSoldItem.totalQuantitySold} unidad vendida esta
+											: `${mostSoldProduct.totalQuantitySold} unidad vendida esta
 									semana.`}
 									</span>
 									{percentageIncrease ? (
@@ -231,26 +230,26 @@ export default function CategoryRoute() {
 
 					<div className="col-span-2 flex flex-col gap-3">
 						<div className="font-semibold">
-							Artículos asociados ( {category.items.length} )
+							Artículos asociados ( {category.products.length} )
 						</div>
 
 						<ScrollArea className="h-[34.7rem]">
 							<ul className="grid gap-3">
-								{categoryItems.map(item => (
+								{categoryProducts.map(product => (
 									<li
-										key={item.id}
+										key={product.id}
 										className="flex items-center justify-between rounded-sm transition-colors duration-100 hover:bg-secondary"
 									>
 										<div className="flex w-full items-center justify-between gap-2">
 											<div className="flex items-center gap-2">
-												<ItemDetailsSheet itemId={item.id} />
+												<ItemDetailsSheet itemId={product.id} />
 												<span className="w-[14rem] text-muted-foreground">
-													{item.name}
+													{product.name}
 												</span>
 											</div>
 											<div className="flex  min-w-[4rem]  items-center gap-1 rounded-sm border-l-2 px-1">
 												<Icon className="shrink-0" name="scan-barcode" />
-												<span>{item.code}</span>
+												<span>{product.code}</span>
 											</div>
 										</div>
 									</li>
@@ -298,58 +297,60 @@ function ChangeItemsCategory() {
 	)
 }
 
-async function getMostSoldItemInCategoryData(
-	items: Pick<Item, 'id' | 'code' | 'name'>[],
+async function getMostSoldProductInCategoryData(
+	products: Pick<Product, 'id' | 'code' | 'name'>[],
 	startDate: Date,
 	endDate: Date,
 ) {
-	if (!items || items.length === 0) {
+	if (!products || products.length === 0) {
 		return null
 	}
 
 	const oneWeekBeforeStartDate = startOfWeek(subWeeks(startDate, 1))
 	const oneWeekBeforeEndDate = endOfWeek(subWeeks(startDate, 1))
 
-	const itemsWithTotalQuantitySold = await Promise.all(
-		items.map(async item => {
-			const itemTransactions = await prisma.itemTransaction.findMany({
+	const productsWithTotalQuantitySold = await Promise.all(
+		products.map(async product => {
+			const itemOrders = await prisma.productOrder.findMany({
 				where: {
-					itemId: item.id,
+					productId: product.id,
 					createdAt: {
 						gte: startDate,
 						lte: endDate,
 					},
-					transaction: { status: TransactionStatus.FINISHED },
+					order: { status: OrderStatus.FINISHED },
 				},
 				select: { quantity: true },
 			})
 
-			const totalQuantitySold = itemTransactions.reduce(
-				(total, transaction) => total + transaction.quantity,
+			const totalQuantitySold = itemOrders.reduce(
+				(total, order) => total + order.quantity,
 				0,
 			)
 
-			return { ...item, totalQuantitySold }
+			return { ...product, totalQuantitySold }
 		}),
 	)
 
-	itemsWithTotalQuantitySold.sort(
+	productsWithTotalQuantitySold.sort(
 		(a, b) => b.totalQuantitySold - a.totalQuantitySold,
 	)
 
-	const mostSoldItem =
-		itemsWithTotalQuantitySold.length > 0 ? itemsWithTotalQuantitySold[0] : null
+	const mostSoldProduct =
+		productsWithTotalQuantitySold.length > 0
+			? productsWithTotalQuantitySold[0]
+			: null
 
-	if (!mostSoldItem) return null
+	if (!mostSoldProduct) return null
 
-	const previousWeekData = await prisma.itemTransaction.findMany({
+	const previousWeekData = await prisma.productOrder.findMany({
 		where: {
-			itemId: mostSoldItem.id,
+			productId: mostSoldProduct.id,
 			createdAt: {
 				gte: oneWeekBeforeStartDate,
 				lte: oneWeekBeforeEndDate,
 			},
-			transaction: { status: TransactionStatus.FINISHED },
+			order: { status: OrderStatus.FINISHED },
 		},
 		select: { quantity: true },
 	})
@@ -359,7 +360,7 @@ async function getMostSoldItemInCategoryData(
 		0,
 	)
 
-	return { ...mostSoldItem, quantitySoldPreviousWeek }
+	return { ...mostSoldProduct, quantitySoldPreviousWeek }
 }
 
 async function handleDeleteCategory(formData: FormData) {
