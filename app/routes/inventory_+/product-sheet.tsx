@@ -1,9 +1,9 @@
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { invariant } from '@epic-web/invariant'
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
 import { Link, useFetcher } from '@remix-run/react'
 import React from 'react'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 
 import {
 	Sheet,
@@ -22,11 +22,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	await requireUserId(request)
 
 	const url = new URL(request.url)
-	const itemId = url.searchParams.get('item-id')
-	invariant(typeof itemId === 'string', 'itemId is required')
+	const productId = url.searchParams.get('product-id')
+	invariant(typeof productId === 'string', 'itemId is required')
 
-	const item = await prisma.item.findUniqueOrThrow({
-		where: { id: itemId },
+	const product = await prisma.product.findUniqueOrThrow({
+		where: { id: productId },
 		select: {
 			id: true,
 			name: true,
@@ -39,22 +39,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 
-	return json({ item })
+	return json({ product })
 }
 
 export function ItemDetailsSheet({ itemId }: { itemId: string }) {
-	const itemFetcher = useFetcher<typeof loader>({ key: 'item-sheet-fetcher' })
+	const productFetcher = useFetcher<typeof loader>({
+		key: `product-sheet-fetcher`,
+	})
 
-	const item = itemFetcher.data?.item ?? null
+	const product = productFetcher.data?.product ?? null
 
 	return (
 		<Sheet>
 			<SheetTrigger asChild>
 				<Button
 					onClick={() =>
-						itemFetcher.submit(
-							{ 'item-id': itemId ?? '' },
-							{ method: 'get', action: '/inventory/item-sheet' },
+						productFetcher.submit(
+							{ 'product-id': itemId ?? '' },
+							{ method: 'get', action: '/inventory/product-sheet' },
 						)
 					}
 					size={'sm'}
@@ -65,50 +67,50 @@ export function ItemDetailsSheet({ itemId }: { itemId: string }) {
 					<span className="sr-only">More</span>
 				</Button>
 			</SheetTrigger>
-			{item ? (
+			{product ? (
 				<SheetContent className="flex flex-col">
 					<SheetHeader>
 						<SheetTitle className="flex flex-col">
-							<span>{item.name}</span>
+							<span>{product.name}</span>
 						</SheetTitle>
 						<SheetDescription>Información del articulo</SheetDescription>
 					</SheetHeader>
 					<div className="flex flex-1 flex-col gap-2">
 						<SheetItem icon={'id'} name={'ID'}>
-							<span>{item.id.toUpperCase()}</span>
+							<span>{product.id.toUpperCase()}</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Código'}>
-							<span>{item.code}</span>
+							<span>{product.code}</span>
 						</SheetItem>
 						<SheetItem icon={'package'} name={'Stock'}>
 							<span>
-								{item.stock !== 1
-									? `${item.stock} unidades.`
-									: `${item.stock} unidad.`}
+								{product.stock !== 1
+									? `${product.stock} unidades.`
+									: `${product.stock} unidad.`}
 							</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Valor'}>
-							<span>{formatCurrency(item.price)}</span>
+							<span>{formatCurrency(product.price)}</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Precio de Venta'}>
-							<span>{formatCurrency(item.sellingPrice)}</span>
+							<span>{formatCurrency(product.sellingPrice)}</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Proveedor'}>
-							<span>{item.supplier.fantasyName}</span>
+							<span>{product.supplier.fantasyName}</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Estado'}>
 							<span
 								className={cn(
 									'text-green-600',
-									!item.isActive && 'text-destructive',
+									!product.isActive && 'text-destructive',
 								)}
 							>
-								{item.isActive ? 'Disponible' : 'No Disponible'}
+								{product.isActive ? 'Disponible' : 'No Disponible'}
 							</span>
 						</SheetItem>
 					</div>
 					<Button asChild>
-						<Link className="flex w-full gap-2" to={`/inventory/${item.id}`}>
+						<Link className="flex w-full gap-2" to={`/inventory/${product.id}`}>
 							<Icon name="link-2" />
 							<span>Detalles articulo</span>
 						</Link>

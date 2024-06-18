@@ -9,8 +9,8 @@ import {
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
-import { OrderStatus } from '../transaction+/_types/order-status.ts'
+import { ProductOrderType } from '../order+/_types/productOrderType.ts'
+import { OrderStatus } from '../order+/_types/order-status.ts'
 
 export type TransactionReportDataType = {
 	id: string
@@ -26,13 +26,13 @@ export type TransactionReportDataType = {
 	seller: {
 		name: string
 	}
-	itemTransactions: Array<{
+	productOrders: Array<{
 		id: string
 		quantity: number
 		type: string
 		totalPrice: number
 		totalDiscount: number
-		item: {
+		productDetails: {
 			id: string
 			name: string
 			price: number
@@ -52,7 +52,7 @@ export type TransactionReportDataType = {
 }
 
 export async function loader({ params }: LoaderFunctionArgs) {
-	const transactionReportData = await prisma.transaction.findUnique({
+	const orderReportData = await prisma.order.findUnique({
 		where: { id: params.reportId },
 		select: {
 			business: { select: { name: true } },
@@ -64,14 +64,14 @@ export async function loader({ params }: LoaderFunctionArgs) {
 			totalDiscount: true,
 			paymentMethod: true,
 			seller: { select: { name: true } },
-			itemTransactions: {
+			productOrders: {
 				select: {
 					id: true,
 					quantity: true,
 					type: true,
 					totalDiscount: true,
 					totalPrice: true,
-					item: {
+					productDetails: {
 						select: {
 							id: true,
 							name: true,
@@ -89,7 +89,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 	let stream = await renderToStream(
 		<ReportDocument
-			data={transactionReportData as TransactionReportDataType}
+			data={orderReportData as TransactionReportDataType}
 		/>,
 	)
 
@@ -197,13 +197,13 @@ const styles = StyleSheet.create({
 })
 
 const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
-	const calculatePreTotal = (items: TransactionReportDataType['itemTransactions']) => {
+	const calculatePreTotal = (products: TransactionReportDataType['productOrders']) => {
 		let preTotal = 0
-		items.forEach(item => {
-			if (item.type === ItemTransactionType.RETURN) {
-				preTotal -= item.quantity * item.item.sellingPrice
+		products.forEach(product => {
+			if (product.type === ProductOrderType.RETURN) {
+				preTotal -= product.quantity * product.productDetails.sellingPrice
 			} else {
-				preTotal += item.quantity * item.item.sellingPrice
+				preTotal += product.quantity * product.productDetails.sellingPrice
 			}
 		})
 		return preTotal
@@ -250,23 +250,23 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 
 				{/* Table for Items */}
 				<View style={styles.table}>
-					{data.itemTransactions.map((itemTransaction, index) => (
+					{data.productOrders.map((productOrder, index) => (
 						<View key={index} style={styles.tableRow}>
 							{/* Define each column */}
 							<View style={styles.mainTableCol}>
-								<Text style={styles.tableCell}>{itemTransaction.item.name}</Text>
+								<Text style={styles.tableCell}>{productOrder.productDetails.name}</Text>
 							</View>
 							{/* More columns for other details like quantity, price, etc. */}
 							<View style={styles.tableCol}>
-								<Text style={styles.tableCell}>{itemTransaction.quantity}</Text>
+								<Text style={styles.tableCell}>{productOrder.quantity}</Text>
 							</View>
 							<View style={styles.tableCol}>
 								<Text style={styles.tableCell}>
-									{formatCurrency(itemTransaction.totalPrice)}
+									{formatCurrency(productOrder.totalPrice)}
 								</Text>
 							</View>
 							<View style={styles.tableCol}>
-								<Text style={styles.tableCell}>{itemTransaction.type}</Text>
+								<Text style={styles.tableCell}>{productOrder.type}</Text>
 							</View>
 						</View>
 					))}
@@ -292,7 +292,7 @@ const ReportDocument = ({ data }: { data: TransactionReportDataType }) => {
 						<Text style={styles.footerTextTitle}>Total:</Text>
 						<Text style={styles.footerText}>
 							{shouldUsePreTotal
-								? formatCurrency(calculatePreTotal(data.itemTransactions))
+								? formatCurrency(calculatePreTotal(data.productOrders))
 								: formatCurrency(data.total)}{' '}
 							CLP
 						</Text>

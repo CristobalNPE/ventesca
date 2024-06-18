@@ -9,28 +9,24 @@ import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
 
 import { DirectDiscount, RemoveDirectDiscount } from './__direct-discount.tsx'
-import { DiscardTransaction } from './__discard-transaction.tsx'
-import { FinishTransaction } from './__finish-transaction.tsx'
-import { type TransactionDetails } from './_types/TransactionData.ts'
+import { DiscardOrder } from './__discard-order.tsx'
+import { FinishOrder } from './__finish-order.tsx'
+import { type OrderDetails } from './_types/OrderData.ts'
 
-export function TransactionIdPanel({
-	transactionId,
-}: {
-	transactionId: string
-}) {
+export function OrderIdPanel({ orderId }: { orderId: string }) {
 	return (
 		<PanelCard>
 			<div className="absolute -top-4 w-fit select-none rounded-md bg-card px-3 py-1 text-xs">
 				ID Transacción
 			</div>
 			<span className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary">
-				{transactionId}
+				{orderId}
 			</span>
 		</PanelCard>
 	)
 }
 
-export function TransactionOverviewPanel({
+export function OrderOverviewPanel({
 	subtotal,
 	discount,
 	total,
@@ -65,8 +61,8 @@ export function TransactionOverviewPanel({
 
 export const DiscountsPanel = ({
 	activeDiscounts,
-	transactionId,
-	transactionTotal,
+	orderId,
+	orderTotal,
 	directDiscount,
 }: {
 	activeDiscounts: SerializeFrom<
@@ -84,8 +80,8 @@ export const DiscountsPanel = ({
 			| 'scope'
 		>
 	>[]
-	transactionId: string
-	transactionTotal: number
+	orderId: string
+	orderTotal: number
 	directDiscount: number
 }) => {
 	return (
@@ -113,48 +109,37 @@ export const DiscountsPanel = ({
 				{/* Should render discount dialog or delete discount button depending if there is or not a direct discount assigned */}
 				{directDiscount ? (
 					<RemoveDirectDiscount
-						transactionId={transactionId}
+						orderId={orderId}
 						directDiscount={directDiscount}
 					/>
 				) : (
-					<DirectDiscount
-						transactionId={transactionId}
-						transactionTotal={transactionTotal}
-					/>
+					<DirectDiscount orderId={orderId} orderTotal={orderTotal} />
 				)}
 			</div>
 		</div>
 	)
 }
 
-export const TransactionOptionsPanel = ({
-	transaction,
-}: {
-	transaction: TransactionDetails
-}) => {
+export const OrderOptionsPanel = ({ order }: { order: OrderDetails }) => {
 	return (
 		<PanelCard>
 			<div className="flex gap-4">
-				<GenerateTransactionReport transactionId={transaction.id} />
-				<DiscardTransaction id={transaction.id} />
+				<GenerateOrderReport orderId={order.id} />
+				<DiscardOrder id={order.id} />
 			</div>
-			<FinishTransaction transaction={transaction} />
+			<FinishOrder order={order} />
 		</PanelCard>
 	)
 }
 
-const GenerateTransactionReport = ({
-	transactionId,
-}: {
-	transactionId: string
-}) => {
+const GenerateOrderReport = ({ orderId }: { orderId: string }) => {
 	return (
 		<Button variant={'outline'} asChild>
 			<Link
 				target="_blank"
 				reloadDocument
-				to={`/reports/${transactionId}/report-pdf`}
-				className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5 text-center text-wrap"
+				to={`/reports/${orderId}/report-pdf`}
+				className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 text-wrap px-5 text-center"
 			>
 				<Icon className="flex-none text-2xl" name="report-money" />{' '}
 				<span className="leading-tight">Generar Reporte</span>

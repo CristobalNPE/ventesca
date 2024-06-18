@@ -27,7 +27,7 @@ import { z } from 'zod'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { OrderStatus } from '../transaction+/_types/order-status.ts'
+import { OrderStatus } from '../order+/_types/order-status.ts'
 import {
 	CREATE_CATEGORY_KEY,
 	CreateCategoryDialog,

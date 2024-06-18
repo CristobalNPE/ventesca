@@ -168,10 +168,38 @@ export async function signup({
 				},
 			},
 		},
-		select: { id: true, expirationDate: true },
+		select: {
+			id: true,
+			expirationDate: true,
+			user: { select: { businessId: true } },
+		},
 	})
 
-	return session
+	//create default supplier and category
+	await prisma.supplier.create({
+		data: {
+			rut: 'Sin Datos',
+			name: name ?? username,
+			address: 'Sin Datos',
+			city: 'Sin Datos',
+			fantasyName: `Proveedor Propio`,
+			phone: 'Sin Datos',
+			email: email,
+			business: { connect: { id: session.user.businessId } },
+			isEssential: true,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			code: 0,
+			description: 'General',
+			business: { connect: { id: session.user.businessId } },
+			isEssential: true,
+		},
+	})
+
+	const { id, expirationDate } = session
+	return { id, expirationDate }
 }
 
 export async function signupWithConnection({
@@ -194,6 +222,7 @@ export async function signupWithConnection({
 			expirationDate: getSessionExpirationDate(),
 			user: {
 				create: {
+					business: { create: { name: `Empresa de ${name}` } },
 					email: email.toLowerCase(),
 					username: username.toLowerCase(),
 					name,

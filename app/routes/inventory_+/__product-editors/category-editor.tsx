@@ -3,26 +3,26 @@ import { getFormProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
-
 import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import {
-	type SelectedSupplier,
-	SupplierSelectBox,
-} from '#app/routes/resources+/suppliers.tsx'
+	CategorySelectBox,
+	type SelectedCategory,
+} from '#app/routes/resources+/categories.tsx'
 import { Editor } from '../../../components/editor.tsx'
 
-export const UPDATE_SUPPLIER_KEY = 'update-supplier'
+export const updateProductCategoryActionIntent = 'update-product-category'
 
-export const SupplierEditorSchema = z.object({
-	itemId: z.string().optional(),
-	supplierId: z.string(),
+export const CategoryEditorSchema = z.object({
+	intent: z.literal(updateProductCategoryActionIntent),
+	productId: z.string().optional(),
+	categoryId: z.string(),
 })
 
-export function SupplierEditModal({
+export function CategoryEditModal({
 	icon,
 	label,
 	value,
@@ -33,21 +33,23 @@ export function SupplierEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_SUPPLIER_KEY })
+	const fetcher = useFetcher<typeof action>({
+		key: `${updateProductCategoryActionIntent}-product${id}`,
+	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 
 	const [form] = useForm({
-		id: UPDATE_SUPPLIER_KEY,
-		constraint: getZodConstraint(SupplierEditorSchema),
+		id: updateProductCategoryActionIntent,
+		constraint: getZodConstraint(CategoryEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: SupplierEditorSchema })
+			return parseWithZod(formData, { schema: CategoryEditorSchema })
 		},
 	})
 
-	const [targetValue, setTargetValue] = useState<SelectedSupplier | null>(null)
+	const [targetValue, setTargetValue] = useState<SelectedCategory | null>(null)
 
 	const renderedForm = (
 		<fetcher.Form
@@ -55,14 +57,14 @@ export function SupplierEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-			<input type="hidden" name="itemId" value={id} />
+			<input type="hidden" name="productId" value={id} />
 			{targetValue && (
-				<input type="hidden" name="supplierId" value={targetValue.id} />
+				<input type="hidden" name="categoryId" value={targetValue.id} />
 			)}
 
-			<SupplierSelectBox
-				newSelectedSupplier={targetValue}
-				setNewSelectedSupplier={setTargetValue}
+			<CategorySelectBox
+				newSelectedCategory={targetValue}
+				setNewSelectedCategory={setTargetValue}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -73,7 +75,7 @@ export function SupplierEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_SUPPLIER_KEY}
+			value={updateProductCategoryActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending || !targetValue}
@@ -86,8 +88,8 @@ export function SupplierEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_SUPPLIER_KEY}
-			targetValue={targetValue?.fantasyName ?? 'Sin Definir'}
+			fetcherKey={`${updateProductCategoryActionIntent}-product${id}`}
+			targetValue={targetValue?.description ?? 'Sin Definir'}
 			open={open}
 			setOpen={setOpen}
 			icon={icon}

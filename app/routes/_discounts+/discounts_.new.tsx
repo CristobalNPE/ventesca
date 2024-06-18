@@ -19,7 +19,7 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
-import {  useIsPending } from '#app/utils/misc.tsx'
+import { useIsPending } from '#app/utils/misc.tsx'
 import {
 	DiscountApplicationMethod,
 	DiscountApplicationMethodSchema,
@@ -78,7 +78,7 @@ const NewDiscountSchema = z.object({
 	discountApplicationMethod: DiscountApplicationMethodSchema,
 	validFrom: z.coerce.date(),
 	validUntil: z.coerce.date(),
-	itemIds: z.string().optional(),
+	productIds: z.string().optional(),
 	categoryIds: z.string().optional(),
 })
 
@@ -98,8 +98,8 @@ export function buildDescription(
 		discountScope === DiscountScope.SINGLE_PRODUCT
 			? 'artículos seleccionados'
 			: discountScope === DiscountScope.CATEGORY
-			  ? `categorías seleccionadas`
-			  : 'todos los artículos'
+				? `categorías seleccionadas`
+				: 'todos los artículos'
 
 	const descriptionApplicationMethod =
 		discountApplicationMethod === DiscountApplicationMethod.TO_TOTAL
@@ -118,7 +118,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		schema: NewDiscountSchema.superRefine(async (data, ctx) => {
 			if (
 				data.discountScope === DiscountScope.SINGLE_PRODUCT &&
-				data.itemIds === undefined
+				data.productIds === undefined
 			) {
 				ctx.addIssue({
 					path: ['itemIds'],
@@ -156,7 +156,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		validUntil,
 		categoryIds,
 		fixedValue,
-		itemIds,
+		productIds,
 		porcentualValue,
 		discountApplicationMethod,
 	} = submission.value
@@ -181,8 +181,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	porcentualValue = porcentualValue === undefined ? 0 : porcentualValue
 
 	if (discountScope === DiscountScope.SINGLE_PRODUCT) {
-		invariant(itemIds, 'Item IDs should be defined.')
-		const itemIdsArray = itemIds.split(',')
+		invariant(productIds, 'Product IDs should be defined.')
+		const productIdsArray = productIds.split(',')
 
 		const createdDiscount = await prisma.discount.create({
 			data: {
@@ -193,7 +193,9 @@ export async function action({ request }: ActionFunctionArgs) {
 				validUntil: validUntil,
 				value:
 					discountType === DiscountType.FIXED ? fixedValue : porcentualValue,
-				items: { connect: itemIdsArray.map(itemId => ({ id: itemId })) },
+				products: {
+					connect: productIdsArray.map(productId => ({ id: productId })),
+				},
 				scope: discountScope,
 				business: { connect: { id: businessId } },
 				type: discountType,
@@ -208,17 +210,17 @@ export async function action({ request }: ActionFunctionArgs) {
 		invariant(categoryIds, 'Category IDs should be defined.')
 		const categoryIdsArray = categoryIds.split(',')
 
-		let itemIdsInSelectedCategories: string[] = []
+		let productIdsInSelectedCategories: string[] = []
 
 		for (const categoryId of categoryIdsArray) {
-			const itemsInCategory = await prisma.item.findMany({
+			const productsInCategory = await prisma.product.findMany({
 				where: { categoryId: categoryId },
 				select: { id: true },
 			})
-			let itemIdsInCategory = itemsInCategory.map(item => item.id)
-			itemIdsInSelectedCategories = [
-				...itemIdsInSelectedCategories,
-				...itemIdsInCategory,
+			let productIdsInCategory = productsInCategory.map(product => product.id)
+			productIdsInSelectedCategories = [
+				...productIdsInSelectedCategories,
+				...productIdsInCategory,
 			]
 		}
 
@@ -231,8 +233,10 @@ export async function action({ request }: ActionFunctionArgs) {
 				validUntil: validUntil,
 				value:
 					discountType === DiscountType.FIXED ? fixedValue : porcentualValue,
-				items: {
-					connect: itemIdsInSelectedCategories.map(itemId => ({ id: itemId })),
+				products: {
+					connect: productIdsInSelectedCategories.map(productId => ({
+						id: productId,
+					})),
 				},
 				scope: discountScope,
 				business: { connect: { id: businessId } },
@@ -314,7 +318,7 @@ export default function CreateDiscount() {
 						<Form method="POST" className="grid " {...getFormProps(form)}>
 							<input
 								type="hidden"
-								name={fields.itemIds.name}
+								name={fields.productIds.name}
 								value={addedItemsIds}
 							/>
 							<input
@@ -380,13 +384,13 @@ export default function CreateDiscount() {
 														label: 'Al Total',
 														value: DiscountApplicationMethod.TO_TOTAL,
 													},
-											  ]
+												]
 											: [
 													{
 														label: 'Al Total',
 														value: DiscountApplicationMethod.TO_TOTAL,
 													},
-											  ]
+												]
 									}
 									name={fields.discountApplicationMethod.name}
 									initialValue={fields.discountApplicationMethod.initialValue}
@@ -469,8 +473,8 @@ export default function CreateDiscount() {
 					<div>
 						{fields.discountScope.value === DiscountScope.SINGLE_PRODUCT ? (
 							<ProductPicker
-								errors={fields.itemIds.errors}
-								setAddedItemsIds={setAddedItemsIds}
+								errors={fields.productIds.errors}
+								setAddedProductsIds={setAddedItemsIds}
 							/>
 						) : (
 							<CategoryPicker

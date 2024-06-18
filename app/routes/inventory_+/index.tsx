@@ -47,7 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const searchTerm = url.searchParams.get('search') ?? ''
 
 	const searchTermIsCode = !isNaN(parseInt(searchTerm))
-	const itemSelect = {
+	const productSelect = {
 		id: true,
 		code: true,
 		name: true,
@@ -56,8 +56,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		category: { select: { description: true } },
 	}
 
-	let itemsPromise
-	let totalItemsPromise
+	let productsPromise
+	let totalProductsPromise
 
 	if (searchTermIsCode) {
 		const where = {
@@ -65,9 +65,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			code: parseInt(searchTerm),
 		}
 
-		itemsPromise = prisma.item.findMany({
+		productsPromise = prisma.product.findMany({
 			orderBy: { code: 'asc' },
-			select: { ...itemSelect },
+			select: { ...productSelect },
 
 			where: {
 				businessId,
@@ -75,70 +75,80 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			},
 		})
 
-		totalItemsPromise = prisma.item.count({ where })
+		totalProductsPromise = prisma.product.count({ where })
 	} else {
 		const where = {
 			businessId,
 			name: { contains: searchTerm },
 		}
 
-		itemsPromise = prisma.item.findMany({
+		productsPromise = prisma.product.findMany({
 			take: $top,
 			skip: $skip,
 			orderBy: { code: 'asc' },
-			select: { ...itemSelect },
+			select: { ...productSelect },
 			where: {
 				businessId,
 				name: { contains: searchTerm },
 			},
 		})
 
-		totalItemsPromise = prisma.item.count({ where })
+		totalProductsPromise = prisma.product.count({ where })
 	}
 
-	const totalActiveItemsPromise = prisma.item.count({
+	const totalActiveProductsPromise = prisma.product.count({
 		where: {
 			businessId,
 			isActive: true,
 		},
 	})
 
-	const noStockItemsPromise = prisma.item.count({
+	const noStockProductsPromise = prisma.product.count({
 		where: {
 			businessId,
 			stock: 0,
 		},
 	})
 
-	const lowStockItemsPromise = prisma.item.count({
+	const lowStockProductsPromise = prisma.product.count({
 		where: {
 			businessId,
 			stock: { lte: 5, gt: 0 },
 		},
 	})
 
-	const [items, totalActiveItems, totalItems, noStockItems, lowStockItems] =
-		await Promise.all([
-			itemsPromise,
-			totalActiveItemsPromise,
-			totalItemsPromise,
-			noStockItemsPromise,
-			lowStockItemsPromise,
-		])
+	const [
+		products,
+		totalActiveProducts,
+		totalProducts,
+		noStockProducts,
+		lowStockProducts,
+	] = await Promise.all([
+		productsPromise,
+		totalActiveProductsPromise,
+		totalProductsPromise,
+		noStockProductsPromise,
+		lowStockProductsPromise,
+	])
 
 	return json({
-		items,
-		totalActiveItems,
-		totalItems,
-		noStockItems,
-		lowStockItems,
+		products,
+		totalActiveProducts,
+		totalProducts,
+		noStockProducts,
+		lowStockProducts,
 	})
 }
 
 export default function InventoryRoute() {
 	const isAdmin = true
-	const { items, totalActiveItems, totalItems, noStockItems, lowStockItems } =
-		useLoaderData<typeof loader>()
+	const {
+		products,
+		totalActiveProducts,
+		totalProducts,
+		noStockProducts,
+		lowStockProducts,
+	} = useLoaderData<typeof loader>()
 
 	return (
 		<main className="flex h-full  flex-col">
@@ -154,19 +164,19 @@ export default function InventoryRoute() {
 					<div className="flex flex-wrap justify-between gap-4">
 						<DataCard
 							title={'Artículos Disponibles'}
-							value={`${totalActiveItems}`}
+							value={`${totalActiveProducts}`}
 							icon={'package'}
-							subtext={`${totalItems} ${
-								totalItems === 1
+							subtext={`${totalProducts} ${
+								totalProducts === 1
 									? 'artículo registrados en sistema'
 									: 'artículos registrados en sistema'
 							} `}
 						/>
 						<DataCard
 							title={'Artículos Sin Stock'}
-							value={`${noStockItems}`}
+							value={`${noStockProducts}`}
 							icon={'box-off'}
-							subtext={`${lowStockItems} artículos próximos a agotarse`}
+							subtext={`${lowStockProducts} artículos próximos a agotarse`}
 						/>
 						<DataCard
 							title={'Mayores Ingresos'}
@@ -182,14 +192,17 @@ export default function InventoryRoute() {
 						/>
 					</div>
 
-					<ItemsTableCard totalItems={totalItems} items={items} />
+					<ProductsTableCard
+						totalProducts={totalProducts}
+						products={products}
+					/>
 				</div>
 			</div>
 		</main>
 	)
 }
 
-type ItemData = {
+type ProductData = {
 	name: string | null
 	code: number
 	id: string
@@ -199,12 +212,12 @@ type ItemData = {
 		description: string
 	}
 }
-function ItemsTableCard({
-	items,
-	totalItems,
+function ProductsTableCard({
+	products,
+	totalProducts,
 }: {
-	items: ItemData[]
-	totalItems: number
+	products: ProductData[]
+	totalProducts: number
 }) {
 	const navigate = useNavigate()
 
@@ -214,10 +227,11 @@ function ItemsTableCard({
 				<div className="grid gap-2">
 					<CardTitle>Artículos</CardTitle>
 					<CardDescription>
-						Mostrando {items.length} de {totalItems} artículos registrados.
+						Mostrando {products.length} de {totalProducts} artículos
+						registrados.
 					</CardDescription>
 				</div>
-				<PaginationBar total={totalItems} top={50} />
+				<PaginationBar total={totalProducts} top={50} />
 				<InventorySearchBar status="idle" autoSubmit />
 			</CardHeader>
 			<CardContent>
@@ -232,7 +246,7 @@ function ItemsTableCard({
 					</TableHeader>
 
 					<TableBody>
-						{items.map(item => (
+						{products.map(item => (
 							<TableRow
 								key={item.id}
 								className="cursor-pointer"

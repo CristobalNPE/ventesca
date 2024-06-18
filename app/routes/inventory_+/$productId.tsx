@@ -1,15 +1,3 @@
-import { getFormProps, useForm } from '@conform-to/react'
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { z } from 'zod'
 import { DataRow } from '#app/components/data-row.tsx'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
@@ -51,25 +39,36 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-
+import { getFormProps, useForm } from '@conform-to/react'
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { z } from 'zod'
 
 import { userHasRole, useUser } from '#app/utils/user.ts'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
-import { CategoryEditModal } from './__item-editors/category-editor.tsx'
-import { CodeEditModal } from './__item-editors/code-editor.tsx'
-import { ItemNameEditModal } from './__item-editors/name-editor.tsx'
-import { PriceEditModal } from './__item-editors/price-editor.tsx'
-import { SellingPriceEditModal } from './__item-editors/sellingPrice-editor.tsx'
-import { EditStatus } from './__item-editors/status-editor.tsx'
-import { StockEditModal } from './__item-editors/stock-editor.tsx'
-import { SupplierEditModal } from './__item-editors/supplier-editor.tsx'
+import { CategoryEditModal } from './__product-editors/category-editor.tsx'
+import { CodeEditModal } from './__product-editors/code-editor.tsx'
+import { ItemNameEditModal } from './__product-editors/name-editor.tsx'
+import { PriceEditModal } from './__product-editors/price-editor.tsx'
+import { SellingPriceEditModal } from './__product-editors/sellingPrice-editor.tsx'
+import { EditStatus } from './__product-editors/status-editor.tsx'
+import { StockEditModal } from './__product-editors/stock-editor.tsx'
+import { SupplierEditModal } from './__product-editors/supplier-editor.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
-	const itemPromise = prisma.item.findUnique({
-		where: { id: params.itemId, businessId },
+	const productPromise = prisma.product.findUnique({
+		where: { id: params.productId, businessId },
 		select: {
 			id: true,
 			isActive: true,
@@ -91,20 +90,20 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		select: { id: true, name: true },
 	})
 
-	const [item, globalDiscounts] = await Promise.all([
-		itemPromise,
+	const [product, globalDiscounts] = await Promise.all([
+		productPromise,
 		globalDiscountsPromise,
 	])
 
-	invariantResponse(item, 'Not found', { status: 404 })
+	invariantResponse(product, 'Not found', { status: 404 })
 
 	return json({
-		item: {
-			...item,
-			updatedAt: formatRelative(subDays(item.updatedAt, 0), new Date(), {
+		product: {
+			...product,
+			updatedAt: formatRelative(subDays(product.updatedAt, 0), new Date(), {
 				locale: es,
 			}),
-			createdAt: formatRelative(subDays(item.createdAt, 0), new Date(), {
+			createdAt: formatRelative(subDays(product.createdAt, 0), new Date(), {
 				locale: es,
 			}),
 		},
@@ -113,8 +112,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 const DeleteFormSchema = z.object({
-	intent: z.literal('delete-item'),
-	itemId: z.string(),
+	intent: z.literal('delete-product'),
+	productId: z.string(),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -131,32 +130,35 @@ export async function action({ request }: ActionFunctionArgs) {
 		)
 	}
 
-	const { itemId } = submission.value
+	const { productId } = submission.value
 
-	const item = await prisma.item.findFirst({
+	const product = await prisma.product.findFirst({
 		select: { id: true, name: true },
-		where: { id: itemId },
+		where: { id: productId },
 	})
-	invariantResponse(item, 'Not found', { status: 404 })
+	invariantResponse(product, 'Not found', { status: 404 })
 
-	await prisma.item.delete({ where: { id: item.id } })
+	await prisma.product.delete({ where: { id: product.id } })
 
 	return redirectWithToast(`/inventory`, {
 		type: 'success',
 		title: 'Articulo eliminado',
-		description: `Articulo ${item.name} ha sido eliminado con éxito.`,
+		description: `Articulo ${product.name} ha sido eliminado con éxito.`,
 	})
 }
 
-export default function ItemRoute() {
+export default function ProductRoute() {
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
-	const { item, globalDiscounts } = useLoaderData<typeof loader>()
+	const { product, globalDiscounts } = useLoaderData<typeof loader>()
 
-	const allAssociatedDiscounts = [...globalDiscounts, ...item.discounts]
+	const allAssociatedDiscounts = [...globalDiscounts, ...product.discounts]
 
 	const activateConditions =
-		!item.isActive && item.stock >= 1 && item.price > 0 && item.sellingPrice > 0
+		!product.isActive &&
+		product.stock >= 1 &&
+		product.price > 0 &&
+		product.sellingPrice > 0
 
 	return (
 		<>
@@ -177,20 +179,22 @@ export default function ItemRoute() {
 							</Link>
 						</Button>
 						<h1 className="text-xl font-bold capitalize tracking-tight">
-							{item.name?.toLowerCase()}
+							{product.name?.toLowerCase()}
 						</h1>
 					</div>
 					<Badge
 						variant={'outline'}
-						className={cn(item.stock > 0 ? 'text-primary' : 'text-destructive')}
+						className={cn(
+							product.stock > 0 ? 'text-primary' : 'text-destructive',
+						)}
 					>
-						{item.stock > 0 ? 'En Stock' : 'Agotado'}
+						{product.stock > 0 ? 'En Stock' : 'Agotado'}
 					</Badge>
 				</div>
 
 				{isAdmin && (
 					<div className="hidden md:flex ">
-						<DeleteItemConfirmationModal itemId={item.id} />
+						<DeleteProductConfirmationModal itemId={product.id} />
 					</div>
 				)}
 			</div>
@@ -207,25 +211,25 @@ export default function ItemRoute() {
 							<DataRow
 								icon="clock-up"
 								label="Fecha ingreso"
-								value={item.createdAt}
+								value={product.createdAt}
 							/>
 							<DataRow
 								icon="clock"
 								label="Ultima actualización"
-								value={item.updatedAt}
+								value={product.updatedAt}
 							/>
-							<DataRow icon="id" label="ID" value={item.id.toUpperCase()} />
+							<DataRow icon="id" label="ID" value={product.id.toUpperCase()} />
 							<DataRow
 								icon="id-badge-2"
 								label="Nombre"
-								value={item.name}
+								value={product.name}
 								isEditable={isAdmin}
 								editModal={
 									<ItemNameEditModal
-										id={item.id}
+										id={product.id}
 										icon={'id-badge-2'}
 										label={'Nombre'}
-										value={item.name}
+										value={product.name}
 									/>
 								}
 							/>
@@ -242,57 +246,57 @@ export default function ItemRoute() {
 							<DataRow
 								icon="scan-barcode"
 								label="Código"
-								value={item.code.toString()}
+								value={product.code.toString()}
 								isEditable={isAdmin}
 								editModal={
 									<CodeEditModal
-										id={item.id}
+										id={product.id}
 										icon={'scan-barcode'}
 										label={'Código'}
-										value={item.code}
+										value={product.code}
 									/>
 								}
 							/>
 							<DataRow
 								icon="package"
 								label="Stock"
-								value={item.stock.toString()}
+								value={product.stock.toString()}
 								isEditable={isAdmin}
-								suffix={item.stock !== 1 ? 'unidades' : 'unidad'}
+								suffix={product.stock !== 1 ? 'unidades' : 'unidad'}
 								editModal={
 									<StockEditModal
-										id={item.id}
+										id={product.id}
 										icon={'package'}
 										label={'Stock'}
-										value={item.stock.toString()}
+										value={product.stock.toString()}
 									/>
 								}
 							/>
 							<DataRow
 								icon="circle-dollar-sign"
 								label="Valor"
-								value={formatCurrency(item.price)}
+								value={formatCurrency(product.price)}
 								isEditable={isAdmin}
 								editModal={
 									<PriceEditModal
-										id={item.id}
+										id={product.id}
 										icon={'circle-dollar-sign'}
 										label={'Valor'}
-										value={item.price ?? 0}
+										value={product.price ?? 0}
 									/>
 								}
 							/>
 							<DataRow
 								icon="cash"
 								label="Precio venta"
-								value={formatCurrency(item.sellingPrice)}
+								value={formatCurrency(product.sellingPrice)}
 								isEditable={isAdmin}
 								editModal={
 									<SellingPriceEditModal
-										id={item.id}
+										id={product.id}
 										icon={'cash'}
 										label={'Precio de venta'}
-										value={item.sellingPrice ?? 0}
+										value={product.sellingPrice ?? 0}
 									/>
 								}
 							/>
@@ -311,28 +315,28 @@ export default function ItemRoute() {
 							<DataRow
 								icon="user"
 								label="Proveedor"
-								value={item.supplier.fantasyName}
+								value={product.supplier.fantasyName}
 								isEditable={isAdmin}
 								editModal={
 									<SupplierEditModal
-										id={item.id}
+										id={product.id}
 										icon={'user'}
 										label={'Proveedor'}
-										value={item.supplier.fantasyName}
+										value={product.supplier.fantasyName}
 									/>
 								}
 							/>
 							<DataRow
 								icon="shapes"
 								label="Categoría"
-								value={item.category.description}
+								value={product.category.description}
 								isEditable={isAdmin}
 								editModal={
 									<CategoryEditModal
-										id={item.id}
+										id={product.id}
 										icon={'shapes'}
 										label={'Categoría'}
-										value={item.category.description}
+										value={product.category.description}
 									/>
 								}
 							/>
@@ -370,18 +374,18 @@ export default function ItemRoute() {
 								<span
 									className={cn(
 										'font-bold',
-										item.isActive ? 'text-primary' : 'text-destructive',
+										product.isActive ? 'text-primary' : 'text-destructive',
 									)}
 								>
-									{item.isActive ? 'Disponible' : 'No Disponible'}
+									{product.isActive ? 'Disponible' : 'No Disponible'}
 								</span>
-								{!activateConditions && !item.isActive && (
+								{!activateConditions && !product.isActive && (
 									<HoverCard openDelay={200} closeDelay={300}>
 										<HoverCardTrigger className="absolute right-3 top-3 transition-all hover:scale-105 hover:text-foreground">
 											<Icon className="ml-2 text-3xl" name="help" />
 										</HoverCardTrigger>
 										<HoverCardContent className="flex flex-col gap-2">
-											{item.stock < 1 && (
+											{product.stock < 1 && (
 												<div className="flex items-center gap-2 ">
 													<Icon
 														name="exclamation-circle"
@@ -390,7 +394,7 @@ export default function ItemRoute() {
 													Debe definir un stock valido.
 												</div>
 											)}
-											{item.price <= 0 && (
+											{product.price <= 0 && (
 												<div className="flex items-center gap-2 ">
 													<Icon
 														name="exclamation-circle"
@@ -399,7 +403,7 @@ export default function ItemRoute() {
 													Debe definir un valor valido mayor a 0.
 												</div>
 											)}
-											{item.sellingPrice <= 0 && (
+											{product.sellingPrice <= 0 && (
 												<div className="flex items-center gap-2 ">
 													<Icon
 														name="exclamation-circle"
@@ -416,16 +420,16 @@ export default function ItemRoute() {
 						{isAdmin && (
 							<CardContent className="grid place-items-center md:place-content-end">
 								<EditStatus
-									isActive={item.isActive}
+									isActive={product.isActive}
 									disabled={!activateConditions}
-									itemId={item.id}
+									productId={product.id}
 								/>
 							</CardContent>
 						)}
 					</Card>
 					{isAdmin && (
 						<div className="flex w-full sm:m-auto sm:w-fit md:hidden">
-							<DeleteItemConfirmationModal itemId={item.id} />
+							<DeleteProductConfirmationModal itemId={product.id} />
 						</div>
 					)}
 				</div>
@@ -458,7 +462,7 @@ function BreadCrumbs() {
 	)
 }
 
-function DeleteItemConfirmationModal({ itemId }: { itemId: string }) {
+function DeleteProductConfirmationModal({ itemId }: { itemId: string }) {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
@@ -477,28 +481,28 @@ function DeleteItemConfirmationModal({ itemId }: { itemId: string }) {
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<DeleteItem id={itemId} />
+					<DeleteProduct id={itemId} />
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
 	)
 }
 
-export function DeleteItem({ id }: { id: string }) {
+export function DeleteProduct({ id }: { id: string }) {
 	const actionData = useActionData<typeof action>()
 	const isPending = useIsPending()
 	const [form] = useForm({
-		id: 'delete-item',
+		id: 'delete-product',
 		lastResult: actionData?.result,
 	})
 
 	return (
 		<Form method="POST" {...getFormProps(form)}>
-			<input type="hidden" name="itemId" value={id} />
+			<input type="hidden" name="productId" value={id} />
 			<StatusButton
 				type="submit"
 				name="intent"
-				value="delete-item"
+				value="delete-product"
 				variant="destructive"
 				status={isPending ? 'pending' : form.status ?? 'idle'}
 				disabled={isPending}
@@ -541,7 +545,7 @@ export function ErrorBoundary() {
 			statusHandlers={{
 				403: () => <p>No posee los permisos necesarios.</p>,
 				404: ({ params }) => (
-					<p>No existe articulo con ID: "{params.itemId}"</p>
+					<p>No existe articulo con ID: "{params.productId}"</p>
 				),
 			}}
 		/>

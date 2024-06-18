@@ -36,7 +36,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
+import { ItemDetailsSheet } from '../inventory_+/product-sheet.tsx'
 import {
 	DELETE_SUPPLIER_KEY,
 	DeleteSupplier,
@@ -60,7 +60,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			email: true,
 			createdAt: true,
 			updatedAt: true,
-			items: { select: { id: true, code: true, name: true } },
+			products: { select: { id: true, code: true, name: true } },
+			isEssential: true,
 		},
 	})
 
@@ -145,14 +146,19 @@ export default function SupplierRoute() {
 							</DropdownMenuItem>
 							<DropdownMenuItem asChild>
 								{/* <ChangeItemsCategory /> */}
+								{/* REPLACE WITH CHANGE ITEMS FROM PROVIDER IN MASS */}
 							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem asChild>
-								<DeleteSupplier
-									id={supplier.id}
-									numberOfItems={supplier.items.length}
-								/>
-							</DropdownMenuItem>
+							{!supplier.isEssential ? (
+								<>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem asChild>
+										<DeleteSupplier
+											id={supplier.id}
+											numberOfItems={supplier.products.length}
+										/>
+									</DropdownMenuItem>
+								</>
+							) : null}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				) : null}
@@ -197,25 +203,25 @@ export default function SupplierRoute() {
 				</div>
 				<div className="col-span-2 flex flex-col gap-3">
 					<div className="font-semibold">
-						Artículos asociados ( {supplier.items.length} )
+						Productos asociados ( {supplier.products.length} )
 					</div>
 					<ScrollArea className="h-[34.7rem]">
 						<ul className="grid gap-3">
-							{supplier.items.map(item => (
+							{supplier.products.map(product => (
 								<li
-									key={item.id}
+									key={product.id}
 									className="flex items-center justify-between rounded-sm transition-colors duration-100 hover:bg-secondary"
 								>
 									<div className="flex w-full items-center justify-between gap-2">
 										<div className="flex items-center gap-2">
-											<ItemDetailsSheet itemId={item.id} />
+											<ItemDetailsSheet itemId={product.id} />
 											<span className="w-[14rem] text-muted-foreground">
-												{item.name}
+												{product.name}
 											</span>
 										</div>
 										<div className="flex  min-w-[4rem]  items-center gap-1 rounded-sm border-l-2 px-1">
 											<Icon className="shrink-0" name="scan-barcode" />
-											<span>{item.code}</span>
+											<span>{product.code}</span>
 										</div>
 									</div>
 								</li>
@@ -278,8 +284,8 @@ export function ErrorBoundary() {
 				404: ({ params }) => (
 					<div className="flex flex-col items-center justify-center gap-2">
 						<Icon className="text-5xl" name="exclamation-circle" />
-						<p>No existe categoría con ID:</p>
-						<p className="text-lg">"{params.categoryId}"</p>
+						<p>No existe proveedor con ID:</p>
+						<p className="text-lg">"{params.supplierId}"</p>
 					</div>
 				),
 			}}

@@ -31,7 +31,8 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useUser, userHasRole } from '#app/utils/user.ts'
-import { type Transaction } from '@prisma/client'
+
+import { Order } from '@prisma/client'
 import {
 	type LoaderFunctionArgs,
 	type SerializeFrom,
@@ -40,7 +41,7 @@ import {
 import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { OrderStatus } from '../transaction+/_types/order-status.ts'
+import { OrderStatus } from '../order+/_types/order-status.ts'
 
 //MOVE THIS OUT OF HERE
 
@@ -107,7 +108,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const isAdmin = userRoles.map(role => role.name).includes('Administrador')
 
-	const numberOfTransactionsPromise = prisma.transaction.count({
+	const numberOfOrdersPromise = prisma.order.count({
 		where: {
 			businessId,
 			...(!isAdmin && { sellerId: userId }),
@@ -117,7 +118,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 
-	const transactionsPromise = prisma.transaction.findMany({
+	const ordersPromise = prisma.order.findMany({
 		take: $top,
 		skip: $skip,
 		select: {
@@ -138,16 +139,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		orderBy: { completedAt: 'desc' },
 	})
 
-	const [numberOfTransactions, transactions] = await Promise.all([
-		numberOfTransactionsPromise,
-		transactionsPromise,
+	const [numberOfOrders, orders] = await Promise.all([
+		numberOfOrdersPromise,
+		ordersPromise,
 	])
 
-	return json({ transactions, numberOfTransactions })
+	return json({ orders, numberOfOrders })
 }
 
-export default function TransactionReportsRoute() {
-	const { transactions, numberOfTransactions } = useLoaderData<typeof loader>()
+export default function OrderReportsRoute() {
+	const { orders, numberOfOrders } = useLoaderData<typeof loader>()
 	const { search } = useLocation()
 	const periodParam = new URLSearchParams(search).get('period')
 
@@ -235,10 +236,7 @@ export default function TransactionReportsRoute() {
 							</Button>
 						</div>
 					</div>
-					<TransactionReportsCard
-						transactions={transactions}
-						totalTransactions={numberOfTransactions}
-					/>
+					<OrderReportsCard orders={orders} totalOrders={numberOfOrders} />
 				</div>
 				<div className="w-full xl:w-[30rem]">
 					<Outlet />
@@ -248,8 +246,8 @@ export default function TransactionReportsRoute() {
 	)
 }
 
-type TransactionWithSellerName = Pick<
-	Transaction,
+type OrderWithSellerName = Pick<
+	Order,
 	'id' | 'completedAt' | 'status' | 'total'
 > & {
 	seller: {
@@ -257,17 +255,17 @@ type TransactionWithSellerName = Pick<
 	}
 }
 
-function TransactionReportsCard({
-	transactions,
-	totalTransactions,
+function OrderReportsCard({
+	orders,
+	totalOrders,
 }: {
-	transactions: SerializeFrom<TransactionWithSellerName>[]
-	totalTransactions: number
+	orders: SerializeFrom<OrderWithSellerName>[]
+	totalOrders: number
 }) {
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
 
-	if (transactions.length === 0) {
+	if (orders.length === 0) {
 		return (
 			<div className="flex h-full items-center justify-center rounded-sm bg-card text-muted-foreground">
 				<p>Sin transacciones durante este periodo.</p>
@@ -280,19 +278,18 @@ function TransactionReportsCard({
 			<CardHeader className="sticky top-0 z-10 justify-between bg-card px-7 md:flex-row">
 				<div className="w-fit">
 					<CardTitle>Transacciones</CardTitle>
-					{transactions.length > 1 ? (
+					{orders.length > 1 ? (
 						<CardDescription>
-							Mostrando {transactions.length} de {totalTransactions}{' '}
-							transacciones.
+							Mostrando {orders.length} de {totalOrders} transacciones.
 						</CardDescription>
 					) : null}
 				</div>
-				<PaginationBar top={10} total={totalTransactions} />
+				<PaginationBar top={10} total={totalOrders} />
 			</CardHeader>
 			<CardContent className="flex flex-col gap-1 ">
-				{transactions.map(transaction => (
+				{orders.map(order => (
 					<LinkWithParams
-						key={transaction.id}
+						key={order.id}
 						prefetch={'intent'}
 						className={({ isActive }) =>
 							cn(
@@ -301,15 +298,15 @@ function TransactionReportsCard({
 							)
 						}
 						preserveSearch
-						to={transaction.id}
+						to={order.id}
 					>
-						<span className="w-[20rem] text-nowrap text-center sm:text-left font-semibold uppercase">
-							{transaction.id}
+						<span className="w-[20rem] text-nowrap text-center font-semibold uppercase sm:text-left">
+							{order.id}
 						</span>
 
 						{isAdmin ? (
 							<span className="w-[15rem] text-nowrap  text-center  text-muted-foreground">
-								{transaction.seller.name}
+								{order.seller.name}
 							</span>
 						) : null}
 
@@ -317,13 +314,9 @@ function TransactionReportsCard({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span className="w-[15rem] text-nowrap  text-center  text-muted-foreground">
-										{format(
-											new Date(transaction.completedAt),
-											"dd'/'MM'/'yyyy",
-											{
-												locale: es,
-											},
-										)}
+										{format(new Date(order.completedAt), "dd'/'MM'/'yyyy", {
+											locale: es,
+										})}
 									</span>
 								</TooltipTrigger>
 								<TooltipContent>
@@ -335,19 +328,15 @@ function TransactionReportsCard({
 						<Badge
 							className={cn(
 								'text-xs ',
-								transaction.status === OrderStatus.DISCARDED &&
-									'text-destructive',
-								transaction.status === OrderStatus.PENDING &&
-									'text-orange-400',
+								order.status === OrderStatus.DISCARDED && 'text-destructive',
+								order.status === OrderStatus.PENDING && 'text-orange-400',
 							)}
 							variant="outline"
 						>
-							{transaction.status}
+							{order.status}
 						</Badge>
-						<span className="w-[15rem] text-nowrap text-center text-muted-foreground font-semibold sm:text-end">
-							{transaction.total !== 0
-								? formatCurrency(transaction.total)
-								: null}
+						<span className="w-[15rem] text-nowrap text-center font-semibold text-muted-foreground sm:text-end">
+							{order.total !== 0 ? formatCurrency(order.total) : null}
 						</span>
 					</LinkWithParams>
 				))}

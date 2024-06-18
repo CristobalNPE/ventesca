@@ -19,14 +19,14 @@ import { Separator } from '#app/components/ui/separator.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { itemTransactionTypeColors } from '../transaction+/_constants/itemTransactionTypesColors.ts'
-import { type ItemTransactionType } from '../transaction+/_types/item-transactionType.ts'
-import { OrderStatus } from '../transaction+/_types/order-status.ts'
+import { productOrderTypeColors } from '../order+/_constants/productOrderTypesColors.ts'
+import { type ProductOrderType } from '../order+/_types/productOrderType.ts'
+import { OrderStatus } from '../order+/_types/order-status.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
-	const transactionReport = await prisma.transaction.findUnique({
+	const orderReport = await prisma.order.findUnique({
 		where: { id: params.reportId, businessId },
 		select: {
 			id: true,
@@ -39,24 +39,24 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			totalDiscount: true,
 			directDiscount: true,
 			seller: { select: { name: true } },
-			itemTransactions: {
+			productOrders: {
 				select: {
 					id: true,
 					quantity: true,
 					type: true,
 					totalPrice: true,
-					item: { select: { code: true, name: true } },
+					productDetails: { select: { code: true, name: true } },
 				},
 			},
 		},
 	})
 
-	invariantResponse(transactionReport, 'Not found', { status: 404 })
-	return json({ transactionReport })
+	invariantResponse(orderReport, 'Not found', { status: 404 })
+	return json({ orderReport })
 }
 
 export default function ReportRoute() {
-	const { transactionReport } = useLoaderData<typeof loader>()
+	const { orderReport } = useLoaderData<typeof loader>()
 
 	return (
 		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
@@ -65,7 +65,7 @@ export default function ReportRoute() {
 					<CardTitle className="group flex items-center gap-2 text-lg">
 						Transacción
 						<span className="font-semibold uppercase">
-							{transactionReport.id.slice(-6)}
+							{orderReport.id.slice(-6)}
 						</span>
 						<Button
 							size="icon"
@@ -78,13 +78,9 @@ export default function ReportRoute() {
 					</CardTitle>
 					<CardDescription>
 						Fecha:
-						{format(
-							new Date(transactionReport.createdAt),
-							" dd' de 'MMMM', 'yyyy",
-							{
-								locale: es,
-							},
-						)}
+						{format(new Date(orderReport.createdAt), " dd' de 'MMMM', 'yyyy", {
+							locale: es,
+						})}
 					</CardDescription>
 				</div>
 				<div className="ml-auto flex items-center gap-1">
@@ -92,7 +88,7 @@ export default function ReportRoute() {
 						<Link
 							target="_blank"
 							reloadDocument
-							to={`/reports/${transactionReport.id}/report-pdf`}
+							to={`/reports/${orderReport.id}/report-pdf`}
 						>
 							<Icon name="checklist" className="h-3.5 w-3.5" />
 							<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
@@ -107,9 +103,9 @@ export default function ReportRoute() {
 					<div className="font-semibold">Detalles de transacción</div>
 					<ScrollArea className="h-[13.5rem]">
 						<ul className="grid gap-3">
-							{transactionReport.itemTransactions.map(itemTransaction => (
+							{orderReport.productOrders.map(productOrder => (
 								<li
-									key={itemTransaction.id}
+									key={productOrder.id}
 									className="flex items-center justify-between"
 								>
 									<div className="flex items-center gap-2">
@@ -117,20 +113,20 @@ export default function ReportRoute() {
 											className={cn(
 												'w-[3rem] rounded-sm px-[1px] text-center text-xs uppercase text-background opacity-70',
 												`${
-													itemTransactionTypeColors[
-														itemTransaction.type as ItemTransactionType
+													productOrderTypeColors[
+														productOrder.type as ProductOrderType
 													]
 												}`,
 											)}
 										>
-											{itemTransaction.type.slice(0, 5)}
+											{productOrder.type.slice(0, 5)}
 										</span>
 										<span className="text-muted-foreground">
-											{itemTransaction.item.name} x{' '}
-											<span>{itemTransaction.quantity}</span>
+											{productOrder.productDetails.name} x{' '}
+											<span>{productOrder.quantity}</span>
 										</span>
 									</div>
-									<span>{formatCurrency(itemTransaction.totalPrice)}</span>
+									<span>{formatCurrency(productOrder.totalPrice)}</span>
 								</li>
 							))}
 						</ul>
@@ -139,36 +135,40 @@ export default function ReportRoute() {
 					<ul className="grid gap-3">
 						<li className="flex items-center justify-between">
 							<span className="text-muted-foreground">Subtotal</span>
-							<span>{formatCurrency(transactionReport.subtotal)}</span>
+							<span>{formatCurrency(orderReport.subtotal)}</span>
 						</li>
-						{transactionReport.totalDiscount ? (
+						{orderReport.totalDiscount ? (
 							<li className="flex items-center justify-between">
 								<span className="text-muted-foreground">
 									Promociones activas
 								</span>
-								<span>- {formatCurrency(transactionReport.totalDiscount)}</span>
+								<span>- {formatCurrency(orderReport.totalDiscount)}</span>
 							</li>
 						) : null}
-						{transactionReport.directDiscount ? (
+						{orderReport.directDiscount ? (
 							<li className="flex items-center justify-between">
 								<span className="text-muted-foreground">Descuento directo</span>
-								<span>
-									- {formatCurrency(transactionReport.directDiscount)}
-								</span>
+								<span>- {formatCurrency(orderReport.directDiscount)}</span>
 							</li>
 						) : null}
 						<li className="flex items-center justify-between font-semibold">
 							<span className="text-muted-foreground">Total</span>
-							<span>{formatCurrency(transactionReport.total)}</span>
+							<span>{formatCurrency(orderReport.total)}</span>
 						</li>
 					</ul>
 				</div>
 				<Separator className="my-4" />
-
+				<div className="grid gap-3">
+					<div className="font-semibold">Método de pago</div>
+					<span className="text-muted-foreground">
+						{orderReport.paymentMethod}
+					</span>
+				</div>
+				<Separator className="my-4" />
 				<div className="grid gap-3">
 					<div className="font-semibold">Vendedor</div>
 					<span className="text-muted-foreground">
-						{transactionReport.seller.name}
+						{orderReport.seller.name}
 					</span>
 				</div>
 				<Separator className="my-4" />
@@ -179,29 +179,29 @@ export default function ReportRoute() {
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<Icon
 									name={
-										transactionReport.status === OrderStatus.DISCARDED
+										orderReport.status === OrderStatus.DISCARDED
 											? 'cross-1'
-											: transactionReport.status === OrderStatus.PENDING
+											: orderReport.status === OrderStatus.PENDING
 												? 'update'
 												: 'checks'
 									}
 									className="h-4 w-4"
 								/>
-								{transactionReport.status}
+								{orderReport.status}
 							</div>
 						</div>
 					</dl>
 				</div>
 			</CardContent>
 			<CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
-				{transactionReport.status !== OrderStatus.PENDING ? (
+				{orderReport.status !== OrderStatus.PENDING ? (
 					<div className="text-xs text-muted-foreground">
-						{transactionReport.status === OrderStatus.FINISHED
+						{orderReport.status === OrderStatus.FINISHED
 							? 'Completada'
 							: 'Cancelada'}{' '}
 						el{' '}
 						{format(
-							new Date(transactionReport.completedAt),
+							new Date(orderReport.completedAt),
 							"dd 'de' MMMM', 'yyyy' a las' hh:mm",
 							{
 								locale: es,

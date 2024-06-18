@@ -1,8 +1,3 @@
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useFetcher } from '@remix-run/react'
-import { useEffect, useState } from 'react'
-import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -17,8 +12,13 @@ import {
 import { Icon } from '#app/components/ui/icon.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/transaction+/index.tsx'
+import { type action } from '#app/routes/order+/index.js'
 import { formatCurrency } from '#app/utils/misc.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
+import { useEffect, useState } from 'react'
+import { z } from 'zod'
 import { discountTypeNames } from '../_discounts+/_constants/discountTypeNames.ts'
 import {
 	DiscountType,
@@ -26,11 +26,11 @@ import {
 	allDiscountTypes,
 } from '../_discounts+/_types/discount-type.ts'
 
-export const APPLY_DIRECT_DISCOUNT_KEY = 'apply-direct-discount'
+export const applyDirectDiscountActionIntent = 'apply-direct-discount'
 
 export const DirectDiscountSchema = z.object({
-	intent: z.literal(APPLY_DIRECT_DISCOUNT_KEY),
-	transactionId: z.string(),
+	intent: z.literal(applyDirectDiscountActionIntent),
+	orderId: z.string(),
 	discountValue: z
 		.number({ required_error: 'Campo obligatorio' })
 		.min(1, { message: 'Debe indicar un número mayor a 0.' }),
@@ -39,19 +39,21 @@ export const DirectDiscountSchema = z.object({
 })
 
 export function DirectDiscount({
-	transactionId,
-	transactionTotal,
+	orderId,
+	orderTotal,
 }: {
-	transactionId: string
-	transactionTotal: number
+	orderId: string
+	orderTotal: number
 }) {
-	const fetcher = useFetcher<typeof action>({ key: APPLY_DIRECT_DISCOUNT_KEY })
+	const fetcher = useFetcher<typeof action>({
+		key: applyDirectDiscountActionIntent,
+	})
 
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 
 	const [form, fields] = useForm({
-		id: APPLY_DIRECT_DISCOUNT_KEY,
+		id: applyDirectDiscountActionIntent,
 		constraint: getZodConstraint(DirectDiscountSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -70,14 +72,13 @@ export function DirectDiscount({
 		if (fetcher.state === 'idle' && fetcher.data?.result.status === 'success') {
 			setOpen(false)
 		}
-		 
 	}, [fetcher])
 
 	const isDiscountTypeFixed = fields.discountType.value === DiscountType.FIXED
 
 	const totalDirectDiscount = isDiscountTypeFixed
 		? Number(fields.discountValue.value)
-		: (transactionTotal * Number(fields.discountValue.value)) / 100
+		: (orderTotal * Number(fields.discountValue.value)) / 100
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -85,7 +86,7 @@ export function DirectDiscount({
 				<Button
 					className="h-8 w-full "
 					variant={'outline'}
-					disabled={transactionTotal <= 0}
+					disabled={orderTotal <= 0}
 				>
 					<Icon className="mr-2" name="tag" /> Descuento Directo
 				</Button>
@@ -99,12 +100,8 @@ export function DirectDiscount({
 					</DialogDescription>
 				</DialogHeader>
 				<div></div>
-				<fetcher.Form
-					method="POST"
-					action={'/transaction'}
-					{...getFormProps(form)}
-				>
-					<input type="hidden" name="transactionId" value={transactionId} />
+				<fetcher.Form method="POST" action={'/order'} {...getFormProps(form)}>
+					<input type="hidden" name="orderId" value={orderId} />
 					<input
 						type="hidden"
 						name="totalDirectDiscount"
@@ -144,7 +141,7 @@ export function DirectDiscount({
 					form={form.id}
 					type="submit"
 					name="intent"
-					value={APPLY_DIRECT_DISCOUNT_KEY}
+					value={applyDirectDiscountActionIntent}
 					variant="default"
 					status={isPending ? 'pending' : form.status ?? 'idle'}
 					disabled={isPending}
@@ -158,27 +155,29 @@ export function DirectDiscount({
 	)
 }
 
-export const REMOVE_DIRECT_DISCOUNT_KEY = 'remove-direct-discount'
+export const removeDirectDiscountActionIntent = 'remove-direct-discount'
 
 export const RemoveDirectDiscountSchema = z.object({
-	intent: z.literal(REMOVE_DIRECT_DISCOUNT_KEY),
-	transactionId: z.string(),
+	intent: z.literal(removeDirectDiscountActionIntent),
+	orderId: z.string(),
 })
 
 export function RemoveDirectDiscount({
-	transactionId,
+	orderId,
 	directDiscount,
 }: {
-	transactionId: string
+	orderId: string
 	directDiscount: number
 }) {
-	const fetcher = useFetcher<typeof action>({ key: REMOVE_DIRECT_DISCOUNT_KEY })
+	const fetcher = useFetcher<typeof action>({
+		key: removeDirectDiscountActionIntent,
+	})
 
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 
 	const [form] = useForm({
-		id: REMOVE_DIRECT_DISCOUNT_KEY,
+		id: removeDirectDiscountActionIntent,
 		constraint: getZodConstraint(RemoveDirectDiscountSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -187,15 +186,15 @@ export function RemoveDirectDiscount({
 	})
 
 	return (
-		<fetcher.Form method="POST" action={'/transaction'} {...getFormProps(form)}>
-			<input type="hidden" name="transactionId" value={transactionId} />
+		<fetcher.Form method="POST" action={'/order'} {...getFormProps(form)}>
+			<input type="hidden" name="orderId" value={orderId} />
 			<StatusButton
 				className="h-8 w-full "
 				form={form.id}
 				type="submit"
 				name="intent"
 				iconName="cross-1"
-				value={REMOVE_DIRECT_DISCOUNT_KEY}
+				value={removeDirectDiscountActionIntent}
 				variant="outline"
 				status={isPending ? 'pending' : form.status ?? 'idle'}
 				disabled={isPending}

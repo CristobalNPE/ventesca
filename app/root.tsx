@@ -184,10 +184,6 @@ export const headers: HeadersFunction = ({ loaderHeaders }) => {
 	return headers
 }
 
-const ThemeFormSchema = z.object({
-	theme: z.enum(['system', 'light', 'dark']),
-})
-
 function Document({
 	children,
 	nonce,
@@ -240,7 +236,7 @@ function App() {
 	const navigationLinks: NavigationLink[] = [
 		{
 			name: 'Punto de Venta',
-			path: 'transaction',
+			path: 'order',
 			icon: 'circle-dollar-sign',
 		},
 		{

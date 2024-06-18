@@ -1,31 +1,33 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useActionData, useFetcher } from '@remix-run/react'
+import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 
-import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
+import { formatCurrency } from '#app/utils/misc.tsx'
+import { z } from 'zod'
 import { Editor } from '../../../components/editor.tsx'
 
-const STOCK_MAX = 9999
-const STOCK_MIN = 0
-export const UPDATE_STOCK_KEY = 'update-stock'
+const PRICE_MAX = 9999999
+const PRICE_MIN = 0
+export const updateProductPriceActionIntent = 'update-product-price'
 
-export const StockEditorSchema = z.object({
-	itemId: z.string().optional(),
-	stock: z
+export const PriceEditorSchema = z.object({
+	intent: z.literal(updateProductPriceActionIntent),
+	productId: z.string().optional(),
+	price: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(STOCK_MIN, { message: 'El stock no puede ser negativo.' })
-		.max(STOCK_MAX, { message: `El stock no puede ser mayor a ${STOCK_MAX}.` }),
+		.min(PRICE_MIN, { message: 'El valor no puede ser negativo.' })
+		.max(PRICE_MAX, { message: `El valor no puede ser mayor a ${PRICE_MAX}.` }),
 })
 
-export function StockEditModal({
+export function PriceEditModal({
 	icon,
 	label,
 	value,
@@ -33,33 +35,34 @@ export function StockEditModal({
 }: {
 	icon: IconName
 	label: string
-	value: string
+	value: string | number
 	id?: string
 }) {
-	const actionData = useActionData<typeof action>()
-	const fetcher = useFetcher({ key: UPDATE_STOCK_KEY })
+	const fetcher = useFetcher<typeof action>({
+		key: `${updateProductPriceActionIntent}-product${id}`,
+	})
+	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
-		id: UPDATE_STOCK_KEY,
-		constraint: getZodConstraint(StockEditorSchema),
+		id: updateProductPriceActionIntent,
+		constraint: getZodConstraint(PriceEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: StockEditorSchema })
+			return parseWithZod(formData, { schema: PriceEditorSchema })
 		},
-
 		defaultValue: {
-			stock: value,
+			price: value,
 		},
 	})
 
-	const [targetValue, setTargetValue] = useState<string>(value)
+	const [targetValue, setTargetValue] = useState<string | number>(value)
 
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
 		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > STOCK_MAX) setTargetValue(STOCK_MAX.toString())
-		if (targetValueAsNumber < STOCK_MIN) setTargetValue(STOCK_MIN.toString())
+		if (targetValueAsNumber > PRICE_MAX) setTargetValue(PRICE_MAX.toString())
+		if (targetValueAsNumber < PRICE_MIN) setTargetValue(PRICE_MIN.toString())
 	}, [targetValue])
 
 	const renderedForm = (
@@ -68,12 +71,11 @@ export function StockEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-
-			<input type="hidden" name="itemId" value={id} />
+			<input type="hidden" name="productId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...getInputProps(fields.stock, {
+					...getInputProps(fields.price, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -81,7 +83,7 @@ export function StockEditModal({
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.stock.errors}
+				errors={fields.price.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -92,7 +94,7 @@ export function StockEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_STOCK_KEY}
+			value={updateProductPriceActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -105,7 +107,8 @@ export function StockEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_STOCK_KEY}
+			formatFn={formatCurrency}
+			fetcherKey={`${updateProductPriceActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

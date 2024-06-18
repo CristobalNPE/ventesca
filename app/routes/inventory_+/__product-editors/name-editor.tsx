@@ -11,21 +11,22 @@ import { type action } from '#app/routes/inventory_+/edit.tsx'
 import { Editor } from '../../../components/editor.tsx'
 
 //Exported constants for consistency on item-creation
-export const ITEM_NAME_MAX = 30
-export const ITEM_NAME_MIN = 3
-export const UPDATE_ITEM_NAME_KEY = 'update-item-name'
+export const PRODUCT_NAME_MAX = 30
+export const PRODUCT_NAME_MIN = 3
+export const updateProductNameActionIntent = 'update-product-name'
 
-export const ItemNameEditorSchema = z.object({
-	itemId: z.string().optional(),
+export const ProductNameEditorSchema = z.object({
+	intent: z.literal(updateProductNameActionIntent),
+	productId: z.string().optional(),
 	name: z
 		.string({
 			required_error: 'Campo obligatorio',
 		})
-		.min(ITEM_NAME_MIN, {
+		.min(PRODUCT_NAME_MIN, {
 			message: 'El nombre debe contener al menos 3 caracteres.',
 		})
-		.max(ITEM_NAME_MAX, {
-			message: `El nombre no puede ser mayor a ${ITEM_NAME_MAX} caracteres.`,
+		.max(PRODUCT_NAME_MAX, {
+			message: `El nombre no puede ser mayor a ${PRODUCT_NAME_MAX} caracteres.`,
 		}),
 })
 
@@ -40,17 +41,19 @@ export function ItemNameEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_ITEM_NAME_KEY })
+	const fetcher = useFetcher<typeof action>({
+		key: updateProductNameActionIntent,
+	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: UPDATE_ITEM_NAME_KEY,
-		constraint: getZodConstraint(ItemNameEditorSchema),
+		id: updateProductNameActionIntent,
+		constraint: getZodConstraint(ProductNameEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: ItemNameEditorSchema })
+			return parseWithZod(formData, { schema: ProductNameEditorSchema })
 		},
 
 		defaultValue: {
@@ -66,8 +69,7 @@ export function ItemNameEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-
-			<input type="hidden" name="itemId" value={id} />
+			<input type="hidden" name="productId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
@@ -90,7 +92,7 @@ export function ItemNameEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_ITEM_NAME_KEY}
+			value={updateProductNameActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -103,7 +105,7 @@ export function ItemNameEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_ITEM_NAME_KEY}
+			fetcherKey={`${updateProductNameActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

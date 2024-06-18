@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => [{ title: 'Sistema de Ventas' }]
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserId(request)
 	if (userId) {
-		throw redirect('/transaction')
+		throw redirect('/order')
 	}
 	return null
 }

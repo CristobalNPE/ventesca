@@ -17,30 +17,30 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { CODE_MAX, CODE_MIN } from './__item-editors/code-editor.tsx'
-import { ITEM_NAME_MAX, ITEM_NAME_MIN } from './__item-editors/name-editor.tsx'
+import { CODE_MAX, CODE_MIN } from './__product-editors/code-editor.tsx'
+import {
+	PRODUCT_NAME_MAX,
+	PRODUCT_NAME_MIN,
+} from './__product-editors/name-editor.tsx'
 
-const DEFAULT_SUPPLIER = 'Desconocido'
-const DEFAULT_CATEGORY = 'General'
-const DEFAULT_CATEGORY_CODE = 999
 const DEFAULT_PRICE = 0
 const DEFAULT_STOCK = 0
 
 export const CreateItemSchema = z.object({
-	itemId: z.string().optional(),
+	productId: z.string().optional(),
 	name: z
 		.string({
 			required_error: 'Campo obligatorio',
 		})
-		.min(ITEM_NAME_MIN, {
+		.min(PRODUCT_NAME_MIN, {
 			message: 'El nombre debe contener al menos 3 caracteres.',
 		})
-		.max(ITEM_NAME_MAX, {
-			message: `El nombre no puede ser mayor a ${ITEM_NAME_MAX} caracteres.`,
+		.max(PRODUCT_NAME_MAX, {
+			message: `El nombre no puede ser mayor a ${PRODUCT_NAME_MAX} caracteres.`,
 		}),
 	code: z
 		.number({
@@ -55,21 +55,17 @@ export async function loader() {
 }
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
+	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
-
-	const { businessId } = await prisma.user.findUniqueOrThrow({
-		where: { id: userId },
-		select: { businessId: true },
-	})
 
 	const submission = await parseWithZod(formData, {
 		schema: CreateItemSchema.superRefine(async (data, ctx) => {
-			const itemByCode = await prisma.item.findFirst({
+			const productByCode = await prisma.product.findFirst({
 				select: { id: true, code: true },
-				where: { ...getWhereBusinessQuery(userId), code: data.code },
+				where: { businessId, code: data.code },
 			})
 
-			if (itemByCode && itemByCode.id !== data.itemId) {
+			if (productByCode && productByCode.id !== data.productId) {
 				ctx.addIssue({
 					path: ['code'],
 					code: z.ZodIssueCode.custom,
@@ -90,40 +86,16 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const { code, name } = submission.value
 
-	let defaultSupplier = await prisma.supplier.findFirst({
-		where: { rut: DEFAULT_SUPPLIER },
+	const defaultCategory = await prisma.category.findFirstOrThrow({
+		where: { businessId, isEssential: true },
+		select: { id: true },
+	})
+	const defaultSupplier = await prisma.supplier.findFirstOrThrow({
+		where: { businessId, isEssential: true },
+		select: { id: true },
 	})
 
-	if (!defaultSupplier) {
-		defaultSupplier = await prisma.supplier.create({
-			data: {
-				rut: DEFAULT_SUPPLIER,
-				name: DEFAULT_SUPPLIER,
-				address: DEFAULT_SUPPLIER,
-				city: DEFAULT_SUPPLIER,
-				fantasyName: DEFAULT_SUPPLIER,
-				phone: DEFAULT_SUPPLIER,
-				email: DEFAULT_SUPPLIER,
-				business: { connect: { id: businessId } },
-			},
-		})
-	}
-
-	let defaultCategory = await prisma.category.findFirst({
-		where: { description: DEFAULT_CATEGORY },
-	})
-
-	if (!defaultCategory) {
-		defaultCategory = await prisma.category.create({
-			data: {
-				code: DEFAULT_CATEGORY_CODE,
-				description: DEFAULT_CATEGORY,
-				business: { connect: { id: businessId } },
-			},
-		})
-	}
-
-	const createdItem = await prisma.item.create({
+	const createdProduct = await prisma.product.create({
 		data: {
 			code,
 			isActive: false,
@@ -137,7 +109,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/inventory/${createdItem.id}`)
+	return redirect(`/inventory/${createdProduct.id}`)
 }
 
 export function CreateItemDialog() {

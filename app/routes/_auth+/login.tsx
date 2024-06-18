@@ -1,3 +1,11 @@
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { CheckboxField, ErrorList, Field } from '#app/components/forms.tsx'
+import { Spacer } from '#app/components/spacer.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { login, requireAnonymous } from '#app/utils/auth.server.ts'
+import { checkHoneypot } from '#app/utils/honeypot.server.ts'
+import { getBrowserInfo, useIsPending } from '#app/utils/misc.tsx'
+import { PasswordSchema, UsernameSchema } from '#app/utils/user-validation.ts'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import {
@@ -9,18 +17,6 @@ import {
 import { Form, Link, useActionData, useSearchParams } from '@remix-run/react'
 import { HoneypotInputs } from 'remix-utils/honeypot/react'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { CheckboxField, ErrorList, Field } from '#app/components/forms.tsx'
-import { Spacer } from '#app/components/spacer.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { login, requireAnonymous } from '#app/utils/auth.server.ts'
-import {
-	ProviderConnectionForm,
-	providerNames,
-} from '#app/utils/connections.tsx'
-import { checkHoneypot } from '#app/utils/honeypot.server.ts'
-import { getBrowserInfo, useIsPending } from '#app/utils/misc.tsx'
-import { PasswordSchema, UsernameSchema } from '#app/utils/user-validation.ts'
 import { handleNewSession } from './login.server.ts'
 
 const LoginFormSchema = z.object({
@@ -199,7 +195,7 @@ export default function LoginPage() {
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Login to Epic Notes' }]
+	return [{ title: 'Iniciar Sesión en Ventesca' }]
 }
 
 export function ErrorBoundary() {

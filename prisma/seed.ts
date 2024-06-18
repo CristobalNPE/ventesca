@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker'
-import { ItemTransactionType } from '#app/routes/transaction+/_types/item-transactionType.ts'
+
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
+import { ProductOrderType } from '#app/routes/order+/_types/productOrderType.ts'
 
 //config:
 const NUMBER_OF_CATEGORIES = 12
@@ -107,7 +108,13 @@ async function seed() {
 	})
 
 	const adminTest = await prisma.user.create({
-		select: { id: true, businessId: true },
+		select: {
+			id: true,
+			businessId: true,
+			name: true,
+			email: true,
+			username: true,
+		},
 		data: {
 			business: { connect: { id: testBusiness.id } },
 			email: 'admin@admin.dev',
@@ -148,6 +155,31 @@ async function seed() {
 
 	users.push(superuser, adminTest, sellerTest1, sellerTest2)
 	console.timeEnd(`🐨 Created test users`)
+
+	console.time('Created default category and supplier')
+	//create default supplier and category
+	await prisma.supplier.create({
+		data: {
+			rut: 'Sin Datos',
+			name: adminTest.name ?? adminTest.username,
+			address: 'Sin Datos',
+			city: 'Sin Datos',
+			fantasyName: `Proveedor Propio`,
+			phone: 'Sin Datos',
+			email: adminTest.email,
+			business: { connect: { id: testBusiness.id } },
+			isEssential: true,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			code: 0,
+			description: 'General',
+			business: { connect: { id: testBusiness.id } },
+			isEssential: true,
+		},
+	})
+	console.timeEnd('Created default category and supplier')
 
 	console.time(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
 
@@ -213,7 +245,7 @@ async function seed() {
 			let stock = faker.number.int({ min: 0, max: 99 })
 			let isActive = price > 0 && sellingPrice > 0 && stock > 0
 
-			await prisma.item.create({
+			await prisma.product.create({
 				data: {
 					code: i + 1,
 					name: faker.commerce.productName(),
@@ -271,7 +303,7 @@ async function seed() {
 
 			const sellerIds = sellers.map(seller => seller.id)
 
-			const createdTransaction = await prisma.transaction.create({
+			const createdTransaction = await prisma.order.create({
 				data: {
 					status: status,
 					business: { connect: { id: business.id } },
@@ -292,7 +324,7 @@ async function seed() {
 			let totalItemPrice = 0
 
 			for (let index = 0; index < totalItemTransactions; index++) {
-				const itemForTransaction = await prisma.item.findFirst({
+				const itemForTransaction = await prisma.product.findFirst({
 					where: {
 						code: faker.number.int({ min: 1, max: NUMBER_OF_PRODUCTS }),
 					},
@@ -300,7 +332,7 @@ async function seed() {
 				})
 				if (!itemForTransaction) continue
 
-				const createdItemTransaction = await prisma.itemTransaction
+				const createdItemTransaction = await prisma.productOrder
 					.create({
 						data: {
 							quantity: faker.number.int({ min: 2, max: 10 }),
@@ -308,20 +340,20 @@ async function seed() {
 							totalPrice: 0,
 							totalDiscount: 0,
 							createdAt: completedDate,
-							item: {
+							productDetails: {
 								connect: {
 									id: itemForTransaction.id,
 								},
 							},
-							transaction: {
+							order: {
 								connect: { id: createdTransaction.id },
 							},
 						},
 						select: {
 							id: true,
 							quantity: true,
-							item: true,
-							itemId: true,
+							productDetails: true,
+							productId: true,
 							type: true,
 							totalPrice: true,
 						},
@@ -330,35 +362,35 @@ async function seed() {
 
 				if (createdItemTransaction) {
 					totalItemPrice =
-						createdItemTransaction.item.sellingPrice *
+						createdItemTransaction.productDetails.sellingPrice *
 						createdItemTransaction.quantity
 
-					await prisma.itemTransaction.update({
+					await prisma.productOrder.update({
 						where: { id: createdItemTransaction.id },
 						data: { totalPrice: totalItemPrice },
 					})
-					await prisma.itemAnalytics.upsert({
-						where: { itemId: createdItemTransaction.itemId },
+					await prisma.productAnalytics.upsert({
+						where: { productId: createdItemTransaction.productId },
 						update: {
 							totalProfit: { increment: createdItemTransaction.totalPrice },
 							totalSales:
-								createdItemTransaction.type === ItemTransactionType.RETURN
+								createdItemTransaction.type === ProductOrderType.RETURN
 									? { decrement: createdItemTransaction.quantity }
 									: { increment: createdItemTransaction.quantity },
 						},
 						create: {
-							item: { connect: { id: createdItemTransaction.itemId } },
+							item: { connect: { id: createdItemTransaction.productId } },
 							totalProfit: createdItemTransaction.totalPrice,
 							totalSales: createdItemTransaction.quantity,
 						},
 					})
 				}
 			}
-			const transactionTotal = await prisma.itemTransaction.aggregate({
-				where: { transactionId: createdTransaction.id },
+			const transactionTotal = await prisma.productOrder.aggregate({
+				where: { orderId: createdTransaction.id },
 				_sum: { totalPrice: true },
 			})
-			await prisma.transaction.update({
+			await prisma.order.update({
 				where: { id: createdTransaction.id },
 				data: {
 					subtotal: transactionTotal._sum.totalPrice ?? 0,

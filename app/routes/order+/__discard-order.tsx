@@ -1,7 +1,5 @@
 import { getFormProps, useForm } from '@conform-to/react'
 
-import { Form, useActionData } from '@remix-run/react'
-import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -16,24 +14,26 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/transaction+/index.tsx'
+import { type action } from '#app/routes/order+/index.js'
 import { useIsPending } from '#app/utils/misc.tsx'
+import { Form, useActionData } from '@remix-run/react'
+import { z } from 'zod'
 
-export const DISCARD_TRANSACTION_KEY = 'discard-transaction'
+export const discardOrderActionIntent = 'discard-order'
 
-export const DiscardTransactionSchema = z.object({
-	intent: z.literal(DISCARD_TRANSACTION_KEY),
-	transactionId: z.string(),
+export const DiscardOrderSchema = z.object({
+	intent: z.literal(discardOrderActionIntent),
+	orderId: z.string(),
 })
 
-export function DiscardTransaction({ id }: { id: string }) {
+export function DiscardOrder({ id }: { id: string }) {
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
-		formAction: '/transaction',
+		formAction: '/order',
 	})
 	const [form] = useForm({
-		id: DISCARD_TRANSACTION_KEY,
+		id: discardOrderActionIntent,
 		lastResult: actionData?.result,
 	})
 
@@ -42,7 +42,7 @@ export function DiscardTransaction({ id }: { id: string }) {
 			<AlertDialogTrigger asChild>
 				<Button
 					variant={'destructive'}
-					className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 px-5 text-center text-wrap"
+					className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 text-wrap px-5 text-center"
 				>
 					<Icon name="trash" className="flex-none text-2xl" />{' '}
 					<span className="leading-tight">Descartar Transacción</span>
@@ -57,16 +57,12 @@ export function DiscardTransaction({ id }: { id: string }) {
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<Form
-						method="POST"
-						action="/transaction"
-						{...getFormProps(form)}
-					>
-						<input type="hidden" name="transactionId" value={id} />
+					<Form method="POST" action="/order" {...getFormProps(form)}>
+						<input type="hidden" name="orderId" value={id} />
 						<StatusButton
 							type="submit"
 							name="intent"
-							value={DISCARD_TRANSACTION_KEY}
+							value={discardOrderActionIntent}
 							variant="destructive"
 							status={isPending ? 'pending' : form.status ?? 'idle'}
 							disabled={isPending}

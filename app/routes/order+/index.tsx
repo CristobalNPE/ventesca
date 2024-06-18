@@ -8,53 +8,52 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
-import React, { createRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import React, { createRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
-import { ItemReader } from '../_system+/item-transaction.new.tsx'
 import {
-	APPLY_DIRECT_DISCOUNT_KEY,
+	applyDirectDiscountActionIntent,
 	DirectDiscountSchema,
-	REMOVE_DIRECT_DISCOUNT_KEY,
+	removeDirectDiscountActionIntent,
 	RemoveDirectDiscountSchema,
 } from './__direct-discount.tsx'
-import { ItemProps, ItemTransaction } from './_components/itemTransaction.tsx'
+import { ProductReader } from './__productOrder+/__product-order-new.tsx'
+import { ProductOrder, ProductProps } from './__productOrder+/__product-order.tsx'
 import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
 
 import { OrderStatus } from './_types/order-status.ts'
-import { TransactionDetailsSchema } from './_types/TransactionData.ts'
-import { ItemTransactionType } from './_types/item-transactionType.ts'
+import { OrderDetailsSchema } from './_types/OrderData.ts'
+import { ProductOrderType } from './_types/productOrderType.ts'
 import {
 	DiscountsPanel,
-	TransactionIdPanel,
-	TransactionOptionsPanel,
-	TransactionOverviewPanel,
-} from './transaction-panel.tsx'
-
+	OrderIdPanel,
+	OrderOptionsPanel,
+	OrderOverviewPanel,
+} from './order-panel.tsx'
 
 import {
-	DISCARD_TRANSACTION_KEY,
-	DiscardTransactionSchema,
-} from './__discard-transaction.tsx'
+	discardOrderActionIntent,
+	DiscardOrderSchema,
+} from './__discard-order.tsx'
 import {
-	FINISH_TRANSACTION_KEY,
+	finishOrderActionIntent,
 	FinishTransactionSchema,
-} from './__finish-transaction.tsx'
+} from './__finish-order.tsx'
 import {
 	PaymentMethodPanel,
-	SET_TRANSACTION_PAYMENT_METHOD_KEY,
+	setPaymentMethodActionIntent,
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
 
-const transactionDetailsSelect = {
+const orderDetailsSelect = {
 	id: true,
 	status: true,
 	createdAt: true,
@@ -64,14 +63,14 @@ const transactionDetailsSelect = {
 	total: true,
 	subtotal: true,
 	seller: { select: { name: true } },
-	itemTransactions: {
+	productOrders: {
 		select: {
 			id: true,
 			type: true,
 			quantity: true,
 			totalPrice: true,
 			totalDiscount: true,
-			item: {
+			productDetails: {
 				select: {
 					id: true,
 					code: true,
@@ -99,8 +98,8 @@ const discountDetailsSelect = {
 	isActive: true,
 }
 
-async function createNewTransaction(userId: string, businessId: string) {
-	const newTransaction = await prisma.transaction.create({
+async function createNewOrder(userId: string, businessId: string) {
+	const newOrder = await prisma.order.create({
 		data: {
 			seller: { connect: { id: userId } },
 			status: OrderStatus.PENDING,
@@ -111,51 +110,49 @@ async function createNewTransaction(userId: string, businessId: string) {
 			total: 0,
 			business: { connect: { id: businessId } },
 		},
-		select: transactionDetailsSelect,
+		select: orderDetailsSelect,
 	})
 
-	return newTransaction
+	return newOrder
 }
 
-async function fetchTransactionDetails(transactionId: string) {
-	const transaction = await prisma.transaction.findUniqueOrThrow({
-		where: { id: transactionId },
-		select: transactionDetailsSelect,
+async function fetchOrderDetails(orderId: string) {
+	const order = await prisma.order.findUniqueOrThrow({
+		where: { id: orderId },
+		select: orderDetailsSelect,
 	})
 
 	//update totals before serving to front end
-	const discount = transaction.itemTransactions
-		.filter(
-			itemTransaction => itemTransaction.type === ItemTransactionType.PROMO,
-		)
-		.reduce((acc, itemTransaction) => acc + itemTransaction.totalDiscount, 0)
+	const discount = order.productOrders
+		.filter(productOrder => productOrder.type === ProductOrderType.PROMO)
+		.reduce((acc, productOrder) => acc + productOrder.totalDiscount, 0)
 
 	const total =
-		transaction.itemTransactions.reduce(
-			(acc, itemTransaction) => acc + itemTransaction.totalPrice,
+		order.productOrders.reduce(
+			(acc, productOrder) => acc + productOrder.totalPrice,
 			0,
-		) - transaction.directDiscount
+		) - order.directDiscount
 
-	const subtotal = total + discount + transaction.directDiscount
+	const subtotal = total + discount + order.directDiscount
 
-	const updatedTransaction = await prisma.transaction.update({
-		where: { id: transactionId },
+	const updatedOrder = await prisma.order.update({
+		where: { id: orderId },
 		data: {
 			totalDiscount: discount,
 			total: total,
 			subtotal: subtotal,
 		},
-		select: transactionDetailsSelect,
+		select: orderDetailsSelect,
 	})
 
-	return updatedTransaction
+	return updatedOrder
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
-	const pendingTransaction = await prisma.transaction.findFirst({
+	const pendingOrder = await prisma.order.findFirst({
 		where: {
 			sellerId: userId,
 			businessId: businessId,
@@ -164,20 +161,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		select: { id: true },
 	})
 
-	const transaction = pendingTransaction
-		? await fetchTransactionDetails(pendingTransaction.id)
-		: await createNewTransaction(userId, businessId)
+	const order = pendingOrder
+		? await fetchOrderDetails(pendingOrder.id)
+		: await createNewOrder(userId, businessId)
 
-	const availableItemDiscounts = transaction.itemTransactions.flatMap(
-		itemTransaction =>
-			itemTransaction.item.discounts
-				.filter(
-					discount => itemTransaction.quantity >= discount.minimumQuantity,
-				)
-				.map(discount => discount.id),
+	const availableProductDiscounts = order.productOrders.flatMap(productOrder =>
+		productOrder.productDetails.discounts
+			.filter(discount => productOrder.quantity >= discount.minimumQuantity)
+			.map(discount => discount.id),
 	)
 
-	const uniqueDiscountIds = [...new Set(availableItemDiscounts)]
+	const uniqueDiscountIds = [...new Set(availableProductDiscounts)]
 
 	const availableDiscounts = await prisma.discount.findMany({
 		where: { id: { in: uniqueDiscountIds }, isActive: true },
@@ -196,7 +190,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	// }
 
 	return json({
-		transaction,
+		order,
 		availableDiscounts: allDiscounts,
 		globalDiscounts,
 	})
@@ -210,36 +204,34 @@ export async function action({ request }: ActionFunctionArgs) {
 	invariantResponse(intent, 'Intent should be defined.')
 
 	switch (intent) {
-		case DISCARD_TRANSACTION_KEY: {
-			return await handleDiscardTransaction(formData)
+		case discardOrderActionIntent: {
+			return await discardOrderAction(formData)
 		}
-		case SET_TRANSACTION_PAYMENT_METHOD_KEY: {
-			return await handleSetPaymentMethod(formData)
+		case setPaymentMethodActionIntent: {
+			return await setPaymentMethodAction(formData)
 		}
-		case FINISH_TRANSACTION_KEY: {
-			return await handleFinishTransaction(formData)
+		case finishOrderActionIntent: {
+			return await finishOrderAction(formData)
 		}
-		case APPLY_DIRECT_DISCOUNT_KEY: {
-			return await handleDirectDiscount(formData)
+		case applyDirectDiscountActionIntent: {
+			return await applyDirectDiscountAction(formData)
 		}
-		case REMOVE_DIRECT_DISCOUNT_KEY: {
-			return await handleRemoveDirectDiscount(formData)
+		case removeDirectDiscountActionIntent: {
+			return await removeDirectDiscountAction(formData)
 		}
 	}
 }
 
 export default function TransactionRoute() {
-	const { transaction, availableDiscounts, globalDiscounts } =
+	const { order, availableDiscounts, globalDiscounts } =
 		useLoaderData<typeof loader>()
 
-	const currentPaymentMethod = PaymentMethodSchema.parse(
-		transaction.paymentMethod,
-	)
+	const currentPaymentMethod = PaymentMethodSchema.parse(order.paymentMethod)
 
-	let allItemTransactions = transaction.itemTransactions
+	let allProductOrders = order.productOrders
 
 	// This is so we can focus the last element in the array automatically
-	const itemRefs = useRef<React.RefObject<HTMLDivElement>[]>([])
+	const productRefs = useRef<React.RefObject<HTMLDivElement>[]>([])
 
 	const [focusedRowIndex, setFocusedRowIndex] = useState<number>(0)
 
@@ -249,57 +241,64 @@ export default function TransactionRoute() {
 			if (event.key === 'ArrowDown') {
 				event.preventDefault()
 				setFocusedRowIndex(prev =>
-					prev === allItemTransactions.length - 1
+					prev === allProductOrders.length - 1
 						? 0
-						: Math.min(prev + 1, allItemTransactions.length - 1),
+						: Math.min(prev + 1, allProductOrders.length - 1),
 				)
 			} else if (event.key === 'ArrowUp') {
 				event.preventDefault()
 				setFocusedRowIndex(prev =>
-					prev === 0 ? allItemTransactions.length - 1 : Math.max(prev - 1, 0),
+					prev === 0 ? allProductOrders.length - 1 : Math.max(prev - 1, 0),
 				)
 			}
 		}
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [allItemTransactions.length])
+	}, [allProductOrders.length])
 
 	useEffect(() => {
-		itemRefs.current[focusedRowIndex]?.current?.focus()
+		productRefs.current[focusedRowIndex]?.current?.focus()
 	}, [focusedRowIndex])
 
-	itemRefs.current = allItemTransactions.map(
-		(_, i) => itemRefs.current[i] ?? createRef(),
+	productRefs.current = allProductOrders.map(
+		(_, i) => productRefs.current[i] ?? createRef(),
 	)
 
 	// This is so we can focus the ItemReader after pressing Enter on a row
-	const itemReaderRef = useRef<HTMLInputElement>(null)
+	const productReaderRef = useRef<HTMLInputElement>(null)
 
 	useEffect(() => {
 		// Focus the last element in the array
-		const lastItemRef = itemRefs.current[allItemTransactions.length - 1]
-		if (lastItemRef) {
-			lastItemRef.current?.focus()
+		const lastProductRef = productRefs.current[allProductOrders.length - 1]
+		if (lastProductRef) {
+			lastProductRef.current?.focus()
 		}
-	}, [allItemTransactions.length])
+	}, [allProductOrders.length])
 
 	return (
 		<div className="flex h-full flex-1  gap-12">
 			<div className="flex-1 ">
-				<ItemReader ref={itemReaderRef} autoFocus autoSubmit status={'idle'} />
+				<ProductReader
+					ref={productReaderRef}
+					autoFocus
+					autoSubmit
+					status={'idle'}
+				/>
 				<Spacer size="4xs" />
-				{allItemTransactions.length > 0 ? (
+				{allProductOrders.length > 0 ? (
 					<div className="no-scrollbar flex flex-col gap-2 overflow-y-auto sm:max-h-[calc(100%-4rem)]">
-						{allItemTransactions.map((itemTransaction, index) => {
-							if (itemTransaction.item) {
+						{allProductOrders.map((productOrder, index) => {
+							if (productOrder.productDetails) {
 								return (
-									<ItemTransaction
-										itemTransaction={itemTransaction}
+									<ProductOrder
+										productOrder={productOrder}
 										globalDiscounts={globalDiscounts}
-										key={itemTransaction.item.id}
-										item={itemTransaction.item as SerializeFrom<ItemProps>}
-										itemReaderRef={itemReaderRef}
-										ref={itemRefs.current[index]}
+										key={productOrder.productDetails.id}
+										product={
+											productOrder.productDetails as SerializeFrom<ProductProps>
+										}
+										productReaderRef={productReaderRef}
+										ref={productRefs.current[index]}
 									/>
 								)
 							} else return null
@@ -317,34 +316,32 @@ export default function TransactionRoute() {
 			</div>
 
 			<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
-				<TransactionIdPanel transactionId={transaction.id} />
+				<OrderIdPanel orderId={order.id} />
 				<PaymentMethodPanel
-					transactionId={transaction.id}
+					orderId={order.id}
 					currentPaymentMethod={currentPaymentMethod}
 				/>
 				<DiscountsPanel
 					activeDiscounts={availableDiscounts}
-					transactionId={transaction.id}
-					transactionTotal={transaction.total}
-					directDiscount={transaction.directDiscount}
+					orderId={order.id}
+					orderTotal={order.total}
+					directDiscount={order.directDiscount}
 				/>
-				<TransactionOverviewPanel
-					subtotal={transaction.subtotal}
-					discount={transaction.totalDiscount + transaction.directDiscount}
-					total={transaction.total}
+				<OrderOverviewPanel
+					subtotal={order.subtotal}
+					discount={order.totalDiscount + order.directDiscount}
+					total={order.total}
 				/>
 
-				<TransactionOptionsPanel
-					transaction={TransactionDetailsSchema.parse(transaction)}
-				/>
+				<OrderOptionsPanel order={OrderDetailsSchema.parse(order)} />
 			</div>
 		</div>
 	)
 }
 
-async function handleDiscardTransaction(formData: FormData) {
+async function discardOrderAction(formData: FormData) {
 	const submission = parseWithZod(formData, {
-		schema: DiscardTransactionSchema,
+		schema: DiscardOrderSchema,
 	})
 
 	if (submission.status !== 'success') {
@@ -354,15 +351,15 @@ async function handleDiscardTransaction(formData: FormData) {
 		)
 	}
 
-	const { transactionId } = submission.value
+	const { orderId } = submission.value
 
-	const transaction = await prisma.transaction.findUniqueOrThrow({
+	const order = await prisma.order.findUniqueOrThrow({
 		select: { id: true },
-		where: { id: transactionId },
+		where: { id: orderId },
 	})
 
-	await prisma.transaction.update({
-		where: { id: transaction.id },
+	await prisma.order.update({
+		where: { id: order.id },
 		data: {
 			isDiscarded: true,
 			status: OrderStatus.DISCARDED,
@@ -372,11 +369,11 @@ async function handleDiscardTransaction(formData: FormData) {
 	return redirectWithToast(`/reports`, {
 		type: 'message',
 		title: 'Transacción Descartada',
-		description: `Transacción ${transaction.id} ha sido descartada.`,
+		description: `Transacción ${order.id} ha sido descartada.`,
 	})
 }
 
-async function handleSetPaymentMethod(formData: FormData) {
+async function setPaymentMethodAction(formData: FormData) {
 	const submission = await parseWithZod(formData, {
 		schema: SetPaymentMethodSchema,
 	})
@@ -387,17 +384,17 @@ async function handleSetPaymentMethod(formData: FormData) {
 		)
 	}
 
-	const { transactionId, paymentMethod } = submission.value
+	const { orderId, paymentMethod } = submission.value
 
-	await prisma.transaction.update({
-		where: { id: transactionId },
+	await prisma.order.update({
+		where: { id: orderId },
 		data: { paymentMethod },
 	})
 
 	return json({ result: submission.reply() })
 }
 
-async function handleFinishTransaction(formData: FormData) {
+async function finishOrderAction(formData: FormData) {
 	const submission = await parseWithZod(formData, {
 		schema: FinishTransactionSchema,
 	})
@@ -407,63 +404,63 @@ async function handleFinishTransaction(formData: FormData) {
 			{ status: submission.status === 'error' ? 400 : 200 },
 		)
 	}
-	const { transactionId } = submission.value
+	const { orderId } = submission.value
 
-	const transaction = await prisma.transaction.update({
-		where: { id: transactionId },
+	const order = await prisma.order.update({
+		where: { id: orderId },
 		data: {
 			status: OrderStatus.FINISHED,
 			completedAt: new Date(),
 		},
-		select: { itemTransactions: true, status: true },
+		select: { productOrders: true, status: true },
 	})
 
-	//update analytics for every item involved in the transaction
-	for (let itemTransaction of transaction.itemTransactions) {
-		if (transaction.status === OrderStatus.FINISHED) {
-			await prisma.itemAnalytics.upsert({
-				where: { itemId: itemTransaction.itemId },
-				update: {
-					totalProfit: { increment: itemTransaction.totalPrice },
-					totalSales:
-						itemTransaction.type === ItemTransactionType.RETURN
-							? { decrement: itemTransaction.quantity }
-							: { increment: itemTransaction.quantity },
-				},
-				create: {
-					item: { connect: { id: itemTransaction.itemId } },
-					totalProfit: itemTransaction.totalPrice,
-					totalSales: itemTransaction.quantity,
-				},
-			})
-		}
-	}
+	// //update analytics for every product involved in the order
+	// for (let productOrder of order.productOrders) {
+	// 	if (order.status === OrderStatus.FINISHED) {
+	// 		await prisma.itemAnalytics.upsert({
+	// 			where: { itemId: productOrder.itemId },
+	// 			update: {
+	// 				totalProfit: { increment: productOrder.totalPrice },
+	// 				totalSales:
+	// 					productOrder.type === ProductOrderType.RETURN
+	// 						? { decrement: productOrder.quantity }
+	// 						: { increment: productOrder.quantity },
+	// 			},
+	// 			create: {
+	// 				item: { connect: { id: productOrder.itemId } },
+	// 				totalProfit: productOrder.totalPrice,
+	// 				totalSales: productOrder.quantity,
+	// 			},
+	// 		})
+	// 	}
+	// }
 
-	return redirectWithToast(`/reports/${transactionId}`, {
+	return redirectWithToast(`/reports/${orderId}`, {
 		type: 'success',
 		title: 'Transacción Completa',
-		description: `Venta completada bajo ID de transacción: [${transactionId.toUpperCase()}].`,
+		description: `Venta completada bajo ID de transacción: [${orderId.toUpperCase()}].`,
 	})
 }
 
-async function handleDirectDiscount(formData: FormData) {
+async function applyDirectDiscountAction(formData: FormData) {
 	const submission = await parseWithZod(formData, {
 		schema: DirectDiscountSchema.superRefine(async (data, ctx) => {
-			const currentTransaction = await prisma.transaction.findUniqueOrThrow({
-				where: { id: data.transactionId },
+			const currentOrder = await prisma.order.findUniqueOrThrow({
+				where: { id: data.orderId },
 				select: { total: true },
 			})
 
 			//El valor del descuento cuando es fijo, no puede ser mayor al total de la transacción.
 			if (
 				data.discountType === DiscountType.FIXED &&
-				data.discountValue > currentTransaction.total
+				data.discountValue > currentOrder.total
 			) {
 				ctx.addIssue({
 					path: ['discountValue'],
 					code: z.ZodIssueCode.custom,
 					message: `El descuento no puede superar el valor total ( ${formatCurrency(
-						currentTransaction.total,
+						currentOrder.total,
 					)} )`,
 				})
 			}
@@ -489,17 +486,17 @@ async function handleDirectDiscount(formData: FormData) {
 		)
 	}
 
-	const { transactionId, totalDirectDiscount } = submission.value
+	const { orderId, totalDirectDiscount } = submission.value
 
-	await prisma.transaction.update({
-		where: { id: transactionId },
+	await prisma.order.update({
+		where: { id: orderId },
 		data: { directDiscount: totalDirectDiscount },
 	})
 
 	return json({ result: submission.reply() })
 }
 
-async function handleRemoveDirectDiscount(formData: FormData) {
+async function removeDirectDiscountAction(formData: FormData) {
 	const submission = await parseWithZod(formData, {
 		schema: RemoveDirectDiscountSchema,
 	})
@@ -510,10 +507,10 @@ async function handleRemoveDirectDiscount(formData: FormData) {
 		)
 	}
 
-	const { transactionId } = submission.value
+	const { orderId } = submission.value
 
-	await prisma.transaction.update({
-		where: { id: transactionId },
+	await prisma.order.update({
+		where: { id: orderId },
 		data: { directDiscount: 0 },
 	})
 

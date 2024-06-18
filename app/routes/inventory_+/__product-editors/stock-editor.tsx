@@ -1,6 +1,6 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useFetcher } from '@remix-run/react'
+import { useActionData, useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 
 import { z } from 'zod'
@@ -10,24 +10,23 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import { Editor } from '../../../components/editor.tsx'
 
-//Exported constants for consistency on item-creation
-export const CODE_MAX = Number.MAX_VALUE
-export const CODE_MIN = 0
+const STOCK_MAX = 9999
+const STOCK_MIN = 0
+export const updateProductStockActionIntent = 'update-product-stock'
 
-export const UPDATE_CODE_KEY = 'update-code'
-
-export const CodeEditorSchema = z.object({
-	itemId: z.string().optional(),
-	code: z
+export const StockEditorSchema = z.object({
+	intent: z.literal(updateProductStockActionIntent),
+	productId: z.string().optional(),
+	stock: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(CODE_MIN, { message: 'El código no puede ser negativo.' })
-		.max(CODE_MAX, { message: `El código no puede ser mayor a ${CODE_MAX}.` }),
+		.min(STOCK_MIN, { message: 'El stock no puede ser negativo.' })
+		.max(STOCK_MAX, { message: `El stock no puede ser mayor a ${STOCK_MAX}.` }),
 })
 
-export function CodeEditModal({
+export function StockEditModal({
 	icon,
 	label,
 	value,
@@ -35,34 +34,35 @@ export function CodeEditModal({
 }: {
 	icon: IconName
 	label: string
-	value: string | number
+	value: string
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_CODE_KEY })
-	const actionData = fetcher.data
+	const actionData = useActionData<typeof action>()
+	const fetcher = useFetcher({
+		key: `${updateProductStockActionIntent}-product${id}`,
+	})
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
-
 	const [form, fields] = useForm({
-		id: UPDATE_CODE_KEY,
-		constraint: getZodConstraint(CodeEditorSchema),
+		id: updateProductStockActionIntent,
+		constraint: getZodConstraint(StockEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: CodeEditorSchema })
+			return parseWithZod(formData, { schema: StockEditorSchema })
 		},
 
 		defaultValue: {
-			code: value,
+			stock: value,
 		},
 	})
 
-	const [targetValue, setTargetValue] = useState<string | number>(value)
+	const [targetValue, setTargetValue] = useState<string>(value)
 
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
 		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > CODE_MAX) setTargetValue(CODE_MAX.toString())
-		if (targetValueAsNumber < CODE_MIN) setTargetValue(CODE_MIN.toString())
+		if (targetValueAsNumber > STOCK_MAX) setTargetValue(STOCK_MAX.toString())
+		if (targetValueAsNumber < STOCK_MIN) setTargetValue(STOCK_MIN.toString())
 	}, [targetValue])
 
 	const renderedForm = (
@@ -71,12 +71,11 @@ export function CodeEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-
-			<input type="hidden" name="itemId" value={id} />
+			<input type="hidden" name="productId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...getInputProps(fields.code, {
+					...getInputProps(fields.stock, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -84,7 +83,7 @@ export function CodeEditModal({
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.code.errors}
+				errors={fields.stock.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -95,7 +94,7 @@ export function CodeEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_CODE_KEY}
+			value={updateProductStockActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -108,7 +107,7 @@ export function CodeEditModal({
 
 	return (
 		<Editor
-			fetcherKey={UPDATE_CODE_KEY}
+			fetcherKey={`${updateProductStockActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

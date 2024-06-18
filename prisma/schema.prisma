@@ -19,6 +19,7 @@ model Category {
   businessId  String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  isEssential Boolean   @default(false) //Data marked as essential should not be possible to be edited or removed
 }
 
 model Supplier {
@@ -35,6 +36,7 @@ model Supplier {
   updatedAt   DateTime  @updatedAt
   business    Business? @relation(fields: [businessId], references: [id])
   businessId  String?
+  isEssential Boolean   @default(false) //Data marked as essential should not be possible to be edited or removed
 }
 
 model Product {

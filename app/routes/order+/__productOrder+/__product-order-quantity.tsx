@@ -1,39 +1,37 @@
-import { useFetcher } from '@remix-run/react'
-import { useEffect, useRef } from 'react'
-import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
+import { useFetcher } from '@remix-run/react'
+import { useEffect, useRef } from 'react'
+import { z } from 'zod'
 
-export const UPDATE_IT_QUANTITY = 'update-it-quantity'
+export const updateProductOrderQuantityActionIntent = 'update-po-quantity'
 
-export const UpdateItemTransactionQuantitySchema = z.object({
-	itemTransactionId: z.string(),
-	itemTransactionQuantity: z.number().min(0),
+export const UpdateProductOrderQuantitySchema = z.object({
+	intent: z.literal(updateProductOrderQuantityActionIntent),
+	productOrderId: z.string(),
+	productOrderQuantity: z.number().min(0),
 })
 
-export const QuantitySelector = ({
+export const ProductOrderQuantitySelector = ({
 	min,
 	max,
 	quantity,
 	setQuantity,
-	itemTransactionId,
+	productOrderId,
 }: {
 	min: number
 	max: number
 	quantity: number
 	setQuantity: (value: number) => void
-	itemTransactionId: string
+	productOrderId: string
 }) => {
 	const componentRef = useRef<HTMLDivElement>(null)
 
-	const itemTransactionQuantityFetcher = useFetcher({
-		key: `${UPDATE_IT_QUANTITY}-${itemTransactionId}`,
+	const productOrderQuantityFetcher = useFetcher({
+		key: `${updateProductOrderQuantityActionIntent}-${productOrderId}`,
 	})
-	const isSubmitting = itemTransactionQuantityFetcher.state !== 'idle'
-
-
-
+	const isSubmitting = productOrderQuantityFetcher.state !== 'idle'
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = parseInt(event.target.value, 10)
@@ -44,15 +42,15 @@ export const QuantitySelector = ({
 
 	//Apply update on change, after a short delay to allow the user to modify the amount
 	useEffect(() => {
-		itemTransactionQuantityFetcher.submit(
+		productOrderQuantityFetcher.submit(
 			{
-				intent: UPDATE_IT_QUANTITY,
-				itemTransactionId: itemTransactionId,
-				itemTransactionQuantity: quantity,
+				intent: updateProductOrderQuantityActionIntent,
+				productOrderId,
+				productOrderQuantity: quantity,
 			},
 			{
 				method: 'post',
-				action: '/transaction/edit',
+				action: '/order/product-order',
 			},
 		)
 	}, [quantity])
@@ -85,7 +83,6 @@ export const QuantitySelector = ({
 				type="number"
 				value={quantity}
 				onChange={handleInputChange}
-				
 				disabled={true}
 			/>
 

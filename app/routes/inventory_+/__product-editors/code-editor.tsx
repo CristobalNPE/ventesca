@@ -8,29 +8,27 @@ import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
-import { formatCurrency } from '#app/utils/misc.tsx'
 import { Editor } from '../../../components/editor.tsx'
 
-const SELLING_PRICE_MAX = 9999999
-const SELLING_PRICE_MIN = 0
-export const UPDATE_SELLINGPRICE_KEY = 'update-sellingPrice'
+//Exported constants for consistency on item-creation
+export const CODE_MAX = Number.MAX_VALUE
+export const CODE_MIN = 0
 
-export const SellingPriceEditorSchema = z.object({
-	itemId: z.string().optional(),
-	sellingPrice: z
+export const updateProductCodeActionIntent = 'update-product-code'
+
+export const CodeEditorSchema = z.object({
+	intent: z.literal(updateProductCodeActionIntent),
+	productId: z.string().optional(),
+	code: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(SELLING_PRICE_MIN, {
-			message: 'El precio de venta no puede ser negativo.',
-		})
-		.max(SELLING_PRICE_MAX, {
-			message: `El precio de venta no puede ser mayor a ${SELLING_PRICE_MAX}.`,
-		}),
+		.min(CODE_MIN, { message: 'El código no puede ser negativo.' })
+		.max(CODE_MAX, { message: `El código no puede ser mayor a ${CODE_MAX}.` }),
 })
 
-export function SellingPriceEditModal({
+export function CodeEditModal({
 	icon,
 	label,
 	value,
@@ -41,19 +39,23 @@ export function SellingPriceEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: UPDATE_SELLINGPRICE_KEY })
+	const fetcher = useFetcher<typeof action>({
+		key: updateProductCodeActionIntent,
+	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
+
 	const [form, fields] = useForm({
-		id: UPDATE_SELLINGPRICE_KEY,
-		constraint: getZodConstraint(SellingPriceEditorSchema),
+		id: updateProductCodeActionIntent,
+		constraint: getZodConstraint(CodeEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: SellingPriceEditorSchema })
+			return parseWithZod(formData, { schema: CodeEditorSchema })
 		},
+
 		defaultValue: {
-			sellingPrice: value,
+			code: value,
 		},
 	})
 
@@ -62,10 +64,8 @@ export function SellingPriceEditModal({
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
 		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > SELLING_PRICE_MAX)
-			setTargetValue(SELLING_PRICE_MAX.toString())
-		if (targetValueAsNumber < SELLING_PRICE_MIN)
-			setTargetValue(SELLING_PRICE_MIN.toString())
+		if (targetValueAsNumber > CODE_MAX) setTargetValue(CODE_MAX.toString())
+		if (targetValueAsNumber < CODE_MIN) setTargetValue(CODE_MIN.toString())
 	}, [targetValue])
 
 	const renderedForm = (
@@ -74,12 +74,11 @@ export function SellingPriceEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-
-			<input type="hidden" name="itemId" value={id} />
+			<input type="hidden" name="productId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...getInputProps(fields.sellingPrice, {
+					...getInputProps(fields.code, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -87,7 +86,7 @@ export function SellingPriceEditModal({
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.sellingPrice.errors}
+				errors={fields.code.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -98,7 +97,7 @@ export function SellingPriceEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={UPDATE_SELLINGPRICE_KEY}
+			value={updateProductCodeActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -111,8 +110,7 @@ export function SellingPriceEditModal({
 
 	return (
 		<Editor
-			formatFn={formatCurrency}
-			fetcherKey={UPDATE_SELLINGPRICE_KEY}
+			fetcherKey={`${updateProductCodeActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

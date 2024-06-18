@@ -16,7 +16,7 @@ const DiscountSchema = z.object({
 	updatedAt: z.coerce.date(),
 })
 
-const ItemSchema = z.object({
+const ProductSchema = z.object({
 	id: z.string(),
 	code: z.number(),
 	name: z.string(),
@@ -25,20 +25,20 @@ const ItemSchema = z.object({
 	discounts: z.array(DiscountSchema),
 })
 
-const ItemTransactionSchema = z.object({
+const ProductOrderSchema = z.object({
 	id: z.string(),
 	type: z.string(),
 	quantity: z.number(),
 	totalPrice: z.number(),
 	totalDiscount: z.number(),
-	item: ItemSchema,
+	productDetails: ProductSchema,
 })
 
 const SellerSchema = z.object({
 	name: z.string(),
 })
 
-export const TransactionDetailsSchema = z.object({
+export const OrderDetailsSchema = z.object({
 	id: z.string(),
 	status: z.string(),
 	createdAt: z.coerce.date(),
@@ -48,7 +48,7 @@ export const TransactionDetailsSchema = z.object({
 	directDiscount: z.number(),
 	subtotal: z.number(),
 	seller: SellerSchema,
-	itemTransactions: z.array(ItemTransactionSchema),
+	productOrders: z.array(ProductOrderSchema),
 })
 
-export type TransactionDetails = z.infer<typeof TransactionDetailsSchema>
+export type OrderDetails = z.infer<typeof OrderDetailsSchema>

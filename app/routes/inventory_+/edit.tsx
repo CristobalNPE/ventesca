@@ -1,233 +1,285 @@
+import { getBusinessId } from '#app/utils/auth.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { type ActionFunctionArgs, json } from '@remix-run/node'
 import { z } from 'zod'
-import { requireUserId } from '#app/utils/auth.server.ts'
 
 import { prisma } from '#app/utils/db.server.ts'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { invariantResponse } from '@epic-web/invariant'
 import {
 	CategoryEditorSchema,
-	UPDATE_CATEGORY_KEY,
-} from './__item-editors/category-editor.tsx'
+	updateProductCategoryActionIntent,
+} from './__product-editors/category-editor.tsx'
 import {
 	CodeEditorSchema,
-	UPDATE_CODE_KEY,
-} from './__item-editors/code-editor.tsx'
+	updateProductCodeActionIntent,
+} from './__product-editors/code-editor.tsx'
 import {
-	ItemNameEditorSchema,
-	UPDATE_ITEM_NAME_KEY,
-} from './__item-editors/name-editor.tsx'
+	ProductNameEditorSchema,
+	updateProductNameActionIntent,
+} from './__product-editors/name-editor.tsx'
 import {
 	PriceEditorSchema,
-	UPDATE_PRICE_KEY,
-} from './__item-editors/price-editor.tsx'
+	updateProductPriceActionIntent,
+} from './__product-editors/price-editor.tsx'
 import {
 	SellingPriceEditorSchema,
-	UPDATE_SELLINGPRICE_KEY,
-} from './__item-editors/sellingPrice-editor.tsx'
+	updateProductSellingPriceActionIntent,
+} from './__product-editors/sellingPrice-editor.tsx'
 import {
 	STATUS_ENABLED,
 	StatusEditorSchema,
-	UPDATE_STATUS_KEY,
-} from './__item-editors/status-editor.tsx'
+	updateProductStatusActionIntent,
+} from './__product-editors/status-editor.tsx'
 import {
 	StockEditorSchema,
-	UPDATE_STOCK_KEY,
-} from './__item-editors/stock-editor.tsx'
+	updateProductStockActionIntent,
+} from './__product-editors/stock-editor.tsx'
 import {
 	SupplierEditorSchema,
-	UPDATE_SUPPLIER_KEY,
-} from './__item-editors/supplier-editor.tsx'
+	updateProductSupplierActionIntent,
+} from './__product-editors/supplier-editor.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
-
+	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 
 	const intent = formData.get('intent')
 
+	invariantResponse(intent, 'Intent should be defined.')
+
 	switch (intent) {
-		case UPDATE_ITEM_NAME_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: ItemNameEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, name } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { name },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductNameActionIntent: {
+			return await updateProductNameAction({ formData })
 		}
-		case UPDATE_CODE_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: CodeEditorSchema.superRefine(async (data, ctx) => {
-					const itemByCode = await prisma.item.findFirst({
-						select: { id: true, code: true },
-						where: { ...getWhereBusinessQuery(userId), code: data.code },
-					})
-
-					if (itemByCode && itemByCode.id !== data.itemId) {
-						ctx.addIssue({
-							path: ['code'],
-							code: z.ZodIssueCode.custom,
-							message: 'El código ya existe.',
-						})
-					}
-				}),
-
-				async: true,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, code } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { code },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductCodeActionIntent: {
+			return await updateProductCodeAction({ formData, businessId })
 		}
-		case UPDATE_STOCK_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: StockEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-			const { itemId, stock } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { stock },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductStockActionIntent: {
+			return await updateProductStockAction({ formData })
 		}
-		case UPDATE_PRICE_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: PriceEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, price } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { price },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductPriceActionIntent: {
+			return await updateProductPriceAction({ formData })
 		}
-		case UPDATE_SELLINGPRICE_KEY:
-			const submission = await parseWithZod(formData, {
-				schema: SellingPriceEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, sellingPrice } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { sellingPrice },
-			})
-
-			return json({ result: submission.reply() })
-		case UPDATE_SUPPLIER_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: SupplierEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, supplierId } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { supplier: { connect: { id: supplierId } } },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductSellingPriceActionIntent: {
+			return await updateProductSellingPriceAction({ formData })
 		}
-		case UPDATE_CATEGORY_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: CategoryEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, categoryId } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { category: { connect: { id: categoryId } } },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductSupplierActionIntent: {
+			return await updateProductSupplierAction({ formData })
 		}
-		case UPDATE_STATUS_KEY: {
-			const submission = await parseWithZod(formData, {
-				schema: StatusEditorSchema,
-			})
-
-			if (submission.status !== 'success') {
-				return json(
-					{ result: submission.reply() },
-					{ status: submission.status === 'error' ? 400 : 200 },
-				)
-			}
-
-			const { itemId, status } = submission.value
-
-			await prisma.item.update({
-				where: { id: itemId },
-				data: { isActive: status === STATUS_ENABLED ? true : false },
-			})
-
-			return json({ result: submission.reply() })
+		case updateProductCategoryActionIntent: {
+			return await updateProductCategoryAction({ formData })
+		}
+		case updateProductStatusActionIntent: {
+			return await updateProductStatusAction({ formData })
 		}
 	}
+}
+
+async function updateProductNameAction({ formData }: { formData: FormData }) {
+	const submission = await parseWithZod(formData, {
+		schema: ProductNameEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, name } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { name },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function updateProductCodeAction({
+	formData,
+	businessId,
+}: {
+	formData: FormData
+	businessId: string
+}) {
+	const submission = await parseWithZod(formData, {
+		schema: CodeEditorSchema.superRefine(async (data, ctx) => {
+			const productByCode = await prisma.product.findFirst({
+				select: { id: true, code: true },
+				where: { businessId, code: data.code },
+			})
+
+			if (productByCode && productByCode.id !== data.productId) {
+				ctx.addIssue({
+					path: ['code'],
+					code: z.ZodIssueCode.custom,
+					message: 'El código ya existe.',
+				})
+			}
+		}),
+
+		async: true,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, code } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { code },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function updateProductStockAction({ formData }: { formData: FormData }) {
+	const submission = await parseWithZod(formData, {
+		schema: StockEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+	const { productId, stock } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { stock },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function updateProductPriceAction({ formData }: { formData: FormData }) {
+	const submission = await parseWithZod(formData, {
+		schema: PriceEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, price } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { price },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function updateProductSellingPriceAction({
+	formData,
+}: {
+	formData: FormData
+}) {
+	const submission = await parseWithZod(formData, {
+		schema: SellingPriceEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, sellingPrice } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { sellingPrice },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function updateProductSupplierAction({
+	formData,
+}: {
+	formData: FormData
+}) {
+	const submission = await parseWithZod(formData, {
+		schema: SupplierEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, supplierId } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { supplier: { connect: { id: supplierId } } },
+	})
+
+	return json({ result: submission.reply() })
+}
+
+async function updateProductCategoryAction({
+	formData,
+}: {
+	formData: FormData
+}) {
+	const submission = await parseWithZod(formData, {
+		schema: CategoryEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, categoryId } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { category: { connect: { id: categoryId } } },
+	})
+
+	return json({ result: submission.reply() })
+}
+async function updateProductStatusAction({ formData }: { formData: FormData }) {
+	const submission = await parseWithZod(formData, {
+		schema: StatusEditorSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { productId, status } = submission.value
+
+	await prisma.product.update({
+		where: { id: productId },
+		data: { isActive: status === STATUS_ENABLED ? true : false },
+	})
+
+	return json({ result: submission.reply() })
 }

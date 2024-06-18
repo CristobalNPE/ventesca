@@ -38,8 +38,8 @@ import { Progress } from '#app/components/ui/progress.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { ItemDetailsSheet } from '../inventory_+/item-sheet.tsx'
-import { OrderStatus } from '../transaction+/_types/order-status.ts'
+import { ItemDetailsSheet } from '../inventory_+/product-sheet.tsx'
+import { OrderStatus } from '../order+/_types/order-status.ts'
 import {
 	DELETE_CATEGORY_KEY,
 	DeleteCategory,
@@ -64,6 +64,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			createdAt: true,
 			updatedAt: true,
 			products: { select: { id: true, code: true, name: true } },
+			isEssential: true,
 		},
 	})
 
@@ -167,19 +168,25 @@ export default function CategoryRoute() {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent className="flex flex-col gap-2 " align="end">
-							<DropdownMenuItem asChild>
-								<EditCategory id={category.id} />
-							</DropdownMenuItem>
+							{!category.isEssential ? (
+								<DropdownMenuItem asChild>
+									<EditCategory id={category.id} />
+								</DropdownMenuItem>
+							) : null}
 							<DropdownMenuItem asChild>
 								<ChangeItemsCategory />
 							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem asChild>
-								<DeleteCategory
-									id={category.id}
-									numberOfItems={category.products.length}
-								/>
-							</DropdownMenuItem>
+							{!category.isEssential ? (
+								<>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem asChild>
+										<DeleteCategory
+											id={category.id}
+											numberOfItems={category.products.length}
+										/>
+									</DropdownMenuItem>
+								</>
+							) : null}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				) : null}
