@@ -18,7 +18,7 @@ import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
-import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
+// import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 import { ItemReader } from '../_system+/item-transaction.new.tsx'
 import {
 	APPLY_DIRECT_DISCOUNT_KEY,
