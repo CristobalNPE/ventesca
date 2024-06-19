@@ -63,7 +63,7 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 							Confirme los datos de la venta para ingreso:
 							<div className="fex mt-4 flex-col gap-1">
 								{order.productOrders.map(productOrder => {
-									if (productOrder.product) {
+									if (productOrder.productDetails) {
 										return (
 											<div className="flex gap-4" key={productOrder.id}>
 												<div className="flex flex-1 gap-2 overflow-clip ">
@@ -71,7 +71,7 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 														{productOrder.quantity}x
 													</span>
 													<span className="uppercase">
-														{productOrder.product.name}
+														{productOrder.productDetails.name}
 													</span>
 												</div>
 												<span className="w-[4rem] text-right">
