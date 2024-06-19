@@ -26,9 +26,12 @@ import {
 	RemoveDirectDiscountSchema,
 } from './__direct-discount.tsx'
 import { ProductReader } from './__productOrder+/__product-order-new.tsx'
-import { ProductOrder, ProductProps } from './__productOrder+/__product-order.tsx'
+import {
+	ProductOrder,
+	ProductProps,
+} from './__productOrder+/__product-order.tsx'
 import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
-
+import { ProductOrder as ProductOrderModel } from '@prisma/client'
 import { OrderStatus } from './_types/order-status.ts'
 import { OrderDetailsSchema } from './_types/OrderData.ts'
 import { ProductOrderType } from './_types/productOrderType.ts'
@@ -415,32 +418,40 @@ async function finishOrderAction(formData: FormData) {
 		select: { productOrders: true, status: true },
 	})
 
-	// //update analytics for every product involved in the order
-	// for (let productOrder of order.productOrders) {
-	// 	if (order.status === OrderStatus.FINISHED) {
-	// 		await prisma.itemAnalytics.upsert({
-	// 			where: { itemId: productOrder.itemId },
-	// 			update: {
-	// 				totalProfit: { increment: productOrder.totalPrice },
-	// 				totalSales:
-	// 					productOrder.type === ProductOrderType.RETURN
-	// 						? { decrement: productOrder.quantity }
-	// 						: { increment: productOrder.quantity },
-	// 			},
-	// 			create: {
-	// 				item: { connect: { id: productOrder.itemId } },
-	// 				totalProfit: productOrder.totalPrice,
-	// 				totalSales: productOrder.quantity,
-	// 			},
-	// 		})
-	// 	}
-	// }
+	//update stock for products in the order
+	await updateProductsStock(order.productOrders)
 
 	return redirectWithToast(`/reports/${orderId}`, {
 		type: 'success',
 		title: 'Transacción Completa',
 		description: `Venta completada bajo ID de transacción: [${orderId.toUpperCase()}].`,
 	})
+}
+
+async function updateProductsStock(productOrders: ProductOrderModel[]) {
+	for (let productOrder of productOrders) {
+		const product = await prisma.product.findUniqueOrThrow({
+			where: { id: productOrder.productId },
+			select: { stock: true },
+		})
+
+		if (productOrder.type === ProductOrderType.RETURN) {
+			await prisma.product.update({
+				where: { id: productOrder.productId },
+				data: {
+					stock: { increment: productOrder.quantity },
+				},
+			})
+		} else {
+			const newStock = product.stock - productOrder.quantity
+			await prisma.product.update({
+				where: { id: productOrder.productId },
+				data: {
+					stock: { set: Math.max(newStock, 0) },
+				},
+			})
+		}
+	}
 }
 
 async function applyDirectDiscountAction(formData: FormData) {
