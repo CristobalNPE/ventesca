@@ -52,7 +52,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		case updateProductOrderTypeActionIntent: {
 			return await updateProductOrderTypeAction({ formData })
 		}
-
 		case updateProductOrderQuantityActionIntent: {
 			return await updateProductOrderQuantityAction({ formData })
 		}
@@ -249,9 +248,7 @@ async function deleteProductOrderAction({ formData }: { formData: FormData }) {
 
 	await prisma.productOrder.delete({ where: { id: productOrder.id } })
 
-	// return redirect('/order')
-	// return json({ result: submission.reply() })
-	return null
+	return json({ result: submission.reply() })
 }
 
 export type addProductOrderActionType = typeof addProductOrderAction
