@@ -432,7 +432,7 @@ function SideBar({
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<div className="flex select-none items-center gap-2 ">
+							<div className="flex select-none items-center gap-4 ">
 								<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
 								<h1
 									className={cn(
