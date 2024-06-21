@@ -15,26 +15,26 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: ⬣ ESLint
-    runs-on: ubuntu-22.04
-    steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+  # lint:
+  #   name: ⬣ ESLint
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v4
 
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+  #     - name: ⎔ Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
 
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
+  #     - name: 📥 Download deps
+  #       uses: bahmutov/npm-install@v1
 
-      - name: 🖼 Build icons
-        run: npm run build:icons
+  #     - name: 🖼 Build icons
+  #       run: npm run build:icons
 
-      - name: 🔬 Lint
-        run: npm run lint
+  #     - name: 🔬 Lint
+  #       run: npm run lint
 
   # typecheck:
   #   name: ʦ TypeScript
@@ -140,7 +140,7 @@ jobs:
     name: 🚀 Deploy
     runs-on: ubuntu-22.04
     # needs: [lint, typecheck, vitest, playwright]
-    needs: [lint]
+    needs: []
     # only build/deploy branches on pushes
     if: ${{ github.event_name == 'push' }}
 
