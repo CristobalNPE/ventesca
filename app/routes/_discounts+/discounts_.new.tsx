@@ -9,6 +9,13 @@ import { type DateRange } from 'react-day-picker'
 import { z } from 'zod'
 import { Field } from '#app/components/forms.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbSeparator,
+} from '#app/components/ui/breadcrumb.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -18,7 +25,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
+import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { useIsPending } from '#app/utils/misc.tsx'
 import {
 	DiscountApplicationMethod,
@@ -27,20 +38,9 @@ import {
 import { DiscountScope, DiscountScopeSchema } from './_types/discount-reach.ts'
 import { DiscountType, DiscountTypeSchema } from './_types/discount-type.ts'
 
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbSeparator,
-} from '#app/components/ui/breadcrumb.tsx'
-import { DatePickerWithRange } from '#app/components/ui/date-picker.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
 
 import { CategoryPicker } from './discounts.category-picker.tsx'
 import { ProductPicker } from './discounts.product-picker.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 
 const DEFAULT_MIN_QUANTITY_REQUIRED = 1
 const DEFAULT_FIXED_DISCOUNT_VALUE = 0

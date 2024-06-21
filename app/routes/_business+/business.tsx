@@ -1,8 +1,8 @@
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
 import { Spacer } from '#app/components/spacer.tsx'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.js'
 import { userHasRole, useUser } from '#app/utils/user.ts'

@@ -1,3 +1,10 @@
+import { type Role, type User, type UserImage } from '@prisma/client'
+import {
+	json,
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -9,18 +16,11 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
-import { type Role, type User, type UserImage } from '@prisma/client'
-import {
-	json,
-	type LoaderFunctionArgs,
-	type SerializeFrom,
-} from '@remix-run/node'
-import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {

@@ -1,3 +1,12 @@
+import { type Product } from '@prisma/client'
+import {
+	json,
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { Link, useFetcher } from '@remix-run/react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { useSpinDelay } from 'spin-delay'
 import { ErrorList, type ListOfErrors } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -26,15 +35,6 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { useDebounce } from '#app/utils/misc.tsx'
-import { Product } from '@prisma/client'
-import {
-	json,
-	type LoaderFunctionArgs,
-	type SerializeFrom,
-} from '@remix-run/node'
-import { Link, useFetcher } from '@remix-run/react'
-import { useEffect, useId, useRef, useState } from 'react'
-import { useSpinDelay } from 'spin-delay'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

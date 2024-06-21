@@ -13,10 +13,9 @@ import { redirect, useFetcher, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-import { DetailsCard } from '#app/components/details-card.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
 import { useId } from 'react'
 import { z } from 'zod'
+import { DetailsCard } from '#app/components/details-card.tsx'
 
 import {
 	AlertDialog,
@@ -28,6 +27,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '#app/components/ui/alert-dialog.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,

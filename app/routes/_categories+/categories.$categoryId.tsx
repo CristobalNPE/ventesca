@@ -1,11 +1,6 @@
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { prisma } from '#app/utils/db.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
-import { Product } from '@prisma/client'
+import { type Product } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -15,6 +10,9 @@ import { Link, useLoaderData } from '@remix-run/react'
 import { endOfWeek, format, startOfWeek, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { z } from 'zod'
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
 
 import {
 	Card,
@@ -24,8 +22,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 
 import {
 	DropdownMenu,
@@ -34,7 +30,11 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { Progress } from '#app/components/ui/progress.tsx'
+import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'

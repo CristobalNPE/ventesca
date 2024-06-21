@@ -1,16 +1,16 @@
-import { getBusinessId, getPasswordHash } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
-import { ActionFunctionArgs, json, redirect } from '@remix-run/node'
+import { createId } from '@paralleldrive/cuid2'
+import * as E from '@react-email/components'
+import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
+import { getBusinessId, getPasswordHash } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { sendEmail } from '#app/utils/email.server.ts'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import {
 	createSellerActionIntent,
 	SellerInfoEditSchema,
 } from './__seller-editor'
-import { createId } from '@paralleldrive/cuid2'
-import * as E from '@react-email/components'
-import { sendEmail } from '#app/utils/email.server.ts'
 
 type SellersActionArgs = {
 	businessId: string

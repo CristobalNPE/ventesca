@@ -1,5 +1,16 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 
+import {
+	forwardRef,
+	useEffect,
+	useId,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react'
+import { z } from 'zod'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { Label } from '#app/components/ui/label.tsx'
@@ -12,18 +23,7 @@ import {
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
 import { cn, useDebounce } from '#app/utils/misc.tsx'
-import {
-	forwardRef,
-	useEffect,
-	useId,
-	useImperativeHandle,
-	useRef,
-	useState,
-} from 'react'
-import { z } from 'zod'
-import { action, addProductOrderActionType } from '../product-order.tsx'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { action, type addProductOrderActionType } from '../product-order.tsx'
 
 export const addProductOrderActionIntent = 'add-product-order'
 export const AddProductOrderSchema = z.object({

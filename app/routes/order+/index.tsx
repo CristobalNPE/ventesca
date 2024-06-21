@@ -1,5 +1,6 @@
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
+import { type ProductOrder as ProductOrderModel } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -8,14 +9,14 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
+import React, { createRef, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import React, { createRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
@@ -25,23 +26,6 @@ import {
 	removeDirectDiscountActionIntent,
 	RemoveDirectDiscountSchema,
 } from './__direct-discount.tsx'
-import { ProductReader } from './__productOrder+/__product-order-new.tsx'
-import {
-	ProductOrder,
-	ProductProps,
-} from './__productOrder+/__product-order.tsx'
-import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
-import { ProductOrder as ProductOrderModel } from '@prisma/client'
-import { OrderStatus } from './_types/order-status.ts'
-import { OrderDetailsSchema } from './_types/OrderData.ts'
-import { ProductOrderType } from './_types/productOrderType.ts'
-import {
-	DiscountsPanel,
-	OrderIdPanel,
-	OrderOptionsPanel,
-	OrderOverviewPanel,
-} from './order-panel.tsx'
-
 import {
 	discardOrderActionIntent,
 	DiscardOrderSchema,
@@ -50,11 +34,27 @@ import {
 	finishOrderActionIntent,
 	FinishTransactionSchema,
 } from './__finish-order.tsx'
+import { ProductReader } from './__productOrder+/__product-order-new.tsx'
+import {
+	ProductOrder,
+	type ProductProps,
+} from './__productOrder+/__product-order.tsx'
 import {
 	PaymentMethodPanel,
 	setPaymentMethodActionIntent,
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
+import { OrderStatus } from './_types/order-status.ts'
+import { OrderDetailsSchema } from './_types/OrderData.ts'
+import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
+import { ProductOrderType } from './_types/productOrderType.ts'
+import {
+	DiscountsPanel,
+	OrderIdPanel,
+	OrderOptionsPanel,
+	OrderOverviewPanel,
+} from './order-panel.tsx'
+
 
 const orderDetailsSelect = {
 	id: true,

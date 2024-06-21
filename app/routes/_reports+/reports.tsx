@@ -1,3 +1,12 @@
+import { type Order } from '@prisma/client'
+import {
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+	json,
+} from '@remix-run/node'
+import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -32,15 +41,6 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useUser, userHasRole } from '#app/utils/user.ts'
 
-import { Order } from '@prisma/client'
-import {
-	type LoaderFunctionArgs,
-	type SerializeFrom,
-	json,
-} from '@remix-run/node'
-import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { OrderStatus } from '../order+/_types/order-status.ts'
 
 //MOVE THIS OUT OF HERE

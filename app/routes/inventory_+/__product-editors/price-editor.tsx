@@ -3,12 +3,12 @@ import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 
+import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/inventory_+/edit.js'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { z } from 'zod'
 import { Editor } from '../../../components/editor.tsx'
 
 const PRICE_MAX = 9999999

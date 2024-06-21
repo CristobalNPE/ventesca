@@ -20,8 +20,8 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { productOrderTypeColors } from '../order+/_constants/productOrderTypesColors.ts'
-import { type ProductOrderType } from '../order+/_types/productOrderType.ts'
 import { OrderStatus } from '../order+/_types/order-status.ts'
+import { type ProductOrderType } from '../order+/_types/productOrderType.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

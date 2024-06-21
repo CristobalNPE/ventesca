@@ -1,12 +1,12 @@
-import { Icon } from '#app/components/ui/icon.tsx'
 import {
-	ProductOrder as ProductOrderModel,
+	type ProductOrder as ProductOrderModel,
 	type Discount,
 } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { useFetchers } from '@remix-run/react'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { useSpinDelay } from 'spin-delay'
+import { Icon } from '#app/components/ui/icon.tsx'
 
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {

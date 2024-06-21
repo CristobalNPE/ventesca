@@ -9,8 +9,8 @@ import {
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { ProductOrderType } from '../order+/_types/productOrderType.ts'
 import { OrderStatus } from '../order+/_types/order-status.ts'
+import { ProductOrderType } from '../order+/_types/productOrderType.ts'
 
 export type TransactionReportDataType = {
 	id: string
