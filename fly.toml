@@ -1,4 +1,4 @@
-app = "ventesca-v2-b7cc"
+app = "ventesca-v1"
 primary_region = "scl"
 kill_signal = "SIGINT"
 kill_timeout = 5
