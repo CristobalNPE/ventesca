@@ -53,7 +53,6 @@ export function Editor({
 		if (fetcher.state === 'idle' && fetcher.data?.result.status === 'success') {
 			setOpen(false)
 		}
-		 
 	}, [fetcher])
 
 	const isMobile = false
@@ -74,7 +73,7 @@ export function Editor({
 		return (
 			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogTrigger asChild>
-					<Button variant="outline" size={'icon'} className="shrink-0  h-7 w-7">
+					<Button variant="outline" size={'icon'} className="h-7  w-7 shrink-0">
 						<Icon name="pencil-2" />
 						<span className="sr-only">Modificar</span>
 					</Button>
