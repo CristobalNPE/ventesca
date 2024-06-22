@@ -19,7 +19,7 @@ import { Separator } from '#app/components/ui/separator.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { productOrderTypeColors } from '../order+/_constants/productOrderTypesColors.ts'
+import { productOrderTypeBgColors } from '../order+/_constants/productOrderTypesColors.ts'
 import { OrderStatus } from '../order+/_types/order-status.ts'
 import { type ProductOrderType } from '../order+/_types/productOrderType.ts'
 
@@ -113,7 +113,7 @@ export default function ReportRoute() {
 											className={cn(
 												'w-[3rem] rounded-sm px-[1px] text-center text-xs uppercase text-background opacity-70',
 												`${
-													productOrderTypeColors[
+													productOrderTypeBgColors[
 														productOrder.type as ProductOrderType
 													]
 												}`,
