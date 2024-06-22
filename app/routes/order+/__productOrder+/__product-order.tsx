@@ -22,6 +22,8 @@ import {
 	ProductOrderTypeToggle,
 	updateProductOrderTypeActionIntent,
 } from './__product-order-type.tsx'
+import { Separator } from '#app/components/ui/separator.tsx'
+import { productOrderTypeBorderColors } from '../_constants/productOrderTypesColors.ts'
 
 type CategoryProps = {
 	id: string
@@ -157,28 +159,52 @@ export const ProductOrder = forwardRef<HTMLDivElement, ProductOrderProps>(
 		}, [rowRef, product.stock])
 
 		return (
-			<ProductOrderCard
-				className={cn(
-					'flex flex-col gap-3 sm:flex-row sm:items-center  sm:gap-8  ',
-					isProductOrderUpdating &&
-						'pointer-events-none animate-pulse duration-1000',
-				)}
+			// LG SIZE MODIFIERS ARE FOR DESKTOP
+			<div
+				tabIndex={0}
 				ref={rowRef}
+				className={cn(
+					'relative flex flex-col gap-4 rounded border bg-accent px-6 pb-6  pt-12 shadow-sm outline-none transition-all  lg:flex-row lg:items-center lg:gap-8 lg:pb-4 lg:pt-8',
+					productOrderType === ProductOrderType.SELL &&
+						productOrderTypeBorderColors[ProductOrderType.SELL],
+					productOrderType === ProductOrderType.RETURN &&
+						productOrderTypeBorderColors[ProductOrderType.RETURN],
+					productOrderType === ProductOrderType.PROMO &&
+						productOrderTypeBorderColors[ProductOrderType.PROMO],
+				)}
 			>
-				<div className="min-w-[11rem] flex-1 ">
-					<div className="flex w-fit items-center gap-1 rounded-sm bg-muted/70 px-[2px] text-sm  text-muted-foreground">
-						<Icon name="scan-barcode" /> <span>{product.code}</span>
-					</div>
-					<div className="font-bold uppercase">{product.name}</div>
+				<ProductOrderTypeToggle
+					className="absolute left-0 top-0 p-2 lg:p-1  "
+					productOrderId={productOrder.id}
+					isPromoApplicable={isAnyProductDiscountApplicable}
+					productOrderType={productOrderType}
+					setProductOrderType={setProductOrderType}
+				/>
+				<div className="absolute right-0 top-0 ">
+					{showUpdateSpinner ? (
+						<div className="p-[5px] ">
+							<Icon name="update" className="animate-spin" />
+						</div>
+					) : (
+						<DeleteProductOrder id={productOrder.id} />
+					)}
 				</div>
 
-				<div className="flex items-center gap-8 ">
-					<div className="flex w-[6.5rem] flex-col ">
-						<span className="text-xs text-muted-foreground">
+				<div className="flex flex-col gap-1 lg:w-96">
+					<div className="flex justify-between gap-2">
+						<span className="text-lg  tracking-tight">{product.name}</span>
+					</div>
+					<div className="flex w-fit items-center gap-1 rounded bg-muted-foreground/20 px-1 font-normal">
+						<Icon name="scan-barcode" />
+						<span className="text-sm">{product.code}</span>
+					</div>
+				</div>
+
+				<div className="flex items-center justify-between gap-4  justify-self-start  lg:w-64">
+					<div className="flex flex-col">
+						<span>{formatCurrency(product.sellingPrice)}</span>
+						<span className="font text-xs leading-none tracking-tight text-muted-foreground lg:text-sm">
 							Precio unitario
-						</span>
-						<span className="font-thin">
-							{formatCurrency(product.sellingPrice)}
 						</span>
 					</div>
 					<ProductOrderQuantitySelector
@@ -188,79 +214,53 @@ export const ProductOrder = forwardRef<HTMLDivElement, ProductOrderProps>(
 						setQuantity={setQuantity}
 						productOrderId={productOrder.id}
 					/>
-					{productOrderType === ProductOrderType.PROMO ? (
-						<div
-							className={cn(
-								'flex w-[6.5rem]  flex-col text-right text-xs text-muted-foreground',
-								isAnyProductDiscountApplicable && 'text-foreground',
-							)}
-						>
-							<span className="text-xs text-muted-foreground">
-								Descuentos ({applicableProductDiscounts.length})
-							</span>
-							<span className="font-thin">
-								{formatCurrency(productOrder.totalDiscount)}
-							</span>
-						</div>
-					) : (
-						<div
-							className={cn(
-								'flex w-[6.5rem]  flex-col text-right text-xs text-muted-foreground',
-								isAnyProductDiscountApplicable && 'text-foreground',
-							)}
-						>
-							{applicableProductDiscounts.length !== 0 && (
-								<span className="text-xs text-muted-foreground">
-									<span className="font-semibold text-foreground">
-										{applicableProductDiscounts.length}
-									</span>{' '}
-									{applicableProductDiscounts.length === 1
-										? 'descuento disponible.'
-										: 'descuentos disponibles.'}
+				</div>
+
+				<div className="flex flex-1 items-center text-xs lg:text-sm ">
+					<div className="">
+						{productOrderType === ProductOrderType.PROMO ? (
+							<div
+								className={cn(
+									'flex  flex-col-reverse   text-muted-foreground',
+									isAnyProductDiscountApplicable && 'text-foreground',
+								)}
+							>
+								<span className=" leading-none text-muted-foreground">
+									Descuentos ({applicableProductDiscounts.length})
 								</span>
-							)}
-						</div>
-					)}
-					<div className="flex w-[6.5rem]  flex-col text-right">
-						<span className="text-xs text-muted-foreground">Total</span>
-						<span className="font-bold">
+								<span className="text-base">
+									{formatCurrency(productOrder.totalDiscount)}
+								</span>
+							</div>
+						) : (
+							<div
+								className={cn(
+									'flex   flex-col   text-muted-foreground',
+									isAnyProductDiscountApplicable && 'text-foreground',
+								)}
+							>
+								{applicableProductDiscounts.length !== 0 && (
+									<span className=" text-muted-foreground">
+										<span className="font-semibold text-foreground">
+											{applicableProductDiscounts.length}
+										</span>{' '}
+										{applicableProductDiscounts.length === 1
+											? 'descuento disponible.'
+											: 'descuentos disponibles.'}
+									</span>
+								)}
+							</div>
+						)}
+					</div>
+					<div className="ml-auto flex gap-2 text-right text-lg font-bold lg:flex-col lg:gap-0  lg:leading-tight">
+						<span className="font-light lg:text-sm">Total:</span>
+						<span className="max-w-24">
 							{formatCurrency(productOrder.totalPrice)}
 						</span>
 					</div>
 				</div>
-				<ProductOrderTypeToggle
-					productOrderId={productOrder.id}
-					isPromoApplicable={isAnyProductDiscountApplicable}
-					productOrderType={productOrderType}
-					setProductOrderType={setProductOrderType}
-				/>
-				<div>
-					{showUpdateSpinner ? (
-						<div className="h-10 px-4 py-2">
-							<Icon name="update" className="animate-spin" />
-						</div>
-					) : (
-						<DeleteProductOrder id={productOrder.id} />
-					)}
-				</div>
-			</ProductOrderCard>
+			</div>
 		)
 	},
 )
-ProductOrder.displayName = 'ItemTransactionRow'
-
-const ProductOrderCard = React.forwardRef<
-	HTMLDivElement,
-	React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-	<div
-		ref={ref}
-		tabIndex={0}
-		className={cn(
-			'relative rounded-md border bg-secondary p-3 shadow-sm outline-none transition-all duration-300 focus:brightness-90 dark:focus:brightness-150',
-			className,
-		)}
-		{...props}
-	/>
-))
-ProductOrderCard.displayName = 'ProductOrderCard'
+ProductOrder.displayName = 'ProductOrderCard'

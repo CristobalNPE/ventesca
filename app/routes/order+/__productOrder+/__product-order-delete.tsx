@@ -5,6 +5,12 @@ import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { type deleteProductOrderActionType } from '../product-order.tsx'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '#app/components/ui/tooltip.tsx'
 
 export const deleteProductOrderActionIntent = 'delete-product-order'
 export const DeleteFormSchema = z.object({
@@ -31,15 +37,26 @@ export function DeleteProductOrder({ id }: { id: string }) {
 		>
 			<input type="hidden" name="productOrderId" value={id} />
 
-			<Button
-				type="submit"
-				name="intent"
-				value={deleteProductOrderActionIntent}
-				tabIndex={-1}
-				variant={'ghost'}
-			>
-				<Icon name="cross-1" />
-			</Button>
+			<TooltipProvider>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							type="submit"
+							name="intent"
+							value={deleteProductOrderActionIntent}
+							tabIndex={-1}
+							variant={'ghost'}
+							size={'sm'}
+							className="p-[4px] text-lg hover:text-destructive"
+						>
+							<Icon name="trash" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						<p>Quitar producto</p>
+					</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
 		</fetcher.Form>
 	)
 }

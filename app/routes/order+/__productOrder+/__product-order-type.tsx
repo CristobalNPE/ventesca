@@ -2,7 +2,7 @@ import { useFetcher } from '@remix-run/react'
 import { useEffect } from 'react'
 import { z } from 'zod'
 import { cn } from '#app/utils/misc.tsx'
-import { productOrderTypeColors } from '../_constants/productOrderTypesColors.ts'
+import { productOrderTypeBgColors } from '../_constants/productOrderTypesColors.ts'
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,
@@ -21,11 +21,13 @@ export const ProductOrderTypeToggle = ({
 	productOrderType,
 	setProductOrderType,
 	isPromoApplicable,
+	className,
 }: {
 	productOrderId: string
 	productOrderType: ProductOrderType
 	setProductOrderType: (value: ProductOrderType) => void
 	isPromoApplicable: boolean
+	className?: string
 }) => {
 	const productOrderTypeFetcher = useFetcher({
 		key: `${updateProductOrderTypeActionIntent}-${productOrderId}`,
@@ -75,12 +77,13 @@ export const ProductOrderTypeToggle = ({
 		<div
 			className={cn(
 				'flex w-[4rem] cursor-pointer select-none items-center justify-center rounded-sm p-1 text-xs font-bold uppercase tracking-wider text-background',
+				className && className,
 				productOrderType === ProductOrderType.SELL &&
-					productOrderTypeColors[ProductOrderType.SELL],
+					productOrderTypeBgColors[ProductOrderType.SELL],
 				productOrderType === ProductOrderType.RETURN &&
-					productOrderTypeColors[ProductOrderType.RETURN],
+					productOrderTypeBgColors[ProductOrderType.RETURN],
 				productOrderType === ProductOrderType.PROMO &&
-					productOrderTypeColors[ProductOrderType.PROMO],
+					productOrderTypeBgColors[ProductOrderType.PROMO],
 			)}
 			onClick={cycleState}
 			tabIndex={-1}

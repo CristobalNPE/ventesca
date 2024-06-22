@@ -66,7 +66,7 @@ export const ProductOrderQuantitySelector = ({
 	}
 
 	return (
-		<div ref={componentRef} className="flex rounded-sm border">
+		<div ref={componentRef} className="flex rounded-sm border border-muted-foreground/10">
 			<Button
 				tabIndex={-1}
 				variant={'ghost'}
