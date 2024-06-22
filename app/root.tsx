@@ -74,6 +74,8 @@ import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
+import VentescaLogoLight from './routes/_marketing+/logos/ventesca-light.png'
+import VentescaLogoDark from './routes/_marketing+/logos/ventesca-dark.png'
 
 type NavigationLink = {
 	name: string
@@ -410,6 +412,23 @@ function UserDropdown() {
 	)
 }
 
+function DefaultLogo() {
+	return (
+		<div className="flex h-[3.8rem] w-[3.8rem] flex-shrink-0 overflow-clip rounded-md  opacity-90 drop-shadow-md">
+			<img
+				className="hidden dark:flex"
+				src={VentescaLogoLight}
+				alt="Ventesca Logo"
+			/>
+			<img
+				className="flex dark:hidden"
+				src={VentescaLogoDark}
+				alt="Ventesca Logo"
+			/>
+		</div>
+	)
+}
+
 function SideBar({
 	themeUserPreference,
 	navigationLinks,
@@ -432,8 +451,8 @@ function SideBar({
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<div className="flex select-none items-center gap-4 ">
-								<div className="flex h-[3.5rem] w-[3.5rem] flex-shrink-0 rounded-md bg-foreground/40"></div>
+							<div className="flex select-none items-center gap-2 ">
+								<DefaultLogo />
 								<h1
 									className={cn(
 										'text-2xl font-black uppercase tracking-tight',
