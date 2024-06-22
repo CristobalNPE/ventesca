@@ -190,7 +190,7 @@ export const ProductOrder = forwardRef<HTMLDivElement, ProductOrderProps>(
 					)}
 				</div>
 
-				<div className="flex flex-col gap-1 lg:flex-1 lead">
+				<div className="flex flex-col gap-1 lg:flex-1">
 					<div className="flex justify-between gap-2">
 						<span className="text-lg  tracking-tight">{product.name}</span>
 					</div>
