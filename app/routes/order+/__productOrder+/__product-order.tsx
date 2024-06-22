@@ -164,7 +164,7 @@ export const ProductOrder = forwardRef<HTMLDivElement, ProductOrderProps>(
 				tabIndex={0}
 				ref={rowRef}
 				className={cn(
-					'relative flex flex-col gap-4 rounded border bg-accent px-6 pb-6  pt-12 shadow-sm outline-none transition-all  lg:flex-row lg:items-center lg:gap-8 lg:pb-4 lg:pt-8',
+					'relative  flex flex-col gap-4 rounded border bg-accent px-6 pb-6  pt-12 shadow-sm outline-none transition-all  lg:flex-row lg:items-center lg:gap-8 lg:pb-4 lg:pt-8',
 					productOrderType === ProductOrderType.SELL &&
 						productOrderTypeBorderColors[ProductOrderType.SELL],
 					productOrderType === ProductOrderType.RETURN &&
@@ -190,7 +190,7 @@ export const ProductOrder = forwardRef<HTMLDivElement, ProductOrderProps>(
 					)}
 				</div>
 
-				<div className="flex flex-col gap-1 lg:w-96">
+				<div className="flex flex-col gap-1 lg:flex-1 lead">
 					<div className="flex justify-between gap-2">
 						<span className="text-lg  tracking-tight">{product.name}</span>
 					</div>
