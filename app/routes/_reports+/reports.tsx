@@ -200,6 +200,9 @@ export default function OrderReportsRoute() {
 										cn(
 											'flex h-7 w-[5rem] items-center justify-center rounded-sm text-sm font-semibold',
 											isActive && periodParam === period && 'bg-background',
+											!periodParam &&
+												period === TimePeriod.TODAY &&
+												'bg-background',
 										)
 									}
 									to={`/reports/?period=${period}`}
