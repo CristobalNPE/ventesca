@@ -1,5 +1,9 @@
 import { invariantResponse } from '@epic-web/invariant'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -21,7 +25,25 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { productOrderTypeBgColors } from '../order+/_constants/productOrderTypesColors.ts'
 import { OrderStatus } from '../order+/_types/order-status.ts'
-import { type ProductOrderType } from '../order+/_types/productOrderType.ts'
+import { ProductOrderType } from '../order+/_types/productOrderType.ts'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '#app/components/ui/dropdown-menu.js'
+
+import {
+	DeleteOrder,
+	deleteOrderActionIntent,
+	DeleteOrderSchema,
+} from './__delete-order.tsx'
+import { userHasRole, useUser } from '#app/utils/user.ts'
+import { parseWithZod } from '@conform-to/zod'
+import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -55,8 +77,26 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	return json({ orderReport })
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+	const userId = await requireUserWithRole(request, 'Administrador')
+	const businessId = await getBusinessId(userId)
+
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+	invariantResponse(intent, 'Intent should be defined.')
+
+	switch (intent) {
+		case deleteOrderActionIntent: {
+			return await deleteOrderAction(formData)
+		}
+	}
+}
+
 export default function ReportRoute() {
 	const { orderReport } = useLoaderData<typeof loader>()
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
 
 	return (
 		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
@@ -96,6 +136,28 @@ export default function ReportRoute() {
 							</span>
 						</Link>
 					</Button>
+					{isAdmin ? (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button size="icon" variant="outline" className="h-8 w-8">
+									<Icon name="dots-vertical" className="h-3.5 w-3.5" />
+									<span className="sr-only">More</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem>
+									<LinkWithParams preserveSearch to={'edit'}>
+										<Icon name="update" className="mr-2" />
+										Modificar transacción
+									</LinkWithParams>
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem asChild>
+									<DeleteOrder id={orderReport.id} />
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					) : null}
 				</div>
 			</CardHeader>
 			<CardContent className="flex-1 p-6 text-sm">
@@ -212,4 +274,48 @@ export default function ReportRoute() {
 			</CardFooter>
 		</Card>
 	)
+}
+
+async function deleteOrderAction(formData: FormData) {
+	const submission = parseWithZod(formData, {
+		schema: DeleteOrderSchema,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { orderId } = submission.value
+
+	const order = await prisma.order.findUnique({
+		select: { id: true, productOrders: true },
+		where: { id: orderId },
+	})
+
+	invariantResponse(order, 'Order not found', { status: 404 })
+
+	//restore stock
+	for (let productOrder of order.productOrders) {
+		if (productOrder.type === ProductOrderType.RETURN) {
+			await prisma.product.update({
+				where: { id: productOrder.productId },
+				data: { stock: { decrement: productOrder.quantity } },
+			})
+		} else {
+			await prisma.product.update({
+				where: { id: productOrder.productId },
+				data: { stock: { increment: productOrder.quantity } },
+			})
+		}
+	}
+
+	await prisma.order.delete({ where: { id: orderId } })
+	return redirectWithToast(`/reports`, {
+		type: 'success',
+		title: 'Transacción eliminada',
+		description: `Transacción ID [${order.id}] ha sido eliminada permanentemente.`,
+	})
 }
