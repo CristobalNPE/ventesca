@@ -146,27 +146,27 @@ export function OrderEditor({
 					<ErrorList id={form.errorId} errors={form.errors} />
 				</Form>
 			</CardContent>
-			<CardFooter className="flex flex-row items-center justify-between gap-4 border-t bg-muted/50 px-6 py-3">
-				<Button variant={'ghost'} asChild>
-					<LinkWithParams preserveSearch relative="path" to={'..'}>
-						<Icon name="arrow-left" className="mr-2" /> Volver
-					</LinkWithParams>
-				</Button>
-
-				<div className="flex gap-2">
-					<Button form={form.id} variant="ghost" type="reset">
+			<CardFooter className="flex flex-col items-center justify-between gap-4 border-t bg-muted/50 px-6 py-3 sm:flex-row">
+				<div className="flex w-full justify-between gap-2 sm:justify-normal">
+					<Button variant={'ghost'} asChild>
+						<LinkWithParams preserveSearch relative="path" to={'..'}>
+							<Icon name="arrow-left" className="mr-2" /> Volver
+						</LinkWithParams>
+					</Button>
+					<Button form={form.id} variant="outline" type="reset">
 						Restaurar
 					</Button>
-					<StatusButton
-						form={form.id}
-						type="submit"
-						disabled={isPending}
-						status={isPending ? 'pending' : 'idle'}
-						iconName="check"
-					>
-						{order ? 'Actualizar registro' : 'Registrar Proveedor'}
-					</StatusButton>
 				</div>
+				<StatusButton
+					form={form.id}
+					type="submit"
+					disabled={isPending}
+					status={isPending ? 'pending' : 'idle'}
+					iconName="check"
+					className="w-full sm:w-fit"
+				>
+					{order ? 'Actualizar registro' : 'Registrar Proveedor'}
+				</StatusButton>
 			</CardFooter>
 		</Card>
 	)

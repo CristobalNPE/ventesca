@@ -99,8 +99,8 @@ export default function ReportRoute() {
 	const isAdmin = userHasRole(user, 'Administrador')
 
 	return (
-		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
-			<CardHeader className="flex flex-row items-start bg-muted/50">
+		<Card className="flex h-full animate-slide-left flex-col lg:h-[85dvh]  ">
+			<CardHeader className="flex flex-col items-start  gap-2 bg-muted/50 2xl:flex-row">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
 						Transacción
@@ -123,7 +123,7 @@ export default function ReportRoute() {
 						})}
 					</CardDescription>
 				</div>
-				<div className="ml-auto flex items-center gap-1">
+				<div className="ml-auto flex w-full  items-center gap-1 2xl:justify-end">
 					<Button asChild size="sm" variant="outline" className="h-8 gap-1">
 						<Link
 							target="_blank"
@@ -160,7 +160,7 @@ export default function ReportRoute() {
 					) : null}
 				</div>
 			</CardHeader>
-			<CardContent className="flex-1 p-6 text-sm">
+			<CardContent className="flex-1 overflow-auto p-6 text-sm ">
 				<div className="grid gap-3">
 					<div className="font-semibold">Detalles de transacción</div>
 					<ScrollArea className="h-[13.5rem]">
@@ -168,9 +168,9 @@ export default function ReportRoute() {
 							{orderReport.productOrders.map(productOrder => (
 								<li
 									key={productOrder.id}
-									className="flex items-center justify-between"
+									className="flex items-center justify-between border-b-2  border-dashed border-border/70 2xl:border-0"
 								>
-									<div className="flex items-center gap-2">
+									<div className="flex flex-col gap-2 2xl:flex-row 2xl:items-center">
 										<span
 											className={cn(
 												'w-[3rem] rounded-sm px-[1px] text-center text-xs uppercase text-background opacity-70',

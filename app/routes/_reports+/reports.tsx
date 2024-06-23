@@ -5,7 +5,17 @@ import {
 	json,
 } from '@remix-run/node'
 import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
-import { format } from 'date-fns'
+import {
+	endOfMonth,
+	endOfToday,
+	endOfWeek,
+	endOfYear,
+	format,
+	startOfMonth,
+	startOfToday,
+	startOfWeek,
+	startOfYear,
+} from 'date-fns'
 import { es } from 'date-fns/locale'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
@@ -43,8 +53,6 @@ import { useUser, userHasRole } from '#app/utils/user.ts'
 
 import { OrderStatus } from '../order+/_types/order-status.ts'
 
-//MOVE THIS OUT OF HERE
-
 enum TimePeriod {
 	TODAY = 'today',
 	LAST_WEEK = 'last-week',
@@ -74,32 +82,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const period = url.searchParams.get('period')?.toLowerCase()
 
-	let startDate = new Date()
-	startDate.setHours(0, 0, 0, 0)
-	let endDate
+	let startDate: Date
+	let endDate: Date
 
 	// Adjust date range based on the selected filter
 	switch (period) {
 		case TimePeriod.TODAY:
-			endDate = new Date()
+			startDate = startOfToday()
+			endDate = endOfToday()
 			break
 		case TimePeriod.LAST_WEEK:
-			startDate.setDate(startDate.getDate() - 7)
-			endDate = new Date()
+			startDate = startOfWeek(new Date(), { weekStartsOn: 1 })
+			endDate = endOfWeek(new Date(), { weekStartsOn: 1 })
 			break
 		case TimePeriod.LAST_MONTH:
-			startDate.setMonth(startDate.getMonth() - 1)
-			endDate = new Date()
+			startDate = startOfMonth(new Date())
+			endDate = endOfMonth(new Date())
 			break
 		case TimePeriod.LAST_YEAR:
-			startDate.setFullYear(startDate.getFullYear() - 1)
-			endDate = new Date()
+			startDate = startOfYear(new Date())
+			endDate = endOfYear(new Date())
 			break
 		default:
 			//fetch only last day if no range given
-			endDate = new Date()
+			startDate = startOfToday()
+			endDate = endOfToday()
 			break
 	}
+
+	console.log(`Start Date: ${startDate}`)
+	console.log(`End Date: ${endDate}`)
 
 	const { roles: userRoles } = await prisma.user.findFirstOrThrow({
 		where: { id: userId },
@@ -159,8 +171,8 @@ export default function OrderReportsRoute() {
 			</div>
 			<Spacer size={'4xs'} />
 
-			<div className="flex flex-col gap-4 xl:h-[85dvh] xl:flex-row ">
-				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+			<div className="grid items-start  gap-4 lg:h-[85dvh] lg:grid-cols-3 ">
+				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-2">
 					<div className="flex flex-col gap-4 lg:flex-row">
 						<Card className="w-full">
 							<CardHeader className="pb-2">
@@ -191,8 +203,8 @@ export default function OrderReportsRoute() {
 							</CardFooter>
 						</Card>
 					</div>
-					<div className="flex justify-between">
-						<div className="flex h-fit items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
+					<div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
+						<div className="flex h-fit w-fit items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
 							{allTimePeriods.map((period, i) => (
 								<NavLink
 									key={i}
@@ -217,9 +229,9 @@ export default function OrderReportsRoute() {
 									<Button
 										variant="outline"
 										size="sm"
-										className="h-7 gap-1 text-sm"
+										className="h-7  gap-1 text-sm"
 									>
-										<Icon name="filter" className="h-3.5 w-3.5" />
+										<Icon name="filter" className="h-3.5 w-3.5 " />
 										<span className="sr-only sm:not-sr-only">Filtrar</span>
 									</Button>
 								</DropdownMenuTrigger>
@@ -241,7 +253,8 @@ export default function OrderReportsRoute() {
 					</div>
 					<OrderReportsCard orders={orders} totalOrders={numberOfOrders} />
 				</div>
-				<div className="w-full xl:w-[30rem]">
+
+				<div className="col-span-1 ">
 					<Outlet />
 				</div>
 			</div>
@@ -278,7 +291,7 @@ function OrderReportsCard({
 
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
-			<CardHeader className="sticky top-0 z-10 justify-between bg-card px-7 md:flex-row">
+			<CardHeader className="sticky top-0 z-10 items-center justify-between bg-card px-7 text-center sm:items-start sm:text-start md:flex-row">
 				<div className="w-fit">
 					<CardTitle>Transacciones</CardTitle>
 					{orders.length > 1 ? (
@@ -289,26 +302,29 @@ function OrderReportsCard({
 				</div>
 				<PaginationBar top={10} total={totalOrders} />
 			</CardHeader>
-			<CardContent className="flex flex-col gap-1 ">
+			<CardContent className="flex flex-col gap-3 sm:gap-1 ">
 				{orders.map(order => (
 					<LinkWithParams
 						key={order.id}
 						prefetch={'intent'}
 						className={({ isActive }) =>
 							cn(
-								'flex flex-col items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary sm:flex-row ',
+								'flex flex-col items-center justify-between gap-1 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary sm:flex-row sm:gap-5 ',
 								isActive && 'border-primary/10 bg-secondary',
 							)
 						}
 						preserveSearch
 						to={order.id}
 					>
-						<span className="w-[20rem] text-nowrap text-center font-semibold uppercase sm:text-left">
-							{order.id}
+						<span className="hidden w-[15rem]  overflow-clip  text-nowrap text-center font-semibold uppercase sm:text-left xl:flex">
+							{order.id.slice(-15)}
+						</span>
+						<span className="flex w-fit text-nowrap text-center font-semibold uppercase sm:w-[10rem] sm:text-left xl:hidden">
+							{order.id.slice(-6)}
 						</span>
 
 						{isAdmin ? (
-							<span className="w-[15rem] text-nowrap  text-center  text-muted-foreground">
+							<span className=" w-[15rem] text-nowrap  text-center  text-muted-foreground">
 								{order.seller.name}
 							</span>
 						) : null}
@@ -316,7 +332,7 @@ function OrderReportsCard({
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<span className="w-[15rem] text-nowrap  text-center  text-muted-foreground">
+									<span className="hidden w-[15rem] text-nowrap text-center  text-muted-foreground  2xl:flex">
 										{format(new Date(order.completedAt), "dd'/'MM'/'yyyy", {
 											locale: es,
 										})}
