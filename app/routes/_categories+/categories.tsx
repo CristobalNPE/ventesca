@@ -29,7 +29,7 @@ import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
 import { OrderStatus } from '../order+/_types/order-status.ts'
 import {
-	CREATE_CATEGORY_KEY,
+	createCategoryActionIntent,
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
@@ -59,8 +59,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	invariantResponse(intent, 'Intent should be defined.')
 
 	switch (intent) {
-		case CREATE_CATEGORY_KEY: {
-			return await handleCreateCategory(formData, businessId)
+		case createCategoryActionIntent: {
+			return await createCategoryAction(formData, businessId)
 		}
 	}
 }
@@ -234,7 +234,7 @@ async function getWeeklyProfitsPerCategory(businessId: string) {
 	return result
 }
 
-async function handleCreateCategory(formData: FormData, businessId: string) {
+async function createCategoryAction(formData: FormData, businessId: string) {
 	const submission = await parseWithZod(formData, {
 		schema: CreateCategorySchema.superRefine(async (data, ctx) => {
 			const categoryByCode = await prisma.category.findFirst({

@@ -19,14 +19,14 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_categories+/categories.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
 
-export const CREATE_CATEGORY_KEY = 'create-category'
+export const createCategoryActionIntent = 'create-category'
 
 export const CATEGORY_DESC_MIN = 3
 export const CATEGORY_DESC_MAX = 20
 export const CODE_MIN = 1
 
 export const CreateCategorySchema = z.object({
-	intent: z.literal(CREATE_CATEGORY_KEY),
+	intent: z.literal(createCategoryActionIntent),
 	description: z
 		.string({
 			required_error: 'Campo obligatorio',
@@ -50,7 +50,7 @@ export function CreateCategoryDialog() {
 	const isPending = useIsPending()
 
 	const [form, fields] = useForm({
-		id: CREATE_CATEGORY_KEY,
+		id: createCategoryActionIntent,
 		constraint: getZodConstraint(CreateCategorySchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
@@ -108,7 +108,7 @@ export function CreateCategoryDialog() {
 						form={form.id}
 						type="submit"
 						name="intent"
-						value={CREATE_CATEGORY_KEY}
+						value={createCategoryActionIntent}
 						disabled={isPending}
 						status={isPending ? 'pending' : 'idle'}
 						iconName="check"

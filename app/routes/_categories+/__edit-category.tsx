@@ -28,10 +28,10 @@ import {
 	CODE_MIN,
 } from './__new-category.tsx'
 
-export const EDIT_CATEGORY_KEY = 'edit-category'
+export const editCategoryActionIntent = 'edit-category'
 
 export const EditCategorySchema = z.object({
-	intent: z.literal(EDIT_CATEGORY_KEY),
+	intent: z.literal(editCategoryActionIntent),
 	description: z
 		.string({
 			required_error: 'Campo obligatorio',
@@ -52,14 +52,14 @@ export const EditCategorySchema = z.object({
 })
 
 export function EditCategory({ id }: { id: string }) {
-	const fetcher = useFetcher<typeof action>({ key: EDIT_CATEGORY_KEY })
+	const fetcher = useFetcher<typeof action>({ key: editCategoryActionIntent })
 	const { category: categoryData } = useLoaderData<typeof loader>()
 	const isPending = fetcher.state !== 'idle'
 
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: EDIT_CATEGORY_KEY,
+		id: editCategoryActionIntent,
 		constraint: getZodConstraint(EditCategorySchema),
 		lastResult: fetcher.data?.result,
 		onValidate({ formData }) {
@@ -82,7 +82,7 @@ export function EditCategory({ id }: { id: string }) {
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<AlertDialogTrigger asChild>
-				<Button size="sm" variant="outline" className="h-8 gap-1">
+				<Button size="sm" variant="ghost" className="h-8 gap-1">
 					<Icon name="update" className="h-3.5 w-3.5" />
 					<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
 						Editar categoría
@@ -136,7 +136,7 @@ export function EditCategory({ id }: { id: string }) {
 						form={form.id}
 						type="submit"
 						name="intent"
-						value={EDIT_CATEGORY_KEY}
+						value={editCategoryActionIntent}
 						disabled={isPending}
 						status={isPending ? 'pending' : 'idle'}
 						iconName="check"

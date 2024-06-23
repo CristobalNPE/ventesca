@@ -41,12 +41,12 @@ import { userHasRole, useUser } from '#app/utils/user.ts'
 import { ItemDetailsSheet } from '../inventory_+/product-sheet.tsx'
 import { OrderStatus } from '../order+/_types/order-status.ts'
 import {
-	DELETE_CATEGORY_KEY,
+	deleteCategoryActionIntent,
 	DeleteCategory,
 	DeleteCategorySchema,
 } from './__delete-category.tsx'
 import {
-	EDIT_CATEGORY_KEY,
+	editCategoryActionIntent,
 	EditCategory,
 	EditCategorySchema,
 } from './__edit-category.tsx'
@@ -102,11 +102,11 @@ export async function action({ request }: ActionFunctionArgs) {
 	invariantResponse(intent, 'Intent should be defined.')
 
 	switch (intent) {
-		case DELETE_CATEGORY_KEY: {
-			return await handleDeleteCategory(formData)
+		case deleteCategoryActionIntent: {
+			return await deleteCategoryAction(formData)
 		}
-		case EDIT_CATEGORY_KEY: {
-			return await handleEditCategory(formData, businessId)
+		case editCategoryActionIntent: {
+			return await editCategoryAction(formData, businessId)
 		}
 	}
 }
@@ -293,7 +293,7 @@ export default function CategoryRoute() {
 
 function ChangeItemsCategory() {
 	return (
-		<Button asChild size="sm" variant="outline" className="h-8 gap-1">
+		<Button asChild size="sm" variant="ghost" className="h-8 gap-1">
 			<Link target="_blank" reloadDocument to={``}>
 				<Icon name="update" className="h-3.5 w-3.5" />
 				<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
@@ -370,7 +370,7 @@ async function getMostSoldProductInCategoryData(
 	return { ...mostSoldProduct, quantitySoldPreviousWeek }
 }
 
-async function handleDeleteCategory(formData: FormData) {
+async function deleteCategoryAction(formData: FormData) {
 	const submission = parseWithZod(formData, {
 		schema: DeleteCategorySchema,
 	})
@@ -400,7 +400,7 @@ async function handleDeleteCategory(formData: FormData) {
 	})
 }
 
-async function handleEditCategory(formData: FormData, businessId: string) {
+async function editCategoryAction(formData: FormData, businessId: string) {
 	const submission = await parseWithZod(formData, {
 		schema: EditCategorySchema.superRefine(async (data, ctx) => {
 			const categoryByCode = await prisma.category.findFirst({

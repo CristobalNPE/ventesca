@@ -19,10 +19,10 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_categories+/categories.$categoryId.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
 
-export const DELETE_CATEGORY_KEY = 'delete-category'
+export const deleteCategoryActionIntent = 'delete-category'
 
 export const DeleteCategorySchema = z.object({
-	intent: z.literal(DELETE_CATEGORY_KEY),
+	intent: z.literal(deleteCategoryActionIntent),
 	categoryId: z.string(),
 })
 
@@ -39,14 +39,14 @@ export function DeleteCategory({
 		formAction: `/categories/${id}`,
 	})
 	const [form] = useForm({
-		id: DELETE_CATEGORY_KEY,
+		id: deleteCategoryActionIntent,
 		lastResult: actionData?.result,
 	})
 
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size="sm" variant="outline" className="h-8 gap-1">
+				<Button size="sm" variant="ghost" className="h-8 gap-1">
 					<Icon name="trash" className="h-3.5 w-3.5" />
 					<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
 						Eliminar categoría
@@ -82,7 +82,7 @@ export function DeleteCategory({
 						<StatusButton
 							type="submit"
 							name="intent"
-							value={DELETE_CATEGORY_KEY}
+							value={deleteCategoryActionIntent}
 							variant="destructive"
 							status={isPending ? 'pending' : form.status ?? 'idle'}
 							disabled={isPending}
