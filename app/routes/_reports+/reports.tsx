@@ -168,6 +168,9 @@ export default function OrderReportsRoute() {
 	const { orders, numberOfOrders, businessSellers, weekEarnings, dayEarnings } =
 		useLoaderData<typeof loader>()
 
+	const user = useUser()
+	const isAdmin = userHasRole(user, 'Administrador')
+
 	const [searchParams, setSearchParams] = useSearchParams()
 	const periodFilter = searchParams.get(periodParam)
 
@@ -346,24 +349,26 @@ export default function OrderReportsRoute() {
 									</DropdownMenuCheckboxItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
-							<Button
-								asChild
-								variant="outline"
-								size="sm"
-								className="h-7 gap-1 text-sm"
-							>
-								<LinkWithParams
-									preserveSearch
-									target="_blank"
-									reloadDocument
-									to={`/reports/orders-report`}
+							{isAdmin ? (
+								<Button
+									asChild
+									variant="outline"
+									size="sm"
+									className="h-7 gap-1 text-sm"
 								>
-									<span className="flex gap-1 lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-										<Icon name="file-text" className="h-3.5 w-3.5" />
-										<span className="sr-only sm:not-sr-only">Exportar</span>
-									</span>
-								</LinkWithParams>
-							</Button>
+									<LinkWithParams
+										preserveSearch
+										target="_blank"
+										reloadDocument
+										to={`/reports/orders-report`}
+									>
+										<span className="flex gap-1 lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+											<Icon name="file-text" className="h-3.5 w-3.5" />
+											<span className="sr-only sm:not-sr-only">Exportar</span>
+										</span>
+									</LinkWithParams>
+								</Button>
+							) : null}
 						</div>
 					</div>
 					<OrderReportsCard orders={orders} totalOrders={numberOfOrders} />
