@@ -1,13 +1,13 @@
+import { Button } from '#app/components/ui/button.tsx'
 import { invariantResponse } from '@epic-web/invariant'
 import {
 	ActionFunctionArgs,
 	json,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { Link, MetaFunction, useLoaderData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Button } from '#app/components/ui/button.tsx'
 
 import {
 	Card,
@@ -17,16 +17,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { Separator } from '#app/components/ui/separator.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { productOrderTypeBgColors } from '../order+/_constants/productOrderTypesColors.ts'
-import { OrderStatus } from '../order+/_types/order-status.ts'
-import { ProductOrderType } from '../order+/_types/productOrderType.ts'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -34,16 +24,27 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.js'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
+import { Separator } from '#app/components/ui/separator.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { productOrderTypeBgColors } from '../order+/_constants/productOrderTypesColors.ts'
+import { OrderStatus } from '../order+/_types/order-status.ts'
+import { ProductOrderType } from '../order+/_types/productOrderType.ts'
 
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { userHasRole, useUser } from '#app/utils/user.ts'
+import { parseWithZod } from '@conform-to/zod'
 import {
 	DeleteOrder,
 	deleteOrderActionIntent,
 	DeleteOrderSchema,
 } from './__delete-order.tsx'
-import { userHasRole, useUser } from '#app/utils/user.ts'
-import { parseWithZod } from '@conform-to/zod'
-import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -318,4 +319,26 @@ async function deleteOrderAction(formData: FormData) {
 		title: 'Transacción eliminada',
 		description: `Transacción ID [${order.id}] ha sido eliminada permanentemente.`,
 	})
+}
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	const orderId = data ? data.orderReport.id.slice(-6).toUpperCase() : ''
+
+	return [
+		{
+			title: `Ventesca | Transacción ${orderId}`,
+		},
+	]
+}
+
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => (
+					<p>Transacción con ID "{params.reportId?.toUpperCase()}" no existe</p>
+				),
+			}}
+		/>
+	)
 }
