@@ -59,6 +59,7 @@ import {
 	startOfYear,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { Prisma } from '@prisma/client'
 
 import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
 
@@ -106,7 +107,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const isAdmin = userRoles.map(role => role.name).includes('Administrador')
 
-	const filters = {
+	const filters: Prisma.OrderWhereInput = {
 		businessId,
 		...(startDate &&
 			endDate && { completedAt: { gte: startDate, lte: endDate } }),
