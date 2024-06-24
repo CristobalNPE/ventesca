@@ -8,7 +8,7 @@ import {
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { Order } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
-import { Form, Link, useActionData } from '@remix-run/react'
+import { Form, useActionData } from '@remix-run/react'
 import { z } from 'zod'
 
 import { ErrorList, Field } from '#app/components/forms.tsx'
@@ -25,6 +25,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
 
 import { Icon } from '#app/components/ui/icon.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import {
 	Select,
 	SelectContent,
@@ -42,7 +43,6 @@ import {
 	PaymentMethodSchema,
 } from '../order+/_types/payment-method.ts'
 import { action } from './__order-editor.server.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 
 export const OrderReportEditSchema = z.object({
 	id: z.string().optional(),
@@ -83,7 +83,7 @@ export function OrderEditor({
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
-						{order ? 'Editar Proveedor' : 'Registro de nuevo proveedor'}
+						Modificar transacción
 					</CardTitle>
 					<CardDescription>
 						Modificar los datos de la transacción.
