@@ -82,6 +82,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			totalDiscount: true,
 			paymentMethod: true,
 			completedAt: true,
+			subtotal: true,
 		},
 
 		orderBy: { completedAt: 'desc' },
@@ -223,7 +224,7 @@ const OrdersReport = ({
 	startDate: Date | null
 	endDate: Date | null
 }) => (
-	<Document  title={`${businessName} - Reporte Transacciones Finalizadas`}>
+	<Document title={`${businessName} - Reporte Transacciones Finalizadas`}>
 		<Page size="A4" style={styles.page}>
 			<View style={styles.title}>
 				<Text style={styles.titleText}>{businessName}</Text>
@@ -282,10 +283,10 @@ const OrdersReport = ({
 					</View>
 
 					<View style={styles.tableCol}>
-						<Text style={styles.tableCell}>D. Directo</Text>
+						<Text style={styles.tableCell}>Subtotal</Text>
 					</View>
 					<View style={styles.tableCol}>
-						<Text style={styles.tableCell}>D. Total</Text>
+						<Text style={styles.tableCell}>Descuento</Text>
 					</View>
 					<View style={styles.tableCol}>
 						<Text style={styles.tableCell}>Total</Text>
@@ -313,12 +314,12 @@ const OrdersReport = ({
 
 						<View style={styles.tableCol}>
 							<Text style={styles.tableCell}>
-								{formatCurrency(order.directDiscount)}
+								{formatCurrency(order.subtotal)}
 							</Text>
 						</View>
 						<View style={styles.tableCol}>
 							<Text style={styles.tableCell}>
-								{formatCurrency(order.totalDiscount)}
+								{formatCurrency(order.totalDiscount + order.directDiscount)}
 							</Text>
 						</View>
 						<View style={styles.tableCol}>
