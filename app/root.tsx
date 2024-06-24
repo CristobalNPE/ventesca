@@ -1,8 +1,19 @@
 import {
-	type LoaderFunctionArgs,
+	Icon,
+	href as iconsHref,
+	type IconName,
+} from '#app/components/ui/icon.tsx'
+import {
+	cn,
+	combineHeaders,
+	getDomainUrl,
+	getUserImgSrc,
+} from '#app/utils/misc.tsx'
+import {
 	json,
 	type HeadersFunction,
 	type LinksFunction,
+	type LoaderFunctionArgs,
 	type MetaFunction,
 } from '@remix-run/node'
 import {
@@ -20,18 +31,6 @@ import {
 import { withSentry } from '@sentry/remix'
 import { useRef } from 'react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
-import { z } from 'zod'
-import {
-	Icon,
-	href as iconsHref,
-	type IconName,
-} from '#app/components/ui/icon.tsx'
-import {
-	cn,
-	combineHeaders,
-	getDomainUrl,
-	getUserImgSrc,
-} from '#app/utils/misc.tsx'
 
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
@@ -69,13 +68,13 @@ import { prisma } from './utils/db.server.ts'
 import { getEnv } from './utils/env.server.ts'
 import { honeypot } from './utils/honeypot.server.ts'
 
+import VentescaLogoDark from './routes/_marketing+/logos/ventesca-dark.png'
+import VentescaLogoLight from './routes/_marketing+/logos/ventesca-light.png'
 import { useNonce } from './utils/nonce-provider.ts'
 import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
-import VentescaLogoLight from './routes/_marketing+/logos/ventesca-light.png'
-import VentescaLogoDark from './routes/_marketing+/logos/ventesca-dark.png'
 
 type NavigationLink = {
 	name: string
