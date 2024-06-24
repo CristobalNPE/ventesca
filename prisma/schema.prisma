@@ -131,16 +131,21 @@ model Discount {
 }
 
 model Business {
-  id         String     @id @default(cuid())
-  name       String
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  products   Product[]
-  orders     Order[]
-  categories Category[]
-  suppliers  Supplier[]
-  discounts  Discount[]
-  users      User[]
+  id            String             @id @default(cuid())
+  name          String
+  address       String?
+  phone         String?
+  email         String?
+  thanksMessage String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  products      Product[]
+  orders        Order[]
+  categories    Category[]
+  suppliers     Supplier[]
+  discounts     Discount[]
+  users         User[]
+  image         BusinessLogoImage?
 }
 
 model User {
@@ -173,6 +178,17 @@ model UserImage {
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId      String   @unique
+}
+
+model BusinessLogoImage {
+  id          String   @id @default(cuid())
+  altText     String?
+  contentType String
+  blob        Bytes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  businessId  String   @unique
 }
 
 model Password {
