@@ -4,7 +4,15 @@ import {
 	type SerializeFrom,
 	json,
 } from '@remix-run/node'
-import { NavLink, Outlet, useLoaderData, useLocation } from '@remix-run/react'
+import {
+	Link,
+	MetaFunction,
+	NavLink,
+	Outlet,
+	useLoaderData,
+	useLocation,
+	useSearchParams,
+} from '@remix-run/react'
 import {
 	endOfMonth,
 	endOfToday,
@@ -34,7 +42,11 @@ import {
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuLabel,
+	DropdownMenuPortal,
 	DropdownMenuSeparator,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -51,28 +63,32 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useUser, userHasRole } from '#app/utils/user.ts'
 
-import { OrderStatus } from '../order+/_types/order-status.ts'
+import { allOrderStatuses, OrderStatus } from '../order+/_types/order-status.ts'
 
-enum TimePeriod {
+export enum TimePeriod {
 	TODAY = 'today',
 	LAST_WEEK = 'last-week',
 	LAST_MONTH = 'last-month',
 	LAST_YEAR = 'last-year',
 }
 
-const allTimePeriods = [
+export const allTimePeriods = [
 	TimePeriod.TODAY,
 	TimePeriod.LAST_WEEK,
 	TimePeriod.LAST_MONTH,
 	TimePeriod.LAST_YEAR,
 ] as const
 
-const timePeriodNames: Record<TimePeriod, string> = {
+export const timePeriodNames: Record<TimePeriod, string> = {
 	[TimePeriod.TODAY]: 'Hoy',
 	[TimePeriod.LAST_WEEK]: 'Semana',
 	[TimePeriod.LAST_MONTH]: 'Mes',
 	[TimePeriod.LAST_YEAR]: 'Año',
 }
+
+const statusParam = 'status'
+const periodParam = 'period'
+const sellerParam = 'seller'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -80,13 +96,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url)
 	const $top = Number(url.searchParams.get('$top')) || 10
 	const $skip = Number(url.searchParams.get('$skip')) || 0
-	const period = url.searchParams.get('period')?.toLowerCase()
+	const periodFilter = url.searchParams.get(periodParam)?.toLowerCase()
+	const statusFilter = url.searchParams.get(statusParam)
+	const sellerFilter = url.searchParams.get(sellerParam)
 
 	let startDate: Date
 	let endDate: Date
 
 	// Adjust date range based on the selected filter
-	switch (period) {
+	switch (periodFilter) {
 		case TimePeriod.TODAY:
 			startDate = startOfToday()
 			endDate = endOfToday()
@@ -110,9 +128,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			break
 	}
 
-	console.log(`Start Date: ${startDate}`)
-	console.log(`End Date: ${endDate}`)
-
 	const { roles: userRoles } = await prisma.user.findFirstOrThrow({
 		where: { id: userId },
 		select: { roles: true },
@@ -127,6 +142,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			// Add date filter if startDate and endDate are defined
 			...(startDate &&
 				endDate && { completedAt: { gte: startDate, lte: endDate } }),
+			...(statusFilter && { status: statusFilter }),
+			...(sellerFilter && { sellerId: sellerFilter }),
 		},
 	})
 
@@ -147,22 +164,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			// Add date filter if startDate and endDate are defined
 			...(startDate &&
 				endDate && { completedAt: { gte: startDate, lte: endDate } }),
+			...(statusFilter && { status: statusFilter }),
+			...(sellerFilter && { sellerId: sellerFilter }),
 		},
 		orderBy: { completedAt: 'desc' },
 	})
 
-	const [numberOfOrders, orders] = await Promise.all([
+	const businessSellersPromise = prisma.user.findMany({
+		where: { businessId, isDeleted: false },
+		select: { id: true, name: true },
+	})
+
+	const [numberOfOrders, orders, businessSellers] = await Promise.all([
 		numberOfOrdersPromise,
 		ordersPromise,
+		businessSellersPromise,
 	])
 
-	return json({ orders, numberOfOrders })
+	return json({ orders, numberOfOrders, businessSellers })
 }
 
 export default function OrderReportsRoute() {
-	const { orders, numberOfOrders } = useLoaderData<typeof loader>()
-	const { search } = useLocation()
-	const periodParam = new URLSearchParams(search).get('period')
+	const { orders, numberOfOrders, businessSellers } =
+		useLoaderData<typeof loader>()
+
+	const [searchParams, setSearchParams] = useSearchParams()
+	const periodFilter = searchParams.get(periodParam)
 
 	return (
 		<main className=" h-full">
@@ -206,21 +233,24 @@ export default function OrderReportsRoute() {
 					<div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
 						<div className="flex h-fit w-fit items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
 							{allTimePeriods.map((period, i) => (
-								<NavLink
+								<div
+									onClick={() => {
+										setSearchParams(prev => {
+											prev.set(periodParam, period)
+											return prev
+										})
+									}}
+									className={cn(
+										'flex h-7 w-[5rem] cursor-pointer items-center justify-center rounded-sm text-sm font-semibold',
+										periodFilter === period && 'bg-background',
+										!periodFilter &&
+											period === TimePeriod.TODAY &&
+											'bg-background',
+									)}
 									key={i}
-									className={({ isActive }) =>
-										cn(
-											'flex h-7 w-[5rem] items-center justify-center rounded-sm text-sm font-semibold',
-											isActive && periodParam === period && 'bg-background',
-											!periodParam &&
-												period === TimePeriod.TODAY &&
-												'bg-background',
-										)
-									}
-									to={`/reports/?period=${period}`}
 								>
 									{timePeriodNames[period]}
-								</NavLink>
+								</div>
 							))}
 						</div>
 						<div className="flex gap-4">
@@ -236,18 +266,84 @@ export default function OrderReportsRoute() {
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end">
-									<DropdownMenuLabel>Filter by</DropdownMenuLabel>
+									<DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
 									<DropdownMenuSeparator />
-									<DropdownMenuCheckboxItem checked>
-										Fulfilled
+									<DropdownMenuSub>
+										<DropdownMenuSubTrigger>Por estado</DropdownMenuSubTrigger>
+										<DropdownMenuPortal>
+											<DropdownMenuSubContent>
+												{allOrderStatuses.map((orderStatus, index) => (
+													<DropdownMenuCheckboxItem
+														key={index}
+														checked={
+															searchParams.get(statusParam) === orderStatus
+														}
+														onClick={() => {
+															setSearchParams(prev => {
+																prev.set(statusParam, orderStatus)
+																return prev
+															})
+														}}
+													>
+														{orderStatus}
+													</DropdownMenuCheckboxItem>
+												))}
+											</DropdownMenuSubContent>
+										</DropdownMenuPortal>
+									</DropdownMenuSub>
+									<DropdownMenuSub>
+										<DropdownMenuSubTrigger>
+											Por vendedor
+										</DropdownMenuSubTrigger>
+										<DropdownMenuPortal>
+											<DropdownMenuSubContent>
+												{businessSellers.map(businessSeller => (
+													<DropdownMenuCheckboxItem
+														key={businessSeller.id}
+														checked={
+															searchParams.get(sellerParam) ===
+															businessSeller.id
+														}
+														onClick={() => {
+															setSearchParams(prev => {
+																prev.set(sellerParam, businessSeller.id)
+																return prev
+															})
+														}}
+													>
+														{businessSeller.name}
+													</DropdownMenuCheckboxItem>
+												))}
+											</DropdownMenuSubContent>
+										</DropdownMenuPortal>
+									</DropdownMenuSub>
+									<DropdownMenuSeparator />
+									<DropdownMenuCheckboxItem
+										onClick={() => {
+											setSearchParams('')
+										}}
+									>
+										Quitar filtros
 									</DropdownMenuCheckboxItem>
-									<DropdownMenuCheckboxItem>Declined</DropdownMenuCheckboxItem>
-									<DropdownMenuCheckboxItem>Refunded</DropdownMenuCheckboxItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
-							<Button variant="outline" size="sm" className="h-7 gap-1 text-sm">
-								<Icon name="file-text" className="h-3.5 w-3.5" />
-								<span className="sr-only sm:not-sr-only">Exportar</span>
+							<Button
+								asChild
+								variant="outline"
+								size="sm"
+								className="h-7 gap-1 text-sm"
+							>
+								<LinkWithParams
+									preserveSearch
+									target="_blank"
+									reloadDocument
+									to={`/reports/orders-report`}
+								>
+									<span className="flex gap-1 lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+										<Icon name="file-text" className="h-3.5 w-3.5" />
+										<span className="sr-only sm:not-sr-only">Exportar</span>
+									</span>
+								</LinkWithParams>
 							</Button>
 						</div>
 					</div>
@@ -362,4 +458,8 @@ function OrderReportsCard({
 			</CardContent>
 		</Card>
 	)
+}
+
+export const meta: MetaFunction = () => {
+	return [{ title: 'Ventesca | Reportes de transacción' }]
 }
