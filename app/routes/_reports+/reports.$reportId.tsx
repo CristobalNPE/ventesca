@@ -292,24 +292,26 @@ async function deleteOrderAction(formData: FormData) {
 	const { orderId } = submission.value
 
 	const order = await prisma.order.findUnique({
-		select: { id: true, productOrders: true },
+		select: { id: true, productOrders: true, status: true },
 		where: { id: orderId },
 	})
 
 	invariantResponse(order, 'Order not found', { status: 404 })
 
-	//restore stock
-	for (let productOrder of order.productOrders) {
-		if (productOrder.type === ProductOrderType.RETURN) {
-			await prisma.product.update({
-				where: { id: productOrder.productId },
-				data: { stock: { decrement: productOrder.quantity } },
-			})
-		} else {
-			await prisma.product.update({
-				where: { id: productOrder.productId },
-				data: { stock: { increment: productOrder.quantity } },
-			})
+	//restore stock only if deleting a finished order
+	if (order.status === OrderStatus.FINISHED) {
+		for (let productOrder of order.productOrders) {
+			if (productOrder.type === ProductOrderType.RETURN) {
+				await prisma.product.update({
+					where: { id: productOrder.productId },
+					data: { stock: { decrement: productOrder.quantity } },
+				})
+			} else {
+				await prisma.product.update({
+					where: { id: productOrder.productId },
+					data: { stock: { increment: productOrder.quantity } },
+				})
+			}
 		}
 	}
 
