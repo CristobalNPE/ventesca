@@ -75,6 +75,7 @@ import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
+import { Separator } from './components/ui/separator.tsx'
 
 type NavigationLink = {
 	name: string
@@ -352,19 +353,23 @@ function UserDropdown() {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button asChild variant="ghost">
+				<Button
+					className="flex justify-start rounded p-1 "
+					asChild
+					variant="ghost"
+				>
 					<Link
 						to={`/users/${user.username}`}
 						// this is for progressive enhancement
 						onClick={e => e.preventDefault()}
-						className="flex items-center  gap-2"
+						className="flex w-full min-w-[3rem] justify-center 2xl:justify-normal ml-1 2xl:ml-0 items-center gap-3   "
 					>
 						<img
-							className="h-8 w-8 rounded-full object-cover"
+							className="h-9 w-9  rounded-full  bg-secondary object-cover ring-2 ring-primary/10"
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
-						<div className="flex flex-col sm:hidden md:flex">
+						<div className=" hidden flex-col 2xl:flex">
 							<span className="text-body-sm font-bold">
 								{user.name ?? user.username}
 							</span>
@@ -413,7 +418,7 @@ function UserDropdown() {
 
 function DefaultLogo() {
 	return (
-		<div className="flex h-[3.8rem] w-[3.8rem] flex-shrink-0 overflow-clip rounded-md  opacity-90 drop-shadow-md">
+		<div className="flex  h-[3rem] w-[3rem] flex-shrink-0 overflow-clip rounded-md opacity-90 drop-shadow-md  2xl:h-[3.8rem] 2xl:w-[3.8rem]">
 			<img
 				className="hidden dark:flex"
 				src={VentescaLogoLight}
@@ -446,15 +451,15 @@ function SideBar({
 
 	return (
 		<>
-			<div className="relative hidden w-[17.5rem]  flex-col  bg-background px-4 pb-8 pt-3 xl:flex ">
+			<div className="relative hidden w-[3.5rem] flex-col  bg-background  px-4 pb-8 pt-3 lg:flex 2xl:w-[17.5rem] ">
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<div className="flex select-none items-center gap-2 ">
+							<div className="ml-2 flex select-none items-center justify-center gap-2 2xl:ml-0 2xl:justify-normal ">
 								<DefaultLogo />
 								<h1
 									className={cn(
-										'text-2xl font-black uppercase tracking-tight',
+										'hidden text-2xl font-black uppercase tracking-tight 2xl:flex',
 										businessNameIsBig && 'text-xl',
 										businessNameIsBigger && 'text-lg',
 									)}
@@ -468,14 +473,14 @@ function SideBar({
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>
-				<nav className="mt-8 flex h-full flex-col  justify-between gap-8">
-					<div className="flex flex-col gap-2">
+				<nav className="mt-8 flex h-full  flex-col items-center justify-between gap-8 2xl:items-start">
+					<div className="flex w-full flex-col items-center gap-3 2xl:items-stretch 2xl:gap-2">
 						{navigationLinks.map(link => {
 							return (
 								<NavLink
 									className={({ isActive }) =>
 										cn(
-											'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+											'text-md ml-1 flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground ',
 											isActive &&
 												' bg-muted-foreground/20 text-foreground  brightness-110 hover:text-foreground dark:bg-accent',
 										)
@@ -483,8 +488,22 @@ function SideBar({
 									key={link.name}
 									to={link.path}
 								>
-									<Icon size="md" className="" name={link.icon} />
-									<span>{link.name}</span>
+									<TooltipProvider>
+										<Tooltip delayDuration={300}>
+											<TooltipTrigger asChild>
+												<div className="flex gap-3">
+													<Icon
+														className="shrink-0 text-2xl 2xl:text-xl"
+														name={link.icon}
+													/>
+													<span className="hidden 2xl:flex">{link.name}</span>
+												</div>
+											</TooltipTrigger>
+											<TooltipContent side="right" className="flex 2xl:hidden">
+												<p>{link.name}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								</NavLink>
 							)
 						})}
@@ -495,7 +514,7 @@ function SideBar({
 								<NavLink
 									className={({ isActive }) =>
 										cn(
-											'text-md flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground',
+											'text-md ml-1 flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground 2xl:ml-0',
 											isActive &&
 												'bg-foreground/20 text-foreground hover:text-foreground',
 										)
@@ -503,13 +522,17 @@ function SideBar({
 									key={link.name}
 									to={link.path}
 								>
-									<Icon size="md" className="" name={link.icon} />
-									<span>{link.name}</span>
+									<Icon
+										className="shrink-0 text-2xl 2xl:text-xl"
+										name={link.icon}
+									/>
+									<span className="hidden 2xl:flex">{link.name}</span>
 								</NavLink>
 							)
 						})}
 					</div>
 					<ThemeSwitch userPreference={themeUserPreference} />
+					
 					<UserDropdown />
 				</nav>
 			</div>
@@ -519,7 +542,7 @@ function SideBar({
 					<Button
 						size={'icon'}
 						variant={'default'}
-						className="absolute left-6 top-6 opacity-50 ring-4 xl:hidden"
+						className="absolute left-6 top-6 opacity-50 ring-4 lg:hidden"
 					>
 						<Icon className="text-2xl" name="layout-sidebar-left-expand" />
 						<span className="sr-only">Expandir Menu</span>
@@ -573,6 +596,7 @@ function SideBar({
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 						</div> */}
 					</nav>
+
 					<UserDropdown />
 				</SheetContent>
 			</Sheet>
