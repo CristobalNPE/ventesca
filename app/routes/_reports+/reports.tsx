@@ -1,30 +1,3 @@
-import { type Order } from '@prisma/client'
-import {
-	type LoaderFunctionArgs,
-	type SerializeFrom,
-	json,
-} from '@remix-run/node'
-import {
-	Link,
-	MetaFunction,
-	NavLink,
-	Outlet,
-	useLoaderData,
-	useLocation,
-	useSearchParams,
-} from '@remix-run/react'
-import {
-	endOfMonth,
-	endOfToday,
-	endOfWeek,
-	endOfYear,
-	format,
-	startOfMonth,
-	startOfToday,
-	startOfWeek,
-	startOfYear,
-} from 'date-fns'
-import { es } from 'date-fns/locale'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -62,8 +35,32 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useUser, userHasRole } from '#app/utils/user.ts'
+import { type Order } from '@prisma/client'
+import {
+	type LoaderFunctionArgs,
+	type SerializeFrom,
+	json,
+} from '@remix-run/node'
+import {
+	MetaFunction,
+	Outlet,
+	useLoaderData,
+	useSearchParams
+} from '@remix-run/react'
+import {
+	endOfMonth,
+	endOfToday,
+	endOfWeek,
+	endOfYear,
+	format,
+	startOfMonth,
+	startOfToday,
+	startOfWeek,
+	startOfYear,
+} from 'date-fns'
+import { es } from 'date-fns/locale'
 
-import { allOrderStatuses, OrderStatus } from '../order+/_types/order-status.ts'
+import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
 
 export enum TimePeriod {
 	TODAY = 'today',
