@@ -4,7 +4,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { invariantResponse } from '@epic-web/invariant'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { MetaFunction, useLoaderData } from '@remix-run/react'
 import { OrderEditor } from './__order-editor'
 import { action } from './__order-editor.server'
 
@@ -35,12 +35,23 @@ export default function ProviderEdit() {
 
 	return <OrderEditor order={order} />
 }
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	const orderId = data ? data.order.id.slice(-6).toUpperCase() : ''
+
+	return [
+		{
+			title: `Ventesca | Modificar Transacción ${orderId}`,
+		},
+	]
+}
+
 export function ErrorBoundary() {
 	return (
 		<GeneralErrorBoundary
 			statusHandlers={{
 				404: ({ params }) => (
-					<p>Transacción con ID "{params.reportId}" no existe</p>
+					<p>Transacción con ID "{params.reportId?.toUpperCase()}" no existe</p>
 				),
 				403: () => <p>Sin autorización.</p>,
 			}}
