@@ -45,7 +45,7 @@ import {
 	MetaFunction,
 	Outlet,
 	useLoaderData,
-	useSearchParams
+	useSearchParams,
 } from '@remix-run/react'
 import {
 	endOfMonth,
@@ -97,33 +97,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const statusFilter = url.searchParams.get(statusParam)
 	const sellerFilter = url.searchParams.get(sellerParam)
 
-	let startDate: Date
-	let endDate: Date
-
-	// Adjust date range based on the selected filter
-	switch (periodFilter) {
-		case TimePeriod.TODAY:
-			startDate = startOfToday()
-			endDate = endOfToday()
-			break
-		case TimePeriod.LAST_WEEK:
-			startDate = startOfWeek(new Date(), { weekStartsOn: 1 })
-			endDate = endOfWeek(new Date(), { weekStartsOn: 1 })
-			break
-		case TimePeriod.LAST_MONTH:
-			startDate = startOfMonth(new Date())
-			endDate = endOfMonth(new Date())
-			break
-		case TimePeriod.LAST_YEAR:
-			startDate = startOfYear(new Date())
-			endDate = endOfYear(new Date())
-			break
-		default:
-			//fetch only last day if no range given
-			startDate = startOfToday()
-			endDate = endOfToday()
-			break
-	}
+	const { startDate, endDate } = getDateRangeByParam(periodFilter)
 
 	const { roles: userRoles } = await prisma.user.findFirstOrThrow({
 		where: { id: userId },
@@ -132,16 +106,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const isAdmin = userRoles.map(role => role.name).includes('Administrador')
 
+	const filters = {
+		businessId,
+		...(startDate &&
+			endDate && { completedAt: { gte: startDate, lte: endDate } }),
+		...(statusFilter && { status: statusFilter }),
+		...(sellerFilter && { sellerId: sellerFilter }),
+		...(!isAdmin && { sellerId: userId }),
+	}
+
 	const numberOfOrdersPromise = prisma.order.count({
-		where: {
-			businessId,
-			...(!isAdmin && { sellerId: userId }),
-			// Add date filter if startDate and endDate are defined
-			...(startDate &&
-				endDate && { completedAt: { gte: startDate, lte: endDate } }),
-			...(statusFilter && { status: statusFilter }),
-			...(sellerFilter && { sellerId: sellerFilter }),
-		},
+		where: filters,
 	})
 
 	const ordersPromise = prisma.order.findMany({
@@ -155,15 +130,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			total: true,
 			seller: { select: { name: true } },
 		},
-		where: {
-			businessId,
-			...(!isAdmin && { sellerId: userId }),
-			// Add date filter if startDate and endDate are defined
-			...(startDate &&
-				endDate && { completedAt: { gte: startDate, lte: endDate } }),
-			...(statusFilter && { status: statusFilter }),
-			...(sellerFilter && { sellerId: sellerFilter }),
-		},
+		where: filters,
 		orderBy: { completedAt: 'desc' },
 	})
 
@@ -455,6 +422,30 @@ function OrderReportsCard({
 			</CardContent>
 		</Card>
 	)
+}
+
+function getDateRangeByParam(param: string | undefined) {
+	switch (param) {
+		case TimePeriod.TODAY:
+			return { startDate: startOfToday(), endDate: endOfToday() }
+		case TimePeriod.LAST_WEEK:
+			return {
+				startDate: startOfWeek(new Date(), { weekStartsOn: 1 }),
+				endDate: endOfWeek(new Date(), { weekStartsOn: 1 }),
+			}
+		case TimePeriod.LAST_MONTH:
+			return {
+				startDate: startOfMonth(new Date()),
+				endDate: endOfMonth(new Date()),
+			}
+		case TimePeriod.LAST_YEAR:
+			return {
+				startDate: startOfYear(new Date()),
+				endDate: endOfYear(new Date()),
+			}
+		default:
+			return { startDate: startOfToday(), endDate: endOfToday() }
+	}
 }
 
 export const meta: MetaFunction = () => {
