@@ -59,7 +59,7 @@ import {
 	startOfWeek,
 	startOfYear,
 	startOfYesterday,
-	subWeeks
+	subWeeks,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -528,15 +528,8 @@ async function getLastTwoWeeksEarnings(businessId: string) {
 		select: { status: true, total: true },
 	})
 
-	const thisWeekEarnings = thisWeekOrders
-		.filter(order => order.status === OrderStatus.FINISHED)
-		.map(order => order.total)
-		.reduce((acc, orderTotal) => acc + orderTotal)
-
-	const previousWeekEarnings = previousWeekOrders
-		.filter(order => order.status === OrderStatus.FINISHED)
-		.map(order => order.total)
-		.reduce((acc, orderTotal) => acc + orderTotal)
+	const thisWeekEarnings = calculateTotalEarnings(thisWeekOrders)
+	const previousWeekEarnings = calculateTotalEarnings(previousWeekOrders)
 
 	return {
 		thisWeekEarnings,
@@ -570,15 +563,8 @@ async function getLastTwoDaysEarnings(businessId: string) {
 		select: { status: true, total: true },
 	})
 
-	const todaysEarnings = todaysOrders
-		.filter(order => order.status === OrderStatus.FINISHED)
-		.map(order => order.total)
-		.reduce((acc, orderTotal) => acc + orderTotal)
-
-	const yesterdaysEarnings = yesterdaysOrders
-		.filter(order => order.status === OrderStatus.FINISHED)
-		.map(order => order.total)
-		.reduce((acc, orderTotal) => acc + orderTotal)
+	const todaysEarnings = calculateTotalEarnings(todaysOrders)
+	const yesterdaysEarnings = calculateTotalEarnings(yesterdaysOrders)
 
 	return {
 		todaysEarnings,
@@ -601,6 +587,17 @@ function calculateEarningsComparison(current: number, previous: number) {
 	} else {
 		return Number((((current - previous) / previous) * 100).toFixed())
 	}
+}
+
+function calculateTotalEarnings(orders: Pick<Order, 'status' | 'total'>[]) {
+	const orderTotals = orders
+		.filter(order => order.status === OrderStatus.FINISHED)
+		.map(order => order.total)
+
+	if (orderTotals.length > 0) {
+		return orderTotals.reduce((acc, orderTotal) => acc + orderTotal, 0)
+	}
+	return 0
 }
 
 export const meta: MetaFunction = () => {
