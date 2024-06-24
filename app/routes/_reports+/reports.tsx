@@ -35,7 +35,7 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useUser, userHasRole } from '#app/utils/user.ts'
-import { type Order } from '@prisma/client'
+import { type Order, Prisma } from '@prisma/client'
 import {
 	type LoaderFunctionArgs,
 	type SerializeFrom,
@@ -52,14 +52,16 @@ import {
 	endOfToday,
 	endOfWeek,
 	endOfYear,
+	endOfYesterday,
 	format,
 	startOfMonth,
 	startOfToday,
 	startOfWeek,
 	startOfYear,
+	startOfYesterday,
+	subWeeks
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Prisma } from '@prisma/client'
 
 import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
 
@@ -116,6 +118,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		...(!isAdmin && { sellerId: userId }),
 	}
 
+	const weekEarningsPromise = getLastTwoWeeksEarnings(businessId)
+
+	const dayEarningsPromise = getLastTwoDaysEarnings(businessId)
+
 	const numberOfOrdersPromise = prisma.order.count({
 		where: filters,
 	})
@@ -140,17 +146,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		select: { id: true, name: true },
 	})
 
-	const [numberOfOrders, orders, businessSellers] = await Promise.all([
-		numberOfOrdersPromise,
-		ordersPromise,
-		businessSellersPromise,
-	])
+	const [numberOfOrders, orders, businessSellers, weekEarnings, dayEarnings] =
+		await Promise.all([
+			numberOfOrdersPromise,
+			ordersPromise,
+			businessSellersPromise,
+			weekEarningsPromise,
+			dayEarningsPromise,
+		])
 
-	return json({ orders, numberOfOrders, businessSellers })
+	return json({
+		orders,
+		numberOfOrders,
+		businessSellers,
+		weekEarnings,
+		dayEarnings,
+	})
 }
 
 export default function OrderReportsRoute() {
-	const { orders, numberOfOrders, businessSellers } =
+	const { orders, numberOfOrders, businessSellers, weekEarnings, dayEarnings } =
 		useLoaderData<typeof loader>()
 
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -168,30 +183,69 @@ export default function OrderReportsRoute() {
 					<div className="flex flex-col gap-4 lg:flex-row">
 						<Card className="w-full">
 							<CardHeader className="pb-2">
-								<CardDescription>This Week</CardDescription>
-								<CardTitle className="text-4xl">$1,329</CardTitle>
+								<CardDescription>Ingresos hoy</CardDescription>
+								<CardTitle className="flex items-center gap-4 text-4xl">
+									<span>{formatCurrency(dayEarnings.todaysEarnings)}</span>
+									{dayEarnings.isIncrease ? (
+										<Icon className="text-3xl" name="arrow-up" />
+									) : null}
+								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div className="text-xs text-muted-foreground">
-									+25% from last week
-								</div>
+								{dayEarnings.isIncrease ? (
+									<div className="text-xs text-muted-foreground">
+										+{dayEarnings.percentageDifference}% de ingresos respecto
+										ayer
+									</div>
+								) : (
+									<div className="text-xs text-muted-foreground">
+										{dayEarnings.percentageDifference}% de los ingresos de ayer
+									</div>
+								)}
 							</CardContent>
 							<CardFooter>
-								<Progress value={25} aria-label="25% increase" />
+								<Progress
+									value={dayEarnings.percentageDifference}
+									aria-label={
+										dayEarnings.isIncrease
+											? `${dayEarnings.percentageDifference}% incremento de ganancias`
+											: `${dayEarnings.percentageDifference}% de ganancias de ayer`
+									}
+								/>
 							</CardFooter>
 						</Card>
 						<Card className="w-full">
 							<CardHeader className="pb-2">
-								<CardDescription>This Week</CardDescription>
-								<CardTitle className="text-4xl">$1,329</CardTitle>
+								<CardDescription>Ingresos esta semana</CardDescription>
+								<CardTitle className="flex items-center gap-4 text-4xl">
+									<span>{formatCurrency(weekEarnings.thisWeekEarnings)} </span>
+									{weekEarnings.isIncrease ? (
+										<Icon className="text-3xl" name="arrow-up" />
+									) : null}
+								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div className="text-xs text-muted-foreground">
-									+25% from last week
-								</div>
+								{weekEarnings.isIncrease ? (
+									<div className="text-xs text-muted-foreground">
+										+{weekEarnings.percentageDifference}% de ingresos respecto
+										la semana pasada
+									</div>
+								) : (
+									<div className="text-xs text-muted-foreground">
+										{weekEarnings.percentageDifference}% de los ingresos de la
+										semana anterior
+									</div>
+								)}
 							</CardContent>
 							<CardFooter>
-								<Progress value={25} aria-label="25% increase" />
+								<Progress
+									value={weekEarnings.percentageDifference}
+									aria-label={
+										weekEarnings.isIncrease
+											? `${weekEarnings.percentageDifference}% incremento de ganancias`
+											: `${weekEarnings.percentageDifference}% de ganancias de la semana anterior`
+									}
+								/>
 							</CardFooter>
 						</Card>
 					</div>
@@ -446,6 +500,106 @@ function getDateRangeByParam(param: string | undefined) {
 			}
 		default:
 			return { startDate: startOfToday(), endDate: endOfToday() }
+	}
+}
+
+async function getLastTwoWeeksEarnings(businessId: string) {
+	const currentWeekStartDate = startOfWeek(new Date(), { weekStartsOn: 1 })
+	const currentWeekEndDate = endOfWeek(new Date(), { weekStartsOn: 1 })
+
+	const previousWeekDate = subWeeks(new Date(), 1)
+	const previousWeekStartDate = startOfWeek(previousWeekDate, {
+		weekStartsOn: 1,
+	})
+	const previousWeekEndDate = endOfWeek(previousWeekDate, { weekStartsOn: 1 })
+
+	const thisWeekOrders = await prisma.order.findMany({
+		where: {
+			businessId,
+			completedAt: { gte: currentWeekStartDate, lte: currentWeekEndDate },
+		},
+		select: { status: true, total: true },
+	})
+	const previousWeekOrders = await prisma.order.findMany({
+		where: {
+			businessId,
+			completedAt: { gte: previousWeekStartDate, lte: previousWeekEndDate },
+		},
+		select: { status: true, total: true },
+	})
+
+	const thisWeekEarnings = thisWeekOrders
+		.filter(order => order.status === OrderStatus.FINISHED)
+		.map(order => order.total)
+		.reduce((acc, orderTotal) => acc + orderTotal)
+
+	const previousWeekEarnings = previousWeekOrders
+		.filter(order => order.status === OrderStatus.FINISHED)
+		.map(order => order.total)
+		.reduce((acc, orderTotal) => acc + orderTotal)
+
+	return {
+		thisWeekEarnings,
+		previousWeekEarnings,
+		isIncrease: thisWeekEarnings > previousWeekEarnings,
+		percentageDifference: calculateEarningsComparison(
+			thisWeekEarnings,
+			previousWeekEarnings,
+		),
+	}
+}
+
+async function getLastTwoDaysEarnings(businessId: string) {
+	const currentDayStartDate = startOfToday()
+	const currentDayEndDate = endOfToday()
+	const previousDayStartDate = startOfYesterday()
+	const previousDayEndDate = endOfYesterday()
+
+	const todaysOrders = await prisma.order.findMany({
+		where: {
+			businessId,
+			completedAt: { gte: currentDayStartDate, lte: currentDayEndDate },
+		},
+		select: { status: true, total: true },
+	})
+	const yesterdaysOrders = await prisma.order.findMany({
+		where: {
+			businessId,
+			completedAt: { gte: previousDayStartDate, lte: previousDayEndDate },
+		},
+		select: { status: true, total: true },
+	})
+
+	const todaysEarnings = todaysOrders
+		.filter(order => order.status === OrderStatus.FINISHED)
+		.map(order => order.total)
+		.reduce((acc, orderTotal) => acc + orderTotal)
+
+	const yesterdaysEarnings = yesterdaysOrders
+		.filter(order => order.status === OrderStatus.FINISHED)
+		.map(order => order.total)
+		.reduce((acc, orderTotal) => acc + orderTotal)
+
+	return {
+		todaysEarnings,
+		yesterdaysEarnings,
+		isIncrease: todaysEarnings > yesterdaysEarnings,
+		percentageDifference: calculateEarningsComparison(
+			todaysEarnings,
+			yesterdaysEarnings,
+		),
+	}
+}
+
+function calculateEarningsComparison(current: number, previous: number) {
+	if (previous === 0) {
+		return current === 0 ? 0 : 100
+	}
+
+	if (current < previous) {
+		return Number(((current * 100) / previous).toFixed())
+	} else {
+		return Number((((current - previous) / previous) * 100).toFixed())
 	}
 }
 
