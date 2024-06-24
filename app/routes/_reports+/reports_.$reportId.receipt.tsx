@@ -7,10 +7,6 @@ import {
 	renderToStream,
 } from '@react-pdf/renderer'
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
-import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { OrderStatus } from '../order+/_types/order-status.ts'
-import { ProductOrderType } from '../order+/_types/productOrderType.ts'
 
 export type TransactionReportDataType = {
 	id: string
@@ -79,6 +75,39 @@ const receiptData = {
 		{ description: 'Item 1', quantity: 2, price: 5.0 },
 		{ description: 'Item 2', quantity: 1, price: 10.0 },
 		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
+		{ description: 'Item 1', quantity: 2, price: 5.0 },
+		{ description: 'Item 2', quantity: 1, price: 10.0 },
+		{ description: 'Item 3', quantity: 3, price: 7.5 },
 	],
 	total: 40.0,
 	footerMessage: 'Thank you for shopping with us!',
@@ -129,11 +158,11 @@ const styles = StyleSheet.create({
 		fontSize: 8,
 	},
 })
-const CUSTOM_80MM = [226.8, 1000];
+// const CUSTOM_80MM = [226.8, 1000]
 // Receipt component
 const Receipt = ({ data }) => (
 	<Document>
-		<Page size={CUSTOM_80MM} style={styles.page}>
+		<Page wrap={false} size={`A7`} style={styles.page}>
 			{/* Header */}
 			<View style={styles.header}>
 				<Text>{data.storeName}</Text>
