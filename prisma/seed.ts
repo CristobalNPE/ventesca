@@ -247,7 +247,7 @@ async function seed() {
 
 			await prisma.product.create({
 				data: {
-					code: i + 1,
+					code: (i + 1).toString(),
 					name: faker.commerce.productName(),
 					sellingPrice,
 					price,
@@ -326,7 +326,7 @@ async function seed() {
 			for (let index = 0; index < totalItemTransactions; index++) {
 				const itemForTransaction = await prisma.product.findFirst({
 					where: {
-						code: faker.number.int({ min: 1, max: NUMBER_OF_PRODUCTS }),
+						code: faker.number.int({ min: 1, max: NUMBER_OF_PRODUCTS }).toString(),
 					},
 					select: { id: true },
 				})
