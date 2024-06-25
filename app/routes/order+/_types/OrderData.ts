@@ -18,7 +18,7 @@ const DiscountSchema = z.object({
 
 const ProductSchema = z.object({
 	id: z.string(),
-	code: z.number(),
+	code: z.string(),
 	name: z.string(),
 	sellingPrice: z.number(),
 	stock: z.number(),
