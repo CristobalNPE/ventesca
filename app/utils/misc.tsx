@@ -15,6 +15,8 @@ export function formatCurrency(amountToFormat: number | null) {
 	return formatted
 }
 
+
+
 export function setSearchParamsString(
 	searchParams: URLSearchParams,
 	changes: Record<string, string | number | undefined>,
@@ -39,8 +41,8 @@ export function getUserImgSrc(imageId?: string | null) {
 	return imageId ? `/resources/user-images/${imageId}` : '/img/user.png'
 }
 
-export function getNoteImgSrc(imageId: string) {
-	return `/resources/note-images/${imageId}`
+export function getBusinessImgSrc(imageId: string) {
+	return `/resources/business-logo/${imageId}`
 }
 
 export function getErrorMessage(error: unknown) {
