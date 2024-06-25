@@ -1,7 +1,12 @@
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import { type ProductOrder, type Discount } from '@prisma/client'
-import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
+import {
+	json,
+	redirect,
+	redirectDocument,
+	type ActionFunctionArgs,
+} from '@remix-run/node'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { DiscountApplicationMethod } from '../_discounts+/_types/discount-applicationMethod.ts'
@@ -25,6 +30,10 @@ import {
 } from './__productOrder+/__product-order-type.tsx'
 import { OrderStatus } from './_types/order-status.ts'
 import { ProductOrderType } from './_types/productOrderType.ts'
+import {
+	ShouldRevalidateFunction,
+	ShouldRevalidateFunctionArgs,
+} from '@remix-run/react'
 
 export async function loader() {
 	return redirect('/order')
@@ -55,6 +64,11 @@ export async function action({ request }: ActionFunctionArgs) {
 		case updateProductOrderQuantityActionIntent: {
 			return await updateProductOrderQuantityAction({ formData })
 		}
+
+		// case increaseProductOrderQuantityActionIntent
+		// case decreaseProductOrderQuantityActionIntent
+		// case updateProductOrderQuantityActionIntent
+
 		case deleteProductOrderActionIntent: {
 			return await deleteProductOrderAction({ formData })
 		}
@@ -275,7 +289,7 @@ async function addProductOrderAction({
 	console.log(formData.get('search'))
 	const result = AddProductOrderSchema.safeParse({
 		intent: formData.get('intent'),
-		search: Number(formData.get('search')),
+		search: formData.get('search'),
 	})
 
 	if (!result.success) {
@@ -324,9 +338,16 @@ async function addProductOrderAction({
 	})
 
 	if (productOrder) {
+		await prisma.productOrder.update({
+			where: { id: productOrder.id },
+			data: {
+				quantity: { increment: 1 },
+			},
+		})
+
 		return json({
-			status: 'error',
-			message: `Articulo código [${product.code}] ya se encuentra en la transacción.`,
+			status: 'success',
+			message: `Articulo código agregado con éxito`,
 		} as const)
 	}
 
@@ -357,10 +378,11 @@ async function addProductOrderAction({
 		},
 	})
 
+	//!SHOULD CHECK STOCK COMPARED TO CURRENT PRODUCT ORDER QUANTITY
 	if (createdProductOrder.productDetails.stock < 1) {
 		return json({
 			status: 'warn',
-			message: `Articulo código [${createdProductOrder.productDetails.code}] se encuentra sin stock.`,
+			message: `Articulo "${createdProductOrder.productDetails.name}" se encuentra sin stock.`,
 		} as const)
 	}
 
