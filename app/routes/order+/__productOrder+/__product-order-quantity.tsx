@@ -13,7 +13,7 @@ export const UpdateProductOrderQuantitySchema = z.object({
 	productOrderQuantity: z.number().min(0),
 })
 
-export const ProductOrderQuantitySelector = ({
+export const ProductOrderQuantity = ({
 	min,
 	max,
 	quantity,
