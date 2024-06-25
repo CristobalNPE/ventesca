@@ -1,16 +1,5 @@
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
 
-import {
-	forwardRef,
-	useEffect,
-	useId,
-	useImperativeHandle,
-	useRef,
-	useState,
-} from 'react'
-import { z } from 'zod'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { Label } from '#app/components/ui/label.tsx'
@@ -23,12 +12,21 @@ import {
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
 import { cn, useDebounce } from '#app/utils/misc.tsx'
-import { action, type addProductOrderActionType } from '../product-order.tsx'
+import {
+	forwardRef,
+	useEffect,
+	useId,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react'
+import { z } from 'zod'
+import { type addProductOrderActionType } from '../product-order.tsx'
 
 export const addProductOrderActionIntent = 'add-product-order'
 export const AddProductOrderSchema = z.object({
 	intent: z.literal(addProductOrderActionIntent),
-	search: z.number(),
+	search: z.string(),
 })
 
 type ProductReaderProps = {
@@ -56,6 +54,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
 			fetcher.submit(form)
+			
 		}, 400)
 
 		useEffect(() => {

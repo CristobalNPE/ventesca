@@ -43,9 +43,8 @@ export const CreateItemSchema = z.object({
 			message: `El nombre no puede ser mayor a ${PRODUCT_NAME_MAX} caracteres.`,
 		}),
 	code: z
-		.number({
+		.string({
 			required_error: 'Campo obligatorio',
-			invalid_type_error: 'Debe ser un número',
 		})
 		.min(CODE_MIN, { message: 'El código no puede ser negativo.' })
 		.max(CODE_MAX, { message: `El código no puede ser mayor a ${CODE_MAX}.` }),

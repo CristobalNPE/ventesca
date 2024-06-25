@@ -38,6 +38,7 @@ import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
 import { CreateItemDialog } from './new.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
+	
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
@@ -62,7 +63,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (searchTermIsCode) {
 		const where = {
 			businessId,
-			code: parseInt(searchTerm),
+			code: searchTerm,
 		}
 
 		productsPromise = prisma.product.findMany({
@@ -71,7 +72,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 			where: {
 				businessId,
-				code: parseInt(searchTerm),
+				code: searchTerm,
 			},
 		})
 
@@ -204,7 +205,7 @@ export default function InventoryRoute() {
 
 type ProductData = {
 	name: string | null
-	code: number
+	code: string
 	id: string
 	sellingPrice: number | null
 	stock: number
