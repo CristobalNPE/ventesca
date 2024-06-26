@@ -1,14 +1,9 @@
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import { type ProductOrder, type Discount } from '@prisma/client'
-import {
-	json,
-	redirect,
-	redirectDocument,
-	type ActionFunctionArgs,
-} from '@remix-run/node'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import { type Discount, type ProductOrder } from '@prisma/client'
+import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
 import { DiscountApplicationMethod } from '../_discounts+/_types/discount-applicationMethod.ts'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
@@ -21,8 +16,12 @@ import {
 	AddProductOrderSchema,
 } from './__productOrder+/__product-order-new.tsx'
 import {
-	updateProductOrderQuantityActionIntent,
-	UpdateProductOrderQuantitySchema,
+	changeProductOrderQuantityActionIntent,
+	ChangeProductOrderQuantitySchema,
+	decreaseProductOrderQuantityActionIntent,
+	DecreaseProductOrderQuantitySchema,
+	increaseProductOrderQuantityActionIntent,
+	IncreaseProductOrderQuantitySchema,
 } from './__productOrder+/__product-order-quantity.tsx'
 import {
 	updateProductOrderTypeActionIntent,
@@ -30,10 +29,6 @@ import {
 } from './__productOrder+/__product-order-type.tsx'
 import { OrderStatus } from './_types/order-status.ts'
 import { ProductOrderType } from './_types/productOrderType.ts'
-import {
-	ShouldRevalidateFunction,
-	ShouldRevalidateFunctionArgs,
-} from '@remix-run/react'
 
 export async function loader() {
 	return redirect('/order')
@@ -45,6 +40,7 @@ type ProductOrderWithRelations = ProductOrder & {
 	productDetails: {
 		discounts: Discount[]
 		sellingPrice: number
+		stock: number
 	}
 }
 
@@ -61,13 +57,16 @@ export async function action({ request }: ActionFunctionArgs) {
 		case updateProductOrderTypeActionIntent: {
 			return await updateProductOrderTypeAction({ formData })
 		}
-		case updateProductOrderQuantityActionIntent: {
-			return await updateProductOrderQuantityAction({ formData })
-		}
 
-		// case increaseProductOrderQuantityActionIntent
-		// case decreaseProductOrderQuantityActionIntent
-		// case updateProductOrderQuantityActionIntent
+		case increaseProductOrderQuantityActionIntent: {
+			return await increaseProductOrderQuantityAction({ formData })
+		}
+		case decreaseProductOrderQuantityActionIntent: {
+			return await decreaseProductOrderQuantityAction({ formData })
+		}
+		case changeProductOrderQuantityActionIntent: {
+			return await changeProductOrderQuantityAction({ formData })
+		}
 
 		case deleteProductOrderActionIntent: {
 			return await deleteProductOrderAction({ formData })
@@ -122,12 +121,151 @@ async function updateProductOrderTypeAction({
 	return json({ status: 'ok' } as const, { status: 200 })
 }
 
-async function updateProductOrderQuantityAction({
+// async function updateProductOrderQuantityAction({
+// 	formData,
+// }: {
+// 	formData: FormData
+// }) {
+// 	const result = IncreaseProductOrderQuantitySchema.safeParse({
+// 		intent: formData.get('intent'),
+// 		productOrderId: formData.get('productOrderId'),
+// 		productOrderQuantity: Number(formData.get('productOrderQuantity')),
+// 	})
+
+// 	if (!result.success) {
+// 		const errors = result.error.flatten()
+// 		return json({ status: 'error', errors } as const, { status: 400 })
+// 	}
+
+// 	const { productOrderId, productOrderQuantity } = result.data
+
+// 	const currentProductOrder = (await prisma.productOrder.findUniqueOrThrow({
+// 		where: { id: productOrderId },
+// 		select: {
+// 			type: true,
+// 			totalPrice: true,
+
+// 			productDetails: { select: { discounts: true, sellingPrice: true } },
+// 		},
+// 	})) as ProductOrderWithRelations
+
+// 	const { totalPrice, totalDiscount } = await calculateTotals(
+// 		{ ...currentProductOrder, quantity: productOrderQuantity },
+// 		currentProductOrder.type as ProductOrderType,
+// 	)
+
+// 	await prisma.productOrder.update({
+// 		where: { id: productOrderId },
+// 		data: {
+// 			quantity: productOrderQuantity,
+// 			totalPrice,
+// 			totalDiscount,
+// 		},
+// 	})
+
+// 	return json({ status: 'ok' } as const, { status: 200 })
+// }
+
+async function increaseProductOrderQuantityAction({
 	formData,
 }: {
 	formData: FormData
 }) {
-	const result = UpdateProductOrderQuantitySchema.safeParse({
+	const result = IncreaseProductOrderQuantitySchema.safeParse({
+		intent: formData.get('intent'),
+		productOrderId: formData.get('productOrderId'),
+	})
+
+	if (!result.success) {
+		const errors = result.error.flatten()
+		return json({ status: 'error', errors } as const, { status: 400 })
+	}
+
+	const { productOrderId } = result.data
+
+	const currentProductOrder = (await prisma.productOrder.findUniqueOrThrow({
+		where: { id: productOrderId },
+		select: {
+			type: true,
+			totalPrice: true,
+			productDetails: { select: { discounts: true, sellingPrice: true } },
+			quantity: true,
+		},
+	})) as ProductOrderWithRelations
+
+	const { totalPrice, totalDiscount } = await calculateTotals(
+		{ ...currentProductOrder, quantity: currentProductOrder.quantity + 1 },
+		currentProductOrder.type as ProductOrderType,
+	)
+
+	await prisma.productOrder.update({
+		where: { id: productOrderId },
+		data: {
+			quantity: { increment: 1 },
+			totalPrice,
+			totalDiscount,
+		},
+	})
+
+	return json({ status: 'ok' } as const, { status: 200 })
+}
+async function decreaseProductOrderQuantityAction({
+	formData,
+}: {
+	formData: FormData
+}) {
+	const result = DecreaseProductOrderQuantitySchema.safeParse({
+		intent: formData.get('intent'),
+		productOrderId: formData.get('productOrderId'),
+	})
+
+	if (!result.success) {
+		const errors = result.error.flatten()
+		return json({ status: 'error', errors } as const, { status: 400 })
+	}
+
+	const { productOrderId } = result.data
+
+	const currentProductOrder = (await prisma.productOrder.findUniqueOrThrow({
+		where: { id: productOrderId },
+		select: {
+			type: true,
+			totalPrice: true,
+			productDetails: { select: { discounts: true, sellingPrice: true } },
+			quantity: true,
+		},
+	})) as ProductOrderWithRelations
+
+	if (currentProductOrder.quantity - 1 < 0) {
+		return json({ status: 'error' } as const, { status: 200 })
+	}
+
+	const { totalPrice, totalDiscount } = await calculateTotals(
+		{ ...currentProductOrder, quantity: currentProductOrder.quantity - 1 },
+		currentProductOrder.type as ProductOrderType,
+	)
+
+	await prisma.productOrder.update({
+		where: { id: productOrderId },
+		data: {
+			quantity: { decrement: 1 },
+			totalPrice,
+			totalDiscount,
+		},
+	})
+
+	return json({ status: 'ok' } as const, { status: 200 })
+}
+
+export type changeProductOrderQuantityActionType =
+	typeof changeProductOrderQuantityAction
+
+async function changeProductOrderQuantityAction({
+	formData,
+}: {
+	formData: FormData
+}) {
+	const result = ChangeProductOrderQuantitySchema.safeParse({
 		intent: formData.get('intent'),
 		productOrderId: formData.get('productOrderId'),
 		productOrderQuantity: Number(formData.get('productOrderQuantity')),
@@ -145,26 +283,35 @@ async function updateProductOrderQuantityAction({
 		select: {
 			type: true,
 			totalPrice: true,
-
-			productDetails: { select: { discounts: true, sellingPrice: true } },
+			productDetails: {
+				select: { discounts: true, sellingPrice: true, stock: true },
+			},
+			quantity: true,
 		},
 	})) as ProductOrderWithRelations
 
-	const { totalPrice, totalDiscount } = await calculateTotals(
-		{ ...currentProductOrder, quantity: productOrderQuantity },
-		currentProductOrder.type as ProductOrderType,
-	)
+	const prevQuantity = currentProductOrder.quantity
+	const isOverStock =
+		productOrderQuantity > currentProductOrder.productDetails.stock
+	const checkedQuantity = isOverStock ? prevQuantity : productOrderQuantity
 
-	await prisma.productOrder.update({
-		where: { id: productOrderId },
-		data: {
-			quantity: productOrderQuantity,
-			totalPrice,
-			totalDiscount,
-		},
-	})
+	if (prevQuantity !== productOrderQuantity) {
+		const { totalPrice, totalDiscount } = await calculateTotals(
+			{ ...currentProductOrder, quantity: checkedQuantity },
+			currentProductOrder.type as ProductOrderType,
+		)
 
-	return json({ status: 'ok' } as const, { status: 200 })
+		await prisma.productOrder.update({
+			where: { id: productOrderId },
+			data: {
+				quantity: checkedQuantity,
+				totalPrice,
+				totalDiscount,
+			},
+		})
+	}
+
+	return json({ status: isOverStock ? 'over' : 'ok' } as const, { status: 200 })
 }
 
 async function calculateTotals(
