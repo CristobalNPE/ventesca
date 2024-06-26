@@ -5,18 +5,17 @@ import {
 	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
-	type SerializeFrom,
 } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { useLoaderData, useSubmit } from '@remix-run/react'
 
-import React, { createRef, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { useRef, useState } from 'react'
+import { z } from 'zod'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
@@ -36,10 +35,6 @@ import {
 } from './__finish-order.tsx'
 import { ProductReader } from './__productOrder+/__product-order-new.tsx'
 import {
-	ProductOrder,
-	type ProductProps,
-} from './__productOrder+/__product-order.tsx'
-import {
 	PaymentMethodPanel,
 	setPaymentMethodActionIntent,
 	SetPaymentMethodSchema,
@@ -55,6 +50,10 @@ import {
 	OrderOverviewPanel,
 } from './order-panel.tsx'
 
+import { useMemo } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { Key } from 'ts-key-enum'
+import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
 
 const orderDetailsSelect = {
 	id: true,
@@ -230,53 +229,32 @@ export default function TransactionRoute() {
 		useLoaderData<typeof loader>()
 
 	const currentPaymentMethod = PaymentMethodSchema.parse(order.paymentMethod)
+	const productReaderRef = useRef<HTMLInputElement>(null)
+	productReaderRef.current?.focus()
 
 	let allProductOrders = order.productOrders
+	const [focus, setFocus] = useRoveFocus(allProductOrders.length ?? 0)
 
-	// This is so we can focus the last element in the array automatically
-	const productRefs = useRef<React.RefObject<HTMLDivElement>[]>([])
-
-	const [focusedRowIndex, setFocusedRowIndex] = useState<number>(0)
-
-	//Keyboard navigation for the ItemTransactionRows
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'ArrowDown') {
-				event.preventDefault()
-				setFocusedRowIndex(prev =>
-					prev === allProductOrders.length - 1
-						? 0
-						: Math.min(prev + 1, allProductOrders.length - 1),
-				)
-			} else if (event.key === 'ArrowUp') {
-				event.preventDefault()
-				setFocusedRowIndex(prev =>
-					prev === 0 ? allProductOrders.length - 1 : Math.max(prev - 1, 0),
-				)
-			}
-		}
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [allProductOrders.length])
-
-	useEffect(() => {
-		productRefs.current[focusedRowIndex]?.current?.focus()
-	}, [focusedRowIndex])
-
-	productRefs.current = allProductOrders.map(
-		(_, i) => productRefs.current[i] ?? createRef(),
-	)
-
-	// This is so we can focus the ItemReader after pressing Enter on a row
-	const productReaderRef = useRef<HTMLInputElement>(null)
-
-	useEffect(() => {
-		// Focus the last element in the array
-		const lastProductRef = productRefs.current[allProductOrders.length - 1]
-		if (lastProductRef) {
-			lastProductRef.current?.focus()
-		}
-	}, [allProductOrders.length])
+	// //KB Shortcuts
+	// const submit = useSubmit()
+	// useHotkeys(
+	// 	[Key.E],
+	// 	event => {
+	// 		switch (event.key) {
+	// 			case `alt+return`: {
+	// 				submit(
+	// 					{
+	// 						intent: finishOrderActionIntent,
+	// 						orderId: order.id,
+	// 					},
+	// 					{ method: 'POST', action: '/order' },
+	// 				)
+	// 				break
+	// 			}
+	// 		}
+	// 	},
+	// 	{ preventDefault: true },
+	// )
 
 	return (
 		<div className="flex h-full flex-1  gap-12">
@@ -289,23 +267,20 @@ export default function TransactionRoute() {
 				/>
 				<Spacer size="4xs" />
 				{allProductOrders.length > 0 ? (
-					<div className="no-scrollbar flex flex-col gap-2 overflow-y-auto sm:max-h-[calc(100%-4rem)]">
-						{allProductOrders.map((productOrder, index) => {
-							if (productOrder.productDetails) {
-								return (
-									<ProductOrder
-										productOrder={productOrder}
-										globalDiscounts={globalDiscounts}
-										key={productOrder.productDetails.id}
-										product={
-											productOrder.productDetails as SerializeFrom<ProductProps>
-										}
-										productReaderRef={productReaderRef}
-										ref={productRefs.current[index]}
-									/>
-								)
-							} else return null
-						})}
+					<div
+						role="list"
+						className="no-scrollbar flex flex-col gap-2 overflow-y-auto sm:max-h-[calc(100%-4rem)]"
+					>
+						{allProductOrders.map((productOrder, index) => (
+							<ProductOrder
+								key={productOrder.id}
+								index={index}
+								focus={focus === index}
+								setFocus={setFocus}
+								productOrder={productOrder}
+								globalDiscounts={globalDiscounts}
+							/>
+						))}
 					</div>
 				) : (
 					<div className=" no-scrollbar flex h-[calc(100%-4rem)] flex-col items-center justify-center gap-2  rounded-md  border-2 border-dashed  p-6 text-xl font-semibold text-muted-foreground">
@@ -526,4 +501,17 @@ async function removeDirectDiscountAction(formData: FormData) {
 	})
 
 	return json({ result: submission.reply() })
+}
+
+const useRoveFocus = (size: number) => {
+	const [currentFocus, setCurrentFocus] = useState(0)
+
+	useHotkeys(Key.ArrowDown, () =>
+		setCurrentFocus(currentFocus === size - 1 ? 0 : currentFocus + 1),
+	)
+	useHotkeys(Key.ArrowUp, () =>
+		setCurrentFocus(currentFocus === 0 ? size - 1 : currentFocus - 1),
+	)
+
+	return useMemo(() => [currentFocus, setCurrentFocus] as const, [currentFocus])
 }
