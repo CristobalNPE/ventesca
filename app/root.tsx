@@ -26,6 +26,7 @@ import {
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
+	useNavigate,
 	useSubmit,
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
@@ -76,9 +77,12 @@ import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
 import { Separator } from './components/ui/separator.tsx'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { Key } from 'ts-key-enum'
 
 type NavigationLink = {
 	name: string
+	kbShortcut?: string
 	path: string
 	icon: IconName
 }
@@ -235,9 +239,14 @@ function App() {
 
 	useToast(data.toast)
 
+	const navigate = useNavigate()
+
+	useHotkeys(Key.F1, () => navigate('/order'), { preventDefault: true })
+
 	const navigationLinks: NavigationLink[] = [
 		{
 			name: 'Punto de Venta',
+			kbShortcut: 'f1',
 			path: 'order',
 			icon: 'circle-dollar-sign',
 		},
@@ -362,7 +371,7 @@ function UserDropdown() {
 						to={`/users/${user.username}`}
 						// this is for progressive enhancement
 						onClick={e => e.preventDefault()}
-						className="flex w-full min-w-[3rem] justify-center 2xl:justify-normal ml-1 2xl:ml-0 items-center gap-3   "
+						className="ml-1 flex w-full min-w-[3rem] items-center justify-center gap-3 2xl:ml-0 2xl:justify-normal   "
 					>
 						<img
 							className="h-9 w-9  rounded-full  bg-secondary object-cover ring-2 ring-primary/10"
@@ -491,12 +500,14 @@ function SideBar({
 									<TooltipProvider>
 										<Tooltip delayDuration={300}>
 											<TooltipTrigger asChild>
-												<div className="flex gap-3">
+												<div className="flex gap-3 ">
 													<Icon
 														className="shrink-0 text-2xl 2xl:text-xl"
 														name={link.icon}
 													/>
-													<span className="hidden 2xl:flex">{link.name}</span>
+													<div className="hidden w-full  2xl:flex">
+														{link.name}
+													</div>
 												</div>
 											</TooltipTrigger>
 											<TooltipContent side="right" className="flex 2xl:hidden">
@@ -504,6 +515,12 @@ function SideBar({
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
+
+									{link.kbShortcut ? (
+										<div className="ml-auto hidden rounded border-[1px] border-b-[3px] border-muted-foreground bg-secondary px-[2px] py-[1px]  font-mono text-xs font-semibold uppercase text-muted-foreground shadow-lg  2xl:flex ">
+											{link.kbShortcut}
+										</div>
+									) : null}
 								</NavLink>
 							)
 						})}
@@ -532,7 +549,7 @@ function SideBar({
 						})}
 					</div>
 					<ThemeSwitch userPreference={themeUserPreference} />
-					
+
 					<UserDropdown />
 				</nav>
 			</div>
