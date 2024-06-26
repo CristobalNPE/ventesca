@@ -54,18 +54,16 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 
 		const handleFormChange = useDebounce((form: HTMLFormElement) => {
 			fetcher.submit(form)
-			
 		}, 400)
 
 		useEffect(() => {
+			const input = innerRef.current
 			if (data?.status === 'success' && fetcher.state === 'idle') {
 				setValue('')
-			} else {
-				const input = innerRef.current
-				if (input) {
-					input.focus()
-					input.select()
-				}
+			}
+			if (input) {
+				input.focus()
+				input.select()
 			}
 		}, [data?.status, fetcher.state])
 
@@ -108,6 +106,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<StatusButton
+										tabIndex={-1}
 										type="submit"
 										status={isSubmitting ? 'pending' : status}
 										className="flex w-full items-center justify-center border-none"
@@ -129,6 +128,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Toggle
+								tabIndex={-1}
 								className={cn(
 									'border-2 border-foreground',
 									isAutoSubmit &&
