@@ -6,7 +6,7 @@ import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { useLoaderData, useSubmit } from '@remix-run/react'
+import { MetaFunction, useLoaderData } from '@remix-run/react'
 
 import { Spacer } from '#app/components/spacer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -514,4 +514,8 @@ const useRoveFocus = (size: number) => {
 	)
 
 	return useMemo(() => [currentFocus, setCurrentFocus] as const, [currentFocus])
+}
+
+export const meta: MetaFunction = () => {
+	return [{ title: 'Ventesca | Transacción en curso' }]
 }
