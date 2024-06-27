@@ -91,23 +91,27 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Fecha:</span>
 									<span>
-										{format(new Date(), "d 'de' MMMM 'del' yyyy'", {
-											locale: es,
-										})}
+										{format(
+											new Date(),
+											"d 'de' MMMM 'del' yyyy',' hh:mm aaaa ",
+											{
+												locale: es,
+											},
+										)}
 									</span>
 								</div>
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Método de Pago:</span>
 									<span>{order.paymentMethod}</span>
 								</div>
-								{order.directDiscount && (
+								{order.directDiscount ? (
 									<div className="flex gap-4">
 										<span className="w-[9rem] font-bold">
 											Descuento directo:
 										</span>
 										<span>{formatCurrency(order.directDiscount)}</span>
 									</div>
-								)}
+								) : null}
 								<div className="flex gap-4">
 									<span className="w-[9rem] font-bold">Total:</span>
 									<span>{formatCurrency(order.total)}</span>
