@@ -8,6 +8,7 @@ import {
 	combineHeaders,
 	getDomainUrl,
 	getUserImgSrc,
+	useDebounce,
 } from '#app/utils/misc.tsx'
 import {
 	json,
@@ -25,12 +26,13 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useFetcher,
 	useLoaderData,
 	useNavigate,
 	useSubmit,
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
@@ -39,6 +41,7 @@ import { EpicProgress } from './components/progress-bar.tsx'
 import { Spacer } from './components/spacer.tsx'
 import { useToast } from './components/toaster.tsx'
 import { Button } from './components/ui/button.tsx'
+import { loader as productIdLoader } from '#app/routes/inventory_+/$productId.tsx'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -79,6 +82,16 @@ import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
 import { Separator } from './components/ui/separator.tsx'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from './components/ui/dialog.tsx'
+import { Input } from './components/ui/input.tsx'
+import { ProductPriceReader } from './routes/inventory_+/price-reader.tsx'
 
 type NavigationLink = {
 	name: string
@@ -307,8 +320,11 @@ function App() {
 
 	const businessName = user?.business.name ?? ''
 
-	// ?CONSIDER MAKING DIFFERENT HEADERS FOR LOGGED IN USER AND OTHERS.
-
+	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
+	useHotkeys(Key.F4, () => setOpenProductPriceReader(true), {
+		preventDefault: true,
+		enableOnFormTags: true,
+	})
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			<div className="flex h-[100dvh] ">
@@ -333,6 +349,10 @@ function App() {
 			</div>
 			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
+			<ProductPriceReader
+				open={openProductPriceReader}
+				setOpen={setOpenProductPriceReader}
+			/>
 		</Document>
 	)
 }
