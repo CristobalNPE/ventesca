@@ -121,51 +121,6 @@ async function updateProductOrderTypeAction({
 	return json({ status: 'ok' } as const, { status: 200 })
 }
 
-// async function updateProductOrderQuantityAction({
-// 	formData,
-// }: {
-// 	formData: FormData
-// }) {
-// 	const result = IncreaseProductOrderQuantitySchema.safeParse({
-// 		intent: formData.get('intent'),
-// 		productOrderId: formData.get('productOrderId'),
-// 		productOrderQuantity: Number(formData.get('productOrderQuantity')),
-// 	})
-
-// 	if (!result.success) {
-// 		const errors = result.error.flatten()
-// 		return json({ status: 'error', errors } as const, { status: 400 })
-// 	}
-
-// 	const { productOrderId, productOrderQuantity } = result.data
-
-// 	const currentProductOrder = (await prisma.productOrder.findUniqueOrThrow({
-// 		where: { id: productOrderId },
-// 		select: {
-// 			type: true,
-// 			totalPrice: true,
-
-// 			productDetails: { select: { discounts: true, sellingPrice: true } },
-// 		},
-// 	})) as ProductOrderWithRelations
-
-// 	const { totalPrice, totalDiscount } = await calculateTotals(
-// 		{ ...currentProductOrder, quantity: productOrderQuantity },
-// 		currentProductOrder.type as ProductOrderType,
-// 	)
-
-// 	await prisma.productOrder.update({
-// 		where: { id: productOrderId },
-// 		data: {
-// 			quantity: productOrderQuantity,
-// 			totalPrice,
-// 			totalDiscount,
-// 		},
-// 	})
-
-// 	return json({ status: 'ok' } as const, { status: 200 })
-// }
-
 async function increaseProductOrderQuantityAction({
 	formData,
 }: {
@@ -482,13 +437,21 @@ async function addProductOrderAction({
 			orderId: currentOrder.id,
 			productId: product.id,
 		},
+		include: { productDetails: { include: { discounts: true } } },
 	})
 
 	if (productOrder) {
+		const { totalPrice, totalDiscount } = await calculateTotals(
+			{ ...productOrder, quantity: productOrder.quantity + 1 },
+			productOrder.type as ProductOrderType,
+		)
+
 		await prisma.productOrder.update({
 			where: { id: productOrder.id },
 			data: {
 				quantity: { increment: 1 },
+				totalPrice,
+				totalDiscount,
 			},
 		})
 
