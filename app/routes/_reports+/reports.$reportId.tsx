@@ -45,6 +45,7 @@ import {
 	deleteOrderActionIntent,
 	DeleteOrderSchema,
 } from './__delete-order.tsx'
+import { useRef } from 'react'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -79,8 +80,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserWithRole(request, 'Administrador')
-	const businessId = await getBusinessId(userId)
+	await requireUserWithRole(request, 'Administrador')
 
 	const formData = await request.formData()
 	const intent = formData.get('intent')
@@ -98,6 +98,7 @@ export default function ReportRoute() {
 	const { orderReport } = useLoaderData<typeof loader>()
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
+	const iframeRef = useRef<HTMLIFrameElement>(null)
 
 	return (
 		<Card className="flex h-full animate-slide-left flex-col lg:h-[85dvh]  ">
@@ -125,18 +126,23 @@ export default function ReportRoute() {
 					</CardDescription>
 				</div>
 				<div className="ml-auto flex w-full  items-center gap-1 2xl:justify-end">
-					<Button asChild size="sm" variant="outline" className="h-8 gap-1">
-						<Link
-							target="_blank"
-							reloadDocument
-							to={`/reports/${orderReport.id}/report-pdf`}
-						>
-							<Icon name="checklist" className="h-3.5 w-3.5" />
-							<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-								Generar reporte
-							</span>
-						</Link>
+					<iframe
+						className="hidden"
+						ref={iframeRef}
+						src={`${orderReport.id}/receipt`}
+					/>
+					<Button
+						onClick={() => iframeRef.current?.contentWindow?.print()}
+						size="sm"
+						variant="outline"
+						className="h-8 gap-1"
+					>
+						<Icon name="printer" className="h-3.5 w-3.5" />
+						<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+							Imprimir comprobante
+						</span>
 					</Button>
+
 					{isAdmin ? (
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>

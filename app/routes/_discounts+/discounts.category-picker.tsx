@@ -220,7 +220,7 @@ export function CategoryPicker({
 										</div>
 										<div className="flex items-center gap-1 text-sm">
 											<span className="text-muted-foreground">
-												{category._count.items} artículos asociados.
+												{category._count.products} artículos asociados.
 											</span>
 										</div>
 									</div>

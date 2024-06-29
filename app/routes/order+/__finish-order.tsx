@@ -20,6 +20,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/order+/index.js'
 import { formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { type OrderDetails } from './_types/OrderData.ts'
+import { useRef } from 'react'
 
 export const finishOrderActionIntent = 'finish-order'
 
@@ -37,7 +38,7 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 		id: finishOrderActionIntent,
 		lastResult: actionData?.result,
 	})
-
+	const iframeRef = useRef<HTMLIFrameElement>(null)
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
@@ -50,77 +51,89 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 					<span className="leading-tight">Ingresar Venta</span>
 				</Button>
 			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle className="flex items-center gap-4">
+			<AlertDialogContent className="max-w-3xl">
+				<AlertDialogHeader className='mb-6'>
+					<AlertDialogTitle className="flex items-center gap-4 justify-center mb-6">
 						Confirmar Transacción{' '}
 						<span className="rounded-md bg-primary/10 p-1 text-sm uppercase">
 							{order.id}
 						</span>
 					</AlertDialogTitle>
 					<AlertDialogDescription asChild>
-						<div>
-							Confirme los datos de la venta para ingreso:
-							<div className="fex mt-4 flex-col gap-1">
-								{order.productOrders.map(productOrder => {
-									if (productOrder.productDetails) {
-										return (
-											<div className="flex gap-4" key={productOrder.id}>
-												<div className="flex flex-1 gap-2 overflow-clip ">
-													<span className="font-bold">
-														{productOrder.quantity}x
-													</span>
-													<span className="uppercase">
-														{productOrder.productDetails.name}
+						<div className="flex justify-between gap-2">
+							<div>
+								Confirme los datos de la venta para ingreso:
+								<div className="fex mt-4 flex-col gap-1">
+									{order.productOrders.map(productOrder => {
+										if (productOrder.productDetails) {
+											return (
+												<div className="flex gap-4" key={productOrder.id}>
+													<div className="flex flex-1 gap-2 overflow-clip ">
+														<span className="font-bold">
+															{productOrder.quantity}x
+														</span>
+														<span className="uppercase">
+															{productOrder.productDetails.name}
+														</span>
+													</div>
+													<span className="w-[4rem] text-right">
+														{formatCurrency(productOrder.totalPrice)}
 													</span>
 												</div>
-												<span className="w-[4rem] text-right">
-													{formatCurrency(productOrder.totalPrice)}
-												</span>
-											</div>
-										)
-									}
-									return null
-								})}
-							</div>
-							<div className="mt-4 flex flex-col gap-1 ">
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Vendedor:</span>
-									<span>{order.seller.name}</span>
+											)
+										}
+										return null
+									})}
 								</div>
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Fecha:</span>
-									<span>
-										{format(
-											new Date(),
-											"d 'de' MMMM 'del' yyyy',' hh:mm aaaa ",
-											{
-												locale: es,
-											},
-										)}
-									</span>
-								</div>
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Método de Pago:</span>
-									<span>{order.paymentMethod}</span>
-								</div>
-								{order.directDiscount ? (
+								<div className="mt-4 flex flex-col gap-1 ">
 									<div className="flex gap-4">
-										<span className="w-[9rem] font-bold">
-											Descuento directo:
-										</span>
-										<span>{formatCurrency(order.directDiscount)}</span>
+										<span className="w-[9rem] font-bold">Vendedor:</span>
+										<span>{order.seller.name}</span>
 									</div>
-								) : null}
-								<div className="flex gap-4">
-									<span className="w-[9rem] font-bold">Total:</span>
-									<span>{formatCurrency(order.total)}</span>
+									<div className="flex gap-4">
+										<span className="w-[9rem] font-bold">Fecha:</span>
+										<span>
+											{format(
+												new Date(),
+												"d 'de' MMMM 'del' yyyy',' hh:mm aaaa ",
+												{
+													locale: es,
+												},
+											)}
+										</span>
+									</div>
+									<div className="flex gap-4">
+										<span className="w-[9rem] font-bold">Método de Pago:</span>
+										<span>{order.paymentMethod}</span>
+									</div>
+									{order.directDiscount ? (
+										<div className="flex gap-4">
+											<span className="w-[9rem] font-bold">
+												Descuento directo:
+											</span>
+											<span>{formatCurrency(order.directDiscount)}</span>
+										</div>
+									) : null}
+									<div className="flex gap-4">
+										<span className="w-[9rem] font-bold">Total:</span>
+										<span>{formatCurrency(order.total)}</span>
+									</div>
 								</div>
+							</div>
+							<div className="flex flex-col gap-2">
+								Ticket Disponible:
+								<iframe className='rounded' ref={iframeRef} src={`reports/${order.id}/receipt`} />
+								<Button
+									onClick={() => iframeRef.current?.contentWindow?.print()}
+									variant={'secondary'}
+								>
+									<Icon name='printer' className='mr-2'/> Imprimir
+								</Button>
 							</div>
 						</div>
 					</AlertDialogDescription>
 				</AlertDialogHeader>
-				<AlertDialogFooter className="mt-4 flex gap-6">
+				<AlertDialogFooter className="mx-auto mt-4 flex items-center justify-center gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
 					<Form method="POST" action="/order" {...getFormProps(form)}>
 						<input type="hidden" name="orderId" value={order.id} />

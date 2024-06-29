@@ -1,12 +1,14 @@
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import VentescaLogoDark from '#app/routes/_marketing+/logos/ventesca-dark.png'
+import VentescaLogoLight from '#app/routes/_marketing+/logos/ventesca-light.png'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getBusinessImgSrc } from '#app/utils/misc.tsx'
+import { formatCurrency, getBusinessImgSrc } from '#app/utils/misc.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
+import { OrderStatus } from '../order+/_types/order-status'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -17,11 +19,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { id: businessId },
 	})
 
-	return json({ business })
+	const numberOfProducts = await prisma.product.count({
+		where: { businessId },
+	})
+	const numberOfCompletedOrders = await prisma.order.count({
+		where: { businessId, status: OrderStatus.FINISHED },
+	})
+	const totalProfits = await prisma.order.aggregate({
+		_sum: {
+			total: true,
+		},
+		where: { businessId, status: OrderStatus.FINISHED },
+	})
+
+	return json({
+		business,
+		numberOfProducts,
+		numberOfCompletedOrders,
+		totalProfits,
+	})
 }
 
 export default function ProfileRoute() {
-	const { business } = useLoaderData<typeof loader>()
+	const { business, numberOfProducts, numberOfCompletedOrders, totalProfits } =
+		useLoaderData<typeof loader>()
 
 	return (
 		<div className="container mb-48 mt-36 flex flex-col items-center justify-center">
@@ -32,9 +53,22 @@ export default function ProfileRoute() {
 					<div className="absolute -top-40">
 						<div className="relative">
 							<img
-								src={getBusinessImgSrc(business.image? business.image.id :VentescaLogoDark)}
+								src={
+									business.image
+										? getBusinessImgSrc(business.image.id)
+										: VentescaLogoDark
+								}
 								alt={business.name}
-								className="h-52 w-52 rounded-full object-cover"
+								className="hidden h-52 w-52 rounded-full bg-primary object-cover dark:flex"
+							/>
+							<img
+								src={
+									business.image
+										? getBusinessImgSrc(business.image.id)
+										: VentescaLogoLight
+								}
+								alt={business.name}
+								className="flex h-52 w-52 rounded-full bg-primary object-cover dark:hidden"
 							/>
 						</div>
 					</div>
@@ -46,7 +80,20 @@ export default function ProfileRoute() {
 					<div className="flex flex-wrap items-center justify-center gap-4">
 						<h1 className="text-center text-h2">{business.name}</h1>
 					</div>
-				
+					<div className="flex flex-wrap items-center justify-center gap-4">
+						<h1 className="text-center text-h4">{business.address}</h1>
+						<h1 className="text-center text-h4">{business.email}</h1>
+						<h1 className="text-center text-h4">{business.phone}</h1>
+						<h1 className="text-center text-h4">
+							{numberOfProducts} productos.
+						</h1>
+						<h1 className="text-center text-h4">
+							{numberOfCompletedOrders} transacciones completadas.
+						</h1>
+						<h1 className="text-center text-h4">
+							{formatCurrency(totalProfits._sum.total)} ganancias totales.
+						</h1>
+					</div>
 				</div>
 			</div>
 		</div>
