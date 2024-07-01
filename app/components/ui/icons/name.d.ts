@@ -79,6 +79,7 @@ export type IconName =
 	| "plus"
 	| "point"
 	| "printer"
+	| "qrcode"
 	| "question-mark-circled"
 	| "report-money"
 	| "reset"
