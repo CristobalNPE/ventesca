@@ -6,6 +6,7 @@ import {
 import {
 	cn,
 	combineHeaders,
+	getBusinessImgSrc,
 	getDomainUrl,
 	getUserImgSrc,
 	useDebounce,
@@ -147,7 +148,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 							id: true,
 							name: true,
 							username: true,
-							business: { select: { name: true } },
+							business: { select: { name: true, image: true } },
 							image: { select: { id: true } },
 							roles: {
 								select: {
@@ -334,6 +335,7 @@ function App() {
 						navigationLinks={navigationLinks}
 						secondaryLinks={secondaryLinks}
 						businessName={businessName}
+						businessLogoId={user.business.image ? user.business.image.id : null}
 					/>
 				)}
 
@@ -445,17 +447,17 @@ function UserDropdown() {
 	)
 }
 
-function DefaultLogo() {
+function BusinessLogo({ businessLogo }: { businessLogo: string | null }) {
 	return (
 		<div className="flex  h-[3rem] w-[3rem] flex-shrink-0 overflow-clip rounded-md opacity-90 drop-shadow-md  2xl:h-[3.8rem] 2xl:w-[3.8rem]">
 			<img
-				className="hidden dark:flex"
-				src={VentescaLogoLight}
+				className="object-cover2 hidden dark:flex"
+				src={businessLogo ? getBusinessImgSrc(businessLogo) : VentescaLogoLight}
 				alt="Ventesca Logo"
 			/>
 			<img
-				className="flex dark:hidden"
-				src={VentescaLogoDark}
+				className="object-cover2 flex dark:hidden"
+				src={businessLogo ? getBusinessImgSrc(businessLogo) : VentescaLogoDark}
 				alt="Ventesca Logo"
 			/>
 		</div>
@@ -467,13 +469,13 @@ function SideBar({
 	navigationLinks,
 	secondaryLinks,
 	businessName,
-	businessLogo,
+	businessLogoId,
 }: {
 	themeUserPreference?: Theme | null
 	navigationLinks: NavigationLink[]
 	secondaryLinks: NavigationLink[]
 	businessName: string
-	businessLogo?: string
+	businessLogoId: string | null
 }) {
 	const businessNameIsBig = businessName.length >= 10
 	const businessNameIsBigger = businessName.length >= 20
@@ -484,8 +486,8 @@ function SideBar({
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<div className="ml-2 flex select-none items-center justify-center gap-2 2xl:ml-0 2xl:justify-normal ">
-								<DefaultLogo />
+							<div className="ml-2 flex select-none items-center justify-center gap-3 2xl:ml-0 2xl:justify-normal ">
+								<BusinessLogo businessLogo={businessLogoId} />
 								<h1
 									className={cn(
 										'hidden text-2xl font-black uppercase tracking-tight 2xl:flex',
