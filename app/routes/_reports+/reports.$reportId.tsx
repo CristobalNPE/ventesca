@@ -131,17 +131,19 @@ export default function ReportRoute() {
 						ref={iframeRef}
 						src={`${orderReport.id}/receipt`}
 					/>
-					<Button
-						onClick={() => iframeRef.current?.contentWindow?.print()}
-						size="sm"
-						variant="outline"
-						className="h-8 gap-1"
-					>
-						<Icon name="printer" className="h-3.5 w-3.5" />
-						<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-							Imprimir comprobante
-						</span>
-					</Button>
+					{orderReport.status === OrderStatus.FINISHED ? (
+						<Button
+							onClick={() => iframeRef.current?.contentWindow?.print()}
+							size="sm"
+							variant="outline"
+							className="h-8 gap-1"
+						>
+							<Icon name="printer" className="h-3.5 w-3.5" />
+							<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+								Imprimir comprobante
+							</span>
+						</Button>
+					) : null}
 
 					{isAdmin ? (
 						<DropdownMenu>
@@ -334,7 +336,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 	return [
 		{
-			title: `Ventesca | Transacción ${orderId}`,
+			title: `Transacción ${orderId} | Ventesca`,
 		},
 	]
 }
