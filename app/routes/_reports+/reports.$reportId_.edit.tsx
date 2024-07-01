@@ -41,7 +41,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 	return [
 		{
-			title: `Ventesca | Modificar Transacción ${orderId}`,
+			title: `Modificar Transacción ${orderId} | Ventesca`,
 		},
 	]
 }
