@@ -8,7 +8,7 @@ export default function Page() {
 	useEffect(() => {
 		let canvas
 		canvas = document.createElement(`canvas`)
-		JsBarcode(canvas, 'mycutedata')
+		JsBarcode(canvas, 'somerandomnumber')
 		setBarcode(canvas.toDataURL())
 	}, [])
 	return (
