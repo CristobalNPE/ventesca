@@ -64,6 +64,7 @@ import {
 import { es } from 'date-fns/locale'
 
 import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
+import { VerifyOrderDialog } from './reports_.verify-order.tsx'
 
 export enum TimePeriod {
 	TODAY = 'today',
@@ -349,26 +350,7 @@ export default function OrderReportsRoute() {
 									</DropdownMenuCheckboxItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
-							{isAdmin ? (
-								<Button
-									asChild
-									variant="outline"
-									size="sm"
-									className="h-7 gap-1 text-sm"
-								>
-									<LinkWithParams
-										preserveSearch
-										target="_blank"
-										reloadDocument
-										to={`/reports/orders-report`}
-									>
-										<span className="flex gap-1 lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-											<Icon name="file-text" className="h-3.5 w-3.5" />
-											<span className="sr-only sm:not-sr-only">Exportar</span>
-										</span>
-									</LinkWithParams>
-								</Button>
-							) : null}
+							<VerifyOrderDialog/>
 						</div>
 					</div>
 					<OrderReportsCard orders={orders} totalOrders={numberOfOrders} />
@@ -408,12 +390,42 @@ function OrderReportsCard({
 			</div>
 		)
 	}
+	const [searchParams] = useSearchParams()
 
+	const getCardTitleFromParams = (searchParams: URLSearchParams) => {
+		const period = searchParams.get(periodParam) ?? TimePeriod.TODAY
+		const { startDate, endDate } = getDateRangeByParam(period)
+
+		switch (period) {
+			case TimePeriod.TODAY:
+				return `Transacciones - Hoy ${format(startDate, "dd 'de' MMMM", {
+					locale: es,
+				})}`
+			case TimePeriod.LAST_WEEK:
+				return `Transacciones - ${format(startDate, 'dd', {
+					locale: es,
+				})} a ${format(endDate, "dd 'de' MMMM", {
+					locale: es,
+				})}`
+			case TimePeriod.LAST_MONTH:
+				return `Transacciones - Mes de  ${format(startDate, 'MMMM', {
+					locale: es,
+				})}`
+			case TimePeriod.LAST_YEAR:
+				return `Transacciones - Año ${format(startDate, 'yyyy', {
+					locale: es,
+				})}`
+			default:
+				return `Transacciones - Hoy ${format(startDate, "dd 'de' MMMM", {
+					locale: es,
+				})}`
+		}
+	}
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
 			<CardHeader className="sticky top-0 z-10 items-center justify-between bg-card px-7 text-center sm:items-start sm:text-start md:flex-row">
 				<div className="w-fit">
-					<CardTitle>Transacciones</CardTitle>
+					<CardTitle>{getCardTitleFromParams(searchParams)}</CardTitle>
 					{orders.length > 1 ? (
 						<CardDescription>
 							Mostrando {orders.length} de {totalOrders} transacciones.
@@ -606,5 +618,5 @@ function calculateTotalEarnings(orders: Pick<Order, 'status' | 'total'>[]) {
 }
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Ventesca | Reportes de transacción' }]
+	return [{ title: 'Reportes de transacción | Ventesca' }]
 }
