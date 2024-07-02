@@ -196,7 +196,7 @@ export default function ProfileRoute() {
 					</div>
 					<Spacer size="3xs" />
 					<div className="flex flex-wrap justify-center gap-6 ">
-						<Card className="grid w-full max-w-sm gap-6 p-6 ">
+						<Card className="grid w-full max-w-lg  gap-6 p-6 ">
 							<div className="flex items-center gap-4">
 								<div className="flex items-center justify-center rounded-md bg-primary p-3">
 									<Icon
@@ -214,7 +214,7 @@ export default function ProfileRoute() {
 								</div>
 							</div>
 						</Card>
-						<Card className="grid w-full max-w-sm gap-6 p-6">
+						<Card className="grid w-full max-w-lg  gap-6 p-6">
 							<div className="flex items-center gap-4">
 								<div className="flex items-center justify-center rounded-md bg-primary p-3">
 									<Icon
@@ -232,7 +232,7 @@ export default function ProfileRoute() {
 								</div>
 							</div>
 						</Card>
-						<Card className="grid w-full max-w-sm gap-6 p-6">
+						<Card className="grid w-full max-w-lg  gap-6 p-6">
 							<div className="flex items-center gap-4">
 								<div className="flex items-center justify-center rounded-md bg-primary p-3">
 									<Icon
