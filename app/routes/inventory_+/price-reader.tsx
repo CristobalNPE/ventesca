@@ -22,12 +22,14 @@ enum VerifySearchStatus {
 	INVALID = 'invalid',
 }
 
+const priceSearchParams = 'product-price-search'
+
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
-	const productPriceSearch = url.searchParams.get('product-price-search')
+	const productPriceSearch = url.searchParams.get(priceSearchParams)
 
 	if (productPriceSearch === null || productPriceSearch === '')
 		return json({ product: null, status: VerifySearchStatus.INVALID })
@@ -61,7 +63,7 @@ export function ProductPriceReader({
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const resetSearch = useCallback(() => {
-		fetcher.load(`/inventory/price-reader?product-price-search=`)
+		fetcher.load(`/inventory/price-reader?${priceSearchParams}=`)
 	}, [fetcher])
 
 	useEffect(() => {
@@ -85,7 +87,7 @@ export function ProductPriceReader({
 
 	const handleFormChange = useDebounce((inputValue: string) => {
 		fetcher.submit(
-			{ 'product-price-search': inputValue ?? '' },
+			{ [priceSearchParams]: inputValue ?? '' },
 			{
 				method: 'get',
 				action: `/inventory/price-reader`,
