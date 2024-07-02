@@ -42,9 +42,11 @@ import {
 	json,
 } from '@remix-run/node'
 import {
+	Link,
 	MetaFunction,
 	Outlet,
 	useLoaderData,
+	useLocation,
 	useSearchParams,
 } from '@remix-run/react'
 import {
@@ -65,6 +67,7 @@ import { es } from 'date-fns/locale'
 
 import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
 import { VerifyOrderDialog } from './reports_.verify-order.tsx'
+import { useEffect, useState } from 'react'
 
 export enum TimePeriod {
 	TODAY = 'today',
@@ -174,6 +177,9 @@ export default function OrderReportsRoute() {
 
 	const [searchParams, setSearchParams] = useSearchParams()
 	const periodFilter = searchParams.get(periodParam)
+	const { selectedReport } = useReportNavigation()
+
+	console.log(`SELECTED REPORT: ${selectedReport}`)
 
 	return (
 		<main className=" h-full">
@@ -350,13 +356,26 @@ export default function OrderReportsRoute() {
 									</DropdownMenuCheckboxItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
-							<VerifyOrderDialog/>
+							<VerifyOrderDialog />
 						</div>
 					</div>
 					<OrderReportsCard orders={orders} totalOrders={numberOfOrders} />
 				</div>
+				{selectedReport && (
+					<div className="fixed bottom-4 right-4  lg:hidden ">
+						<Button
+							onClick={() =>
+								document
+									.getElementById('report-outlet')
+									?.scrollIntoView({ behavior: 'smooth' })
+							}
+						>
+							<Icon className="mr-2" name="file-text" /> Ver detalles
+						</Button>
+					</div>
+				)}
 
-				<div className="col-span-1 ">
+				<div className="col-span-1" id="report-outlet">
 					<Outlet />
 				</div>
 			</div>
@@ -615,6 +634,28 @@ function calculateTotalEarnings(orders: Pick<Order, 'status' | 'total'>[]) {
 		return orderTotals.reduce((acc, orderTotal) => acc + orderTotal, 0)
 	}
 	return 0
+}
+
+function useReportNavigation() {
+	const [selectedReport, setSelectedReport] = useState<string | null>(null)
+	const location = useLocation()
+
+	useEffect(() => {
+		console.log(`location.pathname: ${location.pathname}`)
+		if (location.pathname !== '/reports') {
+			const reportId = location.pathname.split('/').pop()
+			console.log(`Pathname ${location.pathname}`)
+			console.log(`ReportId = ${reportId}`)
+			setSelectedReport(reportId ?? null)
+			const outletElement = document.getElementById('report-outlet')
+			if (outletElement) {
+				outletElement.scrollIntoView({ behavior: 'smooth' })
+			} else {
+				setSelectedReport(null)
+			}
+		}
+	}, [location.pathname])
+	return { selectedReport }
 }
 
 export const meta: MetaFunction = () => {
