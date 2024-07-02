@@ -4,7 +4,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, useDebounce } from '#app/utils/misc.tsx'
 import { json, LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useFetcher, useNavigate } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +14,7 @@ import {
 } from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Button } from '#app/components/ui/button.tsx'
+import { Product } from '@prisma/client'
 
 enum VerifySearchStatus {
 	FOUND = 'found',
@@ -39,7 +40,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			name: true,
 			stock: true,
 			sellingPrice: true,
-			discounts: true,
 		},
 	})
 
@@ -56,45 +56,29 @@ export function ProductPriceReader({
 	open: boolean
 	setOpen: (open: boolean) => void
 }) {
-	const fetcher = useFetcher<typeof loader>({
-		key: 'product-price-reader',
-	})
-
-	const [product, setProduct] = useState(
-		fetcher.data ? fetcher.data.product : null,
-	)
-
-	useEffect(() => {
-		setProduct(fetcher.data ? fetcher.data.product : null)
-	}, [fetcher.data?.product])
-
-	const statusFromFetcher = fetcher.data
-		? fetcher.data.status
-		: VerifySearchStatus.INVALID
-
-	const [status, setStatus] = useState(VerifySearchStatus.INVALID)
-
-	useEffect(() => {
-		setProduct(null)
-	}, [open])
-
-	useEffect(() => {
-		setStatus(statusFromFetcher)
-	}, [statusFromFetcher])
-
+	const { productState, fetcher } = useProductFetcher()
 	const navigate = useNavigate()
+	const inputRef = useRef<HTMLInputElement>(null)
 
-	const navigateToDetails = () => {
-		if (!product) return
-		navigate(`/inventory/${product.id}`)
+	useEffect(() => {
+		if (!open) {
+			fetcher.load(`/inventory/price-reader?product-price-search=`)
+		}
+		if (open) {
+			inputRef.current?.focus()
+			inputRef.current?.select()
+		}
+	}, [open, fetcher])
+
+	const navigateToDetails = useCallback(() => {
+		if (!productState.product) return
+		navigate(`/inventory/${productState.product.id}`)
 		if (inputRef.current !== null) {
 			inputRef.current.value = ''
 		}
-
 		setOpen(false)
-	}
+	}, [productState.product, navigate, setOpen])
 
-	const inputRef = useRef<HTMLInputElement>(null)
 	const handleFormChange = useDebounce((inputValue: string) => {
 		fetcher.submit(
 			{ 'product-price-search': inputValue ?? '' },
@@ -126,12 +110,13 @@ export function ProductPriceReader({
 										className="h-[7rem] w-[7rem] text-primary  "
 									/>
 
-									{product && status === VerifySearchStatus.FOUND ? (
+									{productState.product &&
+									productState.status === VerifySearchStatus.FOUND ? (
 										<Icon
 											name="checks"
 											className="absolute left-8 top-8 h-[3rem] w-[3rem] animate-slide-top rounded-full bg-green-600 p-2 text-foreground"
 										/>
-									) : status === VerifySearchStatus.NOT_FOUND ? (
+									) : productState.status === VerifySearchStatus.NOT_FOUND ? (
 										<Icon
 											name="cross-1"
 											className="absolute left-8 top-8 h-[3rem] w-[3rem] animate-slide-top rounded-full bg-destructive p-2 text-foreground"
@@ -151,7 +136,8 @@ export function ProductPriceReader({
 									}}
 								/>
 							</div>
-							{product && status !== VerifySearchStatus.INVALID ? (
+							{productState.product &&
+							productState.status !== VerifySearchStatus.INVALID ? (
 								<div className="flex animate-slide-top items-center justify-between gap-12 rounded bg-accent p-4 text-foreground">
 									<div className=" flex flex-col">
 										<Button
@@ -159,19 +145,19 @@ export function ProductPriceReader({
 											variant={'link'}
 											onClick={() => navigateToDetails()}
 										>
-											{product.name}
+											{productState.product.name}
 										</Button>
 										<span className="text-muted-foreground">
-											{product.stock === 0
+											{productState.product.stock === 0
 												? 'Sin existencias registradas en inventario.'
-												: product.stock === 1
-													? `${product.stock} unidad disponible.`
-													: `${product.stock} unidades disponibles.`}
+												: productState.product.stock === 1
+													? `${productState.product.stock} unidad disponible.`
+													: `${productState.product.stock} unidades disponibles.`}
 										</span>
 									</div>
 									<div className="flex flex-col items-center">
 										<span className="text-3xl font-bold ">
-											{formatCurrency(product.sellingPrice)}
+											{formatCurrency(productState.product.sellingPrice)}
 										</span>
 										<span className="text-xs leading-none text-muted-foreground">
 											Precio base
@@ -185,4 +171,29 @@ export function ProductPriceReader({
 			</DialogContent>
 		</Dialog>
 	)
+}
+
+function useProductFetcher() {
+	const fetcher = useFetcher<typeof loader>({ key: 'product-price-reader' })
+	const [productState, setProductState] = useState<{
+		product: Pick<
+			Product,
+			'id' | 'code' | 'name' | 'stock' | 'sellingPrice'
+		> | null
+		status: VerifySearchStatus
+	}>({
+		product: null,
+		status: VerifySearchStatus.INVALID,
+	})
+
+	useEffect(() => {
+		if (fetcher.data) {
+			setProductState({
+				product: fetcher.data.product,
+				status: fetcher.data.status,
+			})
+		}
+	}, [fetcher.data])
+
+	return { productState, fetcher }
 }
