@@ -60,15 +60,19 @@ export function ProductPriceReader({
 	const navigate = useNavigate()
 	const inputRef = useRef<HTMLInputElement>(null)
 
+	const resetSearch = useCallback(() => {
+		fetcher.load(`/inventory/price-reader?product-price-search=`)
+	}, [fetcher])
+
 	useEffect(() => {
 		if (!open) {
-			fetcher.load(`/inventory/price-reader?product-price-search=`)
+			resetSearch()
 		}
 		if (open) {
 			inputRef.current?.focus()
 			inputRef.current?.select()
 		}
-	}, [open, fetcher])
+	}, [open])
 
 	const navigateToDetails = useCallback(() => {
 		if (!productState.product) return

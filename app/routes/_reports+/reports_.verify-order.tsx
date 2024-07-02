@@ -12,24 +12,26 @@ import { Input } from '#app/components/ui/input.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { useDebounce } from '#app/utils/misc.tsx'
+import { Order } from '@prisma/client'
 import { json, LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher, useNavigate } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-export enum VerifySearchStatus {
+enum VerifySearchStatus {
 	FOUND = 'found',
 	NOT_FOUND = 'not-found',
 	INVALID = 'invalid',
 }
+
+const orderSearchParam = 'product-price-search'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
 	const url = new URL(request.url)
-	const orderSearch = url.searchParams.get('order-verify-search')
+	const orderSearch = url.searchParams.get(orderSearchParam)
 
-	console.log(orderSearch)
 	if (orderSearch === null || orderSearch === '' || orderSearch.length < 6)
 		return json({ order: null, status: VerifySearchStatus.INVALID })
 
@@ -41,49 +43,43 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	})
 
 	if (order) {
-		console.log(JSON.stringify(order))
 		return json({ order, status: VerifySearchStatus.FOUND })
 	}
 	return json({ order, status: VerifySearchStatus.NOT_FOUND })
 }
 
 export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
+	const { orderState, fetcher } = useOrderFetcher()
+	const navigate = useNavigate()
+	const [open, setOpen] = useState(false)
 	const inputRef = useRef<HTMLInputElement>(null)
 
-	const [open, setOpen] = useState(false)
-
-	const fetcher = useFetcher<typeof loader>({
-		key: 'order-verify-search',
-	})
-	const order = fetcher.data ? fetcher.data.order : null
-	const statusFromFetcher = fetcher.data
-		? fetcher.data.status
-		: VerifySearchStatus.INVALID
-	const [status, setStatus] = useState(VerifySearchStatus.INVALID)
+	const resetSearch = useCallback(() => {
+		fetcher.load(`/reports/verify-order?${orderSearchParam}=`)
+	}, [fetcher])
 
 	useEffect(() => {
-		setStatus(VerifySearchStatus.INVALID)
+		if (!open) {
+			resetSearch()
+		}
+		if (open) {
+			inputRef.current?.focus()
+			inputRef.current?.select()
+		}
 	}, [open])
 
-	useEffect(() => {
-		setStatus(statusFromFetcher)
-	}, [statusFromFetcher])
-
-	const navigate = useNavigate()
-
-	const navigateToDetails = () => {
-		if (!order) return
-		navigate(`/reports/${order.id}`)
+	const navigateToDetails = useCallback(() => {
+		if (!orderState.order) return
+		navigate(`/reports/${orderState.order.id}`)
 		if (inputRef.current !== null) {
 			inputRef.current.value = ''
 		}
-
 		setOpen(false)
-	}
+	}, [orderState.order, navigate, setOpen])
 
 	const handleFormChange = useDebounce((inputValue: string) => {
 		fetcher.submit(
-			{ 'order-verify-search': inputValue ?? '' },
+			{ [orderSearchParam]: inputValue ?? '' },
 			{
 				method: 'get',
 				action: `/reports/verify-order`,
@@ -130,20 +126,18 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 										name="qrcode"
 										className="h-[7rem] w-[7rem] text-primary  "
 									/>
-									{status !== VerifySearchStatus.INVALID ? (
-										<div>
-											{status === VerifySearchStatus.FOUND ? (
-												<Icon
-													name="checks"
-													className="absolute left-8 top-8 h-[3rem] w-[3rem] animate-slide-top rounded-full bg-green-600 p-2 text-foreground"
-												/>
-											) : (
-												<Icon
-													name="cross-1"
-													className="absolute left-8 top-8 h-[3rem] w-[3rem] animate-slide-top rounded-full bg-destructive p-2 text-foreground"
-												/>
-											)}
-										</div>
+
+									{orderState.order &&
+									orderState.status === VerifySearchStatus.FOUND ? (
+										<Icon
+											name="checks"
+											className="absolute left-8 top-8 h-[3rem] w-[3rem] animate-slide-top rounded-full bg-green-600 p-2 text-foreground"
+										/>
+									) : orderState.status === VerifySearchStatus.NOT_FOUND ? (
+										<Icon
+											name="cross-1"
+											className="absolute left-8 top-8 h-[3rem] w-[3rem] animate-slide-top rounded-full bg-destructive p-2 text-foreground"
+										/>
 									) : null}
 								</div>
 								<Input
@@ -158,9 +152,10 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 									}}
 								/>
 							</div>
-							{status !== VerifySearchStatus.INVALID ? (
+							{orderState.order &&
+							orderState.status !== VerifySearchStatus.INVALID ? (
 								<div className="flex items-center justify-center">
-									{status === VerifySearchStatus.FOUND ? (
+									{orderState.status === VerifySearchStatus.FOUND ? (
 										<div className="font-semibold text-green-600">
 											<span>Transacción válida:</span>
 											<Button
@@ -183,4 +178,28 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 			</DialogContent>
 		</Dialog>
 	)
+}
+
+function useOrderFetcher() {
+	const fetcher = useFetcher<typeof loader>({
+		key: 'order-verify-search',
+	})
+
+	const [orderState, setOrderState] = useState<{
+		order: Pick<Order, 'id'> | null
+		status: VerifySearchStatus
+	}>({
+		order: null,
+		status: VerifySearchStatus.INVALID,
+	})
+	useEffect(() => {
+		if (fetcher.data) {
+			setOrderState({
+				order: fetcher.data.order,
+				status: fetcher.data.status,
+			})
+		}
+	}, [fetcher.data])
+
+	return { orderState, fetcher }
 }
