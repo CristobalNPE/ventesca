@@ -21,7 +21,7 @@ import {
 	DrawerTrigger,
 } from '#app/components/ui/drawer.tsx'
 import { Icon, type IconName } from '#app/components/ui/icon.tsx'
-import { type action } from '#app/routes/inventory_+/edit.js'
+import { type action } from '#app/routes/_inventory+/edit.js'
 
 export function Editor({
 	fetcherKey,

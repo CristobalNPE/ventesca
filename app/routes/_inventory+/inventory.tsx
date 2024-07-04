@@ -1,13 +1,3 @@
-import { Label } from '@radix-ui/react-label'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Form,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
-import { useId } from 'react'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -33,9 +23,18 @@ import {
 } from '#app/components/ui/table.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { formatCurrency, useDebounce, useIsPending } from '#app/utils/misc.tsx'
-import { CreateItemDialog } from './new.tsx'
+import { Label } from '@radix-ui/react-label'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Form,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+	useSubmit,
+} from '@remix-run/react'
+import { useId } from 'react'
+import { CreateItemDialog } from './inventory_.new.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	

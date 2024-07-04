@@ -36,7 +36,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { ItemDetailsSheet } from '../inventory_+/product-sheet.tsx'
+import { ItemDetailsSheet } from '../_inventory+/product-sheet.tsx'
 import {
 	DELETE_SUPPLIER_KEY,
 	DeleteSupplier,

@@ -1,8 +1,3 @@
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
-import { useFetcher } from '@remix-run/react'
-import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -17,11 +12,14 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getWhereBusinessQuery } from '#app/utils/global-queries.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { CODE_MAX, CODE_MIN } from './__product-editors/code-editor.tsx'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
+import { useFetcher } from '@remix-run/react'
+import { z } from 'zod'
 import {
 	PRODUCT_NAME_MAX,
 	PRODUCT_NAME_MIN,
@@ -42,12 +40,9 @@ export const CreateItemSchema = z.object({
 		.max(PRODUCT_NAME_MAX, {
 			message: `El nombre no puede ser mayor a ${PRODUCT_NAME_MAX} caracteres.`,
 		}),
-	code: z
-		.string({
-			required_error: 'Campo obligatorio',
-		})
-		.min(CODE_MIN, { message: 'El código no puede ser negativo.' })
-		.max(CODE_MAX, { message: `El código no puede ser mayor a ${CODE_MAX}.` }),
+	code: z.string({
+		required_error: 'Campo obligatorio',
+	}),
 })
 export async function loader() {
 	throw redirect('/inventory')

@@ -349,7 +349,7 @@ const Receipt = ({
 							</View>
 							<View style={styles.tableCol}>
 								<Text>
-									{productOrder.totalDiscount > 0
+									{(productOrder.totalDiscount > 0 && productOrder.type === ProductOrderType.PROMO)
 										? `-${formatCurrency(productOrder.totalDiscount)}`
 										: null}
 								</Text>

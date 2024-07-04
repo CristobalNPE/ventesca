@@ -1,34 +1,36 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/inventory_+/edit.js'
+import { type action } from '#app/routes/_inventory+/edit.js'
 import { Editor } from '../../../components/editor.tsx'
 
 //Exported constants for consistency on item-creation
-export const CODE_MAX = Number.MAX_VALUE
-export const CODE_MIN = 0
+export const PRODUCT_NAME_MAX = 45
+export const PRODUCT_NAME_MIN = 3
+export const updateProductNameActionIntent = 'update-product-name'
 
-export const updateProductCodeActionIntent = 'update-product-code'
-
-export const CodeEditorSchema = z.object({
-	intent: z.literal(updateProductCodeActionIntent),
+export const ProductNameEditorSchema = z.object({
+	intent: z.literal(updateProductNameActionIntent),
 	productId: z.string().optional(),
-	code: z
-		.number({
+	name: z
+		.string({
 			required_error: 'Campo obligatorio',
-			invalid_type_error: 'Debe ser un número',
 		})
-		.min(CODE_MIN, { message: 'El código no puede ser negativo.' })
-		.max(CODE_MAX, { message: `El código no puede ser mayor a ${CODE_MAX}.` }),
+		.min(PRODUCT_NAME_MIN, {
+			message: 'El nombre debe contener al menos 3 caracteres.',
+		})
+		.max(PRODUCT_NAME_MAX, {
+			message: `El nombre no puede ser mayor a ${PRODUCT_NAME_MAX} caracteres.`,
+		}),
 })
 
-export function CodeEditModal({
+export function ItemNameEditModal({
 	icon,
 	label,
 	value,
@@ -40,33 +42,26 @@ export function CodeEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: updateProductCodeActionIntent,
+		key: updateProductNameActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: updateProductCodeActionIntent,
-		constraint: getZodConstraint(CodeEditorSchema),
+		id: updateProductNameActionIntent,
+		constraint: getZodConstraint(ProductNameEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: CodeEditorSchema })
+			return parseWithZod(formData, { schema: ProductNameEditorSchema })
 		},
 
 		defaultValue: {
-			code: value,
+			name: value as string,
 		},
 	})
 
 	const [targetValue, setTargetValue] = useState<string | number>(value)
-
-	//Double check that the value is within the limits to avoid layout issues
-	useEffect(() => {
-		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > CODE_MAX) setTargetValue(CODE_MAX.toString())
-		if (targetValueAsNumber < CODE_MIN) setTargetValue(CODE_MIN.toString())
-	}, [targetValue])
 
 	const renderedForm = (
 		<fetcher.Form
@@ -78,15 +73,15 @@ export function CodeEditModal({
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...getInputProps(fields.code, {
+					...getInputProps(fields.name, {
+						type: 'text',
 						ariaAttributes: true,
-						type: 'number',
 					}),
 					onChange: e => setTargetValue(e.target.value),
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.code.errors}
+				errors={fields.name.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -97,7 +92,7 @@ export function CodeEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={updateProductCodeActionIntent}
+			value={updateProductNameActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -110,7 +105,7 @@ export function CodeEditModal({
 
 	return (
 		<Editor
-			fetcherKey={`${updateProductCodeActionIntent}-product${id}`}
+			fetcherKey={`${updateProductNameActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

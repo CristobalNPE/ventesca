@@ -108,7 +108,6 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-hotkeys-hook": "^4.5.0",
-    "react-jsbarcode": "^1.0.1",
     "remix-auth": "^3.6.0",
     "remix-auth-github": "^1.7.0",
     "remix-utils": "^7.6.0",

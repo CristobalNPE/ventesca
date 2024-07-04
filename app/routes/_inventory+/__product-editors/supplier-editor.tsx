@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/inventory_+/edit.js'
+import { type action } from '#app/routes/_inventory+/edit.js'
 import {
 	type SelectedSupplier,
 	SupplierSelectBox,

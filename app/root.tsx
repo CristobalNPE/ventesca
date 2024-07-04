@@ -9,7 +9,6 @@ import {
 	getBusinessImgSrc,
 	getDomainUrl,
 	getUserImgSrc,
-	useDebounce,
 } from '#app/utils/misc.tsx'
 import {
 	json,
@@ -27,7 +26,6 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	useFetcher,
 	useLoaderData,
 	useNavigate,
 	useSubmit,
@@ -42,7 +40,6 @@ import { EpicProgress } from './components/progress-bar.tsx'
 import { Spacer } from './components/spacer.tsx'
 import { useToast } from './components/toaster.tsx'
 import { Button } from './components/ui/button.tsx'
-import { loader as productIdLoader } from '#app/routes/inventory_+/$productId.tsx'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -73,6 +70,9 @@ import { prisma } from './utils/db.server.ts'
 import { getEnv } from './utils/env.server.ts'
 import { honeypot } from './utils/honeypot.server.ts'
 
+import { useHotkeys } from 'react-hotkeys-hook'
+import { Key } from 'ts-key-enum'
+
 import VentescaLogoDark from './routes/_marketing+/logos/ventesca-dark.png'
 import VentescaLogoLight from './routes/_marketing+/logos/ventesca-light.png'
 import { useNonce } from './utils/nonce-provider.ts'
@@ -80,19 +80,7 @@ import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
-import { Separator } from './components/ui/separator.tsx'
-import { useHotkeys } from 'react-hotkeys-hook'
-import { Key } from 'ts-key-enum'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from './components/ui/dialog.tsx'
-import { Input } from './components/ui/input.tsx'
-import { ProductPriceReader } from './routes/inventory_+/price-reader.tsx'
+import { ProductPriceReader } from './routes/_inventory+/inventory.price-reader.tsx'
 
 type NavigationLink = {
 	name: string

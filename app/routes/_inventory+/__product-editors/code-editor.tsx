@@ -1,36 +1,27 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/inventory_+/edit.tsx'
+import { type action } from '#app/routes/_inventory+/edit.js'
 import { Editor } from '../../../components/editor.tsx'
 
-//Exported constants for consistency on item-creation
-export const PRODUCT_NAME_MAX = 30
-export const PRODUCT_NAME_MIN = 3
-export const updateProductNameActionIntent = 'update-product-name'
 
-export const ProductNameEditorSchema = z.object({
-	intent: z.literal(updateProductNameActionIntent),
+export const updateProductCodeActionIntent = 'update-product-code'
+
+export const CodeEditorSchema = z.object({
+	intent: z.literal(updateProductCodeActionIntent),
 	productId: z.string().optional(),
-	name: z
-		.string({
-			required_error: 'Campo obligatorio',
-		})
-		.min(PRODUCT_NAME_MIN, {
-			message: 'El nombre debe contener al menos 3 caracteres.',
-		})
-		.max(PRODUCT_NAME_MAX, {
-			message: `El nombre no puede ser mayor a ${PRODUCT_NAME_MAX} caracteres.`,
-		}),
+	code: z.string({
+		required_error: 'Campo obligatorio',
+	}),
 })
 
-export function ItemNameEditModal({
+export function CodeEditModal({
 	icon,
 	label,
 	value,
@@ -42,27 +33,28 @@ export function ItemNameEditModal({
 	id?: string
 }) {
 	const fetcher = useFetcher<typeof action>({
-		key: updateProductNameActionIntent,
+		key: updateProductCodeActionIntent,
 	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 
 	const [form, fields] = useForm({
-		id: updateProductNameActionIntent,
-		constraint: getZodConstraint(ProductNameEditorSchema),
+		id: updateProductCodeActionIntent,
+		constraint: getZodConstraint(CodeEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: ProductNameEditorSchema })
+			return parseWithZod(formData, { schema: CodeEditorSchema })
 		},
 
 		defaultValue: {
-			name: value as string,
+			code: value as string,
 		},
 	})
 
 	const [targetValue, setTargetValue] = useState<string | number>(value)
 
+	//Double check that the value is within the limits to avoid layout issues
 	const renderedForm = (
 		<fetcher.Form
 			method="POST"
@@ -73,15 +65,15 @@ export function ItemNameEditModal({
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...getInputProps(fields.name, {
-						type: 'text',
+					...getInputProps(fields.code, {
 						ariaAttributes: true,
+						type: 'number',
 					}),
 					onChange: e => setTargetValue(e.target.value),
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.name.errors}
+				errors={fields.code.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -92,7 +84,7 @@ export function ItemNameEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={updateProductNameActionIntent}
+			value={updateProductCodeActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -105,7 +97,7 @@ export function ItemNameEditModal({
 
 	return (
 		<Editor
-			fetcherKey={`${updateProductNameActionIntent}-product${id}`}
+			fetcherKey={`${updateProductCodeActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}

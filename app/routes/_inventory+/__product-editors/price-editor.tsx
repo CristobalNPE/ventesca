@@ -7,31 +7,27 @@ import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/inventory_+/edit.js'
+import { type action } from '#app/routes/_inventory+/edit.js'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { Editor } from '../../../components/editor.tsx'
 
-const SELLING_PRICE_MAX = 9999999
-const SELLING_PRICE_MIN = 0
-export const updateProductSellingPriceActionIntent = 'update-product-sellingPrice'
+const PRICE_MAX = 9999999
+const PRICE_MIN = 0
+export const updateProductPriceActionIntent = 'update-product-price'
 
-export const SellingPriceEditorSchema = z.object({
-	intent: z.literal(updateProductSellingPriceActionIntent),
+export const PriceEditorSchema = z.object({
+	intent: z.literal(updateProductPriceActionIntent),
 	productId: z.string().optional(),
-	sellingPrice: z
+	price: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(SELLING_PRICE_MIN, {
-			message: 'El precio de venta no puede ser negativo.',
-		})
-		.max(SELLING_PRICE_MAX, {
-			message: `El precio de venta no puede ser mayor a ${SELLING_PRICE_MAX}.`,
-		}),
+		.min(PRICE_MIN, { message: 'El valor no puede ser negativo.' })
+		.max(PRICE_MAX, { message: `El valor no puede ser mayor a ${PRICE_MAX}.` }),
 })
 
-export function SellingPriceEditModal({
+export function PriceEditModal({
 	icon,
 	label,
 	value,
@@ -42,19 +38,21 @@ export function SellingPriceEditModal({
 	value: string | number
 	id?: string
 }) {
-	const fetcher = useFetcher<typeof action>({ key: `${updateProductSellingPriceActionIntent}-product${id}` })
+	const fetcher = useFetcher<typeof action>({
+		key: `${updateProductPriceActionIntent}-product${id}`,
+	})
 	const actionData = fetcher.data
 	const isPending = fetcher.state !== 'idle'
 	const [open, setOpen] = useState(false)
 	const [form, fields] = useForm({
-		id: updateProductSellingPriceActionIntent,
-		constraint: getZodConstraint(SellingPriceEditorSchema),
+		id: updateProductPriceActionIntent,
+		constraint: getZodConstraint(PriceEditorSchema),
 		lastResult: actionData?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: SellingPriceEditorSchema })
+			return parseWithZod(formData, { schema: PriceEditorSchema })
 		},
 		defaultValue: {
-			sellingPrice: value,
+			price: value,
 		},
 	})
 
@@ -63,10 +61,8 @@ export function SellingPriceEditModal({
 	//Double check that the value is within the limits to avoid layout issues
 	useEffect(() => {
 		const targetValueAsNumber = Number(targetValue)
-		if (targetValueAsNumber > SELLING_PRICE_MAX)
-			setTargetValue(SELLING_PRICE_MAX.toString())
-		if (targetValueAsNumber < SELLING_PRICE_MIN)
-			setTargetValue(SELLING_PRICE_MIN.toString())
+		if (targetValueAsNumber > PRICE_MAX) setTargetValue(PRICE_MAX.toString())
+		if (targetValueAsNumber < PRICE_MIN) setTargetValue(PRICE_MIN.toString())
 	}, [targetValue])
 
 	const renderedForm = (
@@ -75,12 +71,11 @@ export function SellingPriceEditModal({
 			{...getFormProps(form)}
 			action={'/inventory/edit'}
 		>
-
 			<input type="hidden" name="productId" value={id} />
 			<Field
 				labelProps={{ children: `Nuevo ${label}`, hidden: true }}
 				inputProps={{
-					...getInputProps(fields.sellingPrice, {
+					...getInputProps(fields.price, {
 						ariaAttributes: true,
 						type: 'number',
 					}),
@@ -88,7 +83,7 @@ export function SellingPriceEditModal({
 					value: targetValue,
 					autoComplete: 'off',
 				}}
-				errors={fields.sellingPrice.errors}
+				errors={fields.price.errors}
 			/>
 			<ErrorList errors={form.errors} id={form.errorId} />
 		</fetcher.Form>
@@ -99,7 +94,7 @@ export function SellingPriceEditModal({
 			form={form.id}
 			type="submit"
 			name="intent"
-			value={updateProductSellingPriceActionIntent}
+			value={updateProductPriceActionIntent}
 			variant="default"
 			status={isPending ? 'pending' : form.status ?? 'idle'}
 			disabled={isPending}
@@ -113,7 +108,7 @@ export function SellingPriceEditModal({
 	return (
 		<Editor
 			formatFn={formatCurrency}
-			fetcherKey={`${updateProductSellingPriceActionIntent}-product${id}`}
+			fetcherKey={`${updateProductPriceActionIntent}-product${id}`}
 			targetValue={targetValue}
 			open={open}
 			setOpen={setOpen}
