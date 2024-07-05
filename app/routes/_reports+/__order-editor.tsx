@@ -79,8 +79,8 @@ export function OrderEditor({
 	const paymentMethod = useInputControl(fields.paymentMethod)
 
 	return (
-		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden ">
-			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
+		<Card className="flex h-full animate-slide-left flex-col overflow-hidden rounded-none">
+			<CardHeader className="flex flex-row items-start justify-between bg-muted/50 p-4">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
 						Modificar transacción
@@ -90,7 +90,7 @@ export function OrderEditor({
 					</CardDescription>
 				</div>
 			</CardHeader>
-			<CardContent className="flex-1">
+			<CardContent className="flex-1 p-4">
 				<Form
 					className="flex flex-1 flex-col gap-4 p-6 text-sm "
 					method="POST"
@@ -146,24 +146,25 @@ export function OrderEditor({
 					<ErrorList id={form.errorId} errors={form.errors} />
 				</Form>
 			</CardContent>
-			<CardFooter className="flex flex-col items-center justify-between gap-4 border-t bg-muted/50 px-6 py-3 sm:flex-row">
-				<div className="flex w-full justify-between gap-2 sm:justify-normal">
-					<Button variant={'ghost'} asChild>
+			<CardFooter className="flex  items-center justify-between gap-2 border-t bg-muted/50 p-4 ">
+				<div className="flex w-full  gap-2">
+					<Button size={'sm'} variant={'ghost'} asChild>
 						<LinkWithParams preserveSearch relative="path" to={'..'}>
 							<Icon name="arrow-left" className="mr-2" /> Volver
 						</LinkWithParams>
 					</Button>
-					<Button form={form.id} variant="outline" type="reset">
+					<Button size={'sm'} form={form.id} variant="outline" type="reset">
 						Restaurar
 					</Button>
 				</div>
 				<StatusButton
+					size={'sm'}
 					form={form.id}
 					type="submit"
 					disabled={isPending}
 					status={isPending ? 'pending' : 'idle'}
 					iconName="check"
-					className="w-full sm:w-fit"
+					className="w-fit"
 				>
 					{order ? 'Actualizar registro' : 'Registrar Proveedor'}
 				</StatusButton>

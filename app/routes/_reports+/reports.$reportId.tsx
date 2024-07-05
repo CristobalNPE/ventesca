@@ -5,7 +5,12 @@ import {
 	json,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Link, MetaFunction, useLoaderData } from '@remix-run/react'
+import {
+	MetaFunction,
+	useLoaderData,
+	useNavigation,
+	useSearchParams,
+} from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -37,15 +42,17 @@ import { ProductOrderType } from '../order+/_types/productOrderType.ts'
 
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { getTimePeriodForDate } from '#app/utils/time-periods.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
 import { parseWithZod } from '@conform-to/zod'
+import { useEffect, useRef } from 'react'
 import {
 	DeleteOrder,
 	deleteOrderActionIntent,
 	DeleteOrderSchema,
 } from './__delete-order.tsx'
-import { useRef } from 'react'
+import { useSpinDelay } from 'spin-delay'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -94,15 +101,48 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 }
 
-export default function ReportRoute() {
+export default function ReportSheet() {
 	const { orderReport } = useLoaderData<typeof loader>()
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
 	const iframeRef = useRef<HTMLIFrameElement>(null)
+	const [searchParams, setSearchParams] = useSearchParams()
+
+	useEffect(() => {
+		const periodParam = searchParams.get('period')
+
+		if (!periodParam) {
+			setSearchParams(prev => {
+				prev.set(
+					'period',
+					getTimePeriodForDate(new Date(orderReport.completedAt))?.toString() ??
+						'',
+				)
+				return prev
+			})
+		}
+	}, [])
+
+	const navigation = useNavigation()
+	const isLoading = navigation.state === 'loading'
+
+	const shouldShowLoadingSpinner = useSpinDelay(isLoading, {
+		delay: 150,
+		minDuration: 500,
+	})
+
+	if (shouldShowLoadingSpinner) {
+		return (
+			<div className="flex h-full flex-col items-center justify-center gap-2">
+				<Icon name="update" className="animate-spin text-3xl" />
+				<span>Cargando detalles</span>
+			</div>
+		)
+	}
 
 	return (
-		<Card className="flex h-full animate-slide-left flex-col lg:h-[85dvh]  ">
-			<CardHeader className="flex flex-col items-start  gap-2 bg-muted/50 2xl:flex-row">
+		<Card className="flex h-full flex-col rounded-none">
+			<CardHeader className="flex flex-col items-start bg-muted/50  p-4 ">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
 						Transacción
@@ -125,7 +165,7 @@ export default function ReportRoute() {
 						})}
 					</CardDescription>
 				</div>
-				<div className="ml-auto flex w-full  items-center gap-1 2xl:justify-end">
+				<div className="ml-auto flex w-full  items-center gap-1">
 					<iframe
 						className="hidden"
 						ref={iframeRef}
@@ -169,10 +209,10 @@ export default function ReportRoute() {
 					) : null}
 				</div>
 			</CardHeader>
-			<CardContent className="flex-1 overflow-auto p-6 text-sm ">
-				<div className="grid gap-3">
+			<CardContent className="flex-1  overflow-auto p-4  text-sm ">
+				<div className="flex flex-col gap-3 ">
 					<div className="font-semibold">Detalles de transacción</div>
-					<ScrollArea className="h-[13.5rem]">
+					<ScrollArea className="h-[18rem] ">
 						<ul className="grid gap-3">
 							{orderReport.productOrders.map(productOrder => (
 								<li
@@ -202,6 +242,7 @@ export default function ReportRoute() {
 							))}
 						</ul>
 					</ScrollArea>
+
 					<Separator className="my-2" />
 					<ul className="grid gap-3">
 						<li className="flex items-center justify-between">
@@ -264,7 +305,7 @@ export default function ReportRoute() {
 					</dl>
 				</div>
 			</CardContent>
-			<CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
+			<CardFooter className="flex flex-row items-center border-t bg-muted/50 p-4">
 				{orderReport.status !== OrderStatus.PENDING ? (
 					<div className="text-xs text-muted-foreground">
 						{orderReport.status === OrderStatus.FINISHED
