@@ -327,13 +327,15 @@ function App() {
 					/>
 				)}
 
-				<main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7">
-					<div className="lg:hidden ">
+				<main className="flex-1  h-[98.5dvh] max-w-[120rem] mx-auto overflow-y-auto bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7">
+				{/* <main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7"> */}
+					{/* <div className="lg:hidden ">
 						<Spacer size="xs" />
-					</div>
-					<div className="mx-auto h-full max-w-[120rem]">
+					</div> */}
+					{/* <div className="mx-auto h-full max-w-[120rem]"> */}
+					
 						<Outlet />
-					</div>
+			
 				</main>
 				{/* </div> */}
 			</div>
