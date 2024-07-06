@@ -50,10 +50,13 @@ import {
 	useSearchParams,
 } from '@remix-run/react'
 import {
+	eachDayOfInterval,
+	endOfDay,
 	endOfToday,
 	endOfWeek,
 	endOfYesterday,
 	format,
+	startOfDay,
 	startOfToday,
 	startOfWeek,
 	startOfYesterday,
@@ -61,21 +64,37 @@ import {
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+import {
+	ChartConfig,
+	ChartContainer,
+	ChartTooltip,
+} from '#app/components/ui/chart.tsx'
 import { Sheet, SheetContent } from '#app/components/ui/sheet.tsx'
 import {
 	TimePeriod,
 	allTimePeriods,
 	getTimePeriodBoundaries,
-	getTimePeriodForDate,
 	timePeriodNames,
 } from '#app/utils/time-periods.ts'
 import { useEffect, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, TooltipProps, XAxis } from 'recharts'
+import {
+	NameType,
+	ValueType,
+} from 'recharts/types/component/DefaultTooltipContent'
 import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
 import { VerifyOrderDialog } from './reports_.verify-order.tsx'
 
 const statusParam = 'status'
 const periodParam = 'period'
 const sellerParam = 'seller'
+
+const chartConfig = {
+	earnings: {
+		label: 'Ingresos',
+		color: 'hsl(var(--chart-6))',
+	},
+} satisfies ChartConfig
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -109,6 +128,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const dayEarningsPromise = getLastTwoDaysEarnings(businessId)
 
+	const weekDailyEarningsPromise = getWeeklyDailyEarnings(businessId)
+
 	const numberOfOrdersPromise = prisma.order.count({
 		where: filters,
 	})
@@ -133,14 +154,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		select: { id: true, name: true },
 	})
 
-	const [numberOfOrders, orders, businessSellers, weekEarnings, dayEarnings] =
-		await Promise.all([
-			numberOfOrdersPromise,
-			ordersPromise,
-			businessSellersPromise,
-			weekEarningsPromise,
-			dayEarningsPromise,
-		])
+	const [
+		numberOfOrders,
+		orders,
+		businessSellers,
+		weekEarnings,
+		dayEarnings,
+		weekDailyEarnings,
+	] = await Promise.all([
+		numberOfOrdersPromise,
+		ordersPromise,
+		businessSellersPromise,
+		weekEarningsPromise,
+		dayEarningsPromise,
+		weekDailyEarningsPromise,
+	])
 
 	return json({
 		orders,
@@ -148,12 +176,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		businessSellers,
 		weekEarnings,
 		dayEarnings,
+		weekDailyEarnings,
 	})
 }
 
 export default function OrderReportsRoute() {
-	const { orders, numberOfOrders, businessSellers, weekEarnings, dayEarnings } =
-		useLoaderData<typeof loader>()
+	const {
+		orders,
+		numberOfOrders,
+		businessSellers,
+		weekEarnings,
+		dayEarnings,
+		weekDailyEarnings,
+	} = useLoaderData<typeof loader>()
 
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
@@ -253,10 +288,52 @@ export default function OrderReportsRoute() {
 								/>
 							</CardFooter>
 						</Card>
+						<Card className="flex h-full w-full flex-1 flex-col">
+							<CardHeader className="pb-2">
+								<CardTitle>Detalle ingresos semanal</CardTitle>
+								<CardDescription>
+									Semana{' '}
+									{`${format(
+										startOfWeek(new Date(), { weekStartsOn: 1 }),
+										'dd',
+										{
+											locale: es,
+										},
+									)} a ${format(
+										endOfWeek(new Date(), { weekStartsOn: 1 }),
+										"dd 'de' MMMM",
+										{
+											locale: es,
+										},
+									)}`}{' '}
+								</CardDescription>
+							</CardHeader>
+							<CardContent className="flex flex-1 flex-col items-center justify-center">
+								<ChartContainer config={chartConfig} className="h-full w-full">
+									<BarChart accessibilityLayer data={weekDailyEarnings}>
+										<CartesianGrid strokeDasharray={'3 3'} vertical={false} />
+										<XAxis
+											dataKey="day"
+											tickLine={false}
+											tickMargin={10}
+											axisLine={false}
+											tickFormatter={value => value.slice(0, 3)}
+										/>
+										<ChartTooltip cursor={false} content={<CustomTooltip />} />
+										<Bar
+											dataKey="earnings"
+											fill="var(--color-earnings)"
+											radius={8}
+										/>
+									</BarChart>
+								</ChartContainer>
+							</CardContent>
+							<CardFooter></CardFooter>
+						</Card>
 					</div>
 					<div className="flex flex-1 flex-col gap-2">
 						<div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
-							<div className="flex h-fit w-fit min-w-[20rem] items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
+							<div className="flex h-fit w-fit  items-center gap-2 rounded-sm bg-secondary px-1 py-[1px]">
 								{allTimePeriods.map((period, i) => (
 									<div
 										onClick={() => {
@@ -357,11 +434,7 @@ export default function OrderReportsRoute() {
 								<VerifyOrderDialog />
 							</div>
 						</div>
-						<OrderReportsCard
-							orders={orders}
-							totalOrders={numberOfOrders}
-							setOpenReport={setIsDetailsSheetOpen}
-						/>
+						<OrderReportsCard orders={orders} totalOrders={numberOfOrders} />
 					</div>
 				</div>
 
@@ -392,13 +465,9 @@ type OrderWithSellerName = Pick<
 function OrderReportsCard({
 	orders,
 	totalOrders,
-
-	setOpenReport,
 }: {
 	orders: SerializeFrom<OrderWithSellerName>[]
 	totalOrders: number
-
-	setOpenReport: (isOpen: boolean) => void
 }) {
 	const user = useUser()
 	const isAdmin = userHasRole(user, 'Administrador')
@@ -559,6 +628,34 @@ async function getLastTwoWeeksEarnings(businessId: string) {
 	}
 }
 
+async function getWeeklyDailyEarnings(businessId: string) {
+	const weekDays = eachDayOfInterval({
+		start: startOfWeek(new Date(), { weekStartsOn: 1 }),
+		end: endOfWeek(new Date(), { weekStartsOn: 1 }),
+	})
+
+	const dailyEarnings = await Promise.all(
+		weekDays.map(async day => {
+			const orders = await prisma.order.findMany({
+				where: {
+					businessId,
+					completedAt: { gte: startOfDay(day), lte: endOfDay(day) },
+				},
+				select: { status: true, total: true },
+			})
+			const earnings = calculateTotalEarnings(orders)
+			return {
+				day: format(day, 'eeee', {
+					locale: es,
+				}),
+				earnings,
+			}
+		}),
+	)
+
+	return dailyEarnings
+}
+
 async function getLastTwoDaysEarnings(businessId: string) {
 	const currentDayStartDate = startOfToday()
 	const currentDayEndDate = endOfToday()
@@ -619,4 +716,21 @@ function calculateTotalEarnings(orders: Pick<Order, 'status' | 'total'>[]) {
 
 export const meta: MetaFunction = () => {
 	return [{ title: 'Reportes de transacción | Ventesca' }]
+}
+
+const CustomTooltip = ({
+	active,
+	payload,
+	label,
+}: TooltipProps<ValueType, NameType>) => {
+	if (active && payload && payload.length) {
+		return (
+			<div className="flex items-center gap-1 rounded border bg-background p-1">
+				<div className="h-2 w-2 bg-primary "></div>
+				<p className="font-semibold capitalize">{`${label} : ${formatCurrency(Number(payload?.[0]?.value))}`}</p>
+			</div>
+		)
+	}
+
+	return null
 }
