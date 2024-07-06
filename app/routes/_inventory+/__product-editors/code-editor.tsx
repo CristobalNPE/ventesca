@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/_inventory+/edit.js'
+import { type action } from '#app/routes/_inventory+/inventory.edit.js'
 import { Editor } from '../../../components/editor.tsx'
 
 

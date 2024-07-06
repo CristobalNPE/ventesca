@@ -5,7 +5,7 @@ import { useFetcher } from '@remix-run/react'
 
 import { z } from 'zod'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '../edit.tsx'
+import { type action } from '../inventory.edit.tsx'
 
 export const updateProductStatusActionIntent = 'update-product-status'
 export const STATUS_DISABLED = 'active'
