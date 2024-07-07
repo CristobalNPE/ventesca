@@ -60,6 +60,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		select: {
 			id: true,
 			code: true,
+			colorCode:true,
 			description: true,
 			createdAt: true,
 			updatedAt: true,
@@ -133,6 +134,7 @@ export default function CategoryRoute() {
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
 						<div className="flex gap-4 text-lg">
+							<input type='color' value={category.colorCode} />
 							<span>{category.description}</span>
 							<Badge
 								variant={'secondary'}

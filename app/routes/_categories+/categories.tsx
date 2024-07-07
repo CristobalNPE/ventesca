@@ -33,6 +33,7 @@ import {
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
+import { faker } from '@faker-js/faker'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -265,6 +266,7 @@ async function createCategoryAction(formData: FormData, businessId: string) {
 
 	const createdCategory = await prisma.category.create({
 		data: {
+			colorCode: faker.color.rgb(),
 			code,
 			description,
 			business: { connect: { id: businessId } },

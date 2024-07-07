@@ -54,6 +54,7 @@ import { useMemo } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
 import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
+import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/productService.server.ts'
 
 const orderDetailsSelect = {
 	id: true,
@@ -235,27 +236,6 @@ export default function TransactionRoute() {
 	let allProductOrders = order.productOrders
 	const [focus, setFocus] = useRoveFocus(allProductOrders.length ?? 0)
 
-	// //KB Shortcuts
-	// const submit = useSubmit()
-	// useHotkeys(
-	// 	[Key.E],
-	// 	event => {
-	// 		switch (event.key) {
-	// 			case `alt+return`: {
-	// 				submit(
-	// 					{
-	// 						intent: finishOrderActionIntent,
-	// 						orderId: order.id,
-	// 					},
-	// 					{ method: 'POST', action: '/order' },
-	// 				)
-	// 				break
-	// 			}
-	// 		}
-	// 	},
-	// 	{ preventDefault: true },
-	// )
-
 	return (
 		<div className="flex h-full flex-1  gap-12">
 			<div className="flex-1 ">
@@ -394,7 +374,7 @@ async function finishOrderAction(formData: FormData) {
 	})
 
 	//update stock for products in the order
-	await updateProductsStock(order.productOrders)
+	await updateProductStockAndAnalytics(order.productOrders, OrderAction.CREATE)
 
 	return redirectWithToast(`/reports/${orderId}`, {
 		type: 'success',
@@ -403,31 +383,6 @@ async function finishOrderAction(formData: FormData) {
 	})
 }
 
-async function updateProductsStock(productOrders: ProductOrderModel[]) {
-	for (let productOrder of productOrders) {
-		const product = await prisma.product.findUniqueOrThrow({
-			where: { id: productOrder.productId },
-			select: { stock: true },
-		})
-
-		if (productOrder.type === ProductOrderType.RETURN) {
-			await prisma.product.update({
-				where: { id: productOrder.productId },
-				data: {
-					stock: { increment: productOrder.quantity },
-				},
-			})
-		} else {
-			const newStock = product.stock - productOrder.quantity
-			await prisma.product.update({
-				where: { id: productOrder.productId },
-				data: {
-					stock: { set: Math.max(newStock, 0) },
-				},
-			})
-		}
-	}
-}
 
 async function applyDirectDiscountAction(formData: FormData) {
 	const submission = await parseWithZod(formData, {

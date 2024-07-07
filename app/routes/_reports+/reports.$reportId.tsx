@@ -53,6 +53,8 @@ import {
 	DeleteOrderSchema,
 } from './__delete-order.tsx'
 import { useSpinDelay } from 'spin-delay'
+import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/productService.server.ts'
+
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -347,22 +349,25 @@ async function deleteOrderAction(formData: FormData) {
 
 	invariantResponse(order, 'Order not found', { status: 404 })
 
-	//restore stock only if deleting a finished order
-	if (order.status === OrderStatus.FINISHED) {
-		for (let productOrder of order.productOrders) {
-			if (productOrder.type === ProductOrderType.RETURN) {
-				await prisma.product.update({
-					where: { id: productOrder.productId },
-					data: { stock: { decrement: productOrder.quantity } },
-				})
-			} else {
-				await prisma.product.update({
-					where: { id: productOrder.productId },
-					data: { stock: { increment: productOrder.quantity } },
-				})
-			}
-		}
-	}
+  // Update stock and analytics only if deleting a finished order
+  if (order.status === OrderStatus.FINISHED) {
+    await updateProductStockAndAnalytics(order.productOrders, OrderAction.DELETE)
+  }
+	// if (order.status === OrderStatus.FINISHED) {
+	// 	for (let productOrder of order.productOrders) {
+	// 		if (productOrder.type === ProductOrderType.RETURN) {
+	// 			await prisma.product.update({
+	// 				where: { id: productOrder.productId },
+	// 				data: { stock: { decrement: productOrder.quantity } },
+	// 			})
+	// 		} else {
+	// 			await prisma.product.update({
+	// 				where: { id: productOrder.productId },
+	// 				data: { stock: { increment: productOrder.quantity } },
+	// 			})
+	// 		}
+	// 	}
+	// }
 
 	await prisma.order.delete({ where: { id: orderId } })
 	return redirectWithToast(`/reports`, {

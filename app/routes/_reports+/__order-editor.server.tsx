@@ -5,6 +5,8 @@ import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { OrderReportEditSchema } from './__order-editor'
 import { OrderStatus } from '../order+/_types/order-status'
 import { ProductOrderType } from '../order+/_types/productOrderType'
+import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/productService.server.ts'
+
 
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserWithRole(request, 'Administrador')
@@ -28,49 +30,57 @@ export async function action({ request }: ActionFunctionArgs) {
 	const order = await prisma.order.findUniqueOrThrow({
 		where: { id },
 		include: {
-			productOrders: {
-				select: {
-					id: true,
-					productId: true,
-					quantity: true,
-					type: true,
-					productDetails: true,
-					totalDiscount: true,
-				},
-			},
+			productOrders: true
 		},
 	})
 
-	//If changed status, revert used stock.
-	if (status === OrderStatus.DISCARDED) {
-		for (let productOrder of order.productOrders) {
-			if (productOrder.type === ProductOrderType.RETURN) {
-				await prisma.product.update({
-					where: { id: productOrder.productId },
-					data: { stock: { decrement: productOrder.quantity } },
-				})
-			} else {
-				await prisma.product.update({
-					where: { id: productOrder.productId },
-					data: { stock: { increment: productOrder.quantity } },
-				})
-			}
-		}
-	} else {
-		for (let productOrder of order.productOrders) {
-			if (productOrder.type === ProductOrderType.RETURN) {
-				await prisma.product.update({
-					where: { id: productOrder.productId },
-					data: { stock: { increment: productOrder.quantity } },
-				})
-			} else {
-				await prisma.product.update({
-					where: { id: productOrder.productId },
-					data: { stock: { decrement: productOrder.quantity } },
-				})
-			}
+	//If changed status, update stock and analytics
+	if (status !== order.status) {
+		if (status === OrderStatus.DISCARDED) {
+			await updateProductStockAndAnalytics(
+				order.productOrders,
+				OrderAction.DISCARD,
+			)
+		} else if (
+			order.status === OrderStatus.DISCARDED &&
+			status === OrderStatus.FINISHED
+		) {
+			await updateProductStockAndAnalytics(
+				order.productOrders,
+				OrderAction.UNDISCARD,
+			)
 		}
 	}
+
+	// if (status === OrderStatus.DISCARDED) {
+	// 	for (let productOrder of order.productOrders) {
+	// 		if (productOrder.type === ProductOrderType.RETURN) {
+	// 			await prisma.product.update({
+	// 				where: { id: productOrder.productId },
+	// 				data: { stock: { decrement: productOrder.quantity } },
+	// 			})
+	// 		} else {
+	// 			await prisma.product.update({
+	// 				where: { id: productOrder.productId },
+	// 				data: { stock: { increment: productOrder.quantity } },
+	// 			})
+	// 		}
+	// 	}
+	// } else {
+	// 	for (let productOrder of order.productOrders) {
+	// 		if (productOrder.type === ProductOrderType.RETURN) {
+	// 			await prisma.product.update({
+	// 				where: { id: productOrder.productId },
+	// 				data: { stock: { increment: productOrder.quantity } },
+	// 			})
+	// 		} else {
+	// 			await prisma.product.update({
+	// 				where: { id: productOrder.productId },
+	// 				data: { stock: { decrement: productOrder.quantity } },
+	// 			})
+	// 		}
+	// 	}
+	// }
 
 	await prisma.order.update({
 		where: { id },

@@ -100,10 +100,11 @@ export async function action({ request }: ActionFunctionArgs) {
 			supplier: { connect: { id: defaultSupplier.id } },
 			business: { connect: { id: businessId } },
 			stock: DEFAULT_STOCK,
+			productAnalytics: { create: {} },
 		},
 	})
 
-	return redirect(`/inventory/${createdProduct.id}`)
+	return redirect(`/inventory/${createdProduct.id}/details`)
 }
 
 export function CreateItemDialog() {
@@ -123,7 +124,7 @@ export function CreateItemDialog() {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button variant={'outline'}>
+				<Button size={'pill'} className="flex h-9 items-center gap-2">
 					<Icon name="plus" size="md" />
 					<span>Agregar articulo</span>
 				</Button>

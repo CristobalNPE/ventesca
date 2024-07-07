@@ -78,7 +78,7 @@ export function ProductPriceReader({
 
 	const navigateToDetails = useCallback(() => {
 		if (!productState.product) return
-		navigate(`/inventory/${productState.product.id}`)
+		navigate(`/inventory/${productState.product.id}/details`)
 		if (inputRef.current !== null) {
 			inputRef.current.value = ''
 		}

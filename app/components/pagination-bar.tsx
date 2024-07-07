@@ -3,7 +3,7 @@ import { setSearchParamsString } from '#app/utils/misc.tsx'
 import { Button } from './ui/button.tsx'
 import { Icon } from './ui/icon.tsx'
 
-export function PaginationBar({ total,top }: { total: number,top:number }) {
+export function PaginationBar({ total, top }: { total: number; top: number }) {
 	const [searchParams] = useSearchParams()
 	const $skip = Number(searchParams.get('$skip')) || 0
 	const $top = Number(searchParams.get('$top')) || top
@@ -93,7 +93,7 @@ export function PaginationBar({ total,top }: { total: number,top:number }) {
 								}}
 								preventScrollReset
 								prefetch="intent"
-								className="w-[1rem] md:min-w-[2rem] font-normal text-neutral-600"
+								className="w-[1rem] font-normal text-neutral-600 md:min-w-[2rem]"
 							>
 								{pageNumber}
 							</Link>
@@ -105,7 +105,7 @@ export function PaginationBar({ total,top }: { total: number,top:number }) {
 				<Link
 					to={{
 						search: setSearchParamsString(searchParams, {
-							$skip: $skip + $top,
+							$skip:canPageForwards? $skip + $top: 0,
 						}),
 					}}
 					preventScrollReset

@@ -13,6 +13,7 @@ datasource db {
 model Category {
   id          String    @id @default(cuid())
   code        Int
+  colorCode   String
   description String
   products    Product[]
   business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -61,14 +62,12 @@ model Product {
 }
 
 model ProductAnalytics {
-  id          String  @id @default(cuid())
-  item        Product @relation(fields: [productId], references: [id])
-  productId   String  @unique
-  totalProfit Float   @default(0)
-  totalSales  Int     @default(0)
-  // averagePrice   Float
-  // leastSoldDate  DateTime?
-  // mostProfitData DateTime?
+  id           String  @id @default(cuid())
+  item         Product @relation(fields: [productId], references: [id])
+  productId    String  @unique
+  totalProfit  Float   @default(0)
+  totalSales   Int     @default(0)
+  totalReturns Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -88,24 +88,6 @@ async function seed() {
 	console.time(`🐨 Created test users`)
 
 	const users = []
-	const superuser = await prisma.user.create({
-		select: { id: true, businessId: true },
-		data: {
-			business: { create: { name: 'SUPER BUSINESS' } },
-			email: 'superuser@ventesca.super',
-			username: 'superuser',
-			name: 'SuperUser Ventesca System',
-			password: { create: createPassword('super123') },
-
-			roles: {
-				connect: [
-					{ name: 'Administrador' },
-					{ name: 'Vendedor' },
-					{ name: 'SuperUser' },
-				],
-			},
-		},
-	})
 
 	const adminTest = await prisma.user.create({
 		select: {
@@ -153,7 +135,7 @@ async function seed() {
 		},
 	})
 
-	users.push(superuser, adminTest, sellerTest1, sellerTest2)
+	users.push( adminTest, sellerTest1, sellerTest2)
 	console.timeEnd(`🐨 Created test users`)
 
 	console.time('Created default category and supplier')
@@ -173,6 +155,7 @@ async function seed() {
 	})
 	await prisma.category.create({
 		data: {
+			colorCode: faker.color.rgb(),
 			code: 0,
 			description: 'General',
 			business: { connect: { id: testBusiness.id } },
@@ -188,6 +171,7 @@ async function seed() {
 			let code = i + 1
 			await prisma.category.create({
 				data: {
+					colorCode: faker.color.rgb(),
 					code,
 					description: `${faker.commerce.productAdjective()} ${faker.commerce.department()}`,
 					business: { connect: { id: business.id } },

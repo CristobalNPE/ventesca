@@ -339,6 +339,7 @@ export default function OrderReportsRoute() {
 										onClick={() => {
 											const newSearchParams = new URLSearchParams(searchParams)
 											newSearchParams.set(periodParam, period)
+											
 
 											navigate(`/reports?${newSearchParams.toString()}`)
 										}}
@@ -529,7 +530,6 @@ function OrderReportsCard({
 			<CardContent className="flex flex-col gap-3 sm:gap-1 ">
 				{orders.map(order => (
 					<LinkWithParams
-						// onClick={() => setOpenReport(true)}
 						key={order.id}
 						prefetch={'intent'}
 						className={({ isActive }) =>
