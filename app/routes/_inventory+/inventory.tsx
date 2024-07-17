@@ -1,4 +1,15 @@
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -28,20 +39,12 @@ import {
 	useDebounce,
 	useIsPending,
 } from '#app/utils/misc.tsx'
-import Autoplay from 'embla-carousel-autoplay'
 
 import {
 	Alert,
 	AlertDescription,
 	AlertTitle,
 } from '#app/components/ui/alert.tsx'
-import {
-	Carousel,
-	CarouselContent,
-	CarouselItem,
-	CarouselNext,
-	CarouselPrevious,
-} from '#app/components/ui/carousel.tsx'
 import {
 	ChartConfig,
 	ChartContainer,
@@ -56,10 +59,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '#app/components/ui/select.tsx'
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from '#app/components/ui/tabs.js'
 import { Category, Prisma } from '@prisma/client'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
 	Form,
+	Link,
 	Outlet,
 	useLoaderData,
 	useLocation,
@@ -76,6 +86,14 @@ import {
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './productService.server.ts'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '#app/components/ui/dropdown-menu.tsx'
 
 const chartConfig = {} satisfies ChartConfig
 const stockFilterParam = 'stock'
@@ -123,6 +141,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const filters: Prisma.ProductWhereInput = {
 		businessId,
+		isDeleted: false,
 		...(stockFilter && {
 			stock: { lte: Number.parseInt(stockFilter) },
 		}),
@@ -218,16 +237,41 @@ export default function InventoryRoute() {
 
 	return (
 		<main className="flex h-full  flex-col gap-4">
-			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
+			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center lg:flex-row lg:text-left">
 				<h1 className="text-xl font-semibold">Administración de Inventario</h1>
 				{isAdmin ? (
-					<div className="hidden flex-col gap-2 sm:flex sm:flex-row-reverse sm:gap-4">
-						<CreateItemDialog />
-						<Button size={'sm'} variant={'outline'}>
-							Modificar precios
-						</Button>
-						<Button size={'sm'} variant={'outline'}>
-							Generar reporte
+					<div className="mt-4 flex w-full flex-col gap-2 lg:mt-0 lg:max-w-[25rem] lg:flex-row-reverse">
+						<div className="flex w-full gap-1 ">
+							<CreateItemDialog />
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button size={'sm'} className="w-6 p-0">
+										<Icon name="dots-vertical" />
+										<span className="sr-only">
+											Mas opciones para ingresar productos
+										</span>
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuItem asChild>
+										<Link to={"new-products"}>
+											<Icon name="cube-plus" className="mr-2" /> Ingresar
+											multiples productos
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem>
+										<Icon name="file-text" className="mr-2" /> Importar
+										productos desde archivo
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+						<ModifyProductPriceInBulkModal />
+						<Button asChild size={'sm'} variant={'outline'}>
+							<a href={'/inventory/generate-inventory-template'}>
+								<Icon name="file-arrow-right" size="sm" className="mr-2" />
+								<span>Exportar datos de inventario</span>
+							</a>
 						</Button>
 					</div>
 				) : null}
@@ -236,18 +280,6 @@ export default function InventoryRoute() {
 			<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
 				<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
 					<div className="flex w-full flex-col gap-3 xl:max-w-[25rem]">
-						{isAdmin ? (
-							<div className="flex flex-col gap-2 sm:hidden sm:flex-row-reverse sm:gap-4">
-								<CreateItemDialog />
-								<Button size={'sm'} variant={'outline'}>
-									Modificar precios
-								</Button>
-								<Button size={'sm'} variant={'outline'}>
-									Generar reporte
-								</Button>
-							</div>
-						) : null}
-
 						{zeroStockProducts ? (
 							<Alert
 								onClick={() => {
@@ -284,6 +316,7 @@ export default function InventoryRoute() {
 										stockFilterParam,
 										LOW_STOCK_CHANGE_FOR_CONFIG,
 									)
+
 									setSearchParams(newSearchParams)
 								}}
 								className="group animate-slide-left cursor-pointer p-3 transition-colors hover:bg-secondary"
@@ -301,82 +334,82 @@ export default function InventoryRoute() {
 							</Alert>
 						) : null}
 						{bestSeller && mostProfit ? (
-							<Carousel
-								plugins={[
-									Autoplay({
-										delay: 8000,
-									}),
-								]}
-							>
-								<CarouselContent>
-									<CarouselItem>
-										<Card className="relative ">
-											<Icon
-												name="trophy"
-												className="absolute right-5 top-5 text-4xl"
-											/>
-											<CardHeader>
-												<CardDescription>Articulo mas vendido</CardDescription>
-												<CardTitle className="">
-													{bestSeller.item.name.slice(0, 25)}
-												</CardTitle>
-											</CardHeader>
-											<CardContent className="flex justify-between">
-												<div className="flex flex-col rounded border bg-secondary/50 p-4">
-													<span className="text-sm text-muted-foreground">
-														Unidades vendidas
-													</span>
-													<span className="text-2xl font-bold">
-														{bestSeller.totalSales}
-													</span>
-												</div>
-												<div className="flex flex-col rounded border bg-secondary/50 p-4">
-													<span className="text-sm text-muted-foreground">
-														Ganancias totales
-													</span>
-													<span className="text-2xl font-bold">
-														{formatCurrency(bestSeller.totalProfit)}
-													</span>
-												</div>
-											</CardContent>
-										</Card>
-									</CarouselItem>
-									<CarouselItem>
-										<Card className="relative ">
-											<Icon
-												name="trending-up"
-												className="absolute right-5 top-5 text-4xl"
-											/>
-											<CardHeader>
-												<CardDescription>Mayores ganancias</CardDescription>
-												<CardTitle className="">
-													{mostProfit.item.name.slice(0, 25)}
-												</CardTitle>
-											</CardHeader>
-											<CardContent className="flex justify-between">
-												<div className="flex flex-col rounded border bg-secondary/50 p-4">
-													<span className="text-sm text-muted-foreground">
-														Ganancias totales
-													</span>
-													<span className="text-2xl font-bold">
-														{formatCurrency(mostProfit.totalProfit)}
-													</span>
-												</div>
-												<div className="flex flex-col rounded border bg-secondary/50 p-4">
-													<span className="text-sm text-muted-foreground">
-														Unidades vendidas
-													</span>
-													<span className="text-2xl font-bold">
-														{mostProfit.totalSales}
-													</span>
-												</div>
-											</CardContent>
-										</Card>
-									</CarouselItem>
-								</CarouselContent>
-								<CarouselPrevious className="-left-3   top-3/4" />
-								<CarouselNext className="-right-3  top-3/4" />
-							</Carousel>
+							<Tabs defaultValue={'most-sold'} className="">
+								<TabsList className="w-full">
+									<TabsTrigger className="w-full" value={'most-sold'}>
+										Mas Vendido
+										<Icon name="trophy" className="ml-2" size="sm" />
+									</TabsTrigger>
+									<TabsTrigger className="w-full" value={'most-profit'}>
+										Mayor Ganancia
+										<Icon name="trending-up" className="ml-2" size="sm" />
+									</TabsTrigger>
+								</TabsList>
+								<TabsContent value={'most-sold'}>
+									<Card className="relative ">
+										<Icon
+											name="trophy"
+											className="absolute right-5 top-5 text-4xl"
+										/>
+										<CardHeader>
+											<CardDescription>Articulo mas vendido</CardDescription>
+											<CardTitle className="">
+												{bestSeller.product.name.slice(0, 25)}
+											</CardTitle>
+										</CardHeader>
+										<CardContent className="flex justify-between">
+											<div className="flex flex-col rounded border bg-secondary/50 p-4">
+												<span className="text-sm text-muted-foreground">
+													Unidades vendidas
+												</span>
+												<span className="text-2xl font-bold">
+													{bestSeller.totalSales}
+												</span>
+											</div>
+											<div className="flex flex-col rounded border bg-secondary/50 p-4">
+												<span className="text-sm text-muted-foreground">
+													Ganancias totales
+												</span>
+												<span className="text-2xl font-bold">
+													{formatCurrency(bestSeller.totalProfit)}
+												</span>
+											</div>
+										</CardContent>
+									</Card>
+								</TabsContent>
+								<TabsContent value={'most-profit'}>
+									<Card className="relative ">
+										<Icon
+											name="trending-up"
+											className="absolute right-5 top-5 text-4xl"
+										/>
+										<CardHeader>
+											<CardDescription>Mayores ganancias</CardDescription>
+											<CardTitle className="">
+												{mostProfit.product.name.slice(0, 25)}
+											</CardTitle>
+										</CardHeader>
+										<CardContent className="flex justify-between">
+											<div className="flex flex-col rounded border bg-secondary/50 p-4">
+												<span className="text-sm text-muted-foreground">
+													Ganancias totales
+												</span>
+												<span className="text-2xl font-bold">
+													{formatCurrency(mostProfit.totalProfit)}
+												</span>
+											</div>
+											<div className="flex flex-col rounded border bg-secondary/50 p-4">
+												<span className="text-sm text-muted-foreground">
+													Unidades vendidas
+												</span>
+												<span className="text-2xl font-bold">
+													{mostProfit.totalSales}
+												</span>
+											</div>
+										</CardContent>
+									</Card>
+								</TabsContent>
+							</Tabs>
 						) : null}
 
 						{products.some(product => product.isActive) ? (
@@ -689,7 +722,7 @@ function InventoryFilters({
 
 	return (
 		<div className="flex flex-wrap gap-4">
-			<div className="relative ">
+			<div className="relative w-full sm:w-[180px]">
 				<FormLabel className="absolute -top-2 left-2 z-30 rounded bg-background p-[1px] text-xs text-muted-foreground">
 					Filtrar por stock
 				</FormLabel>
@@ -704,7 +737,7 @@ function InventoryFilters({
 						setSearchParams(newSearchParams)
 					}}
 				>
-					<SelectTrigger className="w-full sm:w-[180px]">
+					<SelectTrigger className="">
 						<SelectValue placeholder="Sin Filtros" />
 					</SelectTrigger>
 					<SelectContent>
@@ -716,7 +749,7 @@ function InventoryFilters({
 					</SelectContent>
 				</Select>
 			</div>
-			<div className="relative ">
+			<div className="relative w-full sm:w-[180px]">
 				<FormLabel className="absolute -top-2 left-2 z-30 rounded bg-background p-[1px] text-xs text-muted-foreground ">
 					Filtrar por categoría
 				</FormLabel>
@@ -731,7 +764,7 @@ function InventoryFilters({
 						setSearchParams(newSearchParams)
 					}}
 				>
-					<SelectTrigger className="w-full sm:w-[180px]">
+					<SelectTrigger className="">
 						<SelectValue placeholder="Sin Filtros" />
 					</SelectTrigger>
 					<SelectContent>
@@ -801,5 +834,60 @@ function InventoryFilters({
 				)}
 			</div>
 		</div>
+	)
+}
+
+function ModifyProductPriceInBulkModal() {
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild>
+				<Button size={'sm'} variant={'outline'}>
+					<Icon name="coin" size="sm" className="mr-2" />
+					<span>Modificar precios</span>
+				</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent className="max-w-4xl">
+				<AlertDialogHeader>
+					<AlertDialogTitle>Modificar precios en lote</AlertDialogTitle>
+					<AlertDialogDescription>
+						Esta acción modificará los precios de venta de multiples productos
+						en su inventario. Por favor, revise cuidadosamente los cambios antes
+						de confirmar. Asegúrese de haber{' '}
+						<span className="underline hover:font-black">respaldado</span> sus
+						datos actuales, ya que esta acción no se puede deshacer fácilmente.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<AlertDialogAction asChild>
+						<Link to="bulk-price-modify">Entendido, proceder.</Link>
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
+
+function InventoryAnalyticsTab() {
+	return (
+		<Tabs
+			// defaultValue={PRICE_BULK_CHANGE_TYPE.PERCENTAGE}
+			className="mb-6  flex w-full flex-col"
+		>
+			<TabsList>
+				<TabsTrigger value={''}>
+					Porcentual <Icon name="percentage" className="ml-2" size="sm" />
+				</TabsTrigger>
+				<TabsTrigger value={''}>
+					Valor Fijo <Icon name="report-money" className="ml-2" size="sm" />
+				</TabsTrigger>
+			</TabsList>
+			<TabsContent value={''}>
+				<Input placeholder="Valor Porcentual" />
+			</TabsContent>
+			<TabsContent value={''}>
+				<Input placeholder="Valor Fijo" />
+			</TabsContent>
+		</Tabs>
 	)
 }
