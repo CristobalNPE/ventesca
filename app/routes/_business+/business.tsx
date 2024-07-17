@@ -108,7 +108,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	})
 
 	const numberOfProducts = await prisma.product.count({
-		where: { businessId },
+		where: { businessId, isDeleted: false },
 	})
 	const numberOfCompletedOrders = await prisma.order.count({
 		where: { businessId, status: OrderStatus.FINISHED },
