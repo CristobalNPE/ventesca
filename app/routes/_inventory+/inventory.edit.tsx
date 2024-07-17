@@ -203,9 +203,25 @@ async function updateProductSellingPriceAction({
 
 	const { productId, sellingPrice } = submission.value
 
-	await prisma.product.update({
+	const currentProduct = await prisma.product.findUniqueOrThrow({
+		where: { id: productId, isDeleted: false },
+		select: {
+			sellingPrice: true,
+		},
+	})
+
+	const updatedProduct = await prisma.product.update({
 		where: { id: productId },
 		data: { sellingPrice },
+		select: { sellingPrice: true },
+	})
+
+	await prisma.priceModification.create({
+		data: {
+			oldPrice: currentProduct.sellingPrice,
+			newPrice: updatedProduct.sellingPrice,
+			productAnalytics: { connect: { productId: productId } },
+		},
 	})
 
 	return json({ result: submission.reply() })
