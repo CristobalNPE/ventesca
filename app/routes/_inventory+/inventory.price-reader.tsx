@@ -35,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return json({ product: null, status: VerifySearchStatus.INVALID })
 
 	const product = await prisma.product.findFirst({
-		where: { code: productPriceSearch, businessId },
+		where: { code: productPriceSearch, businessId, isDeleted: false },
 		select: {
 			id: true,
 			code: true,
