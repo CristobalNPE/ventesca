@@ -70,6 +70,11 @@ export async function updateProductStockAndAnalytics(
 				break
 		}
 
+		//We do not allow stock to be negative, even if we allow sales to go through.
+		if (product.stock + stockChange < 0) {
+			stockChange = -product.stock
+		}
+
 		await prisma.product.update({
 			where: { id: productOrder.productId },
 			data: {
@@ -91,7 +96,8 @@ export async function updateProductStockAndAnalytics(
 export async function getBestSellingProduct(businessId: string) {
 	const bestSeller = await prisma.productAnalytics.findFirst({
 		where: {
-			item: {
+			product: {
+				isDeleted: false,
 				businessId: businessId,
 			},
 		},
@@ -101,7 +107,7 @@ export async function getBestSellingProduct(businessId: string) {
 		select: {
 			totalSales: true,
 			totalProfit: true,
-			item: {
+			product: {
 				select: {
 					id: true,
 					name: true,
@@ -116,7 +122,8 @@ export async function getBestSellingProduct(businessId: string) {
 export async function getMostProfitProduct(businessId: string) {
 	const mostProfit = await prisma.productAnalytics.findFirst({
 		where: {
-			item: {
+			product: {
+				isDeleted: false,
 				businessId: businessId,
 			},
 		},
@@ -126,7 +133,7 @@ export async function getMostProfitProduct(businessId: string) {
 		select: {
 			totalSales: true,
 			totalProfit: true,
-			item: {
+			product: {
 				select: {
 					id: true,
 					name: true,
@@ -141,7 +148,7 @@ export async function getMostProfitProduct(businessId: string) {
 
 export async function getLowStockProducts(businessId: string, limit: number) {
 	const lowStockProducts = await prisma.product.findMany({
-		where: { stock: { lte: limit }, businessId },
+		where: { stock: { lte: limit }, businessId, isDeleted: false },
 		select: { id: true, stock: true },
 	})
 
@@ -173,6 +180,7 @@ export async function getInventoryValueByCategory(businessId: string) {
 			colorCode: true,
 			products: {
 				where: {
+					isDeleted:false,
 					isActive: true,
 					stock: { gt: 0 },
 				},
@@ -240,4 +248,27 @@ export async function getInventoryValueByCategory(businessId: string) {
 		(overallTotals.potentialProfit / overallTotals.totalValue) * 100
 
 	return { categoryBreakdown: result, overallTotals }
+}
+
+export async function softDeleteProduct(productId: string) {
+	return prisma.product.update({
+		where: { id: productId },
+		data: {
+			isActive: false,
+			isDeleted: true,
+			deletedAt: new Date(),
+		},
+		select: { id: true, name: true },
+	})
+}
+
+export async function restoreProduct(productId: string) {
+	return prisma.product.update({
+		where: { id: productId },
+		data: {
+			isDeleted: false,
+			deletedAt: null,
+		},
+		select: { id: true, name: true },
+	})
 }
