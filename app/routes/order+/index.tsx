@@ -6,7 +6,12 @@ import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { MetaFunction, useLoaderData } from '@remix-run/react'
+import {
+	MetaFunction,
+	useFetchers,
+	useLoaderData,
+	useRevalidator,
+} from '@remix-run/react'
 
 import { Spacer } from '#app/components/spacer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
@@ -14,7 +19,7 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
@@ -33,7 +38,7 @@ import {
 	finishOrderActionIntent,
 	FinishTransactionSchema,
 } from './__finish-order.tsx'
-import { ProductReader } from './__productOrder+/__product-order-new.tsx'
+import { addProductOrderActionIntent, ProductReader } from './__productOrder+/__product-order-new.tsx'
 import {
 	PaymentMethodPanel,
 	setPaymentMethodActionIntent,
@@ -54,7 +59,10 @@ import { useMemo } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
 import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
-import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/productService.server.ts'
+import {
+	OrderAction,
+	updateProductStockAndAnalytics,
+} from '../_inventory+/productService.server.ts'
 
 const orderDetailsSelect = {
 	id: true,
@@ -225,7 +233,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 }
 
-export default function TransactionRoute() {
+export default function ProcessOrderRoute() {
 	const { order, availableDiscounts, globalDiscounts } =
 		useLoaderData<typeof loader>()
 
@@ -234,6 +242,28 @@ export default function TransactionRoute() {
 	productReaderRef.current?.focus()
 
 	let allProductOrders = order.productOrders
+	// const allProductOrders = useMemo(() => order.productOrders, [order.productOrders]);
+
+	//!This did not solve it
+	// const [allProductOrders, setAllProductOrders] = useState(order.productOrders)
+
+	// useEffect(() => {
+	// 	setAllProductOrders(order.productOrders)
+	// }, [order.productOrders])
+
+	const createProductOrderFetcherSubmitting = useFetchers()
+		.filter(fetcher => fetcher.key.includes(addProductOrderActionIntent))
+		.some(fetcher => fetcher.state !== 'idle')
+
+	const revalidator = useRevalidator()
+	useEffect(() => {
+		console.log(createProductOrderFetcherSubmitting)
+		if (!createProductOrderFetcherSubmitting) {
+			console.log('SHould revalidate!')
+			revalidator.revalidate()
+		}
+	}, [createProductOrderFetcherSubmitting])
+
 	const [focus, setFocus] = useRoveFocus(allProductOrders.length ?? 0)
 
 	return (
@@ -382,7 +412,6 @@ async function finishOrderAction(formData: FormData) {
 		description: `Venta completada bajo ID de transacción: [${orderId.toUpperCase()}].`,
 	})
 }
-
 
 async function applyDirectDiscountAction(formData: FormData) {
 	const submission = await parseWithZod(formData, {
