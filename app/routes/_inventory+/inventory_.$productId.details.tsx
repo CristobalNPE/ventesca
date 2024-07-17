@@ -62,6 +62,7 @@ import { SellingPriceEditModal } from './__product-editors/sellingPrice-editor.t
 import { EditStatus } from './__product-editors/status-editor.tsx'
 import { StockEditModal } from './__product-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__product-editors/supplier-editor.tsx'
+import { softDeleteProduct } from './productService.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -138,7 +139,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	})
 	invariantResponse(product, 'Not found', { status: 404 })
 
-	await prisma.product.delete({ where: { id: product.id } })
+	await softDeleteProduct(productId)
 
 	return redirectWithToast(`/inventory`, {
 		type: 'success',
