@@ -409,15 +409,18 @@ async function addProductOrderAction({
 	const { search } = result.data
 
 	const product = await prisma.product.findFirst({
-		where: { code: search, businessId },
+		where: { code: search, businessId, isDeleted: false },
 		select: {
+			name: true,
 			id: true,
 			sellingPrice: true,
 			stock: true,
 			isActive: true,
+
 			code: true,
 		},
 	})
+
 	if (!product) {
 		return json({
 			status: 'error',
