@@ -135,7 +135,7 @@ async function seed() {
 		},
 	})
 
-	users.push( adminTest, sellerTest1, sellerTest2)
+	users.push(adminTest, sellerTest1, sellerTest2)
 	console.timeEnd(`🐨 Created test users`)
 
 	console.time('Created default category and supplier')
@@ -238,6 +238,7 @@ async function seed() {
 					stock,
 					isActive,
 					business: { connect: { id: business.id } },
+					productAnalytics: {},
 					category: {
 						connect: {
 							id: businessCategories[
@@ -310,7 +311,9 @@ async function seed() {
 			for (let index = 0; index < totalItemTransactions; index++) {
 				const itemForTransaction = await prisma.product.findFirst({
 					where: {
-						code: faker.number.int({ min: 1, max: NUMBER_OF_PRODUCTS }).toString(),
+						code: faker.number
+							.int({ min: 1, max: NUMBER_OF_PRODUCTS })
+							.toString(),
 					},
 					select: { id: true },
 				})
