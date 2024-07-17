@@ -56,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		schema: CreateItemSchema.superRefine(async (data, ctx) => {
 			const productByCode = await prisma.product.findFirst({
 				select: { id: true, code: true },
-				where: { businessId, code: data.code },
+				where: { businessId, code: data.code, isDeleted: false },
 			})
 
 			if (productByCode && productByCode.id !== data.productId) {
@@ -124,7 +124,7 @@ export function CreateItemDialog() {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size={'pill'} className="flex h-9 items-center gap-2">
+				<Button size={'pill'} className="flex h-9 items-center gap-2 w-full">
 					<Icon name="plus" size="md" />
 					<span>Agregar articulo</span>
 				</Button>
