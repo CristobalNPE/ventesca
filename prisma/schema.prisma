@@ -42,14 +42,16 @@ model Supplier {
 
 model Product {
   id               String            @id @default(cuid())
-  isActive         Boolean
+  isActive         Boolean           @default(false)
+  isDeleted        Boolean           @default(false)
   code             String
   name             String
-  sellingPrice     Float
-  price            Float
+  sellingPrice     Int
+  price            Int
   stock            Int
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
   category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   categoryId       String
   supplier         Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -59,18 +61,68 @@ model Product {
   business         Business          @relation(fields: [businessId], references: [id])
   businessId       String
   productAnalytics ProductAnalytics?
+
+  // This allows you to have the same product code for an active and a deleted product,
+  // but prevents having duplicate active products with the same code.
+  //! @@unique([code, isDeleted])
+  @@index([isDeleted])
+  @@index([code])
+  @@index([name])
+  @@index([createdAt])
 }
 
 model ProductAnalytics {
-  id           String  @id @default(cuid())
-  item         Product @relation(fields: [productId], references: [id])
-  productId    String  @unique
-  totalProfit  Float   @default(0)
-  totalSales   Int     @default(0)
-  totalReturns Int     @default(0)
+  id           String              @id @default(cuid())
+  product      Product             @relation(fields: [productId], references: [id])
+  productId    String              @unique
+  totalProfit  Int                 @default(0)
+  totalSales   Int                 @default(0)
+  totalReturns Int                 @default(0)
+  priceHistory PriceModification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+//! Price history should not include when product was just created with 0 price.
+model PriceModification {
+  id                      String                 @id @default(cuid())
+  oldPrice                Int
+  newPrice                Int
+  productAnalytics        ProductAnalytics       @relation(fields: [productAnalyticsId], references: [id])
+  productAnalyticsId      String
+  bulkPriceModification   BulkPriceModification? @relation(fields: [bulkPriceModificationId], references: [id], onDelete: Cascade)
+  bulkPriceModificationId String?
+  createdAt               DateTime               @default(now())
+
+  @@index([productAnalyticsId])
+  @@index([bulkPriceModificationId])
+  @@index([createdAt])
+}
+
+model BulkPriceModification {
+  id                    String              @id @default(cuid())
+  status                String //executed/reverted
+  createdAt             DateTime            @default(now())
+  executedAt            DateTime?
+  revertedAt            DateTime?
+  strategy              String //percentage/fixed_amount
+  scope                 String //inventory/category
+  direction             String //increase/decrease
+  adjustmentValue       Int
+  affectedProductsCount Int
+  executedBy            String
+  revertedBy            String?
+  reason                String?
+  previousPriceSnapshot String?
+  business              Business            @relation(fields: [businessId], references: [id])
+  businessId            String
+  priceModifications    PriceModification[]
+
+  @@index([createdAt])
+  @@index([executedAt])
 }
 
 model Order {
@@ -130,21 +182,22 @@ model Discount {
 }
 
 model Business {
-  id            String             @id @default(cuid())
-  name          String
-  address       String?
-  phone         String?
-  email         String?
-  thanksMessage String?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  products      Product[]
-  orders        Order[]
-  categories    Category[]
-  suppliers     Supplier[]
-  discounts     Discount[]
-  users         User[]
-  image         BusinessLogoImage?
+  id                     String                  @id @default(cuid())
+  name                   String
+  address                String?
+  phone                  String?
+  email                  String?
+  thanksMessage          String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  products               Product[]
+  orders                 Order[]
+  categories             Category[]
+  suppliers              Supplier[]
+  discounts              Discount[]
+  bulkPriceModifications BulkPriceModification[]
+  users                  User[]
+  image                  BusinessLogoImage?
 }
 
 model User {
