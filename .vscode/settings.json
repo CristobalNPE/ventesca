@@ -23,6 +23,7 @@
     "lintf",
     "minquantity",
     "MINQUANTITY",
+    "revalidator",
     "SELLINGPRICE",
     "validfrom",
     "VALIDFROM",
