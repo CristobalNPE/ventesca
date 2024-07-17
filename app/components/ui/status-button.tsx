@@ -34,7 +34,7 @@ export const StatusButton = React.forwardRef<
 					role="status"
 					className="inline-flex h-6 w-6 items-center justify-center"
 				>
-					<Icon name="update" className="animate-spin" title="loading" />
+					<Icon name="update" className="animate-spin" title="cargando" />
 				</div>
 			) : null,
 			success: (
@@ -42,28 +42,36 @@ export const StatusButton = React.forwardRef<
 					role="status"
 					className="inline-flex h-6 w-6 items-center justify-center"
 				>
-					<Icon name={iconName ? iconName : 'check'} />
+					<Icon name="check" title="Éxito" />
 				</div>
 			),
 			error: (
 				<div
 					role="status"
-					className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-destructive"
+					className="inline-flex h-6 w-6 items-center justify-center  "
 				>
 					<Icon
 						name="cross-1"
-						className="text-destructive-foreground"
+						size="sm"
+						className="text-destructive"
 						title="error"
 					/>
 				</div>
 			),
-			idle: null,
+			idle: iconName ? (
+				<div
+					role="status"
+					className="inline-flex h-6 w-6 items-center justify-center  "
+				>
+					<Icon name={iconName} size="sm" title="Enviar" />
+				</div>
+			) : null,
 		}[status]
 
 		return (
 			<Button
 				ref={ref}
-				className={cn('flex justify-center gap-4', className)}
+				className={cn('flex justify-center gap-2', className)}
 				{...props}
 			>
 				<div>{children}</div>
