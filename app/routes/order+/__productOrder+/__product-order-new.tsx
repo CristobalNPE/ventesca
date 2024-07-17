@@ -44,7 +44,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 
 		const [value, setValue] = useState('')
 		const fetcher = useFetcher<addProductOrderActionType>({
-			key: `add-product-order-ID${id}`,
+			key: `${addProductOrderActionIntent}-ID${id}`,
 		})
 		const data = fetcher.data
 		const isSubmitting = fetcher.state !== 'idle'
