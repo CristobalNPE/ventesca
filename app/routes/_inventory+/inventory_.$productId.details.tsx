@@ -63,6 +63,7 @@ import { EditStatus } from './__product-editors/status-editor.tsx'
 import { StockEditModal } from './__product-editors/stock-editor.tsx'
 import { SupplierEditModal } from './__product-editors/supplier-editor.tsx'
 import { softDeleteProduct } from './productService.server.ts'
+import { PriceModificationStatus } from './types/PriceModificationStatus.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -83,6 +84,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			discounts: { select: { id: true, name: true } },
 			category: { select: { description: true, id: true } },
 			supplier: { select: { fantasyName: true, id: true } },
+			productAnalytics: { include: { priceHistory: true } },
 		},
 	})
 
@@ -428,6 +430,17 @@ export default function ProductRoute() {
 							</CardContent>
 						)}
 					</Card>
+					<div>
+						{product.productAnalytics?.priceHistory
+							.filter(
+								history => history.status === PriceModificationStatus.APPLIED,
+							)
+							.map(history => (
+								<div key={history.id}>
+									{history.oldPrice} to {history.newPrice}
+								</div>
+							))}
+					</div>
 					{isAdmin && (
 						<div className="flex w-full sm:m-auto sm:w-fit md:hidden">
 							<DeleteProductConfirmationModal itemId={product.id} />
