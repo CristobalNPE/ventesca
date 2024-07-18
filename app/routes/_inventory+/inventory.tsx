@@ -94,6 +94,8 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
+import { Progress } from '#app/components/ui/progress.tsx'
+import { EpicProgress } from '#app/components/progress-bar.tsx'
 
 const chartConfig = {} satisfies ChartConfig
 const stockFilterParam = 'stock'
@@ -254,14 +256,13 @@ export default function InventoryRoute() {
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
 									<DropdownMenuItem asChild>
-										<Link to={"new-products"}>
+										<Link to={'new-products'}>
 											<Icon name="cube-plus" className="mr-2" /> Ingresar
 											multiples productos
 										</Link>
 									</DropdownMenuItem>
-									<DropdownMenuItem>
-										<Icon name="file-text" className="mr-2" /> Importar
-										productos desde archivo
+									<DropdownMenuItem onSelect={e => e.preventDefault()}>
+										<ImportInventoryFromFileModal />
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
@@ -868,26 +869,45 @@ function ModifyProductPriceInBulkModal() {
 	)
 }
 
-function InventoryAnalyticsTab() {
+function ImportInventoryFromFileModal() {
+	const [selectedFile, setSelectedFile] = useState('No file chosen')
+
 	return (
-		<Tabs
-			// defaultValue={PRICE_BULK_CHANGE_TYPE.PERCENTAGE}
-			className="mb-6  flex w-full flex-col"
-		>
-			<TabsList>
-				<TabsTrigger value={''}>
-					Porcentual <Icon name="percentage" className="ml-2" size="sm" />
-				</TabsTrigger>
-				<TabsTrigger value={''}>
-					Valor Fijo <Icon name="report-money" className="ml-2" size="sm" />
-				</TabsTrigger>
-			</TabsList>
-			<TabsContent value={''}>
-				<Input placeholder="Valor Porcentual" />
-			</TabsContent>
-			<TabsContent value={''}>
-				<Input placeholder="Valor Fijo" />
-			</TabsContent>
-		</Tabs>
+		<AlertDialog>
+			<AlertDialogTrigger>
+				<Icon name="file-text" className="mr-2" /> Importar productos desde
+				archivo
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Importar inventario desde archivo</AlertDialogTitle>
+					<AlertDialogDescription>
+						This action cannot be undone. This will permanently delete your
+						account and remove your data from our servers.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<Form
+					method="post"
+					encType="multipart/form-data"
+					className="flex flex-col gap-4"
+				>
+					<Input
+						type="file"
+						name="csv"
+						accept=".csv"
+						className="cursor-pointer"
+					/>
+					<Progress value={50} />
+					<EpicProgress/>
+				</Form>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+					<StatusButton  iconName="upload" status="idle">
+						Cargar Inventario
+					</StatusButton>
+
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	)
 }
