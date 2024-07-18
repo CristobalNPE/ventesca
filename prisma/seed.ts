@@ -366,7 +366,7 @@ async function seed() {
 									: { increment: createdItemTransaction.quantity },
 						},
 						create: {
-							item: { connect: { id: createdItemTransaction.productId } },
+							product: { connect: { id: createdItemTransaction.productId } },
 							totalProfit: createdItemTransaction.totalPrice,
 							totalSales: createdItemTransaction.quantity,
 						},
