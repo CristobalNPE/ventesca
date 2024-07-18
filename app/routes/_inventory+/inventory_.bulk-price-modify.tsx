@@ -46,6 +46,8 @@ import {
 } from './types/BulkPriceModificationStrategy'
 import { BulkPriceModificationStatus } from './types/BulkPriceModificationStatus'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.js'
+import { PriceModificationStatus } from './types/PriceModificationStatus'
 
 const setupBulkPriceModificationActionIntent = 'setup-bulk-price-adjustment'
 
@@ -62,10 +64,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 
-	// const url = new URL(request.url)
+	const pendingBulkPriceModification =
+		await prisma.bulkPriceModification.findFirst({
+			where: { status: BulkPriceModificationStatus.PENDING, businessId },
+			select: { id: true },
+		})
 
-	// const query = url.searchParams.get('query')
-	// invariant(typeof query === 'string', 'query is required')
+	console.log(pendingBulkPriceModification)
+
+	if (pendingBulkPriceModification) {
+		return redirectWithToast(
+			`/inventory/bulk-price-modify/${pendingBulkPriceModification.id}`,
+			{
+				type: 'error',
+				title: 'Modificación Pendiente',
+				description: `Primero debe completar o descartar la modificación pendiente.`,
+			},
+		)
+	}
 
 	const categories = await prisma.category.findMany({
 		where: { businessId },
@@ -338,9 +354,9 @@ export default function ModifyProductPriceInBulk() {
 							</Tabs>
 						</div>
 					</div>
-					<div className="flex flex-col-reverse sm:flex-row justify-start gap-6 ">
+					<div className="flex flex-col-reverse justify-start gap-6 sm:flex-row ">
 						<Button asChild variant={'ghost'} size={'lg'}>
-							<Link to={"/inventory"}>Descartar modificación</Link>
+							<Link to={'/inventory'}>Descartar modificación</Link>
 						</Button>
 
 						<StatusButton
@@ -408,11 +424,12 @@ async function setupBulkPriceModificationAction({
 			affectedProductsCount: affectedProducts.length, //update this after
 			direction,
 			scope,
-			type: strategy,
+			strategy,
 			status: BulkPriceModificationStatus.PENDING,
 			executedBy: userId,
 			priceModifications: {
 				create: affectedProducts.map(product => ({
+					status: PriceModificationStatus.PENDING,
 					oldPrice: product.sellingPrice,
 					newPrice: calculateNewSellingPrice({
 						oldSellingPrice: product.sellingPrice,

@@ -6,36 +6,12 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { invariant, invariantResponse } from '@epic-web/invariant'
-import { Product } from '@prisma/client'
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Form, json, useLoaderData } from '@remix-run/react'
 
-import { BulkPriceModificationScope } from './types/BulkPriceModificationScope'
-import { BulkPriceModificationStrategy } from './types/BulkPriceModificationStrategy'
-import { BulkPriceModificationDirection } from './types/BulkPriceModificationDirection'
-import { BulkPriceModificationStatus } from './types/BulkPriceModificationStatus'
-import {
-	Table,
-	TableBody,
-	TableCaption,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '#app/components/ui/table.tsx'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '#app/components/ui/card.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
-import { getInventoryValueByCategory } from './productService.server'
 import {
 	AlertDialog,
-	AlertDialogAction,
 	AlertDialogCancel,
 	AlertDialogContent,
 	AlertDialogDescription,
@@ -44,10 +20,31 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '#app/components/ui/alert-dialog.tsx'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '#app/components/ui/table.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { getInventoryValueByCategory } from './productService.server'
+import { BulkPriceModificationDirection } from './types/BulkPriceModificationDirection'
+import { BulkPriceModificationScope } from './types/BulkPriceModificationScope'
+import { BulkPriceModificationStatus } from './types/BulkPriceModificationStatus'
+import { BulkPriceModificationStrategy } from './types/BulkPriceModificationStrategy'
+import { PriceModificationStatus } from './types/PriceModificationStatus'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -64,7 +61,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			scope: true,
 			adjustmentValue: true,
 			affectedProductsCount: true,
-			type: true,
+			strategy: true,
 			status: true,
 			direction: true,
 			reason: true,
@@ -75,6 +72,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		where: { bulkPriceModificationId: bulkPriceModification?.id },
 		select: {
 			id: true,
+			status: true,
 			productAnalytics: {
 				select: {
 					product: { include: { category: { select: { description: true } } } },
@@ -132,10 +130,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 const executeBulkPriceModificationActionIntent =
 	'execute-bulk-price-modification'
 const cancelBulkPriceModificationActionIntent = 'cancel-bulk-price-modification'
+const revertBulkPriceModificationActionIntent = 'revert-bulk-price-modification'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
-	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
 
@@ -145,23 +143,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		case executeBulkPriceModificationActionIntent:
 			return await executeBulkPriceModificationAction({ formData, userId })
 		case cancelBulkPriceModificationActionIntent:
-			return await cancelBulkPriceModificationAction({ formData, userId })
-
+			return await cancelBulkPriceModificationAction({ formData })
+		case revertBulkPriceModificationActionIntent:
+			return await revertBulkPriceModificationAction({ formData, userId })
 		default:
 			throw new Error('Invalid Intent')
 	}
-
-	//Action: execute modifications
-	/*
-		Should make the actual price modifications in every item,save the snapshot, make the status EXECUTED, delete the priceModification relations that
-		were discarded, update the number of includedItems. Redirect to inventory with a success toast.
-	*/
-
-	//Action: Cancel modification
-	//Delete all related price modifications, redirect to inventory with toast
-
-	//Action: Revert Modification
-	//Use Snapshot to revert the modification to previous price
 
 	//Action: Remove and add single product modification
 	//either remove or add one of the modifications in the list
@@ -261,20 +248,20 @@ export default function BulkPriceModification() {
 
 					<DataCard
 						icon={
-							bulkPriceModification.type ===
+							bulkPriceModification.strategy ===
 							BulkPriceModificationStrategy.FIXED_AMOUNT
 								? 'cash'
-								: bulkPriceModification.type ===
+								: bulkPriceModification.strategy ===
 									  BulkPriceModificationStrategy.PERCENTAGE
 									? 'circle-percentage'
 									: 'moneybag'
 						}
 						label={'Tipo de modificación'}
 						content={
-							bulkPriceModification.type ===
+							bulkPriceModification.strategy ===
 							BulkPriceModificationStrategy.FIXED_AMOUNT
 								? 'Monto Fijo'
-								: bulkPriceModification.type ===
+								: bulkPriceModification.strategy ===
 									  BulkPriceModificationStrategy.PERCENTAGE
 									? 'Porcentual'
 									: 'Sin definir'
@@ -304,20 +291,20 @@ export default function BulkPriceModification() {
 					/>
 					<DataCard
 						icon={
-							bulkPriceModification.type ===
+							bulkPriceModification.strategy ===
 							BulkPriceModificationStrategy.FIXED_AMOUNT
 								? 'currency-dollar'
-								: bulkPriceModification.type ===
+								: bulkPriceModification.strategy ===
 									  BulkPriceModificationStrategy.PERCENTAGE
 									? 'percentage'
 									: 'moneybag'
 						}
 						label={'Valor de modificación'}
 						content={
-							bulkPriceModification.type ===
+							bulkPriceModification.strategy ===
 							BulkPriceModificationStrategy.FIXED_AMOUNT
 								? formatCurrency(bulkPriceModification.adjustmentValue)
-								: bulkPriceModification.type ===
+								: bulkPriceModification.strategy ===
 									  BulkPriceModificationStrategy.PERCENTAGE
 									? `${bulkPriceModification.adjustmentValue}%`
 									: 'Sin definir'
@@ -544,7 +531,12 @@ export default function BulkPriceModification() {
 				) : null}
 				{bulkPriceModification.status ===
 				BulkPriceModificationStatus.EXECUTED ? (
-					<Button>Revertir Modificación</Button>
+					<RevertModificationDialog
+						bulkPriceModificationId={bulkPriceModification.id}
+						bulkPriceModificationExecutedDate={
+							new Date(bulkPriceModification.executedAt!)
+						}
+					/>
 				) : null}
 			</div>
 		</main>
@@ -562,7 +554,7 @@ function DataCard({
 }) {
 	return (
 		<div className="flex gap-4  p-2 ">
-			<Icon name={icon} className='shrink-0' size="xl" />
+			<Icon name={icon} className="shrink-0" size="xl" />
 			<div>
 				<div className="font-semibold text-muted-foreground">{label}</div>
 				<div>{content}</div>
@@ -645,7 +637,7 @@ async function executeBulkPriceModificationAction({
 					scope: true,
 					adjustmentValue: true,
 					affectedProductsCount: true,
-					type: true,
+					strategy: true,
 					status: true,
 					direction: true,
 					reason: true,
@@ -657,7 +649,7 @@ async function executeBulkPriceModificationAction({
 			select: {
 				id: true,
 				productAnalytics: {
-					select: { product: { include: { category: true } } },
+					select: { id: true, product: { include: { category: true } } },
 				},
 				oldPrice: true,
 				newPrice: true,
@@ -682,6 +674,18 @@ async function executeBulkPriceModificationAction({
 				executedAt: new Date(),
 				executedBy: userId,
 				previousPriceSnapshot: snapshot,
+			},
+		})
+
+		//update status of price modifications
+		await tx.priceModification.updateMany({
+			where: {
+				id: {
+					in: priceModifications.map(priceModification => priceModification.id),
+				},
+			},
+			data: {
+				status: PriceModificationStatus.APPLIED,
 			},
 		})
 
@@ -744,7 +748,6 @@ async function cancelBulkPriceModificationAction({
 	formData,
 }: {
 	formData: FormData
-	userId: string
 }) {
 	const bulkPriceModificationId = formData.get('bulkPriceModificationId')
 	invariant(
@@ -762,11 +765,172 @@ async function cancelBulkPriceModificationAction({
 	})
 }
 
+function RevertModificationDialog({
+	bulkPriceModificationId,
+	bulkPriceModificationExecutedDate,
+}: {
+	bulkPriceModificationId: string
+	bulkPriceModificationExecutedDate: Date
+}) {
+	const isPending = useIsPending()
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild>
+				<Button>Revertir Modificación</Button>
+			</AlertDialogTrigger>
+			<AlertDialogContent className="max-w-2xl">
+				<AlertDialogHeader>
+					<AlertDialogTitle>Confirmar reversión</AlertDialogTitle>
+					<AlertDialogDescription asChild>
+						<div className="flex flex-col gap-4">
+							<p>
+								La reversión de esta modificación restaurará los precios de
+								venta de los productos asociados a los valores previos a la
+								modificación realizada el{' '}
+								{format(
+									bulkPriceModificationExecutedDate,
+									"d'-'MM'-'yyyy 'a las' HH:mm:ss",
+									{
+										locale: es,
+									},
+								)}
+							</p>
+							<p>
+								Para revisar los precios actuales, consulte la columna [P.Venta
+								actual].
+							</p>
+							<p>
+								Por favor, confirme si desea proceder con la reversión de la
+								modificación masiva. Una vez aplicada, esta modificación se
+								cerrará permanentemente.
+							</p>
+						</div>
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancelar</AlertDialogCancel>
+
+					<Form method="POST">
+						<input
+							type="hidden"
+							name="bulkPriceModificationId"
+							value={bulkPriceModificationId}
+						/>
+						<StatusButton
+							iconName="update"
+							type="submit"
+							name="intent"
+							value={revertBulkPriceModificationActionIntent}
+							status={isPending ? 'pending' : 'idle'}
+							disabled={isPending}
+						>
+							<span>
+								{isPending ? 'Restaurando...' : 'Revertir modificación'}
+							</span>
+						</StatusButton>
+					</Form>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
+
+async function revertBulkPriceModificationAction({
+	formData,
+	userId,
+}: {
+	formData: FormData
+	userId: string
+}) {
+	const bulkPriceModificationId = formData.get('bulkPriceModificationId')
+	invariant(
+		bulkPriceModificationId && typeof bulkPriceModificationId === 'string',
+		'Modification ID should be defined',
+	)
+
+	return prisma.$transaction(async tx => {
+		const bulkPriceModification =
+			await tx.bulkPriceModification.findUniqueOrThrow({
+				where: { id: bulkPriceModificationId },
+				select: {
+					previousPriceSnapshot: true,
+					executedBy: true,
+					executedAt: true,
+					revertedAt: true,
+					revertedBy: true,
+					id: true,
+					scope: true,
+					adjustmentValue: true,
+					affectedProductsCount: true,
+					strategy: true,
+					status: true,
+					direction: true,
+					reason: true,
+				},
+			})
+
+		invariant(
+			bulkPriceModification.previousPriceSnapshot,
+			'There is not a valid snapshot for reversion.',
+		)
+
+		const priceModifications: PriceModification[] = JSON.parse(
+			bulkPriceModification.previousPriceSnapshot,
+		) as PriceModification[]
+
+		//Products involved in modification
+		const productAnalytics = await tx.productAnalytics.findMany({
+			where: {
+				id: { in: priceModifications.map(pm => pm.productAnalytics.id) },
+			},
+			select: { id: true, product: { select: { sellingPrice: true } } },
+		})
+
+		//Store new price modifications
+		const newPriceModifications = priceModifications.map(modification => ({
+			status: PriceModificationStatus.APPLIED,
+			oldPrice:
+				productAnalytics.find(pa => pa.id === modification.productAnalytics.id)
+					?.product.sellingPrice ?? modification.newPrice,
+			newPrice: modification.oldPrice,
+			productAnalyticsId: modification.productAnalytics.id,
+			bulkPriceModificationId: bulkPriceModificationId,
+		}))
+
+		await tx.priceModification.createMany({ data: newPriceModifications })
+
+		// Update product prices
+		for (const modification of priceModifications) {
+			await tx.product.updateMany({
+				where: { id: modification.productAnalytics.product.id },
+				data: { sellingPrice: modification.oldPrice },
+			})
+		}
+
+		// Update the bulk price modification status
+		await tx.bulkPriceModification.update({
+			where: { id: bulkPriceModificationId },
+			data: {
+				status: BulkPriceModificationStatus.REVERTED,
+				revertedAt: new Date(),
+				revertedBy: userId,
+			},
+		})
+		return redirectWithToast(`/inventory`, {
+			type: 'success',
+			title: 'Modificación Masiva Revertida',
+			description: `Se ha revertido una modificación de precio masiva a ${bulkPriceModification.affectedProductsCount} articulo(s).`,
+		})
+	})
+}
+
 type PriceModification = {
 	id: string
 	oldPrice: number
 	newPrice: number
+	status: PriceModificationStatus
 	productAnalytics: {
+		id: string
 		product: {
 			category: {
 				description: string
