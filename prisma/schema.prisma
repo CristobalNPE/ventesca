@@ -64,7 +64,7 @@ model Product {
 
   // This allows you to have the same product code for an active and a deleted product,
   // but prevents having duplicate active products with the same code.
-  //! @@unique([code, isDeleted])
+  @@unique([code, isDeleted])
   @@index([isDeleted])
   @@index([code])
   @@index([name])
@@ -89,6 +89,7 @@ model ProductAnalytics {
 //! Price history should not include when product was just created with 0 price.
 model PriceModification {
   id                      String                 @id @default(cuid())
+  status                  String //pending/applied
   oldPrice                Int
   newPrice                Int
   productAnalytics        ProductAnalytics       @relation(fields: [productAnalyticsId], references: [id])
