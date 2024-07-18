@@ -39,6 +39,7 @@ import {
 	SupplierEditorSchema,
 	updateProductSupplierActionIntent,
 } from './__product-editors/supplier-editor.tsx'
+import { PriceModificationStatus } from './types/PriceModificationStatus.ts'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -218,6 +219,7 @@ async function updateProductSellingPriceAction({
 
 	await prisma.priceModification.create({
 		data: {
+			status:PriceModificationStatus.APPLIED,
 			oldPrice: currentProduct.sellingPrice,
 			newPrice: updatedProduct.sellingPrice,
 			productAnalytics: { connect: { productId: productId } },
