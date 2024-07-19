@@ -177,28 +177,12 @@ export async function signup({
 	})
 
 	//create default supplier and category
-	await prisma.supplier.create({
-		data: {
-			rut: 'Sin Datos',
-			name: name ?? username,
-			address: 'Sin Datos',
-			city: 'Sin Datos',
-			fantasyName: `Proveedor Propio`,
-			phone: 'Sin Datos',
-			email: email,
-			business: { connect: { id: session.user.businessId } },
-			isEssential: true,
-		},
+	await getDefaultSupplier({
+		name: name ?? username,
+		email,
+		businessId: session.user.businessId,
 	})
-	await prisma.category.create({
-		data: {
-			colorCode: faker.color.rgb(),
-			code: 0,
-			description: 'General',
-			business: { connect: { id: session.user.businessId } },
-			isEssential: true,
-		},
-	})
+	await getDefaultCategory({ businessId: session.user.businessId })
 
 	const { id, expirationDate } = session
 	return { id, expirationDate }
@@ -322,3 +306,62 @@ export async function verifyUserPassword(
 
 // 	return { id: userWithPassword.id }
 // }
+
+//!MOVE THIS OUT OF HERE?
+
+export async function getDefaultCategory({
+	businessId,
+}: {
+	businessId: string
+}) {
+	const defaultCategory = await prisma.category.findFirst({
+		where: { businessId, isEssential: true },
+	})
+
+	if (defaultCategory) {
+		return defaultCategory
+	}
+
+	return await prisma.category.create({
+		data: {
+			colorCode: faker.color.rgb(),
+			code: 0,
+			description: 'General',
+			business: { connect: { id: businessId } },
+			isEssential: true,
+		},
+	})
+}
+
+export async function getDefaultSupplier({
+	businessId,
+	name,
+	email,
+}: {
+	businessId: string
+	name: string
+	email: string
+}) {
+	const defaultSupplier = await prisma.supplier.findFirst({
+		where: { businessId, isEssential: true },
+	})
+
+	if (defaultSupplier) {
+		return defaultSupplier
+	}
+
+	return await prisma.supplier.create({
+		data: {
+			code: 0,
+			rut: 'Sin Datos',
+			name,
+			address: 'Sin Datos',
+			city: 'Sin Datos',
+			fantasyName: `Proveedor Propio`,
+			phone: 'Sin Datos',
+			email,
+			business: { connect: { id: businessId } },
+			isEssential: true,
+		},
+	})
+}
