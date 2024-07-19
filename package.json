@@ -74,6 +74,7 @@
     "@remix-run/react": "2.9.2",
     "@sentry/profiling-node": "^8.7.0",
     "@sentry/remix": "^8.7.0",
+    "@types/xlsx": "^0.0.35",
     "@validatecl/rut": "^4.0.7",
     "address": "^2.0.2",
     "bcryptjs": "^2.4.3",
@@ -126,6 +127,7 @@
     "tailwindcss-radix": "^3.0.3",
     "ts-key-enum": "^2.0.12",
     "vaul": "^0.9.1",
+    "xlsx-js-style": "^1.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
