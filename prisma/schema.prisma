@@ -25,6 +25,7 @@ model Category {
 
 model Supplier {
   id          String    @id @default(cuid())
+  code        Int
   rut         String
   name        String
   address     String
@@ -64,7 +65,7 @@ model Product {
 
   // This allows you to have the same product code for an active and a deleted product,
   // but prevents having duplicate active products with the same code.
-  @@unique([code, isDeleted])
+  //! @@unique([code, isDeleted])
   @@index([isDeleted])
   @@index([code])
   @@index([name])
