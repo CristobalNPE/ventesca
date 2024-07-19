@@ -15,7 +15,14 @@ export function formatCurrency(amountToFormat: number | null) {
 	return formatted
 }
 
-
+export function isValidNumber(input: string) {
+	const parsed = parseInt(input)
+	// Check if the parsed value is a number and if the input string is not empty or just spaces
+	if (!isNaN(parsed) && input.trim() !== '') {
+		return true
+	}
+	return false
+}
 
 export function setSearchParamsString(
 	searchParams: URLSearchParams,
