@@ -180,7 +180,7 @@ export async function getInventoryValueByCategory(businessId: string) {
 			colorCode: true,
 			products: {
 				where: {
-					isDeleted:false,
+					isDeleted: false,
 					isActive: true,
 					stock: { gt: 0 },
 				},
@@ -272,3 +272,4 @@ export async function restoreProduct(productId: string) {
 		select: { id: true, name: true },
 	})
 }
+
