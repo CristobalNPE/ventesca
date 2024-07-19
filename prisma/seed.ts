@@ -142,6 +142,7 @@ async function seed() {
 	//create default supplier and category
 	await prisma.supplier.create({
 		data: {
+			code: 0,
 			rut: 'Sin Datos',
 			name: adminTest.name ?? adminTest.username,
 			address: 'Sin Datos',
@@ -190,6 +191,7 @@ async function seed() {
 
 			await prisma.supplier.create({
 				data: {
+					code: i + 1,
 					rut: generateFakeRUT(),
 					name: `${firstName} ${lastName}`,
 					address: `${faker.location.streetAddress()}, ${faker.location.buildingNumber()}`,
@@ -243,14 +245,14 @@ async function seed() {
 						connect: {
 							id: businessCategories[
 								faker.number.int({ min: 0, max: businessCategories.length - 1 })
-							].id,
+							]!.id,
 						},
 					},
 					supplier: {
 						connect: {
 							id: businessSuppliers[
 								faker.number.int({ min: 0, max: businessSuppliers.length - 1 })
-							].id,
+							]!.id,
 						},
 					},
 				},
@@ -416,7 +418,7 @@ function generateFakeRUT() {
 		i >= 0;
 		i--, j = (j + 1) % 6
 	) {
-		sum += parseInt(rutWithoutVerifier[i]) * multipliers[j]
+		sum += parseInt(rutWithoutVerifier[i]!) * multipliers[j]!
 	}
 	let verifierDigit: string | number = 11 - (sum % 11)
 	if (verifierDigit == 10) {
@@ -432,7 +434,7 @@ function generateFakeRUT() {
 }
 function getRandomValue(array: string[]): string {
 	const randomIndex = Math.floor(Math.random() * array.length)
-	return array[randomIndex]
+	return array[randomIndex]!
 }
 
 function subtractMinutes(date: Date, minutesToSubtract: number): Date {
