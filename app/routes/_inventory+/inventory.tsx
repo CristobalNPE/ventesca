@@ -31,11 +31,17 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import {
+	getBusinessId,
+	getDefaultCategory,
+	getDefaultSupplier,
+	requireUserId,
+} from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
 	cn,
 	formatCurrency,
+	isValidNumber,
 	useDebounce,
 	useIsPending,
 } from '#app/utils/misc.tsx'
@@ -51,6 +57,12 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '#app/components/ui/dropdown-menu.tsx'
 import { Label as FormLabel } from '#app/components/ui/label.tsx'
 import {
 	Select,
@@ -65,8 +77,16 @@ import {
 	TabsList,
 	TabsTrigger,
 } from '#app/components/ui/tabs.js'
-import { Category, Prisma } from '@prisma/client'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { parseWithZod } from '@conform-to/zod'
+import { Category, Prisma, Product } from '@prisma/client'
+import {
+	ActionFunctionArgs,
+	unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+	json,
+	unstable_parseMultipartFormData as parseMultipartFormData,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -79,24 +99,22 @@ import {
 } from '@remix-run/react'
 import { useEffect, useId, useState } from 'react'
 import { Label, Pie, PieChart } from 'recharts'
+import {
+	ParsedProduct,
+	parseExcelTemplate,
+	validateParsedProduct,
+	validateTemplate,
+} from './inventory.generate-inventory-template'
 import { CreateItemDialog } from './inventory_.new.tsx'
+import { ImportInventoryFromFileSchema } from './inventory__.import-inventory'
+import { ImportInventoryFromFileModal } from './inventory__.import-inventory.tsx'
 import {
 	getBestSellingProduct,
 	getInventoryValueByCategory,
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './productService.server.ts'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '#app/components/ui/dropdown-menu.tsx'
-import { Progress } from '#app/components/ui/progress.tsx'
-import { EpicProgress } from '#app/components/progress-bar.tsx'
-
+import { z } from 'zod'
 const chartConfig = {} satisfies ChartConfig
 const stockFilterParam = 'stock'
 const categoryFilterParam = 'category'
@@ -205,6 +223,147 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	})
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+	const userId = await requireUserWithRole(request, 'Administrador')
+	const businessId = await getBusinessId(userId)
+
+	const formData = await parseMultipartFormData(
+		request,
+		createMemoryUploadHandler(),
+	)
+
+	const submission = await parseWithZod(formData, {
+		schema: ImportInventoryFromFileSchema.superRefine(async (data, ctx) => {
+			const buffer = Buffer.from(await data.template.arrayBuffer())
+			const isValidTemplate = validateTemplate(buffer)
+
+			if (!isValidTemplate) {
+				ctx.addIssue({
+					path: ['template'],
+					code: z.ZodIssueCode.custom,
+					message: 'La plantilla cargada no es válida.',
+				})
+			}
+		}),
+		async: true,
+	})
+
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { template } = submission.value
+
+	const arrayBuffer = await template.arrayBuffer()
+	const buffer = Buffer.from(arrayBuffer)
+
+	const productsReceived = parseExcelTemplate(buffer)
+	console.table(productsReceived)
+	const businessCategories = await prisma.category.findMany({
+		where: { businessId },
+		select: { id: true, code: true },
+	})
+	const businessSuppliers = await prisma.supplier.findMany({
+		where: { businessId },
+		select: { id: true, code: true },
+	})
+	const fallbackCategory = await getDefaultCategory({ businessId })
+	const fallbackSupplier = await getDefaultSupplier({
+		businessId,
+		email: '',
+		name: '',
+	})
+
+	const existingProductCodes = await prisma.product.findMany({
+		where: { businessId, code: { in: productsReceived.map(p => p.code) } },
+		select: { code: true },
+	})
+	const existingCodes = new Set(existingProductCodes.map(p => p.code))
+
+	const productsToCreate: Pick<
+		Product,
+		| 'code'
+		| 'name'
+		| 'businessId'
+		| 'categoryId'
+		| 'supplierId'
+		| 'price'
+		| 'sellingPrice'
+		| 'stock'
+		| 'isActive'
+	>[] = []
+	const errorMessages: Array<{
+		parsedProduct: ParsedProduct
+		message: string
+	}> = []
+
+	for (const parsedProduct of productsReceived) {
+		if (existingCodes.has(parsedProduct.code)) {
+			errorMessages.push({
+				parsedProduct,
+				message: 'Código se encuentra registrado en inventario.',
+			})
+			continue
+		}
+
+		const validationResult = await validateParsedProduct({
+			parsedProduct,
+			businessCategories,
+			businessSuppliers,
+			fallbackCategory,
+			fallbackSupplier,
+		})
+
+		if (!validationResult.isValidProductName) {
+			errorMessages.push({
+				parsedProduct,
+				message: validationResult.errorMessage,
+			})
+			continue
+		}
+
+		productsToCreate.push({
+			code: parsedProduct.code,
+			name: parsedProduct.name,
+			price: validationResult.price,
+			sellingPrice: validationResult.sellingPrice,
+			stock: validationResult.stock,
+			businessId,
+			categoryId: validationResult.categoryId,
+			supplierId: validationResult.supplierId,
+			isActive:
+				validationResult.price > 0 &&
+				validationResult.sellingPrice > 0 &&
+				validationResult.stock > 0,
+		})
+
+		if (validationResult.errorMessage) {
+			errorMessages.push({
+				parsedProduct,
+				message: validationResult.errorMessage,
+			})
+		}
+	}
+
+	await prisma.$transaction(async tx => {
+		const products = await tx.product.createManyAndReturn({
+			data: productsToCreate,
+			select: { id: true },
+		})
+
+		await tx.productAnalytics.createMany({
+			data: products.map(product => ({
+				productId: product.id,
+			})),
+		})
+	})
+
+	return null
+}
+
 export default function InventoryRoute() {
 	const isAdmin = true
 	const {
@@ -217,7 +376,7 @@ export default function InventoryRoute() {
 		allCategories,
 	} = useLoaderData<typeof loader>()
 
-	const [searchParams, setSearchParams] = useSearchParams()
+	const [, setSearchParams] = useSearchParams()
 	const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false)
 	const location = useLocation()
 	const navigation = useNavigation()
@@ -528,6 +687,7 @@ type ProductData = {
 	name: string | null
 	code: string
 	id: string
+	isActive: boolean
 	sellingPrice: number | null
 	stock: number
 	category: {
@@ -575,6 +735,7 @@ function ProductsTableCard({
 							cn(
 								'flex flex-row items-center justify-between gap-5 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
 								isActive && 'border-primary/10 bg-secondary',
+								!product.isActive && 'border-destructive/20',
 							)
 						}
 						preserveSearch
@@ -863,49 +1024,6 @@ function ModifyProductPriceInBulkModal() {
 					<AlertDialogAction asChild>
 						<Link to="bulk-price-modify">Entendido, proceder.</Link>
 					</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-	)
-}
-
-function ImportInventoryFromFileModal() {
-	const [selectedFile, setSelectedFile] = useState('No file chosen')
-
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger>
-				<Icon name="file-text" className="mr-2" /> Importar productos desde
-				archivo
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Importar inventario desde archivo</AlertDialogTitle>
-					<AlertDialogDescription>
-						This action cannot be undone. This will permanently delete your
-						account and remove your data from our servers.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<Form
-					method="post"
-					encType="multipart/form-data"
-					className="flex flex-col gap-4"
-				>
-					<Input
-						type="file"
-						name="csv"
-						accept=".csv"
-						className="cursor-pointer"
-					/>
-					<Progress value={50} />
-					<EpicProgress/>
-				</Form>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<StatusButton  iconName="upload" status="idle">
-						Cargar Inventario
-					</StatusButton>
-
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
