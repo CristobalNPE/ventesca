@@ -7,7 +7,7 @@ import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 //config:
 const NUMBER_OF_CATEGORIES = 12
 const NUMBER_OF_SUPPLIERS = 10
-const NUMBER_OF_PRODUCTS = 5000
+const NUMBER_OF_PRODUCTS = 20000
 const NUMBER_OF_TRANSACTIONS = 100
 
 async function seed() {
