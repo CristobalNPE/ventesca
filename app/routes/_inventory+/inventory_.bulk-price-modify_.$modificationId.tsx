@@ -659,6 +659,7 @@ async function executeBulkPriceModificationAction({
 		const snapshot = JSON.stringify(priceModifications)
 
 		// Update product prices
+
 		for (const modification of priceModifications) {
 			await tx.product.update({
 				where: { id: modification.productAnalytics.product.id },

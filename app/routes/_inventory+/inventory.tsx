@@ -41,7 +41,6 @@ import { prisma } from '#app/utils/db.server.ts'
 import {
 	cn,
 	formatCurrency,
-	isValidNumber,
 	useDebounce,
 	useIsPending,
 } from '#app/utils/misc.tsx'
@@ -91,14 +90,17 @@ import {
 	Form,
 	Link,
 	Outlet,
+	useActionData,
 	useLoaderData,
 	useLocation,
+	useNavigate,
 	useNavigation,
 	useSearchParams,
 	useSubmit,
 } from '@remix-run/react'
 import { useEffect, useId, useState } from 'react'
 import { Label, Pie, PieChart } from 'recharts'
+import { z } from 'zod'
 import {
 	ParsedProduct,
 	parseExcelTemplate,
@@ -114,7 +116,6 @@ import {
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './productService.server.ts'
-import { z } from 'zod'
 const chartConfig = {} satisfies ChartConfig
 const stockFilterParam = 'stock'
 const categoryFilterParam = 'category'
@@ -138,6 +139,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const sortDirection = url.searchParams.get(sortDirectionParam)
 
 	const sortOptions: Record<string, Prisma.ProductOrderByWithRelationInput> = {
+		default: { name: 'asc' },
 		name: { name: sortDirection === SortDirection.ASC ? 'asc' : 'desc' },
 		'selling-price': {
 			sellingPrice: sortDirection === SortDirection.ASC ? 'asc' : 'desc',
@@ -177,7 +179,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: filters,
 		select: productSelect,
 		orderBy:
-			sortBy && sortOptions[sortBy] ? sortOptions[sortBy] : { name: 'asc' },
+			sortBy && sortOptions[sortBy]
+				? sortOptions[sortBy]
+				: sortOptions['default'],
 	})
 
 	const totalProductsPromise = prisma.product.count({ where: filters })
@@ -250,7 +254,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	if (submission.status !== 'success') {
 		return json(
-			{ result: submission.reply() },
+			{
+				result: submission.reply(),
+				productsWithErrors: null,
+				productsWithWarnings: null,
+				successfulProducts: null,
+			},
 			{ status: submission.status === 'error' ? 400 : 200 },
 		)
 	}
@@ -277,11 +286,11 @@ export async function action({ request }: ActionFunctionArgs) {
 		name: '',
 	})
 
-	const existingProductCodes = await prisma.product.findMany({
+	const existingProductCodesOnly = await prisma.product.findMany({
 		where: { businessId, code: { in: productsReceived.map(p => p.code) } },
 		select: { code: true },
 	})
-	const existingCodes = new Set(existingProductCodes.map(p => p.code))
+	const existingCodes = new Set(existingProductCodesOnly.map(p => p.code))
 
 	const productsToCreate: Pick<
 		Product,
@@ -295,16 +304,27 @@ export async function action({ request }: ActionFunctionArgs) {
 		| 'stock'
 		| 'isActive'
 	>[] = []
-	const errorMessages: Array<{
+	const productsWithErrors: Array<{
 		parsedProduct: ParsedProduct
 		message: string
 	}> = []
-
+	const productsWithWarnings: Array<{
+		parsedProduct: ParsedProduct
+		message: string
+	}> = []
+	const successfulProducts: Array<ParsedProduct> = []
 	for (const parsedProduct of productsReceived) {
 		if (existingCodes.has(parsedProduct.code)) {
-			errorMessages.push({
+			productsWithErrors.push({
 				parsedProduct,
 				message: 'Código se encuentra registrado en inventario.',
+			})
+			continue
+		}
+		if (new Set(productsToCreate.map(p => p.code)).has(parsedProduct.code)) {
+			productsWithErrors.push({
+				parsedProduct,
+				message: 'Código se encuentra duplicado en plantilla.',
 			})
 			continue
 		}
@@ -318,7 +338,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 
 		if (!validationResult.isValidProductName) {
-			errorMessages.push({
+			productsWithErrors.push({
 				parsedProduct,
 				message: validationResult.errorMessage,
 			})
@@ -341,10 +361,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 
 		if (validationResult.errorMessage) {
-			errorMessages.push({
+			productsWithWarnings.push({
 				parsedProduct,
 				message: validationResult.errorMessage,
 			})
+		} else {
+			successfulProducts.push(parsedProduct)
 		}
 	}
 
@@ -361,7 +383,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	})
 
-	return null
+	return json({
+		result: submission.reply(),
+		productsWithErrors,
+		productsWithWarnings,
+		successfulProducts,
+	})
 }
 
 export default function InventoryRoute() {
@@ -379,6 +406,7 @@ export default function InventoryRoute() {
 	const [, setSearchParams] = useSearchParams()
 	const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false)
 	const location = useLocation()
+	const navigate = useNavigate()
 	const navigation = useNavigation()
 
 	const chartData = inventoryValue.categoryBreakdown
@@ -446,7 +474,8 @@ export default function InventoryRoute() {
 									const newSearchParams = new URLSearchParams()
 									newSearchParams.set(stockFilterParam, '0')
 
-									setSearchParams(newSearchParams)
+									// setSearchParams(newSearchParams)
+									navigate(`/inventory?${newSearchParams}`)
 								}}
 								variant="destructive"
 								className="group animate-slide-left cursor-pointer p-3 transition-colors hover:bg-destructive"
@@ -477,7 +506,8 @@ export default function InventoryRoute() {
 										LOW_STOCK_CHANGE_FOR_CONFIG,
 									)
 
-									setSearchParams(newSearchParams)
+									// setSearchParams(newSearchParams)
+									navigate(`/inventory?${newSearchParams}`)
 								}}
 								className="group animate-slide-left cursor-pointer p-3 transition-colors hover:bg-secondary"
 							>
@@ -670,15 +700,7 @@ export default function InventoryRoute() {
 					/>
 				</div>
 			</div>
-			<Sheet
-				modal={false}
-				open={isDetailsSheetOpen}
-				onOpenChange={setIsDetailsSheetOpen}
-			>
-				<SheetContent className="p-0 ">
-					<Outlet />
-				</SheetContent>
-			</Sheet>
+	
 		</main>
 	)
 }
@@ -729,6 +751,7 @@ function ProductsTableCard({
 			<CardContent className="flex flex-col gap-3 sm:gap-1 ">
 				{products.map(product => (
 					<LinkWithParams
+					unstable_viewTransition
 						key={product.id}
 						prefetch={'intent'}
 						className={({ isActive }) =>
@@ -877,6 +900,8 @@ function InventoryFilters({
 }: {
 	categories: Pick<Category, 'id' | 'description'>[]
 }) {
+	const navigate = useNavigate()
+
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [sortDirection, setSortDirection] = useState<SortDirection>(
 		SortDirection.DESC,
@@ -896,7 +921,8 @@ function InventoryFilters({
 						} else {
 							newSearchParams.set(stockFilterParam, value)
 						}
-						setSearchParams(newSearchParams)
+						// setSearchParams(newSearchParams)
+						navigate(`/inventory?${newSearchParams}`)
 					}}
 				>
 					<SelectTrigger className="">
@@ -923,7 +949,8 @@ function InventoryFilters({
 						} else {
 							newSearchParams.set(categoryFilterParam, value)
 						}
-						setSearchParams(newSearchParams)
+
+						navigate(`/inventory?${newSearchParams}`)
 					}}
 				>
 					<SelectTrigger className="">
@@ -951,7 +978,7 @@ function InventoryFilters({
 						} else {
 							newSearchParams.set(sortByParam, value)
 						}
-						setSearchParams(newSearchParams)
+						navigate(`/inventory?${newSearchParams}`)
 					}}
 				>
 					<SelectTrigger className="">
@@ -970,8 +997,11 @@ function InventoryFilters({
 						onClick={() => {
 							setSortDirection(SortDirection.ASC)
 							const newSearchParams = new URLSearchParams(searchParams)
+							if (!newSearchParams.get('sort')) {
+								newSearchParams.set(sortByParam, 'name')
+							}
 							newSearchParams.set(sortDirectionParam, sortDirection)
-							setSearchParams(newSearchParams)
+							navigate(`/inventory?${newSearchParams}`)
 						}}
 						variant={'outline'}
 						size={'icon'}
@@ -984,8 +1014,11 @@ function InventoryFilters({
 						onClick={() => {
 							setSortDirection(SortDirection.DESC)
 							const newSearchParams = new URLSearchParams(searchParams)
+							if (!newSearchParams.get('sort')) {
+								newSearchParams.set(sortByParam, 'name')
+							}
 							newSearchParams.set(sortDirectionParam, sortDirection)
-							setSearchParams(newSearchParams)
+							navigate(`/inventory?${newSearchParams}`)
 						}}
 						variant={'outline'}
 						size={'icon'}

@@ -198,7 +198,7 @@ export default function ProductRoute() {
 			</CardContent>
 			<CardFooter className="flex flex-row items-center justify-center border-t bg-muted/50 p-3">
 				<Button size={'pill'} asChild>
-					<Link to={'details'} className="flex items-center gap-2">
+					<Link prefetch='intent' to={'details'} className="flex items-center gap-2">
 						<Icon name="file-text" />
 						<span>Ver Detalles</span>
 					</Link>

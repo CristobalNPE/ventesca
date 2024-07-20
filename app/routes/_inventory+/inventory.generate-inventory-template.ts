@@ -225,8 +225,8 @@ export function parseExcelTemplate(buffer: Buffer): ParsedProduct[] {
 			price: String(worksheet![`C${row}`]?.v || 0),
 			sellingPrice: String(worksheet![`D${row}`]?.v || 0),
 			stock: String(worksheet![`E${row}`]?.v || 0),
-			categoryCode: String(worksheet![`F${row}`]?.v || ''),
-			supplierCode: String(worksheet![`G${row}`]?.v || ''),
+			categoryCode: String(worksheet![`F${row}`]?.v || 0),
+			supplierCode: String(worksheet![`G${row}`]?.v || 0),
 		})
 
 		rowIndex++
@@ -317,7 +317,7 @@ export function validateParsedProduct({
 		!hasValidSellingPrice
 	) {
 		errorMessage =
-			'Algunos campos contenían datos no validos. Se establecieron valores por defecto.'
+			'Se aplicaron valores predeterminados a campos con datos inválidos.'
 	}
 
 	return {
