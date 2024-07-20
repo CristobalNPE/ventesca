@@ -327,7 +327,7 @@ function App() {
 					/>
 				)}
 
-				<main className="mx-auto  h-[98.5dvh] max-w-[120rem] flex-1 overflow-y-auto bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border shadow-sm  md:p-7">
+				<main className="mx-auto  h-[98.5dvh] max-w-[120rem] flex-1 overflow-y-auto bg-muted/40 p-4 shadow-sm sm:p-5 md:m-2 md:rounded-md md:border  md:p-7">
 					{/* <main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7"> */}
 					{/* <div className="lg:hidden ">
 						<Spacer size="xs" />
@@ -500,6 +500,7 @@ function SideBar({
 						{navigationLinks.map(link => {
 							return (
 								<NavLink
+									prefetch="intent"
 									className={({ isActive }) =>
 										cn(
 											'text-md ml-1 flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground ',
@@ -542,6 +543,8 @@ function SideBar({
 						{secondaryLinks.map(link => {
 							return (
 								<NavLink
+						
+									prefetch="intent"
 									className={({ isActive }) =>
 										cn(
 											'text-md ml-1 flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground 2xl:ml-0',
@@ -585,6 +588,7 @@ function SideBar({
 								return (
 									<SheetClose className="group flex" asChild key={link.name}>
 										<NavLink
+											prefetch="viewport"
 											className={({ isActive }) =>
 												cn(
 													'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
