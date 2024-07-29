@@ -20,7 +20,7 @@ export function ModifyProductPriceInBulkModal() {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size={'sm'} variant={'outline'}>
+				<Button size={'sm'} className='h-7 gap-1 text-sm' variant={'outline'}>
 					<Icon name="coin" size="sm" className="mr-2" />
 					<span>Modificar precios</span>
 				</Button>

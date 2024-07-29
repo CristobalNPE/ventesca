@@ -17,12 +17,12 @@ export function InventoryHeader({ isAdmin }: { isAdmin: boolean }) {
 		<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center lg:flex-row lg:text-left">
 			<h1 className="text-xl font-semibold">Administración de Inventario</h1>
 			{isAdmin ? (
-				<div className="mt-4 flex w-full flex-col gap-2 lg:mt-0 lg:max-w-[25rem] lg:flex-row-reverse">
+				<div className="mt-4 flex w-full flex-col gap-4 lg:mt-0 lg:max-w-[25rem] lg:flex-row-reverse">
 					<div className="flex w-full gap-1 ">
 						<CreateItemDialog />
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button size={'sm'} className="w-6 p-0">
+								<Button size={'sm'} className="w-6 h-7 gap-1 text-sm p-0">
 									<Icon name="dots-vertical" />
 									<span className="sr-only">
 										Mas opciones para ingresar productos
@@ -43,7 +43,7 @@ export function InventoryHeader({ isAdmin }: { isAdmin: boolean }) {
 						</DropdownMenu>
 					</div>
 					<ModifyProductPriceInBulkModal />
-					<Button asChild size={'sm'} variant={'outline'}>
+					<Button asChild size={'sm'} className='h-7 gap-1 text-sm' variant={'outline'}>
 						<a href={'/inventory/generate-inventory-template'}>
 							<Icon name="file-arrow-right" size="sm" className="mr-2" />
 							<span>Exportar datos de inventario</span>

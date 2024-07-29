@@ -65,7 +65,7 @@ export function CreateItemDialog() {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size={'pill'} className="flex h-9 w-full items-center gap-2">
+				<Button size={'pill'} className="h-7 gap-1 text-sm w-full">
 					<Icon name="plus" size="md" />
 					<span>Agregar articulo</span>
 				</Button>
