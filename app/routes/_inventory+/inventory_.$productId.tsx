@@ -178,22 +178,17 @@ export default function ProductRoute() {
 
 	const alerts = getProductAlerts(product)
 
-	//?better to get in the server only the needed data.All price changes (last 6 months?).
-	//?Detailed info of last month price changes? {priceHistory, pricePromedio, }
-
 	const processedPriceHistory = processPriceHistory(priceHistory)
-
-	//?chart FOR SALES OF THE PRODUCT IN THE LAST 7 DAYS
 
 	return (
 		<ProductContext.Provider value={{ product, isAdmin }}>
 			<div className="flex flex-col gap-4 ">
-				<div className="flex items-center sm:flex-row flex-col justify-between">
+				<div className="flex flex-col items-center justify-between sm:flex-row">
 					<div className="mb-4 flex flex-col items-center gap-2 text-center md:flex-row md:gap-4">
 						<Button variant={'outline'} size={'sm'} asChild>
 							<LinkWithParams
 								preserveSearch
-								prefetch='intent'
+								prefetch="intent"
 								unstable_viewTransition
 								to={'..'}
 								relative="path"
