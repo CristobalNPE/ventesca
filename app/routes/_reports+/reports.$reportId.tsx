@@ -53,7 +53,7 @@ import {
 	DeleteOrderSchema,
 } from './__delete-order.tsx'
 import { useSpinDelay } from 'spin-delay'
-import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/productService.server.ts'
+import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/product-service.server.ts'
 
 
 export async function loader({ request, params }: LoaderFunctionArgs) {

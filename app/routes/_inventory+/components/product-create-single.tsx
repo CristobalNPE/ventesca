@@ -23,12 +23,13 @@ import { z } from 'zod'
 import {
 	PRODUCT_NAME_MAX,
 	PRODUCT_NAME_MIN,
-} from './__product-editors/name-editor.tsx'
+} from '../inventory_.$productId.edit'
+import { action } from '../inventory.edit'
 
-const DEFAULT_PRICE = 0
-const DEFAULT_STOCK = 0
+export const createSingleProductActionIntent = 'create-product-single'
 
 export const CreateItemSchema = z.object({
+	intent: z.literal(createSingleProductActionIntent),
 	productId: z.string().optional(),
 	name: z
 		.string({
@@ -44,71 +45,11 @@ export const CreateItemSchema = z.object({
 		required_error: 'Campo obligatorio',
 	}),
 })
-export async function loader() {
-	throw redirect('/inventory')
-}
-export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserWithRole(request, 'Administrador')
-	const businessId = await getBusinessId(userId)
-	const formData = await request.formData()
-
-	const submission = await parseWithZod(formData, {
-		schema: CreateItemSchema.superRefine(async (data, ctx) => {
-			const productByCode = await prisma.product.findFirst({
-				select: { id: true, code: true },
-				where: { businessId, code: data.code, isDeleted: false },
-			})
-
-			if (productByCode && productByCode.id !== data.productId) {
-				ctx.addIssue({
-					path: ['code'],
-					code: z.ZodIssueCode.custom,
-					message: 'El código ya existe.',
-				})
-			}
-		}),
-
-		async: true,
-	})
-
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { code, name } = submission.value
-
-	const defaultCategory = await prisma.category.findFirstOrThrow({
-		where: { businessId, isEssential: true },
-		select: { id: true },
-	})
-	const defaultSupplier = await prisma.supplier.findFirstOrThrow({
-		where: { businessId, isEssential: true },
-		select: { id: true },
-	})
-
-	const createdProduct = await prisma.product.create({
-		data: {
-			code,
-			isActive: false,
-			name,
-			sellingPrice: DEFAULT_PRICE,
-			price: DEFAULT_PRICE,
-			category: { connect: { id: defaultCategory.id } },
-			supplier: { connect: { id: defaultSupplier.id } },
-			business: { connect: { id: businessId } },
-			stock: DEFAULT_STOCK,
-			productAnalytics: { create: {} },
-		},
-	})
-
-	return redirect(`/inventory/${createdProduct.id}/details`)
-}
 
 export function CreateItemDialog() {
-	const createItemFetcher = useFetcher<typeof action>({ key: 'create-item' })
+	const createItemFetcher = useFetcher<typeof action>({
+		key: `${createSingleProductActionIntent}`,
+	})
 	const actionData = createItemFetcher.data
 	const isPending = createItemFetcher.state !== 'idle'
 
@@ -124,7 +65,7 @@ export function CreateItemDialog() {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size={'pill'} className="flex h-9 items-center gap-2 w-full">
+				<Button size={'pill'} className="flex h-9 w-full items-center gap-2">
 					<Icon name="plus" size="md" />
 					<span>Agregar articulo</span>
 				</Button>
@@ -139,7 +80,7 @@ export function CreateItemDialog() {
 				</AlertDialogHeader>
 				<createItemFetcher.Form
 					method="POST"
-					action="/inventory/new"
+					action="/inventory/edit"
 					{...getFormProps(form)}
 				>
 					<div className="flex flex-col gap-4 sm:flex-row">

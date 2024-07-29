@@ -67,3 +67,8 @@ export function userHasRole(
 	if (!user) return false
 	return user.roles.some(r => r.name === role)
 }
+
+export function userIsAdmin() {
+	const user = useUser()
+	return userHasRole(user, 'Administrador')
+}

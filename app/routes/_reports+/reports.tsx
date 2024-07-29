@@ -639,6 +639,7 @@ async function getWeeklyDailyEarnings(businessId: string) {
 			const orders = await prisma.order.findMany({
 				where: {
 					businessId,
+					//! Should we check for status?
 					completedAt: { gte: startOfDay(day), lte: endOfDay(day) },
 				},
 				select: { status: true, total: true },

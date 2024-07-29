@@ -62,7 +62,7 @@ import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
 import {
 	OrderAction,
 	updateProductStockAndAnalytics,
-} from '../_inventory+/productService.server.ts'
+} from '../_inventory+/product-service.server.ts'
 
 const orderDetailsSelect = {
 	id: true,

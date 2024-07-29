@@ -6,15 +6,19 @@ import { extendTailwindMerge } from 'tailwind-merge'
 import { extendedTheme } from './extended-theme.ts'
 
 export function formatCurrency(amountToFormat: number | null) {
-	const amount = amountToFormat ? amountToFormat : 0
+	const amount = amountToFormat ?? 0
+	const absAmount = Math.abs(amount)
 	const formatted = new Intl.NumberFormat('es-CL', {
 		style: 'currency',
 		currency: 'CLP',
-	}).format(amount)
+	}).format(absAmount)
 
-	return formatted
+	return amount < 0 ? `-${formatted}` : formatted
 }
 
+export function capitalize(str: string): string {
+	return str.charAt(0).toUpperCase() + str.slice(1)
+}
 export function isValidNumber(input: string) {
 	const parsed = parseInt(input)
 	// Check if the parsed value is a number and if the input string is not empty or just spaces

@@ -5,7 +5,7 @@ import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { OrderReportEditSchema } from './__order-editor'
 import { OrderStatus } from '../order+/_types/order-status'
 import { ProductOrderType } from '../order+/_types/productOrderType'
-import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/productService.server.ts'
+import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/product-service.server.ts'
 
 
 export async function action({ request }: ActionFunctionArgs) {

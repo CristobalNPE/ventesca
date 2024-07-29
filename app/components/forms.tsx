@@ -1,6 +1,6 @@
 import { useInputControl } from '@conform-to/react'
 import { REGEXP_ONLY_DIGITS_AND_CHARS, type OTPInputProps } from 'input-otp'
-import React, { useId } from 'react'
+import React, { useId, useRef } from 'react'
 import { Checkbox, type CheckboxProps } from './ui/checkbox.tsx'
 import {
 	InputOTP,
@@ -11,6 +11,8 @@ import {
 import { Input } from './ui/input.tsx'
 import { Label } from './ui/label.tsx'
 import { Textarea } from './ui/textarea.tsx'
+import { cn } from '#app/utils/misc.tsx'
+import { Icon, IconName } from './ui/icon.tsx'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
@@ -57,6 +59,94 @@ export function Field({
 				aria-describedby={errorId}
 				{...inputProps}
 			/>
+			<div className="min-h-[32px] px-4 pb-3 pt-1">
+				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
+			</div>
+		</div>
+	)
+}
+
+export function StyledField({
+	icon,
+	labelProps,
+	inputProps,
+	errors,
+	className,
+	variant = 'default',
+}: {
+	icon: IconName
+	labelProps: React.LabelHTMLAttributes<HTMLLabelElement>
+	inputProps: React.InputHTMLAttributes<HTMLInputElement>
+	errors?: ListOfErrors
+	className?: string
+	variant?: 'default' | 'slim'
+}) {
+	const fallbackId = useId()
+	const id = inputProps.id ?? fallbackId
+	const errorId = errors?.length ? `${id}-error` : undefined
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	if (variant === 'slim') {
+		return (
+			<div
+				className={cn(
+					className,
+					'flex w-full flex-col justify-center  gap-1   ',
+				)}
+			>
+				<div className="flex  items-center gap-3 ">
+					<Icon name={icon} size="md" />
+					<div className=' w-full text-sm'>
+						<Label
+							className="text-center text-muted-foreground "
+							htmlFor={id}
+							{...labelProps}
+						/>
+						<Input
+							ref={inputRef}
+							id={id}
+							aria-invalid={errorId ? true : undefined}
+							aria-describedby={errorId}
+							{...inputProps}
+							className="flex  w-full items-center justify-center  leading-none"
+						/>
+					</div>
+				</div>
+				<div className="min-h-[32px] px-4 pb-3 pt-1">
+					{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
+				</div>
+			</div>
+		)
+	}
+	return (
+		<div
+			className={cn(className, 'flex w-full flex-col justify-center  gap-1   ')}
+		>
+			<div className="flex  items-center gap-4">
+				<div
+					onClick={() => inputRef.current?.focus()}
+					className={cn(
+						'flex items-center justify-center rounded-full bg-primary p-3',
+					)}
+				>
+					<Icon name={icon} className={cn('h-7 w-7 text-primary-foreground')} />
+				</div>
+				<div>
+					<Label
+						className="text-center text-muted-foreground"
+						htmlFor={id}
+						{...labelProps}
+					/>
+					<Input
+						ref={inputRef}
+						id={id}
+						aria-invalid={errorId ? true : undefined}
+						aria-describedby={errorId}
+						{...inputProps}
+						className="flex w-full items-center justify-center border-none bg-secondary text-center text-3xl font-bold leading-none"
+					/>
+				</div>
+			</div>
 			<div className="min-h-[32px] px-4 pb-3 pt-1">
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
 			</div>
