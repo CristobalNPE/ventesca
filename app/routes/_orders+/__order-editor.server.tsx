@@ -92,5 +92,5 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/reports/${id}${params ? `?${params}` : ''}`)
+	return redirect(`/orders/${id}${params ? `?${params}` : ''}`)
 }

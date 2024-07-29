@@ -202,7 +202,7 @@ export default function OrderReportsRoute() {
 	const navigate = useNavigate()
 
 	useEffect(() => {
-		if (location.pathname !== '/reports') {
+		if (location.pathname !== '/orders') {
 			const reportId = location.pathname.split('/').pop()
 			if (reportId) {
 				if (navigation.state === 'idle') {
@@ -341,7 +341,7 @@ export default function OrderReportsRoute() {
 											newSearchParams.set(periodParam, period)
 											
 
-											navigate(`/reports?${newSearchParams.toString()}`)
+											navigate(`/orders?${newSearchParams.toString()}`)
 										}}
 										className={cn(
 											'flex h-7 w-[5rem] cursor-pointer items-center justify-center rounded-sm text-sm font-semibold',

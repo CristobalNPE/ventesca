@@ -370,7 +370,7 @@ async function deleteOrderAction(formData: FormData) {
 	// }
 
 	await prisma.order.delete({ where: { id: orderId } })
-	return redirectWithToast(`/reports`, {
+	return redirectWithToast(`/orders`, {
 		type: 'success',
 		title: 'Transacción eliminada',
 		description: `Transacción ID [${order.id}] ha sido eliminada permanentemente.`,

@@ -55,7 +55,7 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const resetSearch = useCallback(() => {
-		fetcher.load(`/reports/verify-order?${orderSearchParam}=`)
+		fetcher.load(`/orders/verify-order?${orderSearchParam}=`)
 	}, [fetcher])
 
 	useEffect(() => {
@@ -70,7 +70,7 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 
 	const navigateToDetails = useCallback(() => {
 		if (!orderState.order) return
-		navigate(`/reports/${orderState.order.id}`)
+		navigate(`/orders/${orderState.order.id}`)
 		if (inputRef.current !== null) {
 			inputRef.current.value = ''
 		}
@@ -82,7 +82,7 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 			{ [orderSearchParam]: inputValue ?? '' },
 			{
 				method: 'get',
-				action: `/reports/verify-order`,
+				action: `/orders/verify-order`,
 			},
 		)
 		inputRef.current?.focus()

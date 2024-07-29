@@ -30,7 +30,7 @@ export function DeleteOrder({ id }: { id: string }) {
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
-		formAction: `/reports/${id}`,
+		formAction: `/orders/${id}`,
 	})
 	const [form] = useForm({
 		id: deleteOrderActionIntent,
@@ -58,7 +58,7 @@ export function DeleteOrder({ id }: { id: string }) {
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<Form method="POST" action={`/reports/${id}`} {...getFormProps(form)}>
+					<Form method="POST" action={`/orders/${id}`} {...getFormProps(form)}>
 						<input type="hidden" name="orderId" value={id} />
 						<StatusButton
 							type="submit"
