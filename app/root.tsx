@@ -259,7 +259,7 @@ function App() {
 		},
 		{
 			name: 'Transacciones',
-			path: 'reports',
+			path: 'orders',
 			icon: 'file-bar-chart',
 		},
 		{
@@ -543,7 +543,6 @@ function SideBar({
 						{secondaryLinks.map(link => {
 							return (
 								<NavLink
-						
 									prefetch="intent"
 									className={({ isActive }) =>
 										cn(
