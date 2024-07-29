@@ -35,72 +35,74 @@ export function OrdersStats() {
 	const { dayEarnings, weekEarnings, weekDailyEarnings } = useOrders()
 	return (
 		<div className="flex w-full flex-col  gap-4 xl:max-w-[25rem]   ">
-			<Card className="w-full">
-				<CardHeader className="pb-2">
-					<CardDescription>Ingresos hoy</CardDescription>
-					<CardTitle className="flex items-center gap-4 text-4xl">
-						<span>{formatCurrency(dayEarnings.todaysEarnings)}</span>
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1">
+				<Card className="w-full">
+					<CardHeader className="pb-2">
+						<CardDescription>Ingresos hoy</CardDescription>
+						<CardTitle className="flex items-center gap-4 text-4xl">
+							<span>{formatCurrency(dayEarnings.todaysEarnings)}</span>
+							{dayEarnings.isIncrease ? (
+								<Icon className="text-3xl" name="arrow-up" />
+							) : null}
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
 						{dayEarnings.isIncrease ? (
-							<Icon className="text-3xl" name="arrow-up" />
-						) : null}
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{dayEarnings.isIncrease ? (
-						<div className="text-xs text-muted-foreground">
-							+{dayEarnings.percentageDifference}% de ingresos respecto ayer
-						</div>
-					) : (
-						<div className="text-xs text-muted-foreground">
-							{dayEarnings.percentageDifference}% de los ingresos de ayer
-						</div>
-					)}
-				</CardContent>
-				<CardFooter>
-					<Progress
-						value={dayEarnings.percentageDifference}
-						aria-label={
-							dayEarnings.isIncrease
-								? `${dayEarnings.percentageDifference}% incremento de ganancias`
-								: `${dayEarnings.percentageDifference}% de ganancias de ayer`
-						}
-					/>
-				</CardFooter>
-			</Card>
-			<Card className="w-full">
-				<CardHeader className="pb-2">
-					<CardDescription>Ingresos esta semana</CardDescription>
-					<CardTitle className="flex items-center gap-4 text-4xl">
-						<span>{formatCurrency(weekEarnings.thisWeekEarnings)} </span>
+							<div className="text-xs text-muted-foreground">
+								+{dayEarnings.percentageDifference}% de ingresos respecto ayer
+							</div>
+						) : (
+							<div className="text-xs text-muted-foreground">
+								{dayEarnings.percentageDifference}% de los ingresos de ayer
+							</div>
+						)}
+					</CardContent>
+					<CardFooter>
+						<Progress
+							value={dayEarnings.percentageDifference}
+							aria-label={
+								dayEarnings.isIncrease
+									? `${dayEarnings.percentageDifference}% incremento de ganancias`
+									: `${dayEarnings.percentageDifference}% de ganancias de ayer`
+							}
+						/>
+					</CardFooter>
+				</Card>
+				<Card className="w-full">
+					<CardHeader className="pb-2">
+						<CardDescription>Ingresos esta semana</CardDescription>
+						<CardTitle className="flex items-center gap-4 text-4xl">
+							<span>{formatCurrency(weekEarnings.thisWeekEarnings)} </span>
+							{weekEarnings.isIncrease ? (
+								<Icon className="text-3xl" name="arrow-up" />
+							) : null}
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
 						{weekEarnings.isIncrease ? (
-							<Icon className="text-3xl" name="arrow-up" />
-						) : null}
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{weekEarnings.isIncrease ? (
-						<div className="text-xs text-muted-foreground">
-							+{weekEarnings.percentageDifference}% de ingresos respecto la
-							semana pasada
-						</div>
-					) : (
-						<div className="text-xs text-muted-foreground">
-							{weekEarnings.percentageDifference}% de los ingresos de la semana
-							anterior
-						</div>
-					)}
-				</CardContent>
-				<CardFooter>
-					<Progress
-						value={weekEarnings.percentageDifference}
-						aria-label={
-							weekEarnings.isIncrease
-								? `${weekEarnings.percentageDifference}% incremento de ganancias`
-								: `${weekEarnings.percentageDifference}% de ganancias de la semana anterior`
-						}
-					/>
-				</CardFooter>
-			</Card>
+							<div className="text-xs text-muted-foreground">
+								+{weekEarnings.percentageDifference}% de ingresos respecto la
+								semana pasada
+							</div>
+						) : (
+							<div className="text-xs text-muted-foreground">
+								{weekEarnings.percentageDifference}% de los ingresos de la
+								semana anterior
+							</div>
+						)}
+					</CardContent>
+					<CardFooter>
+						<Progress
+							value={weekEarnings.percentageDifference}
+							aria-label={
+								weekEarnings.isIncrease
+									? `${weekEarnings.percentageDifference}% incremento de ganancias`
+									: `${weekEarnings.percentageDifference}% de ganancias de la semana anterior`
+							}
+						/>
+					</CardFooter>
+				</Card>
+			</div>
 			<Card className="flex h-full w-full flex-1 flex-col">
 				<CardHeader className="pb-2">
 					<CardTitle>Detalle ingresos semanal</CardTitle>
