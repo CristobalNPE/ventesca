@@ -24,7 +24,7 @@ import {
 import { es } from 'date-fns/locale'
 import { pdf } from 'remix-utils/responses'
 import { OrderStatus } from '../order+/_types/order-status.ts'
-import { TimePeriod } from './reports.tsx'
+import { TimePeriod } from './orders.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

@@ -83,7 +83,7 @@ import {
 	ValueType,
 } from 'recharts/types/component/DefaultTooltipContent'
 import { OrderStatus, allOrderStatuses } from '../order+/_types/order-status.ts'
-import { VerifyOrderDialog } from './reports_.verify-order.tsx'
+import { VerifyOrderDialog } from './orders_.verify-order.tsx'
 
 const statusParam = 'status'
 const periodParam = 'period'
