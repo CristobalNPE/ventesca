@@ -3,10 +3,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { userIsAdmin } from '#app/utils/user.ts'
 import { Prisma } from '@prisma/client'
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
-import {
-	MetaFunction,
-	useLoaderData
-} from '@remix-run/react'
+import { MetaFunction, useLoaderData } from '@remix-run/react'
 
 import { OrdersHeader } from '#app/components/orders/orders-header.tsx'
 import { OrdersReportsTable } from '#app/components/orders/orders-reports-table.tsx'
@@ -116,9 +113,9 @@ export default function OrderReportsRoute() {
 			<main className="flex h-full flex-col gap-4">
 				<OrdersHeader />
 				<div className="flex w-full flex-1 flex-col gap-4  lg:h-[48rem] lg:flex-row">
-					<div className="flex h-full w-full flex-1 flex-col gap-4  xl:flex-row-reverse ">
+					<div className="flex h-full w-full flex-1 flex-col gap-4  md:flex-row-reverse ">
 						<OrdersStats />
-						<OrdersReportsTable isAdmin={isAdmin} />
+						<OrdersReportsTable />
 					</div>
 				</div>
 			</main>
