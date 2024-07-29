@@ -1,6 +1,6 @@
 import { getFormProps, getInputProps } from '@conform-to/react'
 import { useFetcher } from '@remix-run/react'
-import { action } from '../inventory.edit'
+import { action } from '../../routes/_inventory+/inventory.edit'
 
 import { useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
@@ -11,7 +11,7 @@ import { IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { cn } from '#app/utils/misc.tsx'
 import { z } from 'zod'
-import { useProductContext } from '../context/ProductContext'
+import { useProductContext } from '../../context/inventory/ProductContext'
 
 const STOCK_MAX = 9999
 const STOCK_MIN = 0

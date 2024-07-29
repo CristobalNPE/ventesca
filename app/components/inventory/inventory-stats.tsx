@@ -27,8 +27,8 @@ import {
 	TabsTrigger,
 } from '#app/components/ui/tabs.js'
 import { Label, Pie, PieChart } from 'recharts'
-import { useInventory } from '../context/InventoryContext'
-import { LOW_STOCK_CHANGE_FOR_CONFIG, stockFilterParam } from '../inventory'
+import { useInventory } from '../../context/inventory/InventoryContext'
+import { LOW_STOCK_CHANGE_FOR_CONFIG, stockFilterParam } from '../../routes/_inventory+/inventory'
 import { useNavigate } from '@remix-run/react'
 const chartConfig = {} satisfies ChartConfig
 export function InventoryStats() {

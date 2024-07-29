@@ -1,4 +1,4 @@
-import { PriceModificationStatus } from '#app/routes/_inventory+/types/PriceModificationStatus.ts'
+import { PriceModificationStatus } from '#app/types/inventory/PriceModificationStatus.js'
 import { PriceModification } from '@prisma/client'
 import { SerializeFrom } from '@remix-run/node'
 

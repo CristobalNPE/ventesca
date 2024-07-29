@@ -16,7 +16,7 @@ import { action } from '#app/routes/_inventory+/inventory_.$productId.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
 import { getFormProps, useForm } from '@conform-to/react'
 import { Form, useActionData } from '@remix-run/react'
-import { useProductContext } from '../context/ProductContext'
+import { useProductContext } from '../../context/inventory/ProductContext'
 
 export function DeleteProductConfirmationModal() {
 	const { product } = useProductContext()

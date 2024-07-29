@@ -1,6 +1,6 @@
 import { getFormProps, getInputProps } from '@conform-to/react'
 import { useFetcher } from '@remix-run/react'
-import { action } from '../inventory.edit'
+import { action } from '../../routes/_inventory+/inventory.edit'
 
 import { useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
@@ -13,9 +13,9 @@ import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	calculateMarkupPercentage,
 	calculateProfitMargin,
-} from '#app/utils/product-calculations.ts'
+} from '#app/utils/inventory/product-calculations.js'
 import { z } from 'zod'
-import { useProductContext } from '../context/ProductContext'
+import { useProductContext } from '../../context/inventory/ProductContext'
 
 export const updateProductSellingPriceActionIntent =
 	'update-product-sellingPrice'

@@ -1,6 +1,6 @@
 import { useInputControl } from '@conform-to/react'
 import { useFetcher } from '@remix-run/react'
-import { action } from '../inventory.edit'
+import { action } from '../../routes/_inventory+/inventory.edit'
 
 import { useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
@@ -18,7 +18,7 @@ import { Supplier } from '@prisma/client'
 import { useEffect } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import { z } from 'zod'
-import { useProductContext } from '../context/ProductContext'
+import { useProductContext } from '../../context/inventory/ProductContext'
 
 export const updateProductSupplierActionIntent = 'update-product-supplier'
 

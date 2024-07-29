@@ -19,7 +19,7 @@ import { es } from 'date-fns/locale'
 import {
 	calculateMarkupPercentage,
 	calculateProfitMargin,
-} from '#app/utils/product-calculations.ts'
+} from '#app/utils/inventory/product-calculations.js'
 import { userIsAdmin } from '#app/utils/user.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {

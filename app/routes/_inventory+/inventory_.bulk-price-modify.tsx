@@ -35,19 +35,19 @@ import { z } from 'zod'
 import {
 	BulkPriceModificationDirection,
 	BulkPriceModificationDirectionSchema,
-} from './types/BulkPriceModificationDirection'
+} from '../../types/inventory/BulkPriceModificationDirection'
 import {
 	BulkPriceModificationScope,
 	BulkPriceModificationScopeSchema,
-} from './types/BulkPriceModificationScope'
+} from '../../types/inventory/BulkPriceModificationScope'
 import {
 	BulkPriceModificationStrategy,
 	BulkPriceModificationStrategySchema,
-} from './types/BulkPriceModificationStrategy'
-import { BulkPriceModificationStatus } from './types/BulkPriceModificationStatus'
+} from '../../types/inventory/BulkPriceModificationStrategy'
+import { BulkPriceModificationStatus } from '../../types/inventory/BulkPriceModificationStatus'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.js'
-import { PriceModificationStatus } from './types/PriceModificationStatus'
+import { PriceModificationStatus } from '../../types/inventory/PriceModificationStatus'
 
 const setupBulkPriceModificationActionIntent = 'setup-bulk-price-adjustment'
 

@@ -19,11 +19,11 @@ import {
 } from '@remix-run/node'
 import { MetaFunction, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { InventoryHeader } from './components/inventory-header.tsx'
-import { ImportInventoryFromFileSchema } from './components/inventory-import.tsx'
-import { InventoryProductsTable } from './components/inventory-products-table.tsx'
-import { InventoryStats } from './components/inventory-stats.tsx'
-import { InventoryProvider } from './context/InventoryContext.tsx'
+import { InventoryHeader } from '../../components/inventory/inventory-header.tsx'
+import { ImportInventoryFromFileSchema } from '../../components/inventory/inventory-import.tsx'
+import { InventoryProductsTable } from '../../components/inventory/inventory-products-table.tsx'
+import { InventoryStats } from '../../components/inventory/inventory-stats.tsx'
+import { InventoryProvider } from '../../context/inventory/InventoryContext.tsx'
 import {
 	ParsedProduct,
 	parseExcelTemplate,

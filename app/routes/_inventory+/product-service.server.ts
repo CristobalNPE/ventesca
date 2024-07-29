@@ -1,7 +1,7 @@
 import { prisma } from '#app/utils/db.server.js'
 import { type ProductOrder as ProductOrderModel } from '@prisma/client'
 import { ProductOrderType } from '../order+/_types/productOrderType'
-import { shouldDeactivateProduct } from '#app/utils/product-status.ts'
+import { shouldDeactivateProduct } from '#app/utils/inventory/product-status.js'
 import { OrderStatus } from '../order+/_types/order-status'
 import {
 	eachDayOfInterval,
@@ -168,9 +168,6 @@ export async function getLowStockProducts(businessId: string, limit: number) {
 		product => product.stock <= 0,
 	)
 
-	console.log(
-		`lowStockProducts = ${lowStockProducts.length}, zeroStockProducts = ${zeroStockProducts.length}`,
-	)
 	return { lowStockProducts, zeroStockProducts }
 }
 

@@ -19,7 +19,7 @@ import {
 	SortDirection,
 	sortDirectionParam,
 	stockFilterParam,
-} from '../inventory'
+} from '../../routes/_inventory+/inventory'
 
 export function InventoryFilters({
 	categories,

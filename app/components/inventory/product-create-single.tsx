@@ -23,8 +23,8 @@ import { z } from 'zod'
 import {
 	PRODUCT_NAME_MAX,
 	PRODUCT_NAME_MIN,
-} from '../inventory_.$productId.edit'
-import { action } from '../inventory.edit'
+} from '../../routes/_inventory+/inventory_.$productId.edit'
+import { action } from '../../routes/_inventory+/inventory.edit'
 
 export const createSingleProductActionIntent = 'create-product-single'
 

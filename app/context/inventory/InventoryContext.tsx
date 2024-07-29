@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import { loader } from '../inventory'
+import { loader } from '../../routes/_inventory+/inventory'
 import { SerializeFrom } from '@remix-run/node'
 type LoaderData = SerializeFrom<typeof loader>
 const InventoryContext = createContext<LoaderData | null>(null)

@@ -10,33 +10,33 @@ import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import {
 	getProductAlerts,
 	shouldDeactivateProduct,
-} from '#app/utils/product-status.ts'
+} from '#app/utils/inventory/product-status.js'
 
 import {
 	CreateItemSchema,
 	createSingleProductActionIntent,
-} from './components/product-create-single.tsx'
+} from '../../components/inventory/product-create-single.tsx'
 import {
 	CategoryEditorSchema,
 	updateProductCategoryActionIntent,
-} from './components/product-modify-category.tsx'
+} from '../../components/inventory/product-modify-category.tsx'
 import {
 	SellingPriceEditorSchema,
 	updateProductSellingPriceActionIntent,
-} from './components/product-modify-sellingPrice.tsx'
+} from '../../components/inventory/product-modify-sellingPrice.tsx'
 import {
 	StatusEditorSchema,
 	updateProductStatusActionIntent,
-} from './components/product-modify-status.tsx'
+} from '../../components/inventory/product-modify-status.tsx'
 import {
 	StockEditorSchema,
 	updateProductStockActionIntent,
-} from './components/product-modify-stock.tsx'
+} from '../../components/inventory/product-modify-stock.tsx'
 import {
 	SupplierEditorSchema,
 	updateProductSupplierActionIntent,
-} from './components/product-modify-supplier.tsx'
-import { PriceModificationStatus } from './types/PriceModificationStatus.ts'
+} from '../../components/inventory/product-modify-supplier.tsx'
+import { PriceModificationStatus } from '../../types/inventory/PriceModificationStatus.ts'
 const DEFAULT_PRICE = 0
 const DEFAULT_STOCK = 0
 export async function action({ request }: ActionFunctionArgs) {

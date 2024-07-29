@@ -24,7 +24,7 @@ import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
-} from '#app/components/ui/popover.js'
+} from '#app/components/ui/popover.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { action } from '#app/routes/_inventory+/inventory.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'

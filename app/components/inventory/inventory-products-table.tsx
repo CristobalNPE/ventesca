@@ -17,7 +17,7 @@ import {
 } from '#app/components/ui/tooltip.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 
-import { useInventory } from '../context/InventoryContext'
+import { useInventory } from '../../context/inventory/InventoryContext'
 import { InventoryFilters } from './inventory-filters'
 import { InventorySearchBar } from './inventory-search-bar'
 

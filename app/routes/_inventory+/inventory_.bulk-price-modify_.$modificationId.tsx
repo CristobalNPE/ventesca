@@ -40,11 +40,11 @@ import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { getInventoryValueByCategory } from './product-service.server'
-import { BulkPriceModificationDirection } from './types/BulkPriceModificationDirection'
-import { BulkPriceModificationScope } from './types/BulkPriceModificationScope'
-import { BulkPriceModificationStatus } from './types/BulkPriceModificationStatus'
-import { BulkPriceModificationStrategy } from './types/BulkPriceModificationStrategy'
-import { PriceModificationStatus } from './types/PriceModificationStatus'
+import { BulkPriceModificationDirection } from '../../types/inventory/BulkPriceModificationDirection'
+import { BulkPriceModificationScope } from '../../types/inventory/BulkPriceModificationScope'
+import { BulkPriceModificationStatus } from '../../types/inventory/BulkPriceModificationStatus'
+import { BulkPriceModificationStrategy } from '../../types/inventory/BulkPriceModificationStrategy'
+import { PriceModificationStatus } from '../../types/inventory/PriceModificationStatus'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')

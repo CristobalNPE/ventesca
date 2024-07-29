@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '#app/components/ui/table.tsx'
-import { ProcessedPriceHistory } from '#app/utils/product-calculations.ts'
+import { ProcessedPriceHistory } from '#app/utils/inventory/product-calculations.js'
 
 export function PriceModificationHistoryCard({
 	priceHistory,
