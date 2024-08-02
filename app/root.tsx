@@ -249,8 +249,8 @@ function App() {
 		{
 			name: 'Punto de Venta',
 			kbShortcut: 'f1',
-			path: 'order',
-			icon: 'circle-dollar-sign',
+			path: 'pos',
+			icon: 'cash-register',
 		},
 		{
 			name: 'Centro de Control',

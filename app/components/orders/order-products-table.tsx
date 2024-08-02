@@ -26,7 +26,8 @@ import { ScrollArea } from '../ui/scroll-area'
 import { OrdersFilters } from './orders-filters'
 import { useOrder } from '#app/context/orders/OrderContext.tsx'
 import { ProductOrderType } from '#app/types/orders/productOrderType.js'
-import { productOrderTypeBgColors } from '#app/routes/order+/_constants/productOrderTypesColors.js'
+import { productOrderTypeBgColors } from '#app/constants/productOrderTypesColors.js'
+
 
 export function OrderProductsTable() {
 	const { order } = useOrder()

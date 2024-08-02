@@ -12,7 +12,7 @@ import { Key } from 'ts-key-enum'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { useFetcher, useFetchers } from '@remix-run/react'
 import { useSpinDelay } from 'spin-delay'
-import { productOrderTypeBorderColors } from '../_constants/productOrderTypesColors.ts'
+import { productOrderTypeBorderColors } from '../../../constants/productOrderTypesColors.ts'
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,

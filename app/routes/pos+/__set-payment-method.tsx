@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { type action } from '#app/routes/order+/index.js'
 import { cn } from '#app/utils/misc.tsx'
-import { paymentMethodIcons } from './_constants/paymentMethodIcons.ts'
+import { paymentMethodIcons } from '../../constants/paymentMethodIcons.ts'
 import {
 	PaymentMethodSchema,
 	allPaymentMethods,

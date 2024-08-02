@@ -2,7 +2,7 @@ import { useFetcher } from '@remix-run/react'
 import { useEffect } from 'react'
 import { z } from 'zod'
 import { cn } from '#app/utils/misc.tsx'
-import { productOrderTypeBgColors } from '../_constants/productOrderTypesColors.ts'
+import { productOrderTypeBgColors } from '../../../constants/productOrderTypesColors.ts'
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,

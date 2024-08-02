@@ -22,6 +22,7 @@ export type IconName =
 	| "building-warehouse"
 	| "calendar"
 	| "camera"
+	| "cash-register"
 	| "cash"
 	| "check"
 	| "checklist"
