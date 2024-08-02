@@ -25,6 +25,7 @@
     "MINQUANTITY",
     "revalidator",
     "SELLINGPRICE",
+    "UNDISCARD",
     "validfrom",
     "VALIDFROM",
     "validperiod",
