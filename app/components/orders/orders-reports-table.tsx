@@ -24,97 +24,128 @@ import {
 import { TimePeriod, getTimePeriodBoundaries } from '#app/utils/time-periods.ts'
 
 import { useOrders } from '#app/context/orders/OrdersContext.tsx'
-import { periodParam } from '#app/routes/_orders+/orders.tsx'
-import { OrderStatus } from '#app/routes/order+/_types/order-status.ts'
+
+import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+import { OrderStatus } from '#app/types/orders/order-status.ts'
+import { PaginationBar } from '../pagination-bar'
 import { ScrollArea } from '../ui/scroll-area'
+import { OrdersFilters } from './orders-filters'
 
 export function OrdersReportsTable() {
-	const { orders, numberOfOrders } = useOrders()
+	const { orders, numberOfOrders, businessSellers } = useOrders()
 
 	const [searchParams] = useSearchParams()
 
-	if (orders.length === 0) {
-		return (
-			<div className="flex h-full flex-col items-center justify-center text-balance rounded-sm bg-card text-muted-foreground">
-				<p>Sin transacciones durante este periodo: </p>
-				<p>{getCardTitleFromParams(searchParams)}</p>
-			</div>
-		)
-	}
 	return (
 		<Card className="w-full">
-			<CardHeader>
-				<CardTitle>
-					Transacciones - {getCardTitleFromParams(searchParams)}
-				</CardTitle>
-				{orders.length > 1 ? (
-					<CardDescription>
-						Mostrando {orders.length} de {numberOfOrders} transacciones.
-					</CardDescription>
-				) : null}
+			<CardHeader className="flex flex-col gap-2">
+				<div className="flex flex-wrap items-center gap-4">
+					<div className="gap-1s flex flex-1 flex-col">
+						<CardTitle>
+							Transacciones - {getCardTitleFromParams(searchParams)}
+						</CardTitle>
+
+						<CardDescription className="h-5">
+							{orders.length
+								? `Mostrando ${orders.length} de ${numberOfOrders} transacciones.`
+								: ''}
+						</CardDescription>
+					</div>
+					<PaginationBar total={numberOfOrders} top={20} />
+				</div>
+				<div className="flex flex-1">
+					<OrdersFilters sellers={businessSellers} />
+				</div>
 			</CardHeader>
-			<ScrollArea className="relative h-[42rem] max-h-[42rem] border-b p-6  pt-0 ">
-				<Table>
-					<TableHeader className="sticky  top-0 z-20 overflow-clip rounded-md bg-secondary">
-						<TableRow>
-							<TableHead className="rounded-t-md"># Transacción</TableHead>
-							<TableHead className="hidden sm:table-cell">Vendedor</TableHead>
-							<TableHead className="">Estado</TableHead>
-							<TableHead className="hidden rounded-t-md sm:table-cell">
-								Total
-							</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{orders.map(order => (
-							<TableRow className="group" key={order.id}>
-								<TableCell>
-									<LinkWithParams
-										unstable_viewTransition
-										preserveSearch
-										prefetch="intent"
-										to={order.id}
-										className={
-											'flex w-fit items-center gap-1 rounded-md px-2 py-[1px] font-semibold transition-all duration-100 hover:translate-x-1 hover:scale-105 group-hover:bg-primary  group-hover:text-primary-foreground '
-										}
-									>
-										{order.id.slice(-6).toLocaleUpperCase()}
-										<Icon
-											name="file-text"
-											className="text-primary-foreground opacity-0 transition-all  duration-100 group-hover:opacity-100"
-										/>
-									</LinkWithParams>
-								</TableCell>
-								<TableCell className="hidden sm:table-cell">
-									{order.seller.name}
-								</TableCell>
-								<TableCell className="">
-									<Badge
-										className={cn(
-											'text-xs ',
-											order.status === OrderStatus.DISCARDED &&
-												'text-destructive',
-											order.status === OrderStatus.PENDING && 'text-orange-400',
-										)}
-										variant="outline"
-									>
-										{order.status}
-									</Badge>
-								</TableCell>
-								<TableCell className="hidden font-semibold sm:table-cell">
-									{formatCurrency(order.total)}
-								</TableCell>
+			{orders.length ? (
+				<ScrollArea className="relative h-[calc(100%-14rem)]  border-b p-6  pt-0 ">
+					<Table>
+						<TableHeader className="sticky  top-0 z-20 overflow-clip rounded-md bg-secondary">
+							<TableRow>
+								<TableHead className="rounded-tl-md">Código</TableHead>
+								<TableHead className="hidden sm:table-cell">
+									Fecha Ingreso
+								</TableHead>
+								<TableHead className="hidden sm:table-cell">Vendedor</TableHead>
+								<TableHead className="">Estado</TableHead>
+								<TableHead className="hidden rounded-tr-md sm:table-cell">
+									Total
+								</TableHead>
 							</TableRow>
-						))}
-					</TableBody>
-				</Table>
-			</ScrollArea>
+						</TableHeader>
+						<TableBody>
+							{orders.map(order => (
+								<TableRow className="group" key={order.id}>
+									<TableCell className=" h-full overflow-hidden p-0">
+										<LinkWithParams
+											unstable_viewTransition
+											preserveSearch
+											prefetch="intent"
+											to={order.id}
+											className={
+												'group/link flex h-full  w-full flex-1  gap-1 p-4 font-bold transition-all duration-100  group-hover:bg-accent group-hover:text-foreground'
+											}
+										>
+											<span className="">
+												{order.id.slice(-6).toLocaleUpperCase()}
+											</span>
+											<Icon
+												name="file-arrow-right"
+												className="text-foreground opacity-0 transition-all  duration-200 group-hover/link:translate-x-2 group-hover/link:opacity-100 "
+											/>
+										</LinkWithParams>
+									</TableCell>
+									<TableCell className="hidden sm:table-cell">
+										<div className="text-xs leading-none text-muted-foreground ">
+											<p>
+												{format(order.completedAt, 'dd/MM/yyyy', {
+													locale: es,
+												})}
+											</p>
+											<p>
+												{format(order.completedAt, 'HH:mm', {
+													locale: es,
+												})}
+											</p>
+										</div>
+									</TableCell>
+									<TableCell className="hidden sm:table-cell">
+										{order.seller.name}
+									</TableCell>
+									<TableCell className="">
+										<Badge
+											className={cn(
+												'text-xs ',
+												order.status === OrderStatus.DISCARDED &&
+													'text-destructive',
+												order.status === OrderStatus.PENDING &&
+													'text-orange-400',
+											)}
+											variant="outline"
+										>
+											{order.status}
+										</Badge>
+									</TableCell>
+									<TableCell className="hidden font-semibold sm:table-cell">
+										{formatCurrency(order.total)}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</ScrollArea>
+			) : (
+				<div className="flex h-[40rem] w-full flex-col items-center justify-center gap-2 text-balance rounded-sm border border-dashed bg-card text-muted-foreground">
+					<Icon name="exclamation-circle" size="xl" />
+					<p>No existen transacciones que cumplan con los filtros aplicados.</p>
+				</div>
+			)}
 		</Card>
 	)
 }
 
 const getCardTitleFromParams = (searchParams: URLSearchParams) => {
-	const period = searchParams.get(periodParam) ?? TimePeriod.TODAY
+	const period = searchParams.get(FILTER_PARAMS.TIME_PERIOD) ?? TimePeriod.TODAY
 	const { startDate, endDate } = getTimePeriodBoundaries(period)
 
 	switch (period) {

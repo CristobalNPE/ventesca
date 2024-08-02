@@ -3,10 +3,12 @@ import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { OrderReportEditSchema } from './__order-editor'
-import { OrderStatus } from '../order+/_types/order-status'
-import { ProductOrderType } from '../order+/_types/productOrderType'
-import { OrderAction, updateProductStockAndAnalytics } from '../_inventory+/product-service.server.ts'
-
+import { OrderStatus } from '../../types/orders/order-status.ts'
+import { ProductOrderType } from '../../types/orders/productOrderType.ts'
+import {
+	OrderAction,
+	updateProductStockAndAnalytics,
+} from '../_inventory+/product-service.server.ts'
 
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserWithRole(request, 'Administrador')
@@ -30,7 +32,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const order = await prisma.order.findUniqueOrThrow({
 		where: { id },
 		include: {
-			productOrders: true
+			productOrders: true,
 		},
 	})
 
@@ -51,36 +53,6 @@ export async function action({ request }: ActionFunctionArgs) {
 			)
 		}
 	}
-
-	// if (status === OrderStatus.DISCARDED) {
-	// 	for (let productOrder of order.productOrders) {
-	// 		if (productOrder.type === ProductOrderType.RETURN) {
-	// 			await prisma.product.update({
-	// 				where: { id: productOrder.productId },
-	// 				data: { stock: { decrement: productOrder.quantity } },
-	// 			})
-	// 		} else {
-	// 			await prisma.product.update({
-	// 				where: { id: productOrder.productId },
-	// 				data: { stock: { increment: productOrder.quantity } },
-	// 			})
-	// 		}
-	// 	}
-	// } else {
-	// 	for (let productOrder of order.productOrders) {
-	// 		if (productOrder.type === ProductOrderType.RETURN) {
-	// 			await prisma.product.update({
-	// 				where: { id: productOrder.productId },
-	// 				data: { stock: { increment: productOrder.quantity } },
-	// 			})
-	// 		} else {
-	// 			await prisma.product.update({
-	// 				where: { id: productOrder.productId },
-	// 				data: { stock: { decrement: productOrder.quantity } },
-	// 			})
-	// 		}
-	// 	}
-	// }
 
 	await prisma.order.update({
 		where: { id },

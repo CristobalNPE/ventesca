@@ -11,7 +11,7 @@ import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
 import { DirectDiscount, RemoveDirectDiscount } from './__direct-discount.tsx'
 import { DiscardOrder } from './__discard-order.tsx'
 import { FinishOrder } from './__finish-order.tsx'
-import { type OrderDetails } from './_types/OrderData.ts'
+import { type OrderDetails } from '../../types/orders/OrderData.ts'
 
 export function OrderIdPanel({ orderId }: { orderId: string }) {
 	return (

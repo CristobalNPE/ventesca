@@ -30,7 +30,7 @@ import {
 } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { OrderStatus } from '../order+/_types/order-status'
+import { OrderStatus } from '../../types/orders/order-status'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Card } from '#app/components/ui/card.tsx'
 import { Button } from '#app/components/ui/button.tsx'

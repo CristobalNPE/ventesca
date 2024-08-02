@@ -27,8 +27,8 @@ import {
 	updateProductOrderTypeActionIntent,
 	UpdateProductOrderTypeSchema,
 } from './__productOrder+/__product-order-type.tsx'
-import { OrderStatus } from './_types/order-status.ts'
-import { ProductOrderType } from './_types/productOrderType.ts'
+import { OrderStatus } from '../../types/orders/order-status.ts'
+import { ProductOrderType } from '../../types/orders/productOrderType.ts'
 
 export async function loader() {
 	return redirect('/order')

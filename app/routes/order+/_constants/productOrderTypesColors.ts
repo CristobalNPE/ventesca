@@ -1,4 +1,4 @@
-import { ProductOrderType } from '../_types/productOrderType.ts'
+import { ProductOrderType } from '../../../types/orders/productOrderType.ts'
 
 export const productOrderTypeBgColors: Record<ProductOrderType, string> = {
 	[ProductOrderType.SELL]: 'bg-green-500/80',

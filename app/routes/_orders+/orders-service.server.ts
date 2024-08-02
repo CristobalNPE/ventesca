@@ -1,21 +1,21 @@
 import { prisma } from '#app/utils/db.server.ts'
 import { type Order } from '@prisma/client'
 import {
-  eachDayOfInterval,
-  endOfDay,
-  endOfToday,
-  endOfWeek,
-  endOfYesterday,
-  format,
-  startOfDay,
-  startOfToday,
-  startOfWeek,
-  startOfYesterday,
-  subWeeks,
+	eachDayOfInterval,
+	endOfDay,
+	endOfToday,
+	endOfWeek,
+	endOfYesterday,
+	format,
+	startOfDay,
+	startOfToday,
+	startOfWeek,
+	startOfYesterday,
+	subWeeks,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-import { OrderStatus } from '../order+/_types/order-status.ts'
+import { OrderStatus } from '../../types/orders/order-status.ts'
 
 export async function getLastTwoWeeksEarnings(businessId: string) {
 	const currentWeekStartDate = startOfWeek(new Date(), { weekStartsOn: 1 })
@@ -68,6 +68,7 @@ export async function getWeeklyDailyEarnings(businessId: string) {
 				where: {
 					businessId,
 					//! Should we check for status?
+					status: OrderStatus.FINISHED,
 					completedAt: { gte: startOfDay(day), lte: endOfDay(day) },
 				},
 				select: { status: true, total: true },
@@ -142,4 +143,3 @@ function calculateTotalEarnings(orders: Pick<Order, 'status' | 'total'>[]) {
 	}
 	return 0
 }
-

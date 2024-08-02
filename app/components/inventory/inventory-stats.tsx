@@ -28,8 +28,9 @@ import {
 } from '#app/components/ui/tabs.js'
 import { Label, Pie, PieChart } from 'recharts'
 import { useInventory } from '../../context/inventory/InventoryContext'
-import { LOW_STOCK_CHANGE_FOR_CONFIG, stockFilterParam } from '../../routes/_inventory+/inventory'
+import { LOW_STOCK_CHANGE_FOR_CONFIG } from '../../routes/_inventory+/inventory'
 import { useNavigate } from '@remix-run/react'
+import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 const chartConfig = {} satisfies ChartConfig
 export function InventoryStats() {
 	const { inventoryValue, stockData, bestSeller, mostProfit, products } =
@@ -44,7 +45,7 @@ export function InventoryStats() {
 				<Alert
 					onClick={() => {
 						const newSearchParams = new URLSearchParams()
-						newSearchParams.set(stockFilterParam, '0')
+						newSearchParams.set(FILTER_PARAMS.STOCK, '0')
 						navigate(`/inventory?${newSearchParams}`)
 					}}
 					variant="destructive"
@@ -70,7 +71,7 @@ export function InventoryStats() {
 				<Alert
 					onClick={() => {
 						const newSearchParams = new URLSearchParams()
-						newSearchParams.set(stockFilterParam, LOW_STOCK_CHANGE_FOR_CONFIG)
+						newSearchParams.set(FILTER_PARAMS.STOCK, LOW_STOCK_CHANGE_FOR_CONFIG)
 						navigate(`/inventory?${newSearchParams}`, {
 							unstable_viewTransition: true,
 						})

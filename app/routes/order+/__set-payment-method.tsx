@@ -11,7 +11,7 @@ import {
 	PaymentMethodSchema,
 	allPaymentMethods,
 	type PaymentMethod,
-} from './_types/payment-method.ts'
+} from '../../types/orders/payment-method.ts'
 import { PanelCard } from './order-panel.tsx'
 
 export const setPaymentMethodActionIntent = 'set-payment-method'

@@ -19,8 +19,9 @@ import { es } from 'date-fns/locale'
 import {
 	calculateMarkupPercentage,
 	calculateProfitMargin,
-} from '#app/utils/inventory/product-calculations.js'
+} from '#app/utils/inventory/product-calculations.ts'
 import { userIsAdmin } from '#app/utils/user.ts'
+import { CardContentItem } from '#app/components/card-content-item.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -75,7 +76,7 @@ export default function ProductDetails() {
 					</Button>
 				) : null}
 			</div>
-			<CardContent className="flex flex-col gap-4">
+			<CardContent className="flex flex-col gap-6">
 				<CardContentItem icon={'id'} title={'Nombre'} content={product.name} />
 				<CardContentItem
 					icon={'scan-barcode'}
@@ -102,25 +103,5 @@ export default function ProductDetails() {
 				</span>
 			</CardFooter>
 		</Card>
-	)
-}
-
-function CardContentItem({
-	icon,
-	content,
-	title,
-}: {
-	icon: IconName
-	title: string
-	content: string | number
-}) {
-	return (
-		<div className="flex gap-4  p-2 ">
-			<Icon name={icon} size="md" />
-			<div>
-				<div className="text-muted-foreground">{title}</div>
-				<div>{content}</div>
-			</div>
-		</div>
 	)
 }

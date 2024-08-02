@@ -18,7 +18,7 @@ import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { pdf } from 'remix-utils/responses'
-import { ProductOrderType } from '../order+/_types/productOrderType'
+import { ProductOrderType } from '../../types/orders/productOrderType'
 
 Font.register({
 	family: 'B612 Mono',
@@ -79,7 +79,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	const businessId = await getBusinessId(userId)
 
 	const orderData = (await prisma.order.findUniqueOrThrow({
-		where: { id: params.reportId },
+		where: { id: params.orderId },
 		select: {
 			id: true,
 			total: true,

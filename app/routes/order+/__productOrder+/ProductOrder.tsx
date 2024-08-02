@@ -16,7 +16,7 @@ import { productOrderTypeBorderColors } from '../_constants/productOrderTypesCol
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,
-} from '../_types/productOrderType.ts'
+} from '../../../types/orders/productOrderType.ts'
 import {
 	DeleteProductOrder,
 	deleteProductOrderActionIntent,

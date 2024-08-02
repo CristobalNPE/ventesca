@@ -6,7 +6,7 @@ import { productOrderTypeBgColors } from '../_constants/productOrderTypesColors.
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,
-} from '../_types/productOrderType.ts'
+} from '../../../types/orders/productOrderType.ts'
 
 export const updateProductOrderTypeActionIntent = 'update-po-type'
 

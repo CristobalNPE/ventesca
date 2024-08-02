@@ -70,7 +70,9 @@ export function VerifyOrderDialog({ trigger }: { trigger?: React.ReactNode }) {
 
 	const navigateToDetails = useCallback(() => {
 		if (!orderState.order) return
-		navigate(`/orders/${orderState.order.id}`)
+		navigate(`/orders/${orderState.order.id}`, {
+			unstable_viewTransition: true,
+		})
 		if (inputRef.current !== null) {
 			inputRef.current.value = ''
 		}

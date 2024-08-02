@@ -40,7 +40,7 @@ export function DeleteOrder({ id }: { id: string }) {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size="sm" variant="ghost" className="h-8 gap-2">
+				<Button size="sm" variant="outline" className="h-8 gap-1">
 					<Icon name="trash" className="h-3.5 w-3.5" />
 					<span>Eliminar transacción</span>
 				</Button>

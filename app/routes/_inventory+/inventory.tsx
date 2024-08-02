@@ -36,19 +36,10 @@ import {
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './product-service.server.ts'
-
-export const stockFilterParam = 'stock'
-export const categoryFilterParam = 'category'
-export const sortByParam = 'sort'
-export const sortDirectionParam = 'sort-direction'
+import { SortDirection } from '#app/types/SortDirection.ts'
+import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 
 export const LOW_STOCK_CHANGE_FOR_CONFIG = '5'
-
-//!CHANGE THIS TO TYPE
-export enum SortDirection {
-	ASC = 'asc',
-	DESC = 'desc',
-}
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -59,10 +50,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const $skip = Number(url.searchParams.get('$skip')) || 0
 	const searchTerm = url.searchParams.get('search') ?? ''
 
-	const stockFilter = url.searchParams.get(stockFilterParam)
-	const categoryFilter = url.searchParams.get(categoryFilterParam)
-	const sortBy = url.searchParams.get(sortByParam)
-	const sortDirection = url.searchParams.get(sortDirectionParam)
+	const stockFilter = url.searchParams.get(FILTER_PARAMS.STOCK)
+	const categoryFilter = url.searchParams.get(FILTER_PARAMS.CATEGORY)
+	const sortBy = url.searchParams.get(FILTER_PARAMS.SORT_BY)
+	const sortDirection = url.searchParams.get(FILTER_PARAMS.SORT_DIRECTION)
 
 	const sortOptions: Record<string, Prisma.ProductOrderByWithRelationInput> = {
 		default: { name: 'asc' },

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 
-import { ProductOrderType } from '#app/routes/order+/_types/productOrderType.ts'
+import { ProductOrderType } from '#app/types/orders/productOrderType.js'
 import { prisma } from '#app/utils/db.server.ts'
 import { cleanupDb, createPassword } from '#tests/db-utils.ts'
 

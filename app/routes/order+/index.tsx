@@ -1,6 +1,5 @@
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
-import { type ProductOrder as ProductOrderModel } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
@@ -24,6 +23,13 @@ import { z } from 'zod'
 import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
 import { DiscountType } from '../_discounts+/_types/discount-type.ts'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
+import { OrderStatus } from '../../types/orders/order-status.ts'
+import { OrderDetailsSchema } from '../../types/orders/OrderData.ts'
+import {
+	PaymentMethod,
+	PaymentMethodSchema,
+} from '../../types/orders/payment-method.ts'
+import { ProductOrderType } from '../../types/orders/productOrderType.ts'
 import {
 	applyDirectDiscountActionIntent,
 	DirectDiscountSchema,
@@ -38,16 +44,15 @@ import {
 	finishOrderActionIntent,
 	FinishTransactionSchema,
 } from './__finish-order.tsx'
-import { addProductOrderActionIntent, ProductReader } from './__productOrder+/__product-order-new.tsx'
+import {
+	addProductOrderActionIntent,
+	ProductReader,
+} from './__productOrder+/__product-order-new.tsx'
 import {
 	PaymentMethodPanel,
 	setPaymentMethodActionIntent,
 	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
-import { OrderStatus } from './_types/order-status.ts'
-import { OrderDetailsSchema } from './_types/OrderData.ts'
-import { PaymentMethod, PaymentMethodSchema } from './_types/payment-method.ts'
-import { ProductOrderType } from './_types/productOrderType.ts'
 import {
 	DiscountsPanel,
 	OrderIdPanel,
@@ -58,11 +63,11 @@ import {
 import { useMemo } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
-import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
 import {
 	OrderAction,
 	updateProductStockAndAnalytics,
 } from '../_inventory+/product-service.server.ts'
+import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
 
 const orderDetailsSelect = {
 	id: true,
@@ -242,14 +247,6 @@ export default function ProcessOrderRoute() {
 	productReaderRef.current?.focus()
 
 	let allProductOrders = order.productOrders
-	// const allProductOrders = useMemo(() => order.productOrders, [order.productOrders]);
-
-	//!This did not solve it
-	// const [allProductOrders, setAllProductOrders] = useState(order.productOrders)
-
-	// useEffect(() => {
-	// 	setAllProductOrders(order.productOrders)
-	// }, [order.productOrders])
 
 	const createProductOrderFetcherSubmitting = useFetchers()
 		.filter(fetcher => fetcher.key.includes(addProductOrderActionIntent))
@@ -257,9 +254,7 @@ export default function ProcessOrderRoute() {
 
 	const revalidator = useRevalidator()
 	useEffect(() => {
-		console.log(createProductOrderFetcherSubmitting)
 		if (!createProductOrderFetcherSubmitting) {
-			console.log('SHould revalidate!')
 			revalidator.revalidate()
 		}
 	}, [createProductOrderFetcherSubmitting])
@@ -354,7 +349,7 @@ async function discardOrderAction(formData: FormData) {
 			completedAt: new Date(),
 		},
 	})
-	return redirectWithToast(`/reports`, {
+	return redirectWithToast(`/orders`, {
 		type: 'message',
 		title: 'Transacción Descartada',
 		description: `Transacción ${order.id} ha sido descartada.`,
@@ -406,7 +401,7 @@ async function finishOrderAction(formData: FormData) {
 	//update stock for products in the order
 	await updateProductStockAndAnalytics(order.productOrders, OrderAction.CREATE)
 
-	return redirectWithToast(`/reports/${orderId}`, {
+	return redirectWithToast(`/orders/${orderId}`, {
 		type: 'success',
 		title: 'Transacción Completa',
 		description: `Venta completada bajo ID de transacción: [${orderId.toUpperCase()}].`,

@@ -1,5 +1,5 @@
 import { type IconName } from '#app/components/ui/icon.tsx'
-import { PaymentMethod } from '../_types/payment-method.ts'
+import { PaymentMethod } from '../../../types/orders/payment-method.ts'
 
 export const paymentMethodIcons: Record<PaymentMethod, IconName> = {
 	[PaymentMethod.CASH]: 'cash',

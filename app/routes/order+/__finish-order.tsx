@@ -19,7 +19,7 @@ import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/order+/index.js'
 import { formatCurrency, useIsPending } from '#app/utils/misc.tsx'
-import { type OrderDetails } from './_types/OrderData.ts'
+import { type OrderDetails } from '../../types/orders/OrderData.ts'
 import { useRef } from 'react'
 
 export const finishOrderActionIntent = 'finish-order'
@@ -122,7 +122,7 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 							</div>
 							<div className="flex flex-col gap-2">
 								Ticket Disponible:
-								<iframe className='rounded' ref={iframeRef} src={`reports/${order.id}/receipt`} />
+								<iframe className='rounded' ref={iframeRef} src={`orders/${order.id}/receipt`} />
 								<Button
 									onClick={() => iframeRef.current?.contentWindow?.print()}
 									variant={'secondary'}

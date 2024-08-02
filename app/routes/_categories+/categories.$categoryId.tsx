@@ -39,7 +39,7 @@ import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
 import { ItemDetailsSheet } from '../_inventory+/product-sheet.tsx'
-import { OrderStatus } from '../order+/_types/order-status.ts'
+import { OrderStatus } from '../../types/orders/order-status.ts'
 import {
 	deleteCategoryActionIntent,
 	DeleteCategory,

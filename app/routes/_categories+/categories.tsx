@@ -27,7 +27,7 @@ import { cn, formatCurrency } from '#app/utils/misc.tsx'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { OrderStatus } from '../order+/_types/order-status.ts'
+import { OrderStatus } from '../../types/orders/order-status.ts'
 import {
 	createCategoryActionIntent,
 	CreateCategoryDialog,

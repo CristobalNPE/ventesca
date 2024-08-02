@@ -2,7 +2,7 @@ import { loader } from '#app/routes/_orders+/orders'
 import { SerializeFrom } from '@remix-run/node'
 import { createContext, useContext } from 'react'
 type LoaderData = SerializeFrom<typeof loader>
-const OrderContext = createContext<LoaderData | null>(null)
+const OrdersContext = createContext<LoaderData | null>(null)
 export function OrdersProvider({
 	children,
 	data,
@@ -10,10 +10,10 @@ export function OrdersProvider({
 	children: React.ReactNode
 	data: LoaderData
 }) {
-	return <OrderContext.Provider value={data}>{children}</OrderContext.Provider>
+	return <OrdersContext.Provider value={data}>{children}</OrdersContext.Provider>
 }
 export function useOrders() {
-	const context = useContext(OrderContext)
+	const context = useContext(OrdersContext)
 	if (!context) {
 		throw new Error('useOrders must be used within an OrdersProvider')
 	}

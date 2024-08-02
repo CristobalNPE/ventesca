@@ -12,14 +12,10 @@ import {
 import { Category } from '@prisma/client'
 import { useNavigate, useSearchParams } from '@remix-run/react'
 import { useState } from 'react'
-import {
-	categoryFilterParam,
-	LOW_STOCK_CHANGE_FOR_CONFIG,
-	sortByParam,
-	SortDirection,
-	sortDirectionParam,
-	stockFilterParam,
-} from '../../routes/_inventory+/inventory'
+
+import { SortDirection } from '#app/types/SortDirection.ts'
+import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+import { LOW_STOCK_CHANGE_FOR_CONFIG } from '#app/routes/_inventory+/inventory.tsx'
 
 export function InventoryFilters({
 	categories,
@@ -43,9 +39,9 @@ export function InventoryFilters({
 					onValueChange={value => {
 						const newSearchParams = new URLSearchParams(searchParams)
 						if (value === 'all') {
-							newSearchParams.delete(stockFilterParam)
+							newSearchParams.delete(FILTER_PARAMS.STOCK)
 						} else {
-							newSearchParams.set(stockFilterParam, value)
+							newSearchParams.set(FILTER_PARAMS.STOCK, value)
 						}
 						navigate(`/inventory?${newSearchParams}`, {
 							unstable_viewTransition: true,
@@ -72,9 +68,9 @@ export function InventoryFilters({
 					onValueChange={value => {
 						const newSearchParams = new URLSearchParams(searchParams)
 						if (value === 'all') {
-							newSearchParams.delete(categoryFilterParam)
+							newSearchParams.delete(FILTER_PARAMS.CATEGORY)
 						} else {
-							newSearchParams.set(categoryFilterParam, value)
+							newSearchParams.set(FILTER_PARAMS.CATEGORY, value)
 						}
 
 						navigate(`/inventory?${newSearchParams}`, {
@@ -103,9 +99,9 @@ export function InventoryFilters({
 					onValueChange={value => {
 						const newSearchParams = new URLSearchParams(searchParams)
 						if (value === 'default') {
-							newSearchParams.delete(sortByParam)
+							newSearchParams.delete(FILTER_PARAMS.SORT_BY)
 						} else {
-							newSearchParams.set(sortByParam, value)
+							newSearchParams.set(FILTER_PARAMS.SORT_BY, value)
 						}
 						navigate(`/inventory?${newSearchParams}`, {
 							unstable_viewTransition: true,
@@ -129,12 +125,10 @@ export function InventoryFilters({
 							setSortDirection(SortDirection.ASC)
 							const newSearchParams = new URLSearchParams(searchParams)
 							if (!newSearchParams.get('sort')) {
-								newSearchParams.set(sortByParam, 'name')
+								newSearchParams.set(FILTER_PARAMS.SORT_BY, 'name')
 							}
-							newSearchParams.set(sortDirectionParam, sortDirection)
-							navigate(`/inventory?${newSearchParams}`, {
-								unstable_viewTransition: true,
-							})
+							newSearchParams.set(FILTER_PARAMS.SORT_DIRECTION, sortDirection)
+							navigate(`/inventory?${newSearchParams}`)
 						}}
 						variant={'outline'}
 						size={'icon'}
@@ -148,12 +142,10 @@ export function InventoryFilters({
 							setSortDirection(SortDirection.DESC)
 							const newSearchParams = new URLSearchParams(searchParams)
 							if (!newSearchParams.get('sort')) {
-								newSearchParams.set(sortByParam, 'name')
+								newSearchParams.set(FILTER_PARAMS.SORT_BY, 'name')
 							}
-							newSearchParams.set(sortDirectionParam, sortDirection)
-							navigate(`/inventory?${newSearchParams}`, {
-								unstable_viewTransition: true,
-							})
+							newSearchParams.set(FILTER_PARAMS.SORT_DIRECTION, sortDirection)
+							navigate(`/inventory?${newSearchParams}`)
 						}}
 						variant={'outline'}
 						size={'icon'}

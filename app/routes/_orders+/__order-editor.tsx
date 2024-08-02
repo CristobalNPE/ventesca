@@ -37,11 +37,11 @@ import {
 	allOrderStatuses,
 	OrderStatus,
 	OrderStatusSchema,
-} from '../order+/_types/order-status.ts'
+} from '../../types/orders/order-status.ts'
 import {
 	allPaymentMethods,
 	PaymentMethodSchema,
-} from '../order+/_types/payment-method.ts'
+} from '../../types/orders/payment-method.ts'
 import { action } from './__order-editor.server.tsx'
 
 export const OrderReportEditSchema = z.object({
