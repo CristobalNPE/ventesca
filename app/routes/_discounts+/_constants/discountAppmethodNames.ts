@@ -1,4 +1,4 @@
-import { DiscountApplicationMethod } from '../_types/discount-applicationMethod.ts'
+import { DiscountApplicationMethod } from '../../../types/discounts/discount-applicationMethod.ts'
 
 export const discountAppmethodNames: Record<DiscountApplicationMethod, string> =
 	{
