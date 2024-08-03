@@ -10,11 +10,11 @@ import { DiscountType } from '../../types/discounts/discount-type.ts'
 import {
 	DeleteFormSchema,
 	deleteProductOrderActionIntent,
-} from './__productOrder+/__product-order-delete.tsx'
+} from '#app/components/pos/product-order/product-order-delete.tsx'
 import {
 	addProductOrderActionIntent,
 	AddProductOrderSchema,
-} from './__productOrder+/__product-order-new.tsx'
+} from '#app/components/pos/product-order/product-order-new.tsx'
 import {
 	changeProductOrderQuantityActionIntent,
 	ChangeProductOrderQuantitySchema,
@@ -22,11 +22,11 @@ import {
 	DecreaseProductOrderQuantitySchema,
 	increaseProductOrderQuantityActionIntent,
 	IncreaseProductOrderQuantitySchema,
-} from './__productOrder+/__product-order-quantity.tsx'
+} from '../../components/pos/product-order/product-order-quantity.tsx'
 import {
 	updateProductOrderTypeActionIntent,
 	UpdateProductOrderTypeSchema,
-} from './__productOrder+/__product-order-type.tsx'
+} from '../../components/pos/product-order/product-order-type.tsx'
 import { OrderStatus } from '../../types/orders/order-status.ts'
 import { ProductOrderType } from '../../types/orders/productOrderType.ts'
 
@@ -388,7 +388,6 @@ async function addProductOrderAction({
 
 	invariantResponse(currentOrder, 'Debe haber una transacción en progreso.')
 
-	console.log(formData.get('search'))
 	const result = AddProductOrderSchema.safeParse({
 		intent: formData.get('intent'),
 		search: formData.get('search'),

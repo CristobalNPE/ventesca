@@ -21,7 +21,8 @@ import {
 	useState,
 } from 'react'
 import { z } from 'zod'
-import { type addProductOrderActionType } from '../product-order.tsx'
+import { addProductOrderActionType } from '#app/routes/pos+/product-order-actions.js'
+
 
 export const addProductOrderActionIntent = 'add-product-order'
 export const AddProductOrderSchema = z.object({
@@ -68,14 +69,14 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 		}, [data?.status, fetcher.state])
 
 		return (
-			<div className="flex items-center gap-4">
+			<div className="flex items-center gap-4 ">
 				<fetcher.Form
 					onSubmit={e => {
 						e.preventDefault()
 						handleFormChange(e.currentTarget)
 					}}
 					method="POST"
-					action="/pos/product-order"
+					action="/pos/product-order-actions"
 					className="flex  items-center  gap-2 rounded-md border-2 bg-background"
 					onChange={e => isAutoSubmit && handleFormChange(e.currentTarget)}
 				>
@@ -92,10 +93,11 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 							value={value}
 							onChange={e => setValue(e.target.value)}
 							ref={innerRef}
-							type="number"
+							type="text"
+							autoComplete="off"
 							name="search"
 							id={id}
-							placeholder="Código articulo"
+							placeholder="[F1] Código articulo "
 							className="w-[10rem] border-none sm:w-[20rem] [&::-webkit-inner-spin-button]:appearance-none"
 							autoFocus={autoFocus}
 							disabled={isSubmitting}

@@ -10,7 +10,8 @@ import {
 } from '#app/components/ui/tooltip.tsx'
 import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
-import { type deleteProductOrderActionType } from '../product-order.tsx'
+import { type deleteProductOrderActionType } from '#app/routes/pos+/product-order-actions.tsx'
+import { cn } from '#app/utils/misc.tsx'
 
 export const deleteProductOrderActionIntent = 'delete-product-order'
 export const DeleteFormSchema = z.object({
@@ -18,7 +19,7 @@ export const DeleteFormSchema = z.object({
 	productOrderId: z.string(),
 })
 
-export function DeleteProductOrder({ id }: { id: string }) {
+export function DeleteProductOrder({ id, className }: { id: string; className?: string }) {
 	const fetcher = useFetcher<deleteProductOrderActionType>({
 		key: `${deleteProductOrderActionIntent}-${id}`,
 	})
@@ -32,7 +33,7 @@ export function DeleteProductOrder({ id }: { id: string }) {
 	return (
 		<fetcher.Form
 			method="POST"
-			action="/pos/product-order"
+			action="/pos/product-order-actions"
 			{...getFormProps(form)}
 		>
 			<input type="hidden" name="productOrderId" value={id} />
@@ -47,7 +48,10 @@ export function DeleteProductOrder({ id }: { id: string }) {
 							tabIndex={-1}
 							variant={'ghost'}
 							size={'sm'}
-							className="p-[4px] text-lg hover:text-destructive"
+							className={cn(
+								'p-[4px] text-lg ',
+								className,
+							)}
 						>
 							<Icon name="trash" />
 						</Button>

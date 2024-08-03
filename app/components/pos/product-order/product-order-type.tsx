@@ -2,11 +2,11 @@ import { useFetcher } from '@remix-run/react'
 import { useEffect } from 'react'
 import { z } from 'zod'
 import { cn } from '#app/utils/misc.tsx'
-import { productOrderTypeBgColors } from '../../../constants/productOrderTypesColors.ts'
+import { productOrderTypeBgColors } from '#app/constants/productOrderTypesColors.ts'
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,
-} from '../../../types/orders/productOrderType.ts'
+} from '#app/types/orders/productOrderType.ts'
 
 export const updateProductOrderTypeActionIntent = 'update-po-type'
 
@@ -68,7 +68,7 @@ export const ProductOrderTypeToggle = ({
 			},
 			{
 				method: 'post',
-				action: '/pos/product-order',
+				action: '/pos/product-order-actions',
 			},
 		)
 	}, [productOrderType])

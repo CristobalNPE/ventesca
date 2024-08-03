@@ -4,7 +4,8 @@ import { Input } from '#app/components/ui/input.tsx'
 import { useFetcher } from '@remix-run/react'
 import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
-import { changeProductOrderQuantityActionType } from '../product-order'
+import { changeProductOrderQuantityActionType } from '#app/routes/pos+/product-order-actions.tsx'
+import { cn } from '#app/utils/misc.js'
 
 export const increaseProductOrderQuantityActionIntent = 'increase-po-quantity'
 export const decreaseProductOrderQuantityActionIntent = 'decrease-po-quantity'
@@ -28,9 +29,11 @@ export const ChangeProductOrderQuantitySchema = z.object({
 export const ProductOrderQuantitySelector = ({
 	productOrderId,
 	quantity,
+	className,
 }: {
 	productOrderId: string
 	quantity: number
+	className?: string
 }) => {
 	const increaseProductOrderQuantityFetcher = useFetcher({
 		key: `${increaseProductOrderQuantityActionIntent}-${productOrderId}`,
@@ -63,10 +66,15 @@ export const ProductOrderQuantitySelector = ({
 	].some(fetcher => fetcher.state !== 'idle')
 
 	return (
-		<div className="flex  items-center rounded-sm border border-muted-foreground/10 p-0">
+		<div
+			className={cn(
+				'flex  w-fit items-center rounded-sm border border-muted-foreground/10 p-0 ',
+				className,
+			)}
+		>
 			<decreaseProductOrderQuantityFetcher.Form
 				method="POST"
-				action="/pos/product-order"
+				action="/pos/product-order-actions"
 				className="aspect-square h-[1.6rem] w-[2rem] rounded-sm p-0"
 			>
 				<input type="hidden" name="productOrderId" value={productOrderId} />
@@ -85,7 +93,7 @@ export const ProductOrderQuantitySelector = ({
 			<changeProductOrderQuantityFetcher.Form
 				className="appearance-none"
 				method="POST"
-				action="/order/product-order"
+				action="/pos/product-order-actions"
 				onSubmit={() => setShowInput(false)}
 				onBlur={() => setShowInput(false)}
 			>
@@ -119,7 +127,7 @@ export const ProductOrderQuantitySelector = ({
 			</changeProductOrderQuantityFetcher.Form>
 			<increaseProductOrderQuantityFetcher.Form
 				method="POST"
-				action="/order/product-order"
+				action="/pos/product-order-actions"
 				className="aspect-square h-[1.6rem] w-[2rem] rounded-sm p-0"
 			>
 				<input type="hidden" name="productOrderId" value={productOrderId} />

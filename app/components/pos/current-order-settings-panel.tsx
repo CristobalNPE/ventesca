@@ -1,3 +1,9 @@
+// import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
+import { PaymentMethodPanel } from '#app/components/pos/current-order-payment-method.tsx'
+import { useCurrentPendingOrder } from '#app/context/pos/CurrentPendingOrderContext.tsx'
+
+import { PaymentMethod } from '#app/types/orders/payment-method.ts'
+
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
@@ -6,17 +12,51 @@ import { type Discount } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Link } from '@remix-run/react'
 import React from 'react'
-import { DiscountSheet } from '../_discounts+/discount-sheet.tsx'
+import { OrderDetailsSchema } from '../../types/orders/OrderData.ts'
 
-import { DirectDiscount, RemoveDirectDiscount } from './__direct-discount.tsx'
-import { DiscardOrder } from './__discard-order.tsx'
-import { FinishOrder } from './__finish-order.tsx'
+import {
+	DirectDiscount,
+	RemoveDirectDiscount,
+} from '../../components/pos/current-order-direct-discount.tsx'
+import { DiscardOrder } from '../../components/pos/current-order-discard.tsx'
+import { FinishOrder } from '../../components/pos/current-order-finish.tsx'
 import { type OrderDetails } from '../../types/orders/OrderData.ts'
+import { DiscountSheet } from '#app/routes/_discounts+/discount-sheet.tsx'
 
-export function OrderIdPanel({ orderId }: { orderId: string }) {
+export function CurrentOrderSettingsPanel() {
+	const { order, availableDiscounts, globalDiscounts } =
+		useCurrentPendingOrder()
+
+	const allDiscounts = [...availableDiscounts, ...globalDiscounts]
+	return (
+		<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
+			<CurrentOrderIdPanel orderId={order.id} />
+			<PaymentMethodPanel
+				orderId={order.id}
+				currentPaymentMethod={order.paymentMethod as PaymentMethod}
+			/>
+			<DiscountsPanel
+				activeDiscounts={allDiscounts}
+				orderId={order.id}
+				orderTotal={order.total}
+				directDiscount={order.directDiscount}
+			/>
+			<OrderOverviewPanel
+				subtotal={order.subtotal}
+				discount={order.totalDiscount + order.directDiscount}
+				total={order.total}
+			/>
+
+			<OrderOptionsPanel order={OrderDetailsSchema.parse(order)} />
+		</div>
+	)
+}
+
+function CurrentOrderIdPanel({ orderId }: { orderId: string }) {
+	//?On hover we want to copy the id!
 	return (
 		<PanelCard>
-			<div className="absolute -top-4 w-fit select-none rounded-md bg-card px-3 py-1 text-xs">
+			<div className="absolute -top-4 w-fit select-none rounded-md border bg-card px-3 py-1 text-xs">
 				ID Transacción
 			</div>
 			<span className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary">
@@ -26,7 +66,7 @@ export function OrderIdPanel({ orderId }: { orderId: string }) {
 	)
 }
 
-export function OrderOverviewPanel({
+function OrderOverviewPanel({
 	subtotal,
 	discount,
 	total,
@@ -59,7 +99,7 @@ export function OrderOverviewPanel({
 	)
 }
 
-export const DiscountsPanel = ({
+const DiscountsPanel = ({
 	activeDiscounts,
 	orderId,
 	orderTotal,
@@ -120,7 +160,7 @@ export const DiscountsPanel = ({
 	)
 }
 
-export const OrderOptionsPanel = ({ order }: { order: OrderDetails }) => {
+const OrderOptionsPanel = ({ order }: { order: OrderDetails }) => {
 	return (
 		<PanelCard>
 			<div className="flex gap-4">
@@ -154,7 +194,7 @@ export const PanelCard = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<div
 		ref={ref}
-		className={cn('relative rounded-md bg-muted p-2', className)}
+		className={cn('relative rounded-md border bg-muted p-2', className)}
 		{...props}
 	/>
 ))

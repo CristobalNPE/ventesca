@@ -12,7 +12,7 @@ import {
 	allPaymentMethods,
 	type PaymentMethod,
 } from '../../types/orders/payment-method.ts'
-import { PanelCard } from './order-panel.tsx'
+import { PanelCard } from './current-order-settings-panel.tsx'
 
 export const setPaymentMethodActionIntent = 'set-payment-method'
 

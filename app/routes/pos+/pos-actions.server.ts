@@ -11,10 +11,10 @@ import { OrderStatus } from '../../types/orders/order-status.ts'
 import {
 	DirectDiscountSchema,
 	RemoveDirectDiscountSchema,
-} from './__direct-discount.tsx'
-import { DiscardOrderSchema } from './__discard-order.tsx'
-import { FinishTransactionSchema } from './__finish-order.tsx'
-import { SetPaymentMethodSchema } from './__set-payment-method.tsx'
+} from '../../components/pos/current-order-direct-discount.tsx'
+import { DiscardOrderSchema } from '../../components/pos/current-order-discard.tsx'
+import { FinishTransactionSchema } from '../../components/pos/current-order-finish.tsx'
+import { SetPaymentMethodSchema } from '../../components/pos/current-order-payment-method.tsx'
 
 import {
 	OrderAction,

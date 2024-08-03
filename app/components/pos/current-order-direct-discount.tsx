@@ -19,7 +19,7 @@ import { SelectTab } from '#app/components/ui/select-tab.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/pos+/index.tsx'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { discountTypeNames } from '../_discounts+/_constants/discountTypeNames.ts'
+import { discountTypeNames } from '../../routes/_discounts+/_constants/discountTypeNames.ts'
 import {
 	DiscountType,
 	DiscountTypeSchema,
