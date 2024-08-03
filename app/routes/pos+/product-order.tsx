@@ -4,9 +4,9 @@ import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import { type Discount, type ProductOrder } from '@prisma/client'
 import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
-import { DiscountApplicationMethod } from '../_discounts+/_types/discount-applicationMethod.ts'
-import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
-import { DiscountType } from '../_discounts+/_types/discount-type.ts'
+import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
+import { DiscountScope } from '../../types/discounts/discount-reach.ts'
+import { DiscountType } from '../../types/discounts/discount-type.ts'
 import {
 	DeleteFormSchema,
 	deleteProductOrderActionIntent,
@@ -31,7 +31,7 @@ import { OrderStatus } from '../../types/orders/order-status.ts'
 import { ProductOrderType } from '../../types/orders/productOrderType.ts'
 
 export async function loader() {
-	return redirect('/order')
+	return redirect('/pos')
 }
 
 //!Discounts may not be taking into account isActive!!!!!!!!!!!!!!!!!!!!!!!!!

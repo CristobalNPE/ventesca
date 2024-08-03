@@ -1,4 +1,3 @@
-import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import {
 	json,
@@ -15,35 +14,16 @@ import {
 import { Spacer } from '#app/components/spacer.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
-import { DiscountScope } from '../_discounts+/_types/discount-reach.ts'
-import { DiscountType } from '../_discounts+/_types/discount-type.ts'
+import { useEffect, useRef } from 'react'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
-import { OrderStatus } from '../../types/orders/order-status.ts'
 import { OrderDetailsSchema } from '../../types/orders/OrderData.ts'
-import {
-	PaymentMethod,
-	PaymentMethodSchema,
-} from '../../types/orders/payment-method.ts'
-import { ProductOrderType } from '../../types/orders/productOrderType.ts'
+import { PaymentMethodSchema } from '../../types/orders/payment-method.ts'
 import {
 	applyDirectDiscountActionIntent,
-	DirectDiscountSchema,
 	removeDirectDiscountActionIntent,
-	RemoveDirectDiscountSchema,
 } from './__direct-discount.tsx'
-import {
-	discardOrderActionIntent,
-	DiscardOrderSchema,
-} from './__discard-order.tsx'
-import {
-	finishOrderActionIntent,
-	FinishTransactionSchema,
-} from './__finish-order.tsx'
+import { discardOrderActionIntent } from './__discard-order.tsx'
+import { finishOrderActionIntent } from './__finish-order.tsx'
 import {
 	addProductOrderActionIntent,
 	ProductReader,
@@ -51,7 +31,6 @@ import {
 import {
 	PaymentMethodPanel,
 	setPaymentMethodActionIntent,
-	SetPaymentMethodSchema,
 } from './__set-payment-method.tsx'
 import {
 	DiscountsPanel,
@@ -60,154 +39,39 @@ import {
 	OrderOverviewPanel,
 } from './order-panel.tsx'
 
-import { useMemo } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
-import { Key } from 'ts-key-enum'
-import {
-	OrderAction,
-	updateProductStockAndAnalytics,
-} from '../_inventory+/product-service.server.ts'
+import { useRoveFocus } from '#app/hooks/useRoveFocus.ts'
 import { ProductOrder } from './__productOrder+/ProductOrder.tsx'
-
-const orderDetailsSelect = {
-	id: true,
-	status: true,
-	createdAt: true,
-	paymentMethod: true,
-	totalDiscount: true,
-	directDiscount: true,
-	total: true,
-	subtotal: true,
-	seller: { select: { name: true } },
-	productOrders: {
-		select: {
-			id: true,
-			type: true,
-			quantity: true,
-			totalPrice: true,
-			totalDiscount: true,
-			productDetails: {
-				select: {
-					id: true,
-					code: true,
-					name: true,
-					sellingPrice: true,
-					stock: true,
-					discounts: true,
-				},
-			},
-		},
-	},
-}
-
-const discountDetailsSelect = {
-	id: true,
-	name: true,
-	description: true,
-	applicationMethod: true,
-	type: true,
-	scope: true,
-	minimumQuantity: true,
-	validFrom: true,
-	validUntil: true,
-	value: true,
-	isActive: true,
-}
-
-async function createNewOrder(userId: string, businessId: string) {
-	const newOrder = await prisma.order.create({
-		data: {
-			seller: { connect: { id: userId } },
-			status: OrderStatus.PENDING,
-			paymentMethod: PaymentMethod.CASH,
-			totalDiscount: 0,
-			directDiscount: 0,
-			subtotal: 0,
-			total: 0,
-			business: { connect: { id: businessId } },
-		},
-		select: orderDetailsSelect,
-	})
-
-	return newOrder
-}
-
-async function fetchOrderDetails(orderId: string) {
-	const order = await prisma.order.findUniqueOrThrow({
-		where: { id: orderId },
-		select: orderDetailsSelect,
-	})
-
-	//update totals before serving to front end
-	const discount = order.productOrders
-		.filter(productOrder => productOrder.type === ProductOrderType.PROMO)
-		.reduce((acc, productOrder) => acc + productOrder.totalDiscount, 0)
-
-	const total =
-		order.productOrders.reduce(
-			(acc, productOrder) => acc + productOrder.totalPrice,
-			0,
-		) - order.directDiscount
-
-	const subtotal = total + discount + order.directDiscount
-
-	const updatedOrder = await prisma.order.update({
-		where: { id: orderId },
-		data: {
-			totalDiscount: discount,
-			total: total,
-			subtotal: subtotal,
-		},
-		select: orderDetailsSelect,
-	})
-
-	return updatedOrder
-}
+import {
+	applyDirectDiscountAction,
+	discardOrderAction,
+	finishOrderAction,
+	removeDirectDiscountAction,
+	setPaymentMethodAction,
+} from './pos-actions.server.ts'
+import {
+	createNewOrder,
+	fetchAvailableDiscounts,
+	fetchCurrentPendingOrder,
+	fetchOrderDetails,
+} from './pos-service.server.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
-	const pendingOrder = await prisma.order.findFirst({
-		where: {
-			sellerId: userId,
-			businessId: businessId,
-			status: OrderStatus.PENDING,
-		},
-		select: { id: true },
-	})
+	const pendingOrder = await fetchCurrentPendingOrder(userId, businessId)
 
 	const order = pendingOrder
 		? await fetchOrderDetails(pendingOrder.id)
 		: await createNewOrder(userId, businessId)
 
-	const availableProductDiscounts = order.productOrders.flatMap(productOrder =>
-		productOrder.productDetails.discounts
-			.filter(discount => productOrder.quantity >= discount.minimumQuantity)
-			.map(discount => discount.id),
+	const { availableDiscounts, globalDiscounts } = await fetchAvailableDiscounts(
+		order.id,
 	)
-
-	const uniqueDiscountIds = [...new Set(availableProductDiscounts)]
-
-	const availableDiscounts = await prisma.discount.findMany({
-		where: { id: { in: uniqueDiscountIds }, isActive: true },
-		select: discountDetailsSelect,
-	})
-
-	const globalDiscounts = await prisma.discount.findMany({
-		where: { scope: DiscountScope.GLOBAL },
-		select: discountDetailsSelect,
-	})
-
-	const allDiscounts = [...availableDiscounts, ...globalDiscounts]
-
-	// for (let discount of allDiscounts) {
-	// 	await updateDiscountValidity(discount)
-	// }
 
 	return json({
 		order,
-		availableDiscounts: allDiscounts,
+		availableDiscounts,
 		globalDiscounts,
 	})
 }
@@ -320,179 +184,6 @@ export default function ProcessOrderRoute() {
 			</div>
 		</div>
 	)
-}
-
-async function discardOrderAction(formData: FormData) {
-	const submission = parseWithZod(formData, {
-		schema: DiscardOrderSchema,
-	})
-
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { orderId } = submission.value
-
-	const order = await prisma.order.findUniqueOrThrow({
-		select: { id: true },
-		where: { id: orderId },
-	})
-
-	await prisma.order.update({
-		where: { id: order.id },
-		data: {
-			isDiscarded: true,
-			status: OrderStatus.DISCARDED,
-			completedAt: new Date(),
-		},
-	})
-	return redirectWithToast(`/orders`, {
-		type: 'message',
-		title: 'Transacción Descartada',
-		description: `Transacción ${order.id} ha sido descartada.`,
-	})
-}
-
-async function setPaymentMethodAction(formData: FormData) {
-	const submission = await parseWithZod(formData, {
-		schema: SetPaymentMethodSchema,
-	})
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { orderId, paymentMethod } = submission.value
-
-	await prisma.order.update({
-		where: { id: orderId },
-		data: { paymentMethod },
-	})
-
-	return json({ result: submission.reply() })
-}
-
-async function finishOrderAction(formData: FormData) {
-	const submission = await parseWithZod(formData, {
-		schema: FinishTransactionSchema,
-	})
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-	const { orderId } = submission.value
-
-	const order = await prisma.order.update({
-		where: { id: orderId },
-		data: {
-			status: OrderStatus.FINISHED,
-			completedAt: new Date(),
-		},
-		select: { productOrders: true, status: true },
-	})
-
-	//update stock for products in the order
-	await updateProductStockAndAnalytics(order.productOrders, OrderAction.CREATE)
-
-	return redirectWithToast(`/orders/${orderId}`, {
-		type: 'success',
-		title: 'Transacción Completa',
-		description: `Venta completada bajo ID de transacción: [${orderId.toUpperCase()}].`,
-	})
-}
-
-async function applyDirectDiscountAction(formData: FormData) {
-	const submission = await parseWithZod(formData, {
-		schema: DirectDiscountSchema.superRefine(async (data, ctx) => {
-			const currentOrder = await prisma.order.findUniqueOrThrow({
-				where: { id: data.orderId },
-				select: { total: true },
-			})
-
-			//El valor del descuento cuando es fijo, no puede ser mayor al total de la transacción.
-			if (
-				data.discountType === DiscountType.FIXED &&
-				data.discountValue > currentOrder.total
-			) {
-				ctx.addIssue({
-					path: ['discountValue'],
-					code: z.ZodIssueCode.custom,
-					message: `El descuento no puede superar el valor total ( ${formatCurrency(
-						currentOrder.total,
-					)} )`,
-				})
-			}
-
-			//Si el descuento es porcentual, el valor debe estar entre 1 y 100
-			if (
-				data.discountType === DiscountType.PERCENTAGE &&
-				!(data.discountValue >= 1 && data.discountValue <= 100)
-			) {
-				ctx.addIssue({
-					path: ['discountValue'],
-					code: z.ZodIssueCode.custom,
-					message: 'Un descuento porcentual debe estar entre 1% y 100%.',
-				})
-			}
-		}),
-		async: true,
-	})
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { orderId, totalDirectDiscount } = submission.value
-
-	await prisma.order.update({
-		where: { id: orderId },
-		data: { directDiscount: totalDirectDiscount },
-	})
-
-	return json({ result: submission.reply() })
-}
-
-async function removeDirectDiscountAction(formData: FormData) {
-	const submission = await parseWithZod(formData, {
-		schema: RemoveDirectDiscountSchema,
-	})
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { orderId } = submission.value
-
-	await prisma.order.update({
-		where: { id: orderId },
-		data: { directDiscount: 0 },
-	})
-
-	return json({ result: submission.reply() })
-}
-
-const useRoveFocus = (size: number) => {
-	const [currentFocus, setCurrentFocus] = useState(0)
-
-	useHotkeys(Key.ArrowDown, () =>
-		setCurrentFocus(currentFocus === size - 1 ? 0 : currentFocus + 1),
-	)
-	useHotkeys(Key.ArrowUp, () =>
-		setCurrentFocus(currentFocus === 0 ? size - 1 : currentFocus - 1),
-	)
-
-	return useMemo(() => [currentFocus, setCurrentFocus] as const, [currentFocus])
 }
 
 export const meta: MetaFunction = () => {

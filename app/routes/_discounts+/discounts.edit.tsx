@@ -38,9 +38,9 @@ import {
 	DiscountValueEditorSchema,
 	updateDiscountValueActionIntent,
 } from './__discounts-editors/value-editor.tsx'
-import { type DiscountApplicationMethod } from './_types/discount-applicationMethod.ts'
-import { type DiscountScope } from './_types/discount-reach.ts'
-import { DiscountType } from './_types/discount-type.ts'
+import { type DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
+import { type DiscountScope } from '../../types/discounts/discount-reach.ts'
+import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { buildDescription } from './discounts_.new.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {

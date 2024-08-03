@@ -16,7 +16,7 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/order+/index.js'
+import { type action } from '#app/routes/pos+/index.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
 
 export const discardOrderActionIntent = 'discard-order'
@@ -57,7 +57,7 @@ export function DiscardOrder({ id }: { id: string }) {
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<Form method="POST" action="/order" {...getFormProps(form)}>
+					<Form method="POST" action="/pos" {...getFormProps(form)}>
 						<input type="hidden" name="orderId" value={id} />
 						<StatusButton
 							type="submit"

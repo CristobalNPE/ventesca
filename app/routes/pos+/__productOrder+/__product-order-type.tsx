@@ -68,7 +68,7 @@ export const ProductOrderTypeToggle = ({
 			},
 			{
 				method: 'post',
-				action: '/order/product-order',
+				action: '/pos/product-order',
 			},
 		)
 	}, [productOrderType])

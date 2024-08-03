@@ -75,7 +75,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 						handleFormChange(e.currentTarget)
 					}}
 					method="POST"
-					action="/order/product-order"
+					action="/pos/product-order"
 					className="flex  items-center  gap-2 rounded-md border-2 bg-background"
 					onChange={e => isAutoSubmit && handleFormChange(e.currentTarget)}
 				>

@@ -32,7 +32,7 @@ export function DeleteProductOrder({ id }: { id: string }) {
 	return (
 		<fetcher.Form
 			method="POST"
-			action="/order/product-order"
+			action="/pos/product-order"
 			{...getFormProps(form)}
 		>
 			<input type="hidden" name="productOrderId" value={id} />

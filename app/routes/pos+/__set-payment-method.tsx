@@ -4,7 +4,7 @@ import { useFetcher } from '@remix-run/react'
 import { useSpinDelay } from 'spin-delay'
 import { z } from 'zod'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { type action } from '#app/routes/order+/index.js'
+import { type action } from '#app/routes/pos+/index.tsx'
 import { cn } from '#app/utils/misc.tsx'
 import { paymentMethodIcons } from '../../constants/paymentMethodIcons.ts'
 import {
@@ -59,7 +59,7 @@ export const PaymentMethodPanel = ({
 			)}
 			<fetcher.Form
 				{...getFormProps(form)}
-				action="/order"
+				action="/pos"
 				method="post"
 				className={cn(
 					'flex justify-between',

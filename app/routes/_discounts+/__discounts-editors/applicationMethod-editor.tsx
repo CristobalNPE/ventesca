@@ -20,7 +20,7 @@ import {
 	type DiscountApplicationMethod,
 	DiscountApplicationMethodSchema,
 	allDiscountApplicationMethods,
-} from '../_types/discount-applicationMethod.ts'
+} from '../../../types/discounts/discount-applicationMethod.ts'
 
 export const updateDiscountAppMethodActionIntent = 'update-discount-appmethod'
 

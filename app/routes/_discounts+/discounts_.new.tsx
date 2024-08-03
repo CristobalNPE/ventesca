@@ -34,9 +34,9 @@ import { useIsPending } from '#app/utils/misc.tsx'
 import {
 	DiscountApplicationMethod,
 	DiscountApplicationMethodSchema,
-} from './_types/discount-applicationMethod.ts'
-import { DiscountScope, DiscountScopeSchema } from './_types/discount-reach.ts'
-import { DiscountType, DiscountTypeSchema } from './_types/discount-type.ts'
+} from '../../types/discounts/discount-applicationMethod.ts'
+import { DiscountScope, DiscountScopeSchema } from '../../types/discounts/discount-reach.ts'
+import { DiscountType, DiscountTypeSchema } from '../../types/discounts/discount-type.ts'
 
 
 import { CategoryPicker } from './discounts.category-picker.tsx'

@@ -17,7 +17,7 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/order+/index.js'
+import { type action } from '#app/routes/pos+/index.tsx'
 import { formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { type OrderDetails } from '../../types/orders/OrderData.ts'
 import { useRef } from 'react'
@@ -135,7 +135,7 @@ export const FinishOrder = ({ order }: { order: OrderDetails }) => {
 				</AlertDialogHeader>
 				<AlertDialogFooter className="mx-auto mt-4 flex items-center justify-center gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<Form method="POST" action="/order" {...getFormProps(form)}>
+					<Form method="POST" action="/pos" {...getFormProps(form)}>
 						<input type="hidden" name="orderId" value={order.id} />
 						<StatusButton
 							type="submit"

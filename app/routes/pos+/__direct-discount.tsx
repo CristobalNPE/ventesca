@@ -17,14 +17,14 @@ import {
 import { Icon } from '#app/components/ui/icon.tsx'
 import { SelectTab } from '#app/components/ui/select-tab.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/order+/index.js'
+import { type action } from '#app/routes/pos+/index.tsx'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { discountTypeNames } from '../_discounts+/_constants/discountTypeNames.ts'
 import {
 	DiscountType,
 	DiscountTypeSchema,
 	allDiscountTypes,
-} from '../_discounts+/_types/discount-type.ts'
+} from '../../types/discounts/discount-type.ts'
 
 export const applyDirectDiscountActionIntent = 'apply-direct-discount'
 
@@ -100,7 +100,7 @@ export function DirectDiscount({
 					</DialogDescription>
 				</DialogHeader>
 				<div></div>
-				<fetcher.Form method="POST" action={'/order'} {...getFormProps(form)}>
+				<fetcher.Form method="POST" action={'/pos'} {...getFormProps(form)}>
 					<input type="hidden" name="orderId" value={orderId} />
 					<input
 						type="hidden"

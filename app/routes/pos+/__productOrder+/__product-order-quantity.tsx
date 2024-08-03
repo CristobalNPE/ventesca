@@ -66,7 +66,7 @@ export const ProductOrderQuantitySelector = ({
 		<div className="flex  items-center rounded-sm border border-muted-foreground/10 p-0">
 			<decreaseProductOrderQuantityFetcher.Form
 				method="POST"
-				action="/order/product-order"
+				action="/pos/product-order"
 				className="aspect-square h-[1.6rem] w-[2rem] rounded-sm p-0"
 			>
 				<input type="hidden" name="productOrderId" value={productOrderId} />

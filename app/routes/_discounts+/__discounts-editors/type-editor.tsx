@@ -20,7 +20,7 @@ import {
 	type DiscountType,
 	DiscountTypeSchema,
 	allDiscountTypes,
-} from '../_types/discount-type.ts'
+} from '../../../types/discounts/discount-type.ts'
 
 export const updateDiscountTypeActionIntent = 'update-discount-type'
 
