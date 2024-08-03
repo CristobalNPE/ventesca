@@ -243,7 +243,7 @@ function App() {
 
 	const navigate = useNavigate()
 
-	useHotkeys(Key.F1, () => navigate('/order'), { preventDefault: true })
+	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
 
 	const navigationLinks: NavigationLink[] = [
 		{
