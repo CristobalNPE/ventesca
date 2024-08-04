@@ -6,7 +6,7 @@ export enum DiscountScope {
 	GLOBAL = 'global',
 }
 
-const allDiscountScopes = [
+export const allDiscountScopes = [
 	DiscountScope.SINGLE_PRODUCT,
 	DiscountScope.CATEGORY,
 	DiscountScope.GLOBAL,
