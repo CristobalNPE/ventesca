@@ -35,7 +35,7 @@ import {
 	DiscountApplicationMethod,
 	DiscountApplicationMethodSchema,
 } from '../../types/discounts/discount-applicationMethod.ts'
-import { DiscountScope, DiscountScopeSchema } from '../../types/discounts/discount-reach.ts'
+import { DiscountScope, DiscountScopeSchema } from '../../types/discounts/discount-scope.ts'
 import { DiscountType, DiscountTypeSchema } from '../../types/discounts/discount-type.ts'
 
 

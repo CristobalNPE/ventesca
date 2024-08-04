@@ -39,7 +39,7 @@ import {
 	updateDiscountValueActionIntent,
 } from './__discounts-editors/value-editor.tsx'
 import { type DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
-import { type DiscountScope } from '../../types/discounts/discount-reach.ts'
+import { type DiscountScope } from '../../types/discounts/discount-scope.ts'
 import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { buildDescription } from './discounts_.new.tsx'
 
