@@ -1,377 +1,285 @@
+import { allDiscountApplicationMethods } from '#app/types/discounts/discount-applicationMethod.ts'
+import { allDiscountScopes } from '#app/types/discounts/discount-scope.ts'
+import { allDiscountTypes } from '#app/types/discounts/discount-type.ts'
+import {
+	allOrderStatuses,
+	OrderStatus,
+} from '#app/types/orders/order-status.ts'
+import { allPaymentMethods } from '#app/types/orders/payment-method.ts'
+import { allProductOrderTypes } from '#app/types/orders/productOrderType.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { createPassword } from '#tests/db-utils.ts'
 import { faker } from '@faker-js/faker'
 
-import { ProductOrderType } from '#app/types/orders/productOrderType.js'
-import { prisma } from '#app/utils/db.server.ts'
-import { cleanupDb, createPassword } from '#tests/db-utils.ts'
+// const prisma = new PrismaClient();
 
-//config:
-const NUMBER_OF_CATEGORIES = 12
-const NUMBER_OF_SUPPLIERS = 10
-const NUMBER_OF_PRODUCTS = 5000
-const NUMBER_OF_TRANSACTIONS = 100
+interface SeedConfig {
+	businessCount: number
+	usersPerBusiness: number
+	categoriesPerBusiness: number
+	suppliersPerBusiness: number
+	productsPerBusiness: number
+	ordersPerBusiness: number
+	discountsPerBusiness: number
+}
 
-async function seed() {
-	console.log('🌱 Seeding...')
-	console.time(`🌱 Database has been seeded`)
+const defaultConfig: SeedConfig = {
+	businessCount: 1,
+	usersPerBusiness: 5,
+	categoriesPerBusiness: 15,
+	suppliersPerBusiness: 5,
+	productsPerBusiness: 5000,
+	ordersPerBusiness: 20000,
+	discountsPerBusiness: 0,
+}
 
-	console.time('🧹 Cleaned up the database...')
-	await cleanupDb(prisma)
-	console.timeEnd('🧹 Cleaned up the database...')
+async function seed(config: SeedConfig = defaultConfig) {
+	console.time('🌱 Seeding database...')
 
-	console.time('🔑 Created permissions...')
-	const entities = ['user', 'business']
-	const actions = ['create', 'read', 'update', 'delete']
-	const accesses = ['own', 'any'] as const
+	for (let i = 0; i < config.businessCount; i++) {
+		console.time(`🌱 Creating business...`)
+		const business = await createBusiness()
+		console.timeEnd(`🌱 Creating business...`)
 
-	let permissionsToCreate = []
-	for (const entity of entities) {
-		for (const action of actions) {
-			for (const access of accesses) {
-				permissionsToCreate.push({ entity, action, access })
-			}
-		}
+		console.time(`🌱 Creating roles...`)
+		await createRoles()
+		console.timeEnd(`🌱 Creating roles...`)
+
+		console.time('🌱 Creating admin...')
+		await createAdmin(business.id)
+		console.timeEnd('🌱 Creating admin...')
+
+		console.time('🌱 Creating users...')
+		await createUsers(business.id, config.usersPerBusiness)
+		console.timeEnd('🌱 Creating users...')
+
+		console.time('🌱 Creating categories...')
+		const categories = await createCategories(
+			business.id,
+			config.categoriesPerBusiness,
+		)
+		console.timeEnd('🌱 Creating categories...')
+
+		console.time('🌱 Creating suppliers...')
+		const suppliers = await createSuppliers(
+			business.id,
+			config.suppliersPerBusiness,
+		)
+		console.timeEnd('🌱 Creating suppliers...')
+
+		console.time('🌱 Creating products...')
+		await createProducts(
+			business.id,
+			categories,
+			suppliers,
+			config.productsPerBusiness,
+		)
+		console.timeEnd('🌱 Creating products...')
+
+		console.time('🌱 Creating discounts...')
+		await createDiscounts(business.id, config.discountsPerBusiness)
+		console.timeEnd('🌱 Creating discounts...')
+
+		console.time('🌱 Creating orders...')
+		await createOrders(business.id, config.ordersPerBusiness)
+		console.timeEnd('🌱 Creating orders...')
 	}
-	await prisma.permission.createMany({ data: permissionsToCreate })
-	console.timeEnd('🔑 Created permissions...')
 
-	console.time('🏫 Created testing business')
+	console.timeEnd('🌱 Seeding database...')
+}
 
-	const allBusinesses = []
-	const testBusiness = await prisma.business.create({
+async function createBusiness() {
+	return prisma.business.create({
 		data: {
 			name: faker.company.name(),
-		},
-		select: { id: true },
-	})
-
-	allBusinesses.push(testBusiness)
-
-	console.timeEnd('🏫 Created testing business')
-
-	console.time('👑 Created roles...')
-	await prisma.role.create({
-		data: {
-			name: 'Administrador',
-			permissions: {
-				connect: await prisma.permission.findMany({
-					select: { id: true },
-					where: { access: 'any' },
-				}),
-			},
+			address: faker.location.streetAddress(),
+			phone: faker.phone.number(),
+			email: faker.internet.email(),
+			thanksMessage: faker.lorem.sentence(),
 		},
 	})
-	await prisma.role.create({
-		data: {
-			name: 'Vendedor',
-			permissions: {
-				connect: await prisma.permission.findMany({
-					select: { id: true },
-					where: { access: 'own' },
-				}),
-			},
-		},
+}
+
+async function createRoles() {
+	await prisma.role.createMany({
+		data: [
+			{ name: 'Administrador', description: 'Administrador' },
+			{ name: 'Vendedor', description: 'Vendedor' },
+		],
 	})
-	await prisma.role.create({
+}
+
+async function createAdmin(businessId: string) {
+	await prisma.user.create({
 		data: {
-			name: 'SuperUser',
-			permissions: {
-				connect: await prisma.permission.findMany({
-					select: { id: true },
-					where: { access: 'any' },
-				}),
-			},
-		},
-	})
-
-	console.timeEnd('👑 Created roles...')
-
-	console.time(`🐨 Created test users`)
-
-	const users = []
-
-	const adminTest = await prisma.user.create({
-		select: {
-			id: true,
-			businessId: true,
-			name: true,
-			email: true,
-			username: true,
-		},
-		data: {
-			business: { connect: { id: testBusiness.id } },
-			email: 'admin@admin.dev',
+			email: 'admin@admin.com',
 			username: 'admin',
-			name: 'Administrador Sistema',
+			name: 'Administrador',
 			password: { create: createPassword('admin123') },
-
+			businessId,
 			roles: {
 				connect: [{ name: 'Administrador' }, { name: 'Vendedor' }],
 			},
 		},
 	})
-
-	users.push(adminTest)
-	console.timeEnd(`🐨 Created test users`)
-
-	console.time('Created default category and supplier')
-	//create default supplier and category
-	await prisma.supplier.create({
-		data: {
-			code: 0,
-			rut: 'Sin Datos',
-			name: adminTest.name ?? adminTest.username,
-			address: 'Sin Datos',
-			city: 'Sin Datos',
-			fantasyName: `Proveedor Propio`,
-			phone: 'Sin Datos',
-			email: adminTest.email,
-			business: { connect: { id: testBusiness.id } },
-			isEssential: true,
-		},
-	})
-	await prisma.category.create({
-		data: {
-			colorCode: faker.color.rgb(),
-			code: 0,
-			description: 'General',
-			business: { connect: { id: testBusiness.id } },
-			isEssential: true,
-		},
-	})
-	console.timeEnd('Created default category and supplier')
-
-	console.time(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
-
-	for (let business of allBusinesses) {
-		for (let i = 0; i < NUMBER_OF_CATEGORIES; i++) {
-			let code = i + 1
-			await prisma.category.create({
-				data: {
-					colorCode: faker.color.rgb(),
-					code,
-					description: `${faker.commerce.productAdjective()} ${faker.commerce.department()}`,
-					business: { connect: { id: business.id } },
+}
+async function createUsers(businessId: string, count: number) {
+	const roles = await prisma.role.findMany()
+	for (let i = 0; i < count; i++) {
+		await prisma.user.create({
+			data: {
+				email: faker.internet.email(),
+				username: faker.internet.userName(),
+				name: faker.person.fullName(),
+				businessId,
+				roles: {
+					connect: [{ id: faker.helpers.arrayElement(roles).id }],
 				},
-			})
-		}
-	}
-
-	console.timeEnd(`📦 Created ${NUMBER_OF_CATEGORIES} categories...`)
-
-	console.time(`🤼 Created ${NUMBER_OF_SUPPLIERS} suppliers...`)
-	for (let business of allBusinesses) {
-		for (let i = 0; i < NUMBER_OF_SUPPLIERS; i++) {
-			let firstName = faker.person.firstName()
-			let lastName = faker.person.lastName()
-
-			await prisma.supplier.create({
-				data: {
-					code: i + 1,
-					rut: generateFakeRUT(),
-					name: `${firstName} ${lastName}`,
-					address: `${faker.location.streetAddress()}, ${faker.location.buildingNumber()}`,
-					city: faker.location.city(),
-					fantasyName: faker.company.name(),
-					phone: faker.phone.number(),
-					email: `${firstName}.${lastName}.${faker.number.int({
-						min: 1,
-						max: 99,
-					})}@xmail.com`,
-					business: { connect: { id: business.id } },
-				},
-				select: { id: true },
-			})
-		}
-	}
-
-	console.timeEnd(`🤼 Created ${NUMBER_OF_SUPPLIERS} suppliers...`)
-
-	console.time(`🛒 Created ${NUMBER_OF_PRODUCTS} products per business...`)
-
-	for (let business of allBusinesses) {
-		let businessSuppliers = await prisma.supplier.findMany({
-			select: { id: true },
-			where: { businessId: business.id },
-		})
-
-		let businessCategories = await prisma.category.findMany({
-			select: { id: true },
-			where: { businessId: business.id },
-		})
-
-		for (let i = 0; i < NUMBER_OF_PRODUCTS; i++) {
-			let price =
-				Math.round(faker.number.int({ min: 1000, max: 10500 }) / 100) * 100
-			let sellingPrice = price * faker.number.int({ min: 2, max: 3 })
-			let stock = faker.number.int({ min: 0, max: 99 })
-			let isActive = price > 0 && sellingPrice > 0 && stock > 0
-
-			await prisma.product.create({
-				data: {
-					code: (i + 1).toString(),
-					name: faker.commerce.productName(),
-					sellingPrice,
-					price,
-					stock,
-					isActive,
-					business: { connect: { id: business.id } },
-					productAnalytics: { create: {} },
-					category: {
-						connect: {
-							id: businessCategories[
-								faker.number.int({ min: 0, max: businessCategories.length - 1 })
-							]!.id,
-						},
-					},
-					supplier: {
-						connect: {
-							id: businessSuppliers[
-								faker.number.int({ min: 0, max: businessSuppliers.length - 1 })
-							]!.id,
-						},
+				password: {
+					create: {
+						hash: faker.internet.password(),
 					},
 				},
-			})
-		}
+			},
+		})
 	}
-
-	console.timeEnd(`🛒 Created ${NUMBER_OF_PRODUCTS} products per business...`)
-
-	// console.time(`💰 Created ${NUMBER_OF_TRANSACTIONS} transactions per business`)
-
-	// const transactionStatuses = [
-	// 	'Finalizada',
-	// 	'Finalizada',
-	// 	'Finalizada',
-	// 	'Cancelada',
-	// ]
-	// const paymentMethods = ['Contado', 'Crédito', 'Débito']
-
-	// for (let business of allBusinesses) {
-	// 	for (let i = 0; i < NUMBER_OF_TRANSACTIONS; i++) {
-	// 		const status = getRandomValue(transactionStatuses)
-
-	// 		let startDate = new Date()
-	// 		startDate.setHours(0, 0, 0, 0)
-	// 		const completedDate = faker.date.between({
-	// 			from: startDate.setFullYear(startDate.getFullYear() - 1),
-	// 			to: new Date(),
-	// 		})
-
-	// 		const sellers = await prisma.user.findMany({
-	// 			where: { businessId: business.id },
-	// 			select: { id: true },
-	// 		})
-
-	// 		const sellerIds = sellers.map(seller => seller.id)
-
-	// 		const createdTransaction = await prisma.order.create({
-	// 			data: {
-	// 				status: status,
-	// 				business: { connect: { id: business.id } },
-	// 				paymentMethod: getRandomValue(paymentMethods),
-	// 				subtotal: 0,
-	// 				total: 0,
-	// 				totalDiscount: 0,
-	// 				directDiscount: 0,
-	// 				isDiscarded: status === 'Cancelada',
-	// 				createdAt: subtractMinutes(completedDate, 10),
-	// 				updatedAt: completedDate,
-	// 				completedAt: completedDate,
-	// 				seller: { connect: { id: getRandomValue(sellerIds) } },
-	// 			},
-	// 		})
-
-	// 		const totalItemTransactions = faker.number.int({ min: 1, max: 15 })
-	// 		let totalItemPrice = 0
-
-	// 		for (let index = 0; index < totalItemTransactions; index++) {
-	// 			const itemForTransaction = await prisma.product.findFirst({
-	// 				where: {
-	// 					code: faker.number
-	// 						.int({ min: 1, max: NUMBER_OF_PRODUCTS })
-	// 						.toString(),
-	// 				},
-	// 				select: { id: true },
-	// 			})
-	// 			if (!itemForTransaction) continue
-
-	// 			const createdItemTransaction = await prisma.productOrder
-	// 				.create({
-	// 					data: {
-	// 						quantity: faker.number.int({ min: 2, max: 10 }),
-	// 						type: 'Venta',
-	// 						totalPrice: 0,
-	// 						totalDiscount: 0,
-	// 						createdAt: completedDate,
-	// 						productDetails: {
-	// 							connect: {
-	// 								id: itemForTransaction.id,
-	// 							},
-	// 						},
-	// 						order: {
-	// 							connect: { id: createdTransaction.id },
-	// 						},
-	// 					},
-	// 					select: {
-	// 						id: true,
-	// 						quantity: true,
-	// 						productDetails: true,
-	// 						productId: true,
-	// 						type: true,
-	// 						totalPrice: true,
-	// 					},
-	// 				})
-	// 				.catch(e => null)
-
-	// 			if (createdItemTransaction) {
-	// 				totalItemPrice =
-	// 					createdItemTransaction.productDetails.sellingPrice *
-	// 					createdItemTransaction.quantity
-
-	// 				await prisma.productOrder.update({
-	// 					where: { id: createdItemTransaction.id },
-	// 					data: { totalPrice: totalItemPrice },
-	// 				})
-	// 				await prisma.productAnalytics.upsert({
-	// 					where: { productId: createdItemTransaction.productId },
-	// 					update: {
-	// 						totalProfit: { increment: createdItemTransaction.totalPrice },
-	// 						totalSales:
-	// 							createdItemTransaction.type === ProductOrderType.RETURN
-	// 								? { decrement: createdItemTransaction.quantity }
-	// 								: { increment: createdItemTransaction.quantity },
-	// 					},
-	// 					create: {
-	// 						product: { connect: { id: createdItemTransaction.productId } },
-	// 						totalProfit: createdItemTransaction.totalPrice,
-	// 						totalSales: createdItemTransaction.quantity,
-	// 					},
-	// 				})
-	// 			}
-	// 		}
-	// 		const transactionTotal = await prisma.productOrder.aggregate({
-	// 			where: { orderId: createdTransaction.id },
-	// 			_sum: { totalPrice: true },
-	// 		})
-	// 		await prisma.order.update({
-	// 			where: { id: createdTransaction.id },
-	// 			data: {
-	// 				subtotal: transactionTotal._sum.totalPrice ?? 0,
-	// 				total: transactionTotal._sum.totalPrice ?? 0,
-	// 			},
-	// 		})
-	// 	}
-	// }
-
-	// console.timeEnd(
-	// 	`💰 Created ${NUMBER_OF_TRANSACTIONS} transactions per business`,
-	// )
-
-	console.timeEnd(`🌱 Database has been seeded`)
 }
 
-seed()
+async function createCategories(businessId: string, count: number) {
+	const categories = []
+	for (let i = 0; i < count; i++) {
+		const category = await prisma.category.create({
+			data: {
+				code: faker.number.int({ min: 1000, max: 9999 }),
+				colorCode: faker.internet.color(),
+				description: faker.commerce.department(),
+				businessId,
+				isEssential: faker.datatype.boolean(),
+			},
+		})
+		categories.push(category)
+	}
+	return categories
+}
+
+async function createSuppliers(businessId: string, count: number) {
+	const suppliers = []
+	for (let i = 0; i < count; i++) {
+		const supplier = await prisma.supplier.create({
+			data: {
+				code: faker.number.int({ min: 1000, max: 9999 }),
+				rut: generateFakeRUT(),
+				name: faker.company.name(),
+				address: faker.location.streetAddress(),
+				city: faker.location.city(),
+				fantasyName: faker.company.catchPhrase(),
+				phone: faker.phone.number(),
+				email: faker.internet.email(),
+				businessId,
+				isEssential: faker.datatype.boolean(),
+			},
+		})
+		suppliers.push(supplier)
+	}
+	return suppliers
+}
+
+async function createProducts(
+	businessId: string,
+	categories: any[],
+	suppliers: any[],
+	count: number,
+) {
+	for (let i = 0; i < count; i++) {
+		const stock = faker.number.int({ min: 0, max: 100 })
+		const isActive = stock > 0
+
+		await prisma.product.create({
+			data: {
+				isActive,
+				code: faker.string.nanoid(15),
+				name: faker.commerce.productName(),
+				sellingPrice: faker.number.int({ min: 1000, max: 100000 }),
+				price: faker.number.int({ min: 500, max: 50000 }),
+				stock,
+				categoryId: faker.helpers.arrayElement(categories).id,
+				supplierId: faker.helpers.arrayElement(suppliers).id,
+				businessId,
+				productAnalytics: { create: {} },
+			},
+		})
+	}
+}
+
+async function createDiscounts(businessId: string, count: number) {
+	for (let i = 0; i < count; i++) {
+		await prisma.discount.create({
+			data: {
+				name: faker.commerce.productAdjective() + ' Discount',
+				description: faker.lorem.sentence(),
+				type: faker.helpers.arrayElement([...allDiscountTypes]),
+				scope: faker.helpers.arrayElement([...allDiscountScopes]),
+				applicationMethod: faker.helpers.arrayElement([
+					...allDiscountApplicationMethods,
+				]),
+				minimumQuantity: faker.number.int({ min: 1, max: 10 }),
+				value: faker.number.int({ min: 5, max: 50 }),
+				validFrom: faker.date.past(),
+				validUntil: faker.date.future(),
+				isActive: faker.datatype.boolean(),
+				businessId,
+			},
+		})
+	}
+}
+
+async function createOrders(businessId: string, count: number) {
+	const users = await prisma.user.findMany({ where: { businessId } })
+	const products = await prisma.product.findMany({ where: { businessId } })
+
+	for (let i = 0; i < count; i++) {
+		const orderProducts = faker.helpers.arrayElements(
+			products,
+			faker.number.int({ min: 1, max: 5 }),
+		)
+		const subtotal = orderProducts.reduce(
+			(sum, product) => sum + product.sellingPrice,
+			0,
+		)
+		const totalDiscount = faker.number.int({ min: 0, max: subtotal * 0.2 })
+
+		await prisma.order.create({
+			data: {
+				status: faker.helpers.arrayElement([
+					OrderStatus.FINISHED,
+					OrderStatus.DISCARDED,
+				]),
+				paymentMethod: faker.helpers.arrayElement([...allPaymentMethods]),
+				subtotal,
+				total: subtotal - totalDiscount,
+				totalDiscount,
+				directDiscount: faker.number.int({ min: 0, max: totalDiscount }),
+				completedAt: faker.date.past(),
+				sellerId: faker.helpers.arrayElement(users).id,
+				businessId,
+				productOrders: {
+					create: orderProducts.map(product => ({
+						quantity: faker.number.int({ min: 1, max: 5 }),
+						type: faker.helpers.arrayElement([...allProductOrderTypes]),
+						totalPrice: product.sellingPrice,
+						totalDiscount: faker.number.int({
+							min: 0,
+							max: product.sellingPrice * 0.1,
+						}),
+						productId: product.id,
+					})),
+				},
+			},
+		})
+	}
+}
+
+seed(defaultConfig)
 	.catch(e => {
 		console.error(e)
 		process.exit(1)
@@ -406,14 +314,4 @@ function generateFakeRUT() {
 	let rut = rutWithoutVerifier + '-' + verifierDigit
 
 	return rut
-}
-function getRandomValue(array: string[]): string {
-	const randomIndex = Math.floor(Math.random() * array.length)
-	return array[randomIndex]!
-}
-
-function subtractMinutes(date: Date, minutesToSubtract: number): Date {
-	const result = new Date(date)
-	result.setMinutes(result.getMinutes() - minutesToSubtract)
-	return result
 }
