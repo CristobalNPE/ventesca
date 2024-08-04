@@ -17,6 +17,9 @@ import { formatCurrency } from '#app/utils/misc.tsx'
 
 export function OrderDetails() {
 	const { order } = useOrder()
+
+	const orderIsPending = order.status === OrderStatus.PENDING
+
 	return (
 		<div className="flex flex-col gap-4">
 			<MetricCard
@@ -45,11 +48,13 @@ export function OrderDetails() {
 						title="ID Transacción"
 						content={order.id.toUpperCase()}
 					/>
-					<CardContentItem
-						icon="clock"
-						title="Fecha ingreso"
-						content={format(order.createdAt, 'dd/MM/yyyy hh:mm')}
-					/>
+					{!orderIsPending && (
+						<CardContentItem
+							icon="clock"
+							title="Fecha ingreso"
+							content={format(order.createdAt, 'dd/MM/yyyy hh:mm')}
+						/>
+					)}
 					<CardContentItem
 						icon="user-dollar"
 						title="Vendedor"
