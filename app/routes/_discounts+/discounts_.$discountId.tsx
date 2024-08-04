@@ -55,7 +55,7 @@ import { DiscountValueEditModal } from './__discounts-editors/value-editor.tsx'
 import { discountAppmethodNames } from './_constants/discountAppmethodNames.ts'
 import { discountTypeNames } from './_constants/discountTypeNames.ts'
 import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
-import { DiscountScope } from '../../types/discounts/discount-reach.ts'
+import { DiscountScope } from '../../types/discounts/discount-scope.ts'
 import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { DiscountItemsList } from './discounts.product-picker.tsx'
 
