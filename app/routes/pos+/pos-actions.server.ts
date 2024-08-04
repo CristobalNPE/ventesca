@@ -1,5 +1,5 @@
 import { parseWithZod } from '@conform-to/zod'
-import { json } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
 
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
@@ -7,7 +7,6 @@ import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { z } from 'zod'
 import { DiscountType } from '../../types/discounts/discount-type.ts'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
-import { OrderStatus } from '../../types/orders/order-status.ts'
 import {
 	DirectDiscountSchema,
 	RemoveDirectDiscountSchema,
@@ -15,7 +14,10 @@ import {
 import { DiscardOrderSchema } from '../../components/pos/current-order-discard.tsx'
 import { FinishTransactionSchema } from '../../components/pos/current-order-finish.tsx'
 import { SetPaymentMethodSchema } from '../../components/pos/current-order-payment-method.tsx'
+import { OrderStatus } from '../../types/orders/order-status.ts'
 
+import { DeleteOrderSchema } from '#app/components/pos/current-order-delete.tsx'
+import { ModifyOrderSchema } from '#app/components/pos/current-order-modify.tsx'
 import {
 	OrderAction,
 	updateProductStockAndAnalytics,
@@ -98,12 +100,77 @@ export async function finishOrderAction(formData: FormData) {
 	})
 
 	//update stock for products in the order
-	await updateProductStockAndAnalytics(order.productOrders, OrderAction.CREATE)
+	await updateProductStockAndAnalytics({
+		productOrders: order.productOrders,
+		action: OrderAction.CREATE,
+	})
 
-	return redirectWithToast(`/orders/${orderId}`, {
+	return redirectWithToast(`/pos`, {
 		type: 'success',
-		title: 'Transacción Completa',
-		description: `Venta completada bajo ID de transacción: [${orderId.toUpperCase()}].`,
+		title: 'Transacción Finalizada',
+		description: `Transacción cerrada satisfactoriamente con ID: [${orderId.toUpperCase()}].`,
+	})
+}
+
+export async function modifyOrderAction(formData: FormData) {
+	const submission = await parseWithZod(formData, {
+		schema: ModifyOrderSchema,
+	})
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+	const { orderId } = submission.value
+
+	const order = await prisma.order.findUniqueOrThrow({
+		where: { id: orderId },
+	})
+	if (order.status !== OrderStatus.PENDING) {
+		await prisma.order.update({
+			where: { id: orderId },
+			data: {
+				status: OrderStatus.PENDING,
+			},
+		})
+	}
+	return redirect('/pos')
+}
+
+export async function deleteOrderAction(formData: FormData) {
+	const submission = await parseWithZod(formData, {
+		schema: DeleteOrderSchema,
+	})
+	if (submission.status !== 'success') {
+		return json(
+			{ result: submission.reply() },
+			{ status: submission.status === 'error' ? 400 : 200 },
+		)
+	}
+
+	const { orderId } = submission.value
+
+	await prisma.$transaction(async tx => {
+		const order = await tx.order.findUniqueOrThrow({
+			select: { id: true, productOrders: true, status: true },
+			where: { id: orderId },
+		})
+		// Update stock and analytics only if deleting a finished order
+		if (order.status === OrderStatus.FINISHED) {
+			await updateProductStockAndAnalytics({
+				productOrders: order.productOrders,
+				action: OrderAction.DELETE,
+				transactionClient: tx,
+			})
+		}
+		await tx.order.delete({ where: { id: orderId } })
+	})
+
+	return redirectWithToast(`/orders`, {
+		type: 'success',
+		title: 'Transacción eliminada',
+		description: `Transacción ID [${orderId}] ha sido eliminada permanentemente.`,
 	})
 }
 

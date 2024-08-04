@@ -26,11 +26,11 @@ export const DeleteOrderSchema = z.object({
 	orderId: z.string(),
 })
 
-export function DeleteOrder({ id }: { id: string }) {
+export function DeleteOrder({ orderId }: { orderId: string }) {
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
-		formAction: `/orders/${id}`,
+		formAction: `/pos`,
 	})
 	const [form] = useForm({
 		id: deleteOrderActionIntent,
@@ -40,8 +40,12 @@ export function DeleteOrder({ id }: { id: string }) {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size="sm" variant="outline" className="h-8 gap-1">
-					<Icon name="trash" className="h-3.5 w-3.5" />
+				<Button
+					size="wide"
+					variant="destructive"
+					className="flex w-fit items-center gap-2 text-lg"
+				>
+					<Icon name="trash" />
 					<span>Eliminar transacción</span>
 				</Button>
 			</AlertDialogTrigger>
@@ -58,20 +62,19 @@ export function DeleteOrder({ id }: { id: string }) {
 				</AlertDialogHeader>
 				<AlertDialogFooter className="flex gap-6">
 					<AlertDialogCancel>Cancelar</AlertDialogCancel>
-					<Form method="POST" action={`/orders/${id}`} {...getFormProps(form)}>
-						<input type="hidden" name="orderId" value={id} />
+					<Form method="POST" action={`/pos`} {...getFormProps(form)}>
+						<input type="hidden" name="orderId" value={orderId} />
 						<StatusButton
 							type="submit"
 							name="intent"
 							value={deleteOrderActionIntent}
 							variant="destructive"
+							className="w-full"
 							status={isPending ? 'pending' : form.status ?? 'idle'}
 							disabled={isPending}
+							iconName="trash"
 						>
-							<div className="flex items-center gap-2 ">
-								<Icon name="trash" />
-								<span>Eliminar Transacción</span>
-							</div>
+							Eliminar Transacción
 						</StatusButton>
 						<ErrorList errors={form.errors} id={form.errorId} />
 					</Form>

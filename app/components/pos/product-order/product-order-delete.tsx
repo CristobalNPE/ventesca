@@ -12,6 +12,7 @@ import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
 import { type deleteProductOrderActionType } from '#app/routes/pos+/product-order-actions.tsx'
 import { cn } from '#app/utils/misc.tsx'
+import { useCallback } from 'react'
 
 export const deleteProductOrderActionIntent = 'delete-product-order'
 export const DeleteFormSchema = z.object({
@@ -19,7 +20,13 @@ export const DeleteFormSchema = z.object({
 	productOrderId: z.string(),
 })
 
-export function DeleteProductOrder({ id, className }: { id: string; className?: string }) {
+export function DeleteProductOrder({
+	id,
+	className,
+}: {
+	id: string
+	className?: string
+}) {
 	const fetcher = useFetcher<deleteProductOrderActionType>({
 		key: `${deleteProductOrderActionIntent}-${id}`,
 	})
@@ -48,10 +55,7 @@ export function DeleteProductOrder({ id, className }: { id: string; className?: 
 							tabIndex={-1}
 							variant={'ghost'}
 							size={'sm'}
-							className={cn(
-								'p-[4px] text-lg ',
-								className,
-							)}
+							className={cn('p-[4px] text-lg ', className)}
 						>
 							<Icon name="trash" />
 						</Button>
@@ -63,4 +67,23 @@ export function DeleteProductOrder({ id, className }: { id: string; className?: 
 			</TooltipProvider>
 		</fetcher.Form>
 	)
+}
+
+export function useDeleteProductOrder(productOrderId: string) {
+	const fetcher = useFetcher({
+		key: `${deleteProductOrderActionIntent}-${productOrderId}`,
+	})
+
+	return useCallback(() => {
+		fetcher.submit(
+			{
+				intent: deleteProductOrderActionIntent,
+				productOrderId: productOrderId,
+			},
+			{
+				method: 'POST',
+				action: '/pos/product-order-actions',
+			},
+		)
+	}, [fetcher, productOrderId])
 }

@@ -35,8 +35,10 @@ import {
 import { CurrentPendingOrderProvider } from '#app/context/pos/CurrentPendingOrderContext.tsx'
 import {
 	applyDirectDiscountAction,
+	deleteOrderAction,
 	discardOrderAction,
 	finishOrderAction,
+	modifyOrderAction,
 	removeDirectDiscountAction,
 	setPaymentMethodAction,
 } from './pos-actions.server.ts'
@@ -49,6 +51,8 @@ import {
 
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
+import { modifyOrderActionIntent } from '#app/components/pos/current-order-modify.tsx'
+import { deleteOrderActionIntent } from '#app/components/pos/current-order-delete.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -88,6 +92,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		case finishOrderActionIntent: {
 			return await finishOrderAction(formData)
 		}
+		case modifyOrderActionIntent: {
+			return await modifyOrderAction(formData)
+		}
+		case deleteOrderActionIntent: {
+			return await deleteOrderAction(formData)
+		}
 		case applyDirectDiscountActionIntent: {
 			return await applyDirectDiscountAction(formData)
 		}
@@ -113,7 +123,7 @@ export default function ProcessOrderRoute() {
 
 		// Cleanup the timeout to avoid memory leaks
 		return () => clearTimeout(timeoutId)
-	}, [location.pathname])
+	}, [location.pathname, loaderData.order.productOrders.length])
 
 	const hasProductOrders = loaderData.order.productOrders.length > 0
 

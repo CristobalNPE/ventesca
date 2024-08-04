@@ -30,7 +30,7 @@ export function DiscardOrder({ id }: { id: string }) {
 	const actionData = useActionData<typeof action>()
 
 	const isPending = useIsPending({
-		formAction: '/order',
+		formAction: '/pos',
 	})
 	const [form] = useForm({
 		id: discardOrderActionIntent,
@@ -42,10 +42,10 @@ export function DiscardOrder({ id }: { id: string }) {
 			<AlertDialogTrigger asChild>
 				<Button
 					variant={'destructive'}
-					className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 text-wrap px-5 text-center"
+					className="flex h-[3.5rem] w-full items-center gap-2 text-lg group"
 				>
-					<Icon name="trash" className="flex-none text-2xl" />{' '}
-					<span className="leading-tight">Descartar Transacción</span>
+					<Icon name="trash" size="md" className="shrink-0 transition-transform group-hover:rotate-12" />
+					Descartar Transacción
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>

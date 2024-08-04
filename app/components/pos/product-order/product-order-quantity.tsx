@@ -2,7 +2,7 @@ import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { useFetcher } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { changeProductOrderQuantityActionType } from '#app/routes/pos+/product-order-actions.tsx'
 import { cn } from '#app/utils/misc.js'
@@ -145,4 +145,42 @@ export const ProductOrderQuantitySelector = ({
 			</increaseProductOrderQuantityFetcher.Form>
 		</div>
 	)
+}
+
+export function useIncreaseProductOrderQuantity(productOrderId: string) {
+	const fetcher = useFetcher({
+		key: `${increaseProductOrderQuantityActionIntent}-${productOrderId}`,
+	})
+
+	return useCallback(() => {
+		fetcher.submit(
+			{
+				intent: increaseProductOrderQuantityActionIntent,
+				productOrderId: productOrderId,
+			},
+			{
+				method: 'POST',
+				action: '/pos/product-order-actions',
+			},
+		)
+	}, [fetcher, productOrderId])
+}
+
+export function useDecreaseProductOrderQuantity(productOrderId: string) {
+	const fetcher = useFetcher({
+		key: `${decreaseProductOrderQuantityActionIntent}-${productOrderId}`,
+	})
+
+	return useCallback(() => {
+		fetcher.submit(
+			{
+				intent: decreaseProductOrderQuantityActionIntent,
+				productOrderId: productOrderId,
+			},
+			{
+				method: 'POST',
+				action: '/pos/product-order-actions',
+			},
+		)
+	}, [fetcher, productOrderId])
 }

@@ -1,8 +1,6 @@
 import { prisma } from '#app/utils/db.server.js'
-import { type ProductOrder as ProductOrderModel } from '@prisma/client'
-import { ProductOrderType } from '../../types/orders/productOrderType'
-import { shouldDeactivateProduct } from '#app/utils/inventory/product-status.js'
-import { OrderStatus } from '../../types/orders/order-status'
+import { capitalize } from '#app/utils/misc.tsx'
+import { Prisma, type ProductOrder as ProductOrderModel } from '@prisma/client'
 import {
 	eachDayOfInterval,
 	endOfDay,
@@ -12,7 +10,8 @@ import {
 	startOfWeek,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { capitalize } from '#app/utils/misc.tsx'
+import { OrderStatus } from '../../types/orders/order-status'
+import { ProductOrderType } from '../../types/orders/productOrderType'
 export enum OrderAction {
 	CREATE,
 	DELETE,
@@ -20,12 +19,18 @@ export enum OrderAction {
 	UNDISCARD,
 }
 
-export async function updateProductStockAndAnalytics(
-	productOrders: ProductOrderModel[],
-	action: OrderAction,
-) {
+export async function updateProductStockAndAnalytics({
+	productOrders,
+	action,
+	transactionClient,
+}: {
+	productOrders: ProductOrderModel[]
+	action: OrderAction
+	transactionClient?: Prisma.TransactionClient
+}) {
+	let prismaClient = transactionClient ?? prisma
 	for (let productOrder of productOrders) {
-		const product = await prisma.product.findUniqueOrThrow({
+		const product = await prismaClient.product.findUniqueOrThrow({
 			where: { id: productOrder.productId },
 			select: { stock: true, price: true, sellingPrice: true },
 		})
@@ -87,20 +92,22 @@ export async function updateProductStockAndAnalytics(
 			stockChange = -product.stock
 		}
 
-		await prisma.product.update({
-			where: { id: productOrder.productId },
-			data: {
-				stock: { increment: stockChange },
-				productAnalytics: {
-					update: {
-						data: {
-							totalSales: { increment: salesChange },
-							totalProfit: { increment: profitChange },
-							totalReturns: { increment: returnsChange },
-						},
+		const update: Prisma.ProductUpdateInput = {
+			stock: { increment: stockChange },
+			productAnalytics: {
+				update: {
+					data: {
+						totalSales: { increment: salesChange },
+						totalProfit: { increment: profitChange },
+						totalReturns: { increment: returnsChange },
 					},
 				},
 			},
+		}
+
+		await prismaClient.product.update({
+			where: { id: productOrder.productId },
+			data: update,
 		})
 	}
 }

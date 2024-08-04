@@ -13,17 +13,19 @@ import { Key } from 'ts-key-enum'
 import { productOrderTypeBgFocusColors } from '#app/constants/productOrderTypesColors.ts'
 import { ProductOrderType } from '#app/types/orders/productOrderType.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { useFetcher, useFetchers } from '@remix-run/react'
+import { useFetchers } from '@remix-run/react'
 import { useSpinDelay } from 'spin-delay'
 import {
 	DeleteProductOrder,
-	deleteProductOrderActionIntent,
+	useDeleteProductOrder,
 } from './product-order-delete.tsx'
 import {
 	changeProductOrderQuantityActionIntent,
 	decreaseProductOrderQuantityActionIntent,
 	increaseProductOrderQuantityActionIntent,
 	ProductOrderQuantitySelector,
+	useDecreaseProductOrderQuantity,
+	useIncreaseProductOrderQuantity,
 } from './product-order-quantity.tsx'
 import {
 	ProductOrderTypeToggle,
@@ -107,9 +109,9 @@ export function ProductOrderRow({
 		minDuration: 500,
 	})
 
-	const deleteProductOrderFetcher = useFetcher({
-		key: `${deleteProductOrderActionIntent}-${productOrder.id}`,
-	})
+	const deleteProductOrder = useDeleteProductOrder(productOrder.id)
+	const increaseQuantity = useIncreaseProductOrderQuantity(productOrder.id)
+	const decreaseQuantity = useDecreaseProductOrderQuantity(productOrder.id)
 
 	// Hotkeys
 	const handleHotkey = useCallback(
@@ -125,24 +127,26 @@ export function ProductOrderRow({
 					setProductOrderType(ProductOrderType.RETURN)
 					break
 				case Key.Delete.toLowerCase():
-					deleteProductOrderFetcher.submit(
-						{
-							intent: deleteProductOrderActionIntent,
-							productOrderId: productOrder.id,
-						},
-						{
-							method: 'POST',
-							action: '/pos/product-order-actions',
-						},
-					)
+					deleteProductOrder()
+					break
+				case Key.ArrowRight.toLowerCase():
+					increaseQuantity()
+					break
+				case Key.ArrowLeft.toLowerCase():
+					decreaseQuantity()
 					break
 			}
 		},
-		[deleteProductOrderFetcher, productOrder.id, setProductOrderType],
+		[
+			deleteProductOrder,
+			increaseQuantity,
+			decreaseQuantity,
+			setProductOrderType,
+		],
 	)
 
 	const focusRef = useHotkeys<HTMLTableRowElement>(
-		[Key.Delete, 'v', 'p', 'd'],
+		[Key.Delete, 'v', 'p', 'd', Key.ArrowRight, Key.ArrowLeft],
 		handleHotkey,
 		{ preventDefault: true },
 	)
@@ -250,7 +254,12 @@ function ProductAvailableDiscounts({
 						isAnyProductDiscountApplicable && 'text-foreground',
 					)}
 				>
-					<span className="text-base">{formatCurrency(totalDiscount)}</span>
+					<div className="flex items-center gap-1">
+						<div className="text-base">{formatCurrency(totalDiscount)}</div>
+						<span className="text-sm text-muted-foreground">
+							({numberOfApplicableProductDiscounts})
+						</span>
+					</div>
 				</div>
 			) : (
 				<div

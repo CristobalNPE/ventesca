@@ -10,26 +10,51 @@ import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { type Discount } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
-import { Link } from '@remix-run/react'
+import { Link, useNavigate } from '@remix-run/react'
 import React from 'react'
 import { OrderDetailsSchema } from '../../types/orders/OrderData.ts'
 
+import { useResponsive } from '#app/hooks/useResponsive.ts'
+import { DiscountSheet } from '#app/routes/_discounts+/discount-sheet.tsx'
+import { type OrderDetails } from '#app/types/orders/OrderData.ts'
+import { toast } from 'sonner'
 import {
 	DirectDiscount,
 	RemoveDirectDiscount,
 } from '../../components/pos/current-order-direct-discount.tsx'
 import { DiscardOrder } from '../../components/pos/current-order-discard.tsx'
-import { FinishOrder } from '../../components/pos/current-order-finish.tsx'
-import { type OrderDetails } from '../../types/orders/OrderData.ts'
-import { DiscountSheet } from '#app/routes/_discounts+/discount-sheet.tsx'
+import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet.tsx'
 
 export function CurrentOrderSettingsPanel() {
+	return (
+		<>
+			{/* Desktop */}
+			<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
+				<CurrentOrderSettingsPanelContent />
+			</div>
+
+			{/* Mobile */}
+			<Sheet modal={false}>
+				<SheetTrigger asChild>
+					<Button className="absolute right-2 top-1/2 flex h-24 w-7 -translate-y-1/2 p-1 transition-all hover:h-32 xl:hidden">
+						<Icon name="double-arrow-left" className="shrink-0" size="sm" />
+					</Button>
+				</SheetTrigger>
+				<SheetContent className="flex flex-col">
+					<CurrentOrderSettingsPanelContent />
+				</SheetContent>
+			</Sheet>
+		</>
+	)
+}
+
+function CurrentOrderSettingsPanelContent() {
 	const { order, availableDiscounts, globalDiscounts } =
 		useCurrentPendingOrder()
 
 	const allDiscounts = [...availableDiscounts, ...globalDiscounts]
 	return (
-		<div className="mx-auto  hidden w-[20rem] flex-col justify-between gap-4 xl:flex">
+		<>
 			<CurrentOrderIdPanel orderId={order.id} />
 			<PaymentMethodPanel
 				orderId={order.id}
@@ -46,22 +71,31 @@ export function CurrentOrderSettingsPanel() {
 				discount={order.totalDiscount + order.directDiscount}
 				total={order.total}
 			/>
-
 			<OrderOptionsPanel order={OrderDetailsSchema.parse(order)} />
-		</div>
+		</>
 	)
 }
 
 function CurrentOrderIdPanel({ orderId }: { orderId: string }) {
-	//?On hover we want to copy the id!
 	return (
-		<PanelCard>
+		<PanelCard className="group flex items-center justify-between">
 			<div className="absolute -top-4 w-fit select-none rounded-md border bg-card px-3 py-1 text-xs">
 				ID Transacción
 			</div>
-			<span className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary">
+			<div
+				onClick={() => {
+					navigator.clipboard.writeText(orderId)
+					toast.success('ID copiado al portapapeles')
+				}}
+				className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary"
+			>
 				{orderId}
-			</span>
+			</div>
+			<Icon
+				name="copy"
+				size="sm"
+				className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+			/>
 		</PanelCard>
 	)
 }
@@ -76,7 +110,7 @@ function OrderOverviewPanel({
 	total: number
 }) {
 	return (
-		<div className="flex flex-col justify-between gap-2 rounded-md bg-muted p-2 ">
+		<div className="flex flex-col justify-between gap-2 rounded-md border bg-muted p-2">
 			<div className="flex items-center text-xl text-foreground/80">
 				<span className="w-[12rem] pl-2">Subtotal:</span>
 				<span className="w-[12rem] rounded-md bg-background/50 p-1">
@@ -125,7 +159,7 @@ const DiscountsPanel = ({
 	directDiscount: number
 }) => {
 	return (
-		<div className="relative flex w-full flex-1  flex-col gap-1 rounded-md bg-muted p-2  ">
+		<div className="relative flex w-full flex-1 flex-col  gap-1 rounded-md border bg-muted p-2  ">
 			{activeDiscounts.length === 0 ? (
 				<div className="flex h-full flex-col items-center justify-center gap-2 rounded-md  bg-background/30 p-1">
 					<span className="select-none text-lg text-foreground/50">
@@ -161,30 +195,30 @@ const DiscountsPanel = ({
 }
 
 const OrderOptionsPanel = ({ order }: { order: OrderDetails }) => {
-	return (
-		<PanelCard>
-			<div className="flex gap-4">
-				<GenerateOrderReport orderId={order.id} />
-				<DiscardOrder id={order.id} />
-			</div>
-			<FinishOrder order={order} />
-		</PanelCard>
-	)
-}
+	const navigate = useNavigate()
 
-const GenerateOrderReport = ({ orderId }: { orderId: string }) => {
 	return (
-		<Button variant={'outline'} asChild>
-			<Link
-				target="_blank"
-				reloadDocument
-				to={`/reports/${orderId}/report-pdf`}
-				className="flex aspect-square h-[5.5rem] w-full flex-col items-center justify-center gap-1 text-wrap px-5 text-center"
+		<PanelCard className="flex flex-col gap-2">
+			<DiscardOrder id={order.id} />
+			<Button
+				size={'wide'}
+				className="group flex h-[3.5rem] items-center gap-2 text-lg font-semibold"
+				disabled={order.productOrders.length === 0}
+				onClick={() => {
+					navigate(`/orders/${order.id}`, {
+						unstable_viewTransition: true,
+						state: { origin: 'pos' },
+					})
+				}}
 			>
-				<Icon className="flex-none text-2xl" name="report-money" />{' '}
-				<span className="leading-tight">Generar Reporte</span>
-			</Link>
-		</Button>
+				Ingresar Transacción
+				<Icon
+					name="double-arrow-right"
+					size="md"
+					className="shrink-0 transition-transform group-hover:translate-x-2"
+				/>
+			</Button>
+		</PanelCard>
 	)
 }
 
