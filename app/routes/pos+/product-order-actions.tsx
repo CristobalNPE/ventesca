@@ -5,7 +5,7 @@ import { invariantResponse } from '@epic-web/invariant'
 import { type Discount, type ProductOrder } from '@prisma/client'
 import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
 import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
-import { DiscountScope } from '../../types/discounts/discount-reach.ts'
+import { DiscountScope } from '../../types/discounts/discount-scope.ts'
 import { DiscountType } from '../../types/discounts/discount-type.ts'
 import {
 	DeleteFormSchema,
