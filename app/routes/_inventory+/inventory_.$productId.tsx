@@ -33,7 +33,7 @@ import { processPriceHistory } from '#app/utils/inventory/product-calculations.j
 import { getProductAlerts } from '#app/utils/inventory/product-status.js'
 import { userIsAdmin } from '#app/utils/user.ts'
 import { useState } from 'react'
-import { DiscountScope } from '../../types/discounts/discount-reach.ts'
+import { DiscountScope } from '../../types/discounts/discount-scope.ts'
 import { DeleteProductConfirmationModal } from '../../components/inventory/product-delete.tsx'
 import { ProductDiscountsCard } from '../../components/inventory/product-discounts.tsx'
 import { ModifyCategorySelect } from '../../components/inventory/product-modify-category.tsx'
