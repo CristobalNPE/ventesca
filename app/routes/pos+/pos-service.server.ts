@@ -4,7 +4,8 @@ import { Prisma } from '@prisma/client'
 import { OrderStatus } from '../../types/orders/order-status.ts'
 import { PaymentMethod } from '../../types/orders/payment-method.ts'
 import { ProductOrderType } from '#app/types/orders/productOrderType.ts'
-import { DiscountScope } from '#app/types/discounts/discount-reach.ts'
+import { DiscountScope } from '#app/types/discounts/discount-scope.ts'
+
 
 const orderDetailsSelect = {
 	id: true,
