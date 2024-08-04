@@ -186,7 +186,7 @@ export function RemoveDirectDiscount({
 	})
 
 	return (
-		<fetcher.Form method="POST" action={'/order'} {...getFormProps(form)}>
+		<fetcher.Form method="POST" action={'/pos'} {...getFormProps(form)}>
 			<input type="hidden" name="orderId" value={orderId} />
 			<StatusButton
 				className="h-8 w-full "
