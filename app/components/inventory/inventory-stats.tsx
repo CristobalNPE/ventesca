@@ -71,7 +71,10 @@ export function InventoryStats() {
 				<Alert
 					onClick={() => {
 						const newSearchParams = new URLSearchParams()
-						newSearchParams.set(FILTER_PARAMS.STOCK, LOW_STOCK_CHANGE_FOR_CONFIG)
+						newSearchParams.set(
+							FILTER_PARAMS.STOCK,
+							LOW_STOCK_CHANGE_FOR_CONFIG,
+						)
 						navigate(`/inventory?${newSearchParams}`, {
 							unstable_viewTransition: true,
 						})
