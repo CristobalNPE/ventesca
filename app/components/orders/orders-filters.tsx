@@ -73,7 +73,7 @@ export function OrdersFilters({
 		setStatusFilter(defaultValue)
 		setPeriodFilter(allTimePeriods[0])
 		setSellerFilter(defaultValue)
-		setSortBy(defaultValue)
+		setSortBy('completed-at')
 		setSortDirection(SortDirection.DESC)
 	}
 
