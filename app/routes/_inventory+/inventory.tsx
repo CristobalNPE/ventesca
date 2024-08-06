@@ -6,6 +6,8 @@ import {
 } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
+import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+import { SortDirection } from '#app/types/SortDirection.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userIsAdmin } from '#app/utils/user.ts'
 import { parseWithZod } from '@conform-to/zod'
@@ -36,8 +38,6 @@ import {
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './product-service.server.ts'
-import { SortDirection } from '#app/types/SortDirection.ts'
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 
 export const LOW_STOCK_CHANGE_FOR_CONFIG = '5'
 
@@ -52,6 +52,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const stockFilter = url.searchParams.get(FILTER_PARAMS.STOCK)
 	const categoryFilter = url.searchParams.get(FILTER_PARAMS.CATEGORY)
+	const statusFilter = url.searchParams.get(FILTER_PARAMS.STATUS)
 	const sortBy = url.searchParams.get(FILTER_PARAMS.SORT_BY)
 	const sortDirection = url.searchParams.get(FILTER_PARAMS.SORT_DIRECTION)
 
@@ -88,6 +89,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		...(searchTermIsCode
 			? { code: searchTerm }
 			: { name: { contains: searchTerm } }),
+		...(statusFilter && { isActive: statusFilter === 'active' }),
 	}
 
 	const productsPromise = prisma.product.findMany({
@@ -114,9 +116,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { businessId },
 		select: { id: true, description: true },
 	})
-	const allSuppliersPromise = prisma.supplier.findMany({
-		where: { businessId },
-		select: { id: true, fantasyName: true },
+	const hasActiveProductsPromise = prisma.product.findFirst({
+		where: { businessId, isActive: true },
 	})
 
 	const [
@@ -127,7 +128,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSeller,
 		mostProfit,
 		allCategories,
-		allSuppliers,
+		hasActiveProducts,
 	] = await Promise.all([
 		productsPromise,
 		totalProductsPromise,
@@ -136,7 +137,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSellerPromise,
 		mostProfitPromise,
 		allCategoriesPromise,
-		allSuppliersPromise,
+		hasActiveProductsPromise,
 	])
 
 	return json({
@@ -147,7 +148,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSeller,
 		mostProfit,
 		allCategories,
-		allSuppliers,
+		hasActiveProducts: hasActiveProducts !== null,
 	})
 }
 
