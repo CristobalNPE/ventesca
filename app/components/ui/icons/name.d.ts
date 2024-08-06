@@ -2,6 +2,7 @@
 
 export type IconName =
 	| "activity"
+	| "alert-hexagon"
 	| "alert-triangle"
 	| "arrow-down"
 	| "arrow-left"
@@ -63,6 +64,7 @@ export type IconName =
 	| "filter-off"
 	| "filter"
 	| "github-logo"
+	| "graph"
 	| "help"
 	| "hourglass"
 	| "id-badge-2"
