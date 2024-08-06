@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "@remix-run/react"
+import { useLocation, useNavigate, useSearchParams } from '@remix-run/react'
 
 /**
  * @description Custom hook to handle url params
@@ -6,6 +6,9 @@ import { useNavigate, useSearchParams } from "@remix-run/react"
  * @returns - The search params and a function to update them
  */
 export const useUrlParams = (defaultValue: string) => {
+	const location = useLocation()
+	const path = location.pathname
+
 	const [searchParams] = useSearchParams()
 	const navigate = useNavigate()
 
@@ -16,7 +19,7 @@ export const useUrlParams = (defaultValue: string) => {
 		} else {
 			newSearchParams.set(paramName, value)
 		}
-		navigate(`/orders?${newSearchParams}`, {
+		navigate(`${path}?${newSearchParams}`, {
 			unstable_viewTransition: true,
 		})
 	}
