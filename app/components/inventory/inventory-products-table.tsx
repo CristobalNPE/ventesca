@@ -101,16 +101,13 @@ export function InventoryProductsTable() {
 									<TableCell className="text-center">
 										<div
 											className={cn(
-												'text-nowrap text-sm  text-muted-foreground ',
+												'flex justify-center gap-1 text-nowrap text-sm text-muted-foreground ',
 												product.stock === 0 && 'text-destructive',
 											)}
 										>
+											<Icon name="package" />
 											<span className="font-semibold">
-												{product.stock === 0
-													? 'Sin stock'
-													: product.stock === 1
-														? `${product.stock} unidad`
-														: `${product.stock} unidades`}
+												{product.stock === 0 ? 'Sin stock' : product.stock}
 											</span>
 										</div>
 									</TableCell>
