@@ -253,11 +253,6 @@ function App() {
 			icon: 'cash-register',
 		},
 		{
-			name: 'Centro de Control',
-			path: 'dashboard',
-			icon: 'circle-dot-dashed',
-		},
-		{
 			name: 'Transacciones',
 			path: 'orders',
 			icon: 'file-bar-chart',
@@ -267,6 +262,7 @@ function App() {
 			path: 'inventory',
 			icon: 'package',
 		},
+
 		{
 			name: 'Descuentos',
 			path: 'discounts',
@@ -281,6 +277,11 @@ function App() {
 			name: 'Proveedores',
 			path: 'suppliers',
 			icon: 'users',
+		},
+		{
+			name: 'Analítica',
+			path: 'analytics',
+			icon: 'graph',
 		},
 		//Admin only routes
 		...(isAdmin
