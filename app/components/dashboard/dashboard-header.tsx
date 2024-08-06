@@ -1,5 +1,5 @@
 import { RouteHeader } from "../route-header";
 
 export function DashboardHeader() {
-	return <RouteHeader title="Centro de Control" />
+	return <RouteHeader title="Analíticas de la Empresa" />
 }
