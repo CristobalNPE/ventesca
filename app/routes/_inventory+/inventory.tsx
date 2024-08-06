@@ -91,14 +91,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 
 	const productsPromise = prisma.product.findMany({
-		take: $top,
-		skip: $skip,
 		where: filters,
 		select: productSelect,
 		orderBy:
 			sortBy && sortOptions[sortBy]
 				? sortOptions[sortBy]
 				: sortOptions['default'],
+		take: $top,
+		skip: $skip,
 	})
 
 	const totalProductsPromise = prisma.product.count({ where: filters })
@@ -114,6 +114,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { businessId },
 		select: { id: true, description: true },
 	})
+	const allSuppliersPromise = prisma.supplier.findMany({
+		where: { businessId },
+		select: { id: true, fantasyName: true },
+	})
 
 	const [
 		products,
@@ -123,6 +127,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSeller,
 		mostProfit,
 		allCategories,
+		allSuppliers,
 	] = await Promise.all([
 		productsPromise,
 		totalProductsPromise,
@@ -131,6 +136,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSellerPromise,
 		mostProfitPromise,
 		allCategoriesPromise,
+		allSuppliersPromise,
 	])
 
 	return json({
@@ -141,6 +147,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSeller,
 		mostProfit,
 		allCategories,
+		allSuppliers,
 	})
 }
 
