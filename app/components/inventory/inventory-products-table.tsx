@@ -22,27 +22,31 @@ import { InventoryFilters } from './inventory-filters'
 import { InventorySearchBar } from './inventory-search-bar'
 
 export function InventoryProductsTable() {
-	const { products, totalProducts, allCategories } = useInventory()
+	const { products, totalProducts, allCategories, allSuppliers } =
+		useInventory()
 	return (
 		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
-			<CardHeader className="sticky top-0 z-10 flex flex-col  gap-1 bg-card px-7">
-				<div className="flex w-full justify-between ">
-					<div className="w-fit">
-						<CardTitle>Artículos</CardTitle>
-						{products.length > 1 ? (
-							<CardDescription>
-								Mostrando {products.length} de {totalProducts} artículos
-								registrados.
-							</CardDescription>
-						) : null}
-					</div>
-					<PaginationBar total={totalProducts} top={25} />
+			<CardHeader className="sticky top-0 z-10 flex flex-col  gap-4 bg-card px-7">
+				<div className="flex w-full items-center justify-between">
+					<CardTitle>Registro de productos</CardTitle>
+					{products.length > 1 ? (
+						<CardDescription>
+							Mostrando {products.length} de {totalProducts} artículos
+							registrados.
+						</CardDescription>
+					) : null}
 				</div>
-				<div className="flex flex-wrap gap-4">
-					<div className="flex-1">
+
+				<div className="flex flex-wrap items-center justify-center gap-2 ">
+					<InventoryFilters
+						categories={allCategories}
+						suppliers={allSuppliers}
+					/>
+
+					<div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-8 ">
 						<InventorySearchBar status="idle" autoSubmit />
+						<PaginationBar total={totalProducts} top={25} />
 					</div>
-					<InventoryFilters categories={allCategories} />
 				</div>
 			</CardHeader>
 			<CardContent className="flex flex-col gap-3 sm:gap-1 ">
