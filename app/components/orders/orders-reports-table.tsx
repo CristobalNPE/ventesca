@@ -40,21 +40,21 @@ export function OrdersReportsTable() {
 		<Card className="w-full">
 			<CardHeader className="flex flex-col gap-2">
 				<div className="flex flex-wrap items-center gap-4">
-					<div className="gap-1s flex flex-1 flex-col">
+					<div className="flex w-full items-center justify-between">
 						<CardTitle>
 							Transacciones - {getCardTitleFromParams(searchParams)}
 						</CardTitle>
-
-						<CardDescription className="h-5">
-							{orders.length
-								? `Mostrando ${orders.length} de ${numberOfOrders} transacciones.`
-								: ''}
-						</CardDescription>
+						{orders.length > 1 && (
+							<CardDescription className="h-5">
+								Mostrando {orders.length} de {numberOfOrders} transacciones.
+							</CardDescription>
+						)}
 					</div>
-					<PaginationBar total={numberOfOrders} top={20} />
-				</div>
-				<div className="flex flex-1">
-					<OrdersFilters sellers={businessSellers} />
+
+					<div className="flex w-full  flex-col flex-wrap items-center justify-center gap-2">
+						<OrdersFilters sellers={businessSellers} />
+						<PaginationBar total={numberOfOrders} top={20} />
+					</div>
 				</div>
 			</CardHeader>
 			{orders.length ? (
