@@ -26,26 +26,21 @@ import { useSortDirection } from '#app/hooks/useSortDirection.ts'
 
 export function InventoryFilters({
 	categories,
-	suppliers,
 }: {
 	categories: Pick<Category, 'id' | 'description'>[]
-	suppliers: Pick<Supplier, 'id' | 'fantasyName'>[]
 }) {
 	const [stockFilter, setStockFilter] = useFilter(FILTER_PARAMS.STOCK, 'all')
 	const [categoryFilter, setCategoryFilter] = useFilter(
 		FILTER_PARAMS.CATEGORY,
 		'all',
 	)
-	const [supplierFilter, setSupplierFilter] = useFilter(
-		FILTER_PARAMS.SUPPLIER,
-		'all',
-	)
+	const [statusFilter, setStatusFilter] = useFilter(FILTER_PARAMS.STATUS, 'all')
 	const [sortBy, setSortBy] = useFilter(FILTER_PARAMS.SORT_BY, 'name')
 	const [sortDirection, setSortDirection] = useSortDirection()
 	const resetSelectValues = () => {
 		setStockFilter('all')
 		setCategoryFilter('all')
-		setSupplierFilter('all')
+		setStatusFilter('all')
 		setSortBy('name')
 		setSortDirection(SortDirection.ASC)
 	}
@@ -75,14 +70,14 @@ export function InventoryFilters({
 			/>
 
 			<FilterSelect
-				label="Proveedor"
-				filter={supplierFilter}
-				setFilter={setSupplierFilter}
-				options={suppliers.map(supplier => ({
-					value: supplier.id,
-					label: supplier.fantasyName,
-				}))}
-				topOption={{ value: 'all', label: 'Sin Filtros' }}
+				label="Estado"
+				filter={statusFilter}
+				setFilter={setStatusFilter}
+				options={[
+					{ value: 'all', label: 'Todos' },
+					{ value: 'active', label: 'Activo' },
+					{ value: 'inactive', label: 'Inactivo' },
+				]}
 			/>
 			<FilterSelect
 				label="Ordenar por"
