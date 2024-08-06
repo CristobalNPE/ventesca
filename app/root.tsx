@@ -254,7 +254,7 @@ function App() {
 		},
 		{
 			name: 'Centro de Control',
-			path: 'control-center',
+			path: 'dashboard',
 			icon: 'circle-dot-dashed',
 		},
 		{
