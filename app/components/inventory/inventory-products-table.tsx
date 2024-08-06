@@ -2,39 +2,43 @@ import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
 import {
 	Card,
-	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '#app/components/ui/tooltip.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 
 import { useInventory } from '../../context/inventory/InventoryContext'
 import { InventoryFilters } from './inventory-filters'
 import { InventorySearchBar } from './inventory-search-bar'
 
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '#app/components/ui/table.tsx'
+
+import { ScrollArea } from '../ui/scroll-area'
+
 export function InventoryProductsTable() {
 	const { products, totalProducts, allCategories, allSuppliers } =
 		useInventory()
 	return (
-		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
-			<CardHeader className="sticky top-0 z-10 flex flex-col  gap-4 bg-card px-7">
+		<Card className="w-full">
+			<CardHeader className="flex flex-col gap-2">
 				<div className="flex w-full items-center justify-between">
 					<CardTitle>Registro de productos</CardTitle>
-					{products.length > 1 ? (
+					{products.length > 1 && (
 						<CardDescription>
 							Mostrando {products.length} de {totalProducts} artículos
 							registrados.
 						</CardDescription>
-					) : null}
+					)}
 				</div>
 
 				<div className="flex flex-wrap items-center justify-center gap-2 ">
@@ -49,88 +53,81 @@ export function InventoryProductsTable() {
 					</div>
 				</div>
 			</CardHeader>
-			<CardContent className="flex flex-col gap-3 sm:gap-1 ">
-				{products.map(product => (
-					<LinkWithParams
-						unstable_viewTransition
-						key={product.id}
-						prefetch={'intent'}
-						className={({ isActive }) =>
-							cn(
-								'flex flex-row items-center justify-between gap-5 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
-								isActive && 'border-primary/10 bg-secondary',
-								!product.isActive && 'border-destructive/20',
-							)
-						}
-						preserveSearch
-						to={product.id}
-					>
-						<div className="flex w-[55%] flex-col  overflow-clip  text-nowrap text-left font-semibold uppercase ">
-							<span>{product.name}</span>
-							<div className="flex items-center gap-1 text-muted-foreground">
-								<Icon name="scan-barcode" className="text-xs" />
-								<span>{product.code}</span>
-							</div>
-						</div>
-
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div className="hidden w-[15%] sm:block ">
-										<Badge variant="outline">
+			{products.length ? (
+				<ScrollArea className="relative h-[calc(100%-14rem)]  border-b p-6  pt-0 ">
+					<Table>
+						<TableHeader className="sticky top-0 z-20 overflow-clip rounded-md bg-secondary">
+							<TableRow>
+								<TableHead className="rounded-tl-md">Código | Nombre</TableHead>
+								<TableHead className="text-center">Categoría</TableHead>
+								<TableHead className="text-center">Stock</TableHead>
+								<TableHead className="rounded-tr-md text-right">
+									Precio de venta
+								</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{products.map(product => (
+								<TableRow className="group" key={product.id}>
+									<TableCell className=" h-full overflow-hidden p-0">
+										<LinkWithParams
+											unstable_viewTransition
+											preserveSearch
+											prefetch="intent"
+											to={product.id}
+											className={
+												'group/link flex h-full w-full flex-1  items-center justify-between  gap-1 p-4 font-bold transition-all duration-100  group-hover:bg-accent group-hover:text-foreground'
+											}
+										>
+											<div className="flex flex-col  overflow-clip  text-nowrap text-left font-semibold uppercase ">
+												<span>{product.name}</span>
+												<div className="flex items-center gap-1 text-muted-foreground">
+													<Icon name="scan-barcode" className="text-xs" />
+													<span>{product.code}</span>
+												</div>
+											</div>
+											<Icon
+												size="md"
+												name="file-arrow-right"
+												className="text-foreground opacity-0 transition-all  duration-200 group-hover/link:translate-x-2 group-hover/link:opacity-100 "
+											/>
+										</LinkWithParams>
+									</TableCell>
+									<TableCell className="text-center">
+										<Badge variant="outline" className="">
 											{product.category.description}
 										</Badge>
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>Categoría</p>
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div
-										className={cn(
-											'hidden w-[10%] text-nowrap text-center  text-xs  text-muted-foreground sm:block ',
-											product.stock === 0 && 'text-destructive',
-										)}
-									>
-										<div className="flex items-center justify-center gap-1">
-											<Icon name="package" className="" />
-											<span className="font-semibold ">{product.stock}</span>
+									</TableCell>
+									<TableCell className="text-center">
+										<div
+											className={cn(
+												'text-nowrap text-sm  text-muted-foreground ',
+												product.stock === 0 && 'text-destructive',
+											)}
+										>
+											<span className="font-semibold">
+												{product.stock === 0
+													? 'Sin stock'
+													: product.stock === 1
+														? `${product.stock} unidad`
+														: `${product.stock} unidades`}
+											</span>
 										</div>
-										<div className="">
-											{product.stock === 0
-												? 'sin stock'
-												: product.stock === 1
-													? 'unidad'
-													: 'unidades'}
-										</div>
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>Stock</p>
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div className="w-[20%] text-nowrap text-end font-bold text-muted-foreground ">
+									</TableCell>
+									<TableCell className="text-right font-bold">
 										{formatCurrency(product.sellingPrice)}
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>Precio de venta</p>
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-					</LinkWithParams>
-				))}
-			</CardContent>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</ScrollArea>
+			) : (
+				<div className="flex h-[40rem] w-full flex-col items-center justify-center gap-2 text-balance rounded-sm border border-dashed bg-card text-muted-foreground">
+					<Icon name="exclamation-circle" size="xl" />
+					<p>No existen productos que cumplan con los filtros aplicados.</p>
+				</div>
+			)}
 		</Card>
 	)
 }
