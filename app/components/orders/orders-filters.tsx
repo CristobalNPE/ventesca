@@ -42,7 +42,7 @@ export function OrdersFilters({
 	}
 
 	return (
-		<div className="flex w-fit flex-wrap gap-4 rounded-md bg-secondary/40 p-1 shadow-sm">
+		<div className="flex  w-fit flex-wrap justify-center gap-4 rounded-md bg-secondary/40 p-1 shadow-sm">
 			<RemoveFiltersButton resetSelectValues={resetSelectValues} />
 			<FilterSelect
 				label="Estado"
@@ -63,6 +63,7 @@ export function OrdersFilters({
 					label: timePeriodNames[period],
 				}))}
 			/>
+
 			<FilterSelect
 				label="Vendedor"
 				filter={sellerFilter}
@@ -83,9 +84,7 @@ export function OrdersFilters({
 					{ value: 'total', label: 'Total' },
 					{ value: 'seller', label: 'Vendedor' },
 				]}
-
 			/>
-
 			<SortDirectionButton
 				sortDirection={sortDirection}
 				onChange={setSortDirection}
