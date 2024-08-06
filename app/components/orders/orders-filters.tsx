@@ -77,11 +77,13 @@ export function OrdersFilters({
 				label="Ordenar por"
 				filter={sortBy}
 				setFilter={setSortBy}
-				options={allTimePeriods.map(period => ({
-					value: period,
-					label: timePeriodNames[period],
-				}))}
-				topOption={{ value: 'completed-at', label: 'Fecha de ingreso' }}
+				options={[
+					{ value: 'completed-at', label: 'Fecha de ingreso' },
+					{ value: 'status', label: 'Estado' },
+					{ value: 'total', label: 'Total' },
+					{ value: 'seller', label: 'Vendedor' },
+				]}
+
 			/>
 
 			<SortDirectionButton
