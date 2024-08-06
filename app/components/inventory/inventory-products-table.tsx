@@ -25,8 +25,9 @@ import {
 
 import { ScrollArea } from '../ui/scroll-area'
 
+
 export function InventoryProductsTable() {
-	const { products, totalProducts, allCategories, allSuppliers } =
+	const { products, totalProducts, allCategories } =
 		useInventory()
 	return (
 		<Card className="w-full">
@@ -42,11 +43,7 @@ export function InventoryProductsTable() {
 				</div>
 
 				<div className="flex flex-wrap items-center justify-center gap-2 ">
-					<InventoryFilters
-						categories={allCategories}
-						suppliers={allSuppliers}
-					/>
-
+					<InventoryFilters categories={allCategories} />
 					<div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-8 ">
 						<InventorySearchBar status="idle" autoSubmit />
 						<PaginationBar total={totalProducts} top={25} />
@@ -79,11 +76,18 @@ export function InventoryProductsTable() {
 												'group/link flex h-full w-full flex-1  items-center justify-between  gap-1 p-4 font-bold transition-all duration-100  group-hover:bg-accent group-hover:text-foreground'
 											}
 										>
-											<div className="flex flex-col  overflow-clip  text-nowrap text-left font-semibold uppercase ">
-												<span>{product.name}</span>
-												<div className="flex items-center gap-1 text-muted-foreground">
-													<Icon name="scan-barcode" className="text-xs" />
-													<span>{product.code}</span>
+											<div
+												className={cn(
+													'flex items-center gap-1 overflow-clip  text-nowrap text-left font-semibold ',
+													!product.isActive && 'text-destructive',
+												)}
+											>
+												<div className="flex flex-col uppercase">
+													<span>{product.name}</span>
+													<div className="flex items-center gap-1 text-muted-foreground">
+														<Icon name="scan-barcode" className="text-xs" />
+														<span>{product.code}</span>
+													</div>
 												</div>
 											</div>
 											<Icon
