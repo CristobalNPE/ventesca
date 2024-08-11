@@ -56,11 +56,11 @@ export default function OrderRoute() {
 
 	return (
 		<OrderProvider data={loaderData}>
-			<main className="flex flex-col gap-4 h-full">
+			<main className="flex h-full flex-col gap-4">
 				<OrderHeader />
 				<div
 					className={cn(
-						'grid grid-cols-1 gap-y-4 lg:grid-cols-6 lg:gap-4 flex-1',
+						'grid flex-1 grid-cols-1 gap-y-4 lg:grid-cols-6 lg:gap-4',
 						shouldShowReceipt && 'lg:grid-cols-7',
 					)}
 				>
