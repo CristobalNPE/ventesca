@@ -278,14 +278,15 @@ function App() {
 			path: 'suppliers',
 			icon: 'users',
 		},
-		{
-			name: 'Analítica',
-			path: 'analytics',
-			icon: 'graph',
-		},
+
 		//Admin only routes
 		...(isAdmin
 			? ([
+					{
+						name: 'Analítica',
+						path: 'analytics',
+						icon: 'graph',
+					},
 					{
 						name: 'Empresa',
 						path: 'business',
