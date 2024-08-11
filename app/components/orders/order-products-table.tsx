@@ -110,7 +110,7 @@ export function OrderProductsTable() {
 					</Table>
 				</ScrollArea>
 			) : (
-				<div className="flex h-[40rem] w-full flex-col items-center justify-center gap-2 text-balance rounded-sm border border-dashed bg-card text-muted-foreground">
+				<div className="flex h-[28rem] w-full flex-col items-center justify-center gap-2 text-balance rounded-sm border border-dashed bg-card text-muted-foreground">
 					<Icon name="exclamation-circle" size="xl" />
 					<p>La transacción no contiene productos asociados.</p>
 				</div>
