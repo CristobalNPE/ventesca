@@ -10,15 +10,16 @@ export function OrderActions() {
 	const isOrderPending = order.status === OrderStatus.PENDING
 	const user = useUser()
 	const isAdmin = userIsAdmin()
-	const canModify = order.seller.id === user.id || isAdmin
+	const canCallAction = order.seller.id === user.id || isAdmin
+
 
 	return (
 		<div className="flex flex-col items-center justify-end gap-4 lg:flex-row">
-			{canModify && (
+			{canCallAction && (
 				<ModifyOrder orderId={order.id}/>
 			)}
 			{isOrderPending ? (
-				<FinishOrder orderId={order.id} />
+				canCallAction && <FinishOrder orderId={order.id} />
 			) : (
 				isAdmin && <DeleteOrder orderId={order.id} />
 			)}
