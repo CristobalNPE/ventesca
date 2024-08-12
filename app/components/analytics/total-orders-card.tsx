@@ -21,7 +21,7 @@ export function TotalOrders() {
 					<h3 className="text-3xl font-semibold leading-none">
 						{numberOfCompletedOrders}{' '}
 						<span className="text-base font-thin leading-none">
-							transacciones completadas
+							{numberOfCompletedOrders === 1 ? "transacción completada":"transacciones completadas"}
 						</span>
 					</h3>
 					<p className="text-sm text-muted-foreground ">

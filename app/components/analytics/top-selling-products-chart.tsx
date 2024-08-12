@@ -48,6 +48,10 @@ const barChartConfig = {
 export function TopSellingProductsBarChart() {
 	const { topSellingProducts } = useAnalytics()
 
+	if (topSellingProducts.length <= 0) {
+		return null
+	}
+
 	return (
 		<Card className="flex flex-col ">
 			<CardHeader>
@@ -103,7 +107,7 @@ export function TopSellingProductsBarChart() {
 					<Link
 						prefetch="intent"
 						unstable_viewTransition
-						className="flex items-center gap-3"
+						className="flex items-center gap-3 justify-center"
 						to={`/inventory/${topSellingProducts[0]!.id}`}
 					>
 						<Icon name="trophy" size="lg" />

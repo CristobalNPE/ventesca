@@ -1,5 +1,3 @@
-import { AnalyticsHeader } from '#app/components/analytics/analytics-header.js'
-import { Spacer } from '#app/components/spacer.tsx'
 import {
 	Card,
 	CardContent,
@@ -15,31 +13,11 @@ import {
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Progress } from '#app/components/ui/progress.tsx'
 import {
-	Tabs,
-	TabsList,
-	TabsTrigger,
-	TabsContent,
-} from '#app/components/ui/tabs.tsx'
-import { OrderStatus } from '#app/types/orders/order-status.ts'
-import { getBusinessId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { json, LoaderFunctionArgs } from '@remix-run/node'
-import { TrendingUp } from 'lucide-react'
-import {
-	LineChart,
 	CartesianGrid,
-	XAxis,
 	Line,
-	PieChart,
-	Pie,
-	BarChart,
-	YAxis,
-	Bar,
-	LabelList,
+	LineChart,
+	XAxis
 } from 'recharts'
 
 const line2ChartData = [
@@ -64,10 +42,10 @@ const line2ChartConfig = {
 
 export function WeeklyTransactionsLineChart() {
 	return (
-		<Card>
+		<Card className='blur-sm'>
 			<CardHeader>
-				<CardTitle>Line Chart - Multiple</CardTitle>
-				<CardDescription>January - June 2024</CardDescription>
+				<CardTitle>Transacciones esta semana</CardTitle>
+				<CardDescription>Ventas y devoluciones procesadas.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer config={line2ChartConfig}>
@@ -109,10 +87,10 @@ export function WeeklyTransactionsLineChart() {
 				<div className="flex w-full items-start gap-2 text-sm">
 					<div className="grid gap-2">
 						<div className="flex items-center gap-2 font-medium leading-none">
-							Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+							Porcentaje de devolución aproximado a 15.4% <Icon name='reset' className="h-4 w-4" />
 						</div>
 						<div className="flex items-center gap-2 leading-none text-muted-foreground">
-							Showing total visitors for the last 6 months
+							Mostrando transacciones durante la semana 12 - 19 Agosto.
 						</div>
 					</div>
 				</div>

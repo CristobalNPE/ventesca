@@ -2,24 +2,39 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Progress } from '#app/components/ui/progress.tsx'
+import { useAnalytics } from '#app/context/analytics/AnalyticsContext.js'
+import { formatCurrency, getUserImgSrc } from '#app/utils/misc.tsx'
 import { Icon, IconName } from '../ui/icon'
 
 export function TopSellerCard() {
-	//TODO: RENAME TO TOP BUSINESS SELLER
+	const { sellerStatsForWeek } = useAnalytics()
+	const sellerDisplayName =
+		sellerStatsForWeek.sellerData.name ?? sellerStatsForWeek.sellerData.username
+
+	const averageTransactionTimeInSeconds =
+		sellerStatsForWeek.averageTransactionTime
+	const averageTransactionTimeInMinutes =
+		sellerStatsForWeek.averageTransactionTime > 0
+			? sellerStatsForWeek.averageTransactionTime / 60
+			: 0
+
 	return (
 		<Card>
 			<CardHeader className="flex flex-row  justify-between gap-4 pb-9">
 				<div>
-					<CardDescription>Vendedor con mejor desempeño esta semana</CardDescription>
-					<CardTitle className="text-4xl">Don Sunito Sunero</CardTitle>
+					<CardDescription>
+						Vendedor con mejor desempeño esta semana
+					</CardDescription>
+					<CardTitle className="text-4xl">{sellerDisplayName}</CardTitle>
 				</div>
-				<div className="h-14 w-14 rounded-sm bg-secondary ">
-					<img src="unsplash.com/random/200x200" alt="Seller" />
+				<div className="h-16 w-16 overflow-clip rounded-full border-4 border-secondary bg-secondary shadow-md">
+					<img
+						src={getUserImgSrc(sellerStatsForWeek.sellerData.image?.id)}
+						alt="Foto perfil vendedor"
+					/>
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -27,17 +42,21 @@ export function TopSellerCard() {
 					<StatDisplay
 						icon="cash-register"
 						title="Transacciones Completadas"
-						value="100"
+						value={sellerStatsForWeek.totalTransactions.toString()}
 					/>
 					<StatDisplay
 						icon="moneybag"
 						title="Ganancias recaudadas"
-						value="100"
+						value={formatCurrency(sellerStatsForWeek.profitGenerated)}
 					/>
 					<StatDisplay
 						icon="clock-up"
 						title="Tiempo promedio por transacción"
-						value="100"
+						value={
+							averageTransactionTimeInMinutes >= 1
+								? `${averageTransactionTimeInMinutes.toFixed(0)} min.`
+								: `${averageTransactionTimeInSeconds.toFixed(0)} seg.`
+						}
 					/>
 				</div>
 			</CardContent>

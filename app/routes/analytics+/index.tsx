@@ -14,6 +14,7 @@ import { useLoaderData } from '@remix-run/react'
 import {
 	getCompletedOrdersCount,
 	getDailyProfitsForWeek,
+	getTopSellerStatsForWeek,
 	getTopSellingProducts,
 	getTotalProfits,
 	getWeeklyProfitsForMonth,
@@ -29,12 +30,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		dailyProfits,
 		weeklyProfits,
 		topSellingProducts,
+		sellerStatsForWeek,
 	] = await Promise.all([
 		getCompletedOrdersCount(businessId),
 		getTotalProfits(businessId),
 		getDailyProfitsForWeek({ businessId }),
 		getWeeklyProfitsForMonth({ businessId }),
 		getTopSellingProducts(businessId),
+		getTopSellerStatsForWeek({ businessId }),
 	])
 
 	return json({
@@ -43,10 +46,33 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		dailyProfits,
 		weeklyProfits,
 		topSellingProducts,
+		sellerStatsForWeek,
 	})
 }
 export default function Dashboard() {
 	const loaderData = useLoaderData<typeof loader>()
+	return (
+		<AnalyticsProvider data={loaderData}>
+			<AnalyticsHeader />
+			<Spacer size="4xs" />
+			<main className="grid gap-6  xl:grid-cols-7">
+				<div className="grid gap-y-6 xl:col-span-5 xl:grid-cols-5  xl:gap-x-6">
+					<div className="xl:col-span-2 grid gap-6 ">
+						<TotalProfit />
+						<TotalOrders />
+						<ProfitLineCharts />
+					</div>
+					<div className="xl:col-span-3 grid gap-6 ">
+						<WeeklyTransactionsLineChart />
+						<TopSellerCard />
+					</div>
+				</div>
+				<div className="grid gap-6 xl:col-span-2">
+					<TopSellingProductsBarChart />
+				</div>
+			</main>
+		</AnalyticsProvider>
+	)
 	return (
 		<AnalyticsProvider data={loaderData}>
 			<AnalyticsHeader />
