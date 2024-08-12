@@ -5,7 +5,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { useAnalytics } from '#app/context/analytics/AnalyticsContext.js'
+import { useAnalytics } from '#app/context/analytics/AnalyticsContext.tsx'
 import { formatCurrency, getUserImgSrc } from '#app/utils/misc.tsx'
 import { Icon, IconName } from '../ui/icon'
 
