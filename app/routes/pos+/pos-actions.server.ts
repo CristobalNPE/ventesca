@@ -22,6 +22,7 @@ import {
 	OrderAction,
 	updateProductStockAndAnalytics,
 } from '../_inventory+/product-service.server.ts'
+import { ProductOrderType } from '#app/types/orders/productOrderType.js'
 
 export async function discardOrderAction(formData: FormData) {
 	const submission = parseWithZod(formData, {
@@ -45,9 +46,9 @@ export async function discardOrderAction(formData: FormData) {
 	await prisma.order.update({
 		where: { id: order.id },
 		data: {
-			isDiscarded: true,
 			status: OrderStatus.DISCARDED,
 			completedAt: new Date(),
+			profit: 0,
 		},
 	})
 	return redirectWithToast(`/orders`, {
@@ -90,19 +91,40 @@ export async function finishOrderAction(formData: FormData) {
 	}
 	const { orderId } = submission.value
 
-	const order = await prisma.order.update({
+	const order = await prisma.order.findUniqueOrThrow({
 		where: { id: orderId },
-		data: {
-			status: OrderStatus.FINISHED,
-			completedAt: new Date(),
+		select: {
+			total: true,
+			productOrders: { include: { productDetails: true } },
+			status: true,
 		},
-		select: { productOrders: true, status: true },
 	})
 
-	//update stock for products in the order
-	await updateProductStockAndAnalytics({
-		productOrders: order.productOrders,
-		action: OrderAction.CREATE,
+	await prisma.$transaction(async tx => {
+		const aggregateProductCost = order.productOrders.reduce(
+			(acc, productOrder) =>
+				productOrder.type === ProductOrderType.RETURN
+					? acc + productOrder.productDetails.cost * productOrder.quantity
+					: acc - productOrder.productDetails.cost * productOrder.quantity,
+			0,
+		)
+
+		await tx.order.update({
+			where: { id: orderId },
+			data: {
+				profit: order.total + aggregateProductCost,
+				status: OrderStatus.FINISHED,
+				completedAt: new Date(),
+			},
+			select: { productOrders: true, status: true },
+		})
+
+		//update stock for products in the order
+		await updateProductStockAndAnalytics({
+			productOrders: order.productOrders,
+			action: OrderAction.CREATE,
+			transactionClient: tx,
+		})
 	})
 
 	return redirectWithToast(`/pos`, {
@@ -112,7 +134,13 @@ export async function finishOrderAction(formData: FormData) {
 	})
 }
 
-export async function modifyOrderAction(formData: FormData) {
+export async function modifyOrderAction({
+	formData,
+	sellerId,
+}: {
+	formData: FormData
+	sellerId: string
+}) {
 	const submission = await parseWithZod(formData, {
 		schema: ModifyOrderSchema,
 	})
@@ -132,6 +160,7 @@ export async function modifyOrderAction(formData: FormData) {
 			where: { id: orderId },
 			data: {
 				status: OrderStatus.PENDING,
+				seller: { connect: { id: sellerId } },
 			},
 		})
 	}

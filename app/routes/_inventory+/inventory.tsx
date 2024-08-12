@@ -224,7 +224,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		| 'businessId'
 		| 'categoryId'
 		| 'supplierId'
-		| 'price'
+		| 'cost'
 		| 'sellingPrice'
 		| 'stock'
 		| 'isActive'
@@ -273,14 +273,14 @@ export async function action({ request }: ActionFunctionArgs) {
 		productsToCreate.push({
 			code: parsedProduct.code,
 			name: parsedProduct.name,
-			price: validationResult.price,
+			cost: validationResult.cost,
 			sellingPrice: validationResult.sellingPrice,
 			stock: validationResult.stock,
 			businessId,
 			categoryId: validationResult.categoryId,
 			supplierId: validationResult.supplierId,
 			isActive:
-				validationResult.price > 0 &&
+				validationResult.cost > 0 &&
 				validationResult.sellingPrice > 0 &&
 				validationResult.stock > 0,
 		})
@@ -304,6 +304,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		await tx.productAnalytics.createMany({
 			data: products.map(product => ({
 				productId: product.id,
+				businessId,
+				//TODO:CONNECT TO BUSINESS!!!!
 			})),
 		})
 	})

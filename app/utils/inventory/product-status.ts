@@ -16,7 +16,7 @@ export type ProductStatus = {
 }
 
 export function getProductAlerts(
-	product: Pick<Product, 'stock' | 'price' | 'sellingPrice' | 'isActive'>,
+	product: Pick<Product, 'stock' | 'cost' | 'sellingPrice' | 'isActive'>,
 ): ProductAlert[] {
 	return [
 		{
@@ -27,7 +27,7 @@ export function getProductAlerts(
 			enforce: false,
 		},
 		{
-			condition: product.price <= 0,
+			condition: product.cost <= 0,
 			title: 'Valor de costo inválido',
 			description:
 				'El costo del producto no es válido o se encuentra sin definir.',
@@ -44,20 +44,20 @@ export function getProductAlerts(
 }
 
 export function getActiveProductAlerts(
-	product: Pick<Product, 'stock' | 'price' | 'sellingPrice' | 'isActive'>,
+	product: Pick<Product, 'stock' | 'cost' | 'sellingPrice' | 'isActive'>,
 ): ProductAlert[] {
 	return getProductAlerts(product).filter(alert => alert.condition)
 }
 
 export function canActivateProduct(
-	product: Pick<Product, 'stock' | 'price' | 'sellingPrice' | 'isActive'>,
+	product: Pick<Product, 'stock' | 'cost' | 'sellingPrice' | 'isActive'>,
 ): boolean {
 	const alerts = getProductAlerts(product)
 	return alerts.every(alert => !alert.condition)
 }
 
 export function getProductStatus(
-	product: Pick<Product, 'stock' | 'price' | 'sellingPrice' | 'isActive'>,
+	product: Pick<Product, 'stock' | 'cost' | 'sellingPrice' | 'isActive'>,
 ): ProductStatus {
 	const alerts = getActiveProductAlerts(product)
 	const canActivate = canActivateProduct(product)

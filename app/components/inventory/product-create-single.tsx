@@ -12,19 +12,15 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { getBusinessId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
+import { action } from '../../routes/_inventory+/inventory.edit'
 import {
 	PRODUCT_NAME_MAX,
 	PRODUCT_NAME_MIN,
 } from '../../routes/_inventory+/inventory_.$productId.edit'
-import { action } from '../../routes/_inventory+/inventory.edit'
 
 export const createSingleProductActionIntent = 'create-product-single'
 
@@ -116,10 +112,12 @@ export function CreateItemDialog() {
 					<StatusButton
 						form={form.id}
 						type="submit"
+						name='intent'
+						value={createSingleProductActionIntent}
 						disabled={isPending}
 						status={isPending ? 'pending' : 'idle'}
+						iconName='check'
 					>
-						<Icon name="check" className="mr-2" />
 						Registrar Articulo
 					</StatusButton>
 				</AlertDialogFooter>

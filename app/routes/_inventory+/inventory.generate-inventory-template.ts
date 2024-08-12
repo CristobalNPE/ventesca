@@ -198,7 +198,7 @@ function createExcelTemplate(
 export type ParsedProduct = {
 	code: string
 	name: string
-	price: string
+	cost: string
 	sellingPrice: string
 	stock: string
 	categoryCode: string
@@ -222,7 +222,7 @@ export function parseExcelTemplate(buffer: Buffer): ParsedProduct[] {
 		products.push({
 			code: String(productCode),
 			name: String(worksheet![`B${row}`]?.v || ''),
-			price: String(worksheet![`C${row}`]?.v || 0),
+			cost: String(worksheet![`C${row}`]?.v || 0),
 			sellingPrice: String(worksheet![`D${row}`]?.v || 0),
 			stock: String(worksheet![`E${row}`]?.v || 0),
 			categoryCode: String(worksheet![`F${row}`]?.v || 0),
@@ -285,8 +285,8 @@ export function validateParsedProduct({
 		supplierCodes.includes(Number(parsedProduct.supplierCode))
 	const hasValidStock =
 		isValidNumber(parsedProduct.stock) && Number(parsedProduct.stock) >= 0
-	const hasValidPrice =
-		isValidNumber(parsedProduct.price) && Number(parsedProduct.price) >= 0
+	const hasValidCost =
+		isValidNumber(parsedProduct.cost) && Number(parsedProduct.cost) >= 0
 	const hasValidSellingPrice =
 		isValidNumber(parsedProduct.sellingPrice) &&
 		Number(parsedProduct.sellingPrice) >= 0
@@ -313,7 +313,7 @@ export function validateParsedProduct({
 		!hasValidCategoryCode ||
 		!hasValidSupplierCode ||
 		!hasValidStock ||
-		!hasValidPrice ||
+		!hasValidCost ||
 		!hasValidSellingPrice
 	) {
 		errorMessage =
@@ -325,7 +325,7 @@ export function validateParsedProduct({
 		categoryId,
 		supplierId,
 		stock: hasValidStock ? Number(parsedProduct.stock) : 0,
-		price: hasValidPrice ? Number(parsedProduct.price) : 0,
+		cost: hasValidCost ? Number(parsedProduct.cost) : 0,
 		sellingPrice: hasValidSellingPrice ? Number(parsedProduct.sellingPrice) : 0,
 		errorMessage,
 	}

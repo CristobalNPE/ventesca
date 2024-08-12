@@ -76,7 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	await requireUserId(request)
+	const userId = await requireUserId(request)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
 
@@ -93,7 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			return await finishOrderAction(formData)
 		}
 		case modifyOrderActionIntent: {
-			return await modifyOrderAction(formData)
+			return await modifyOrderAction({ formData, sellerId: userId })
 		}
 		case deleteOrderActionIntent: {
 			return await deleteOrderAction(formData)

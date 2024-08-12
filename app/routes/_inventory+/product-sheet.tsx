@@ -32,7 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			name: true,
 			code: true,
 			stock: true,
-			price: true,
+			cost: true,
 			sellingPrice: true,
 			isActive: true,
 			supplier: { select: { fantasyName: true } },
@@ -90,7 +90,7 @@ export function ItemDetailsSheet({ itemId }: { itemId: string }) {
 							</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Valor'}>
-							<span>{formatCurrency(product.price)}</span>
+							<span>{formatCurrency(product.cost)}</span>
 						</SheetItem>
 						<SheetItem icon={'scan-barcode'} name={'Precio de Venta'}>
 							<span>{formatCurrency(product.sellingPrice)}</span>

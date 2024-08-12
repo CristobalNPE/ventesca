@@ -42,12 +42,12 @@ export default function ProductDetails() {
 
 	const profitMargin = calculateProfitMargin({
 		sellingPrice: product.sellingPrice,
-		cost: product.price,
+		cost: product.cost,
 	})
 
 	const markupPercentage = calculateMarkupPercentage({
 		sellingPrice: product.sellingPrice,
-		cost: product.price,
+		cost: product.cost,
 	})
 
 	return (
@@ -86,7 +86,7 @@ export default function ProductDetails() {
 				<CardContentItem
 					icon={'moneybag'}
 					title={'Costo'}
-					content={formatCurrency(product.price)}
+					content={formatCurrency(product.cost)}
 				/>
 				<CardContentItem
 					icon={'trending-up'}

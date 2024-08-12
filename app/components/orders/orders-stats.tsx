@@ -34,8 +34,8 @@ const chartConfig = {
 export function OrdersStats() {
 	const { dayEarnings, weekEarnings, weekDailyEarnings } = useOrders()
 	return (
-		<div className="flex w-full flex-col  gap-4 xl:max-w-[25rem]   ">
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1">
+		<div className="flex w-full flex-col  gap-4 xl:max-w-[25rem]">
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1">
 				<Card className="w-full">
 					<CardHeader className="pb-2">
 						<CardDescription>Ingresos hoy</CardDescription>

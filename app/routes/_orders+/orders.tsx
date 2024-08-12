@@ -121,8 +121,8 @@ export default function OrderReportsRoute() {
 		<OrdersProvider data={loaderData}>
 			<main className="flex h-full flex-col gap-4">
 				<OrdersHeader />
-				<div className="flex w-full flex-1 flex-col gap-4  lg:h-[48rem] lg:flex-row">
-					<div className="flex h-full w-full flex-1 flex-col gap-4  md:flex-row-reverse ">
+				<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
+					<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
 						<OrdersStats />
 						<OrdersReportsTable />
 					</div>

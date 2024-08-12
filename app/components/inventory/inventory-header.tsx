@@ -23,7 +23,7 @@ export function InventoryHeader({ isAdmin }: { isAdmin: boolean }) {
 
 function InventoryOptions() {
 	return (
-		<div className="mt-4 flex w-full flex-col gap-4 lg:mt-0 lg:max-w-[25rem] lg:flex-row-reverse">
+		<div className="mt-4 flex w-full flex-col justify-between gap-4  md:flex-row-reverse lg:mt-0">
 			<div className="flex w-full gap-1 ">
 				<CreateItemDialog />
 				<DropdownMenu>

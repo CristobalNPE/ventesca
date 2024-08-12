@@ -57,23 +57,23 @@ export function ModifySellingPriceDialog() {
 
 	const currentProfitMargin = calculateProfitMargin({
 		sellingPrice: product.sellingPrice,
-		cost: product.price,
+		cost: product.cost,
 	})
 	const currentMarkupPercentage = calculateMarkupPercentage({
 		sellingPrice: product.sellingPrice,
-		cost: product.price,
+		cost: product.cost,
 	})
 
 	const newSellingPrice = Number(fields.sellingPrice.value) ?? 0
 
 	const newProfitMargin = calculateProfitMargin({
 		sellingPrice: newSellingPrice,
-		cost: product.price,
+		cost: product.cost,
 	})
 
 	const newMarkupPercentage = calculateMarkupPercentage({
 		sellingPrice: newSellingPrice,
-		cost: product.price,
+		cost: product.cost,
 	})
 
 	const profitMarginDifference = newProfitMargin - currentProfitMargin
@@ -123,7 +123,7 @@ export function ModifySellingPriceDialog() {
 					<div className="grid gap-4 sm:grid-cols-3">
 						<div className="rounded-md  p-2 text-center">
 							<div className="text-xl font-bold">
-								{formatCurrency(product.price)}
+								{formatCurrency(product.cost)}
 							</div>
 							<span className="text-xs text-muted-foreground">
 								Precio de costo

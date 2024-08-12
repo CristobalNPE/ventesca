@@ -10,7 +10,7 @@ import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import {
 	getProductAlerts,
 	shouldDeactivateProduct,
-} from '#app/utils/inventory/product-status.js'
+} from '#app/utils/inventory/product-status.ts'
 
 import {
 	CreateItemSchema,
@@ -306,12 +306,12 @@ async function createSingleProductAction({
 			isActive: false,
 			name,
 			sellingPrice: DEFAULT_PRICE,
-			price: DEFAULT_PRICE,
+			cost: DEFAULT_PRICE,
 			category: { connect: { id: defaultCategory.id } },
 			supplier: { connect: { id: defaultSupplier.id } },
 			business: { connect: { id: businessId } },
 			stock: DEFAULT_STOCK,
-			productAnalytics: { create: {} },
+			productAnalytics: { create: { businessId } },
 		},
 	})
 

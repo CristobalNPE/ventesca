@@ -28,8 +28,8 @@ const defaultConfig: SeedConfig = {
 	usersPerBusiness: 5,
 	categoriesPerBusiness: 15,
 	suppliersPerBusiness: 5,
-	productsPerBusiness: 5000,
-	ordersPerBusiness: 20000,
+	productsPerBusiness: 500,
+	ordersPerBusiness: 2000,
 	discountsPerBusiness: 0,
 }
 
@@ -200,12 +200,12 @@ async function createProducts(
 				code: faker.string.nanoid(15),
 				name: faker.commerce.productName(),
 				sellingPrice: faker.number.int({ min: 1000, max: 100000 }),
-				price: faker.number.int({ min: 500, max: 50000 }),
+				cost: faker.number.int({ min: 500, max: 50000 }),
 				stock,
 				categoryId: faker.helpers.arrayElement(categories).id,
 				supplierId: faker.helpers.arrayElement(suppliers).id,
 				businessId,
-				productAnalytics: { create: {} },
+				productAnalytics: { create: { businessId } },
 			},
 		})
 	}
@@ -248,7 +248,7 @@ async function createOrders(businessId: string, count: number) {
 		)
 		const totalDiscount = faker.number.int({ min: 0, max: subtotal * 0.2 })
 
-		await prisma.order.create({
+		const createdOrder = await prisma.order.create({
 			data: {
 				status: faker.helpers.arrayElement([
 					OrderStatus.FINISHED,
@@ -274,6 +274,24 @@ async function createOrders(businessId: string, count: number) {
 						productId: product.id,
 					})),
 				},
+			},
+			select: {
+				id: true,
+				total: true,
+				productOrders: { select: { productDetails: true, quantity: true } },
+			},
+		})
+
+		const aggregateProductCost = createdOrder.productOrders.reduce(
+			(acc, productOrder) =>
+				acc + productOrder.productDetails.cost * productOrder.quantity,
+			0,
+		)
+
+		await prisma.order.update({
+			where: { id: createdOrder.id },
+			data: {
+				profit: createdOrder.total - aggregateProductCost,
 			},
 		})
 	}

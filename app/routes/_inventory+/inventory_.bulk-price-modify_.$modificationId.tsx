@@ -416,7 +416,7 @@ export default function BulkPriceModification() {
 												</TableCell>
 												<TableCell className="hidden text-right sm:table-cell">
 													{formatCurrency(
-														priceModifications.productAnalytics.product.price,
+														priceModifications.productAnalytics.product.cost,
 													)}
 												</TableCell>
 												<TableCell className="text-right text-muted-foreground line-through group-hover:no-underline ">
@@ -939,7 +939,7 @@ type PriceModification = {
 		} & {
 			id: string
 			name: string
-			price: number
+			cost: number
 			code: string
 			stock: number
 		}

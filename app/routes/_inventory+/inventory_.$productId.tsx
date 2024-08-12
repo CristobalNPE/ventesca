@@ -33,7 +33,6 @@ import { processPriceHistory } from '#app/utils/inventory/product-calculations.j
 import { getProductAlerts } from '#app/utils/inventory/product-status.js'
 import { userIsAdmin } from '#app/utils/user.ts'
 import { useState } from 'react'
-import { DiscountScope } from '../../types/discounts/discount-scope.ts'
 import { DeleteProductConfirmationModal } from '../../components/inventory/product-delete.tsx'
 import { ProductDiscountsCard } from '../../components/inventory/product-discounts.tsx'
 import { ModifyCategorySelect } from '../../components/inventory/product-modify-category.tsx'
@@ -44,6 +43,7 @@ import { ModifySupplierSelect } from '../../components/inventory/product-modify-
 import { PriceModificationHistoryCard } from '../../components/inventory/product-price-modification-history.tsx'
 import { ChartsCard } from '../../components/inventory/product-sales-chart.tsx'
 import { ProductContext } from '../../context/inventory/ProductContext.tsx'
+import { DiscountScope } from '../../types/discounts/discount-scope.ts'
 import {
 	getCurrentWeekProductSales,
 	softDeleteProduct,
@@ -62,7 +62,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			isActive: true,
 			code: true,
 			name: true,
-			price: true,
+			cost: true,
 			stock: true,
 			createdAt: true,
 			updatedAt: true,
@@ -179,6 +179,8 @@ export default function ProductRoute() {
 	const alerts = getProductAlerts(product)
 
 	const processedPriceHistory = processPriceHistory(priceHistory)
+	const totalSales = product.productAnalytics?.totalSales ?? 0
+	const totalReturns = product.productAnalytics?.totalReturns ?? 0
 
 	return (
 		<ProductContext.Provider value={{ product, isAdmin }}>
@@ -275,21 +277,21 @@ export default function ProductRoute() {
 				</div>
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 					<MetricCard
-						title={'Ventas Totales'}
-						description="Cantidad total de unidades vendidas."
-						value={product.productAnalytics?.totalSales ?? 0}
+						title={'Ventas Netas'}
+						description="Ventas ajustada por devoluciones."
+						value={totalSales}
 						icon={'shopping-bag'}
 					/>
 					<MetricCard
 						title={'Devoluciones'}
-						description="Cantidad total de unidades devueltas."
-						value={product.productAnalytics?.totalReturns ?? 0}
+						description="Total de unidades devueltas."
+						value={totalReturns}
 						icon={'reset'}
 					/>
 					<div className="md:col-span-2 xl:col-span-1 ">
 						<MetricCard
 							title={'Ganancias'}
-							description="Total de ganancias generadas."
+							description={`Generadas en ${totalSales + totalReturns} transacciones.`}
 							value={formatCurrency(product.productAnalytics?.totalProfit ?? 0)}
 							icon={'moneybag'}
 						/>

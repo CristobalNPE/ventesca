@@ -45,7 +45,7 @@ export const ProductDetailsEditorSchema = z.object({
 	code: z.string({
 		required_error: 'Campo obligatorio',
 	}),
-	price: z
+	cost: z
 		.number({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
@@ -97,12 +97,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		)
 	}
 
-	const { productId, code, name, price } = submission.value
+	const { productId, code, name, cost } = submission.value
 
 	prisma.$transaction(async tx => {
 		const updatedProduct = await tx.product.update({
 			where: { id: productId },
-			data: { code, name, price },
+			data: { code, name, cost },
 		})
 		if (shouldDeactivateProduct(updatedProduct)) {
 			await tx.product.update({
@@ -134,7 +134,7 @@ export default function ProductDetails() {
 		defaultValue: {
 			code: product.code,
 			name: product.name,
-			price: product.price,
+			cost: product.cost,
 		},
 	})
 
@@ -184,14 +184,14 @@ export default function ProductDetails() {
 						children: `Costo`,
 					}}
 					inputProps={{
-						...getInputProps(fields.price, {
+						...getInputProps(fields.cost, {
 							ariaAttributes: true,
 							type: 'text',
 						}),
 
 						autoComplete: 'off',
 					}}
-					errors={fields.price.errors}
+					errors={fields.cost.errors}
 				/>
 				<Form method="post" {...getFormProps(form)}>
 					<input type="hidden" name="productId" value={product.id} />

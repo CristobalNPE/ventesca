@@ -8,7 +8,7 @@ type ProductContextType = {
 		| 'sellingPrice'
 		| 'stock'
 		| 'isActive'
-		| 'price'
+		| 'cost'
 		| 'categoryId'
 		| 'supplierId'
 	>

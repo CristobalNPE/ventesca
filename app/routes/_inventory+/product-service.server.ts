@@ -32,11 +32,11 @@ export async function updateProductStockAndAnalytics({
 	for (let productOrder of productOrders) {
 		const product = await prismaClient.product.findUniqueOrThrow({
 			where: { id: productOrder.productId },
-			select: { stock: true, price: true, sellingPrice: true },
+			select: { stock: true, cost: true, sellingPrice: true },
 		})
 
 		//!Need to check for discounts as well, be it global or product tied.
-		const profitPerUnit = product.sellingPrice - product.price
+		const profitPerUnit = product.sellingPrice - product.cost
 		const totalProfit = profitPerUnit * productOrder.quantity
 
 		let stockChange = 0
@@ -94,6 +94,7 @@ export async function updateProductStockAndAnalytics({
 
 		const update: Prisma.ProductUpdateInput = {
 			stock: { increment: stockChange },
+
 			productAnalytics: {
 				update: {
 					data: {
@@ -108,6 +109,23 @@ export async function updateProductStockAndAnalytics({
 		await prismaClient.product.update({
 			where: { id: productOrder.productId },
 			data: update,
+		})
+
+		// productOrder.type === ProductOrderType.RETURN
+		// 	? acc + productOrder.productDetails.cost * productOrder.quantity
+		// 	: acc - productOrder.productDetails.cost * productOrder.quantity
+
+		await prismaClient.productOrder.update({
+			where: { id: productOrder.id },
+			//?: Is this ok?
+			data: {
+				profit:
+					productOrder.totalPrice -
+					productOrder.totalDiscount +
+					(productOrder.type === ProductOrderType.RETURN
+						? product.cost * productOrder.quantity
+						: product.cost * productOrder.quantity * -1),
+			},
 		})
 	}
 }
@@ -202,7 +220,7 @@ export async function getInventoryValueByCategory(businessId: string) {
 				},
 				select: {
 					sellingPrice: true,
-					price: true,
+					cost: true,
 					stock: true,
 				},
 			},
@@ -215,7 +233,7 @@ export async function getInventoryValueByCategory(businessId: string) {
 		let totalItems = 0
 
 		category.products.forEach(product => {
-			totalValue += product.price * product.stock
+			totalValue += product.cost * product.stock
 			totalSellingValue += product.sellingPrice * product.stock
 			totalItems += product.stock
 		})
@@ -267,9 +285,15 @@ export async function getInventoryValueByCategory(businessId: string) {
 }
 
 export async function softDeleteProduct(productId: string) {
-	return prisma.product.update({
+	const product = await prisma.product.findUniqueOrThrow({
+		where: { id: productId },
+		select: { code: true },
+	})
+
+	return await prisma.product.update({
 		where: { id: productId },
 		data: {
+			code: `REMOVED-${new Date().toISOString()}-${product.code}`,
 			isActive: false,
 			isDeleted: true,
 			deletedAt: new Date(),

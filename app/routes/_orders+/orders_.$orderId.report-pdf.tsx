@@ -35,7 +35,7 @@ export type TransactionReportDataType = {
 		productDetails: {
 			id: string
 			name: string
-			price: number
+			cost: number
 			stock: number
 			sellingPrice: number
 
@@ -75,7 +75,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 						select: {
 							id: true,
 							name: true,
-							price: true,
+							cost: true,
 							stock: true,
 							sellingPrice: true,
 							category: { select: { description: true, id: true } },

@@ -48,7 +48,7 @@ model Product {
   code             String
   name             String
   sellingPrice     Int
-  price            Int
+  cost             Int
   stock            Int
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -81,10 +81,14 @@ model ProductAnalytics {
   totalReturns Int                 @default(0)
   priceHistory PriceModification[]
 
+  business   Business @relation(fields: [businessId], references: [id])
+  businessId String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([createdAt])
+  @@index([businessId])
 }
 
 model PriceModification {
@@ -127,22 +131,23 @@ model BulkPriceModification {
 }
 
 model Order {
-  id             String     @id @default(cuid())
+  id             String         @id @default(cuid())
   status         String // e.g. pending, canceled, completed
   paymentMethod  String // e.g. cash, credit, debit
   subtotal       Int
   total          Int
+  profit         Int            @default(0)
   totalDiscount  Int
   directDiscount Int
   discounts      Discount[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  completedAt   DateTime       @default(now())
-  productOrders ProductOrder[]
-  seller        User           @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  sellerId      String
-  business      Business       @relation(fields: [businessId], references: [id])
-  businessId    String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  completedAt    DateTime       @default(now())
+  productOrders  ProductOrder[]
+  seller         User           @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sellerId       String
+  business       Business       @relation(fields: [businessId], references: [id])
+  businessId     String
 }
 
 model ProductOrder {
@@ -151,6 +156,7 @@ model ProductOrder {
   type           String // e.g. sale, loan, return
   totalPrice     Int
   totalDiscount  Int
+  profit         Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   productDetails Product  @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -191,6 +197,7 @@ model Business {
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   products               Product[]
+  productAnalytics       ProductAnalytics[]
   orders                 Order[]
   categories             Category[]
   suppliers              Supplier[]

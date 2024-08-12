@@ -36,7 +36,7 @@ export function MetricCard({
 	isNegative,
 }: MetricCardProps) {
 	return (
-		<Card className="rounded-lg bg-background p-6 shadow-sm">
+		<Card className="rounded-lg bg-background p-6 shadow-sm h-full grid">
 			<div className="flex items-center justify-between gap-4 md:gap-2">
 				<div className="flex items-center gap-4">
 					<div
@@ -110,7 +110,7 @@ export function EditableMetricCard({
 			<DialogTrigger asChild>
 				<Card
 					className={cn(
-						'group relative cursor-pointer rounded-lg bg-background transition-all duration-300 hover:-translate-y-1 hover:border-primary',
+						'group relative cursor-pointer rounded-lg bg-background transition-all duration-300 hover:-translate-y-1 hover:border-primary ',
 					)}
 					onClick={undefined}
 				>

@@ -1,6 +1,6 @@
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
+import { formatCurrency, getBusinessImgSrc } from '#app/utils/misc.tsx'
 import { Prisma } from '@prisma/client'
 import * as QRCode from 'qrcode'
 
@@ -126,13 +126,18 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	const qrCode = await QRCode.toDataURL(orderData.id)
 
+	const imageblob = businessData.image?.blob ?? null
+	const imageDataUrl = imageblob ? await blobToDataURL(imageblob) : undefined
+
 	let stream = await renderToStream(
 		<Receipt
 			businessData={businessData}
 			orderData={orderData}
 			qrCode={qrCode}
+			businessLogo={imageDataUrl}
 		/>,
 	)
+
 
 	let body: Buffer = await new Promise((resolve, reject) => {
 		let buffers: Uint8Array[] = []
@@ -152,25 +157,26 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 const styles = StyleSheet.create({
 	page: {
 		padding: 7,
-		fontSize: 6,
+		fontSize: 7,
 		fontFamily: 'B612 Mono',
-		letterSpacing: '-0.5px',
+		letterSpacing: '-0.3px',
 	},
 	header: {
 		marginBottom: 10,
 		textAlign: 'center',
 	},
 	title: {
-		fontSize: 10,
+		fontSize: 11,
 		fontWeight: 700,
 	},
 	section: {
-		fontSize: 6,
+		fontSize: 7,
 		marginBottom: 10,
 	},
 	totalSection: {
 		fontSize: 8,
 		marginTop: 6,
+		marginRight: 5,
 		marginBottom: 10,
 	},
 	table: {
@@ -184,6 +190,7 @@ const styles = StyleSheet.create({
 	},
 	tableRow: {
 		flexDirection: 'row',
+		marginBottom: '3px',
 	},
 	tableHeader: {
 		flexDirection: 'row',
@@ -198,10 +205,11 @@ const styles = StyleSheet.create({
 		borderLeftWidth: 0,
 		borderTopWidth: 0,
 		padding: 1,
+		fontSize: 7,
 	},
 
 	tableDescription: {
-		width: '40%',
+		width: '45%',
 
 		borderStyle: 'solid',
 		borderWidth: 1,
@@ -213,7 +221,7 @@ const styles = StyleSheet.create({
 		overflow: 'hidden',
 	},
 	tableCode: {
-		width: '25%',
+		width: '65%',
 		borderStyle: 'solid',
 		borderWidth: 1,
 		borderColor: 'white',
@@ -273,16 +281,21 @@ const Receipt = ({
 	orderData,
 	businessData,
 	qrCode,
+	businessLogo
 }: {
 	orderData: ReceiptOrderData
 	businessData: BusinessData
 	qrCode: string
+	businessLogo?: string
 }) => {
 	const currentDate = new Date()
 	const date =
 		orderData.createdAt.getTime() === orderData.completedAt.getTime()
 			? currentDate
 			: orderData.completedAt
+
+
+
 
 	return (
 		<Document
@@ -292,6 +305,19 @@ const Receipt = ({
 		>
 			<Page size={`A7`} wrap={false} style={styles.page}>
 				{/* Header */}
+				{businessLogo && (
+					<Image
+						source={businessLogo}
+						style={{
+							width: 50,
+							height: 50,
+							borderRadius: '10px',
+							marginHorizontal: 'auto',
+							border: '2px solid black',
+							marginBottom:'3px'
+						}}
+					/>
+				)}
 				<View style={styles.header}>
 					<Text style={styles.title}>{businessData.name}</Text>
 					<Text>{businessData.address}</Text>
@@ -313,11 +339,11 @@ const Receipt = ({
 				<View style={styles.table}>
 					<View style={styles.tableHeader}>
 						<View style={styles.tableCode}>
-							<Text>CÓDIGO</Text>
+							<Text>CÓDIGO | DESCRIPCIÓN</Text>
 						</View>
-						<View style={styles.tableDescription}>
+						{/* <View style={styles.tableDescription}>
 							<Text>DESCRIPCIÓN</Text>
-						</View>
+						</View> */}
 						<View style={styles.tableCol}>
 							<Text>VALOR</Text>
 						</View>
@@ -328,9 +354,9 @@ const Receipt = ({
 					{orderData.productOrders.map(productOrder => (
 						<View style={styles.tableRow} key={productOrder.id}>
 							<View style={styles.tableCode}>
-								<Text>{productOrder.productDetails.code}</Text>
-							</View>
-							<View style={styles.tableDescription}>
+								<Text style={{ fontSize: 7 }}>
+									{productOrder.productDetails.code}
+								</Text>
 								<Text>
 									{productOrder.type === ProductOrderType.RETURN
 										? `DEVOL `
@@ -341,15 +367,31 @@ const Receipt = ({
 										? `${productOrder.quantity} X `
 										: null}
 									{productOrder.productDetails.name}
-									{/* {productOrder.productDetails.name.replaceAll(' ', '\t')} */}
 								</Text>
 							</View>
+							{/* <View style={styles.tableDescription}>
+								<Text>
+									{productOrder.type === ProductOrderType.RETURN
+										? `DEVOL `
+										: productOrder.type === ProductOrderType.PROMO
+											? 'PROMO '
+											: null}
+									{productOrder.quantity > 1
+										? `${productOrder.quantity} X `
+										: null}
+									{productOrder.productDetails.name}
+						
+								</Text>
+							</View> */}
 							<View style={styles.tableCol}>
+								<Text> </Text>
 								<Text>{formatCurrency(productOrder.totalPrice)}</Text>
 							</View>
 							<View style={styles.tableCol}>
+								<Text> </Text>
 								<Text>
-									{(productOrder.totalDiscount > 0 && productOrder.type === ProductOrderType.PROMO)
+									{productOrder.totalDiscount > 0 &&
+									productOrder.type === ProductOrderType.PROMO
 										? `-${formatCurrency(productOrder.totalDiscount)}`
 										: null}
 								</Text>
@@ -418,7 +460,7 @@ const Receipt = ({
 					</View>
 					<View style={styles.totalContainer}>
 						<Text style={styles.total}>Total : </Text>
-						<Text style={styles.wideTextContainer}>
+						<Text style={{ ...styles.wideTextContainer, fontWeight: 700 }}>
 							{formatCurrency(orderData.total)}
 						</Text>
 					</View>
@@ -435,4 +477,13 @@ const Receipt = ({
 			</Page>
 		</Document>
 	)
+}
+
+async function blobToDataURL(blob: Buffer): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const base64 = blob.toString('base64');
+    const mimeType = 'image/jpeg'; // Adjust this based on your image type
+    const dataURL = `data:${mimeType};base64,${base64}`;
+    resolve(dataURL);
+  });
 }

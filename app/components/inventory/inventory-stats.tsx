@@ -36,9 +36,19 @@ export function InventoryStats() {
 	const { stockData, bestSeller, mostProfit, hasActiveProducts } =
 		useInventory()
 
-	const zeroStockProducts = stockData.zeroStockProducts.length
-	const lowStockProducts = stockData.lowStockProducts.length
+	const zeroStockProducts = stockData.zeroStockProducts.length > 0
+	const lowStockProducts = stockData.lowStockProducts.length > 0
 
+	return (
+		<div className="flex w-full flex-col gap-3 xl:max-w-[25rem]">
+			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-1">
+				{zeroStockProducts ? <ZeroStockAlert /> : null}
+				{lowStockProducts && !zeroStockProducts ? <LowStockAlert /> : null}
+				{bestSeller && mostProfit ? <TopStatsTabs /> : null}
+			</div>
+			{hasActiveProducts && <InventoryValueChartCard />}
+		</div>
+	)
 	return (
 		<div className="flex w-full flex-col gap-3 xl:max-w-[25rem]">
 			{zeroStockProducts ? <ZeroStockAlert /> : null}

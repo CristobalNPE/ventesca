@@ -109,7 +109,7 @@ export default function DiscountsPage() {
 			</div>
 			<Spacer size={'4xs'} />
 			<div className="flex flex-col  ">
-				<div className="grid gap-4 md:grid-cols-2 md:gap-8">
+				{/* <div className="grid gap-4 md:grid-cols-2 md:gap-8">
 					<DataCard
 						title={'Descuentos Activos'}
 						value={amountOfActiveDiscounts.toString()}
@@ -122,8 +122,8 @@ export default function DiscountsPage() {
 						icon={'tag'}
 						subtext={'Utilizado 42 veces.'}
 					/>
-				</div>
-				<Spacer size={'4xs'} />
+				</div> */}
+				{/* <Spacer size={'4xs'} /> */}
 				<DiscountsTableCard totalDiscounts={0} discounts={discounts} />
 			</div>
 		</main>
