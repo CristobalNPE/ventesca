@@ -1,6 +1,6 @@
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency, getBusinessImgSrc } from '#app/utils/misc.tsx'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { Prisma } from '@prisma/client'
 import * as QRCode from 'qrcode'
 
@@ -126,18 +126,19 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	const qrCode = await QRCode.toDataURL(orderData.id)
 
-	const imageblob = businessData.image?.blob ?? null
-	const imageDataUrl = imageblob ? await blobToDataURL(imageblob) : undefined
+	const businessLogoBlob = businessData.image?.blob ?? null
+	const businessLogoDatUrl = businessLogoBlob
+		? await blobToDataURL(businessLogoBlob)
+		: undefined
 
 	let stream = await renderToStream(
 		<Receipt
 			businessData={businessData}
 			orderData={orderData}
 			qrCode={qrCode}
-			businessLogo={imageDataUrl}
+			businessLogo={businessLogoDatUrl}
 		/>,
 	)
-
 
 	let body: Buffer = await new Promise((resolve, reject) => {
 		let buffers: Uint8Array[] = []
@@ -281,7 +282,7 @@ const Receipt = ({
 	orderData,
 	businessData,
 	qrCode,
-	businessLogo
+	businessLogo,
 }: {
 	orderData: ReceiptOrderData
 	businessData: BusinessData
@@ -293,9 +294,6 @@ const Receipt = ({
 		orderData.createdAt.getTime() === orderData.completedAt.getTime()
 			? currentDate
 			: orderData.completedAt
-
-
-
 
 	return (
 		<Document
@@ -313,8 +311,7 @@ const Receipt = ({
 							height: 50,
 							borderRadius: '10px',
 							marginHorizontal: 'auto',
-							border: '2px solid black',
-							marginBottom:'3px'
+							marginBottom: '3px',
 						}}
 					/>
 				)}
@@ -480,10 +477,10 @@ const Receipt = ({
 }
 
 async function blobToDataURL(blob: Buffer): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const base64 = blob.toString('base64');
-    const mimeType = 'image/jpeg'; // Adjust this based on your image type
-    const dataURL = `data:${mimeType};base64,${base64}`;
-    resolve(dataURL);
-  });
+	return new Promise((resolve, reject) => {
+		const base64 = blob.toString('base64')
+		const mimeType = 'image/jpeg' // Adjust this based on your image type
+		const dataURL = `data:${mimeType};base64,${base64}`
+		resolve(dataURL)
+	})
 }
