@@ -23,11 +23,14 @@ export async function getTopSellerStatsForWeek({
 	const start = startOfWeek(referenceDay, { weekStartsOn: 1 })
 	const end = endOfWeek(start, { weekStartsOn: 1 })
 
-	const sellerStats = await getSellersStats({
-		businessId,
-		startDate: start,
-		endDate: end,
-	})
+	const sellerStats =
+		(await getSellersStats({
+			businessId,
+			startDate: start,
+			endDate: end,
+		})) ?? []
+
+	if (sellerStats.length === 0) return null
 
 	const topSeller = sellerStats.reduce((topSeller, seller) => {
 		return seller.totalTransactions > topSeller.totalTransactions
@@ -77,6 +80,8 @@ async function getSellersStats({
 		profitGenerated: number
 		averageTransactionTime: number
 	}
+
+	if (orders.length === 0) return null
 
 	const sellerStats = orders.reduce<Record<string, SellerStats>>(
 		(acc, order) => {

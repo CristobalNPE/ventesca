@@ -278,7 +278,7 @@ export default function ProductRoute() {
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 					<MetricCard
 						title={'Ventas Netas'}
-						description="Ventas ajustada por devoluciones."
+						description="Total de ventas ajustado por devoluciones."
 						value={totalSales}
 						icon={'shopping-bag'}
 					/>

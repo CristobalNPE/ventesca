@@ -11,6 +11,9 @@ import { Icon, IconName } from '../ui/icon'
 
 export function TopSellerCard() {
 	const { sellerStatsForWeek } = useAnalytics()
+
+	if (!sellerStatsForWeek) return null
+
 	const sellerDisplayName =
 		sellerStatsForWeek.sellerData.name ?? sellerStatsForWeek.sellerData.username
 

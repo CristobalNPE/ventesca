@@ -57,39 +57,17 @@ export default function Dashboard() {
 			<Spacer size="4xs" />
 			<main className="grid gap-6  xl:grid-cols-7">
 				<div className="grid gap-y-6 xl:col-span-5 xl:grid-cols-5  xl:gap-x-6">
-					<div className="xl:col-span-2 grid gap-6 ">
+					<div className="grid gap-6 xl:col-span-2 ">
 						<TotalProfit />
 						<TotalOrders />
 						<ProfitLineCharts />
 					</div>
-					<div className="xl:col-span-3 grid gap-6 ">
+					<div className="grid gap-6 xl:col-span-3 ">
 						<WeeklyTransactionsLineChart />
 						<TopSellerCard />
 					</div>
 				</div>
 				<div className="grid gap-6 xl:col-span-2">
-					<TopSellingProductsBarChart />
-				</div>
-			</main>
-		</AnalyticsProvider>
-	)
-	return (
-		<AnalyticsProvider data={loaderData}>
-			<AnalyticsHeader />
-			<Spacer size="4xs" />
-			<main className="grid gap-6  sm:grid-cols-7">
-				<div className="grid gap-y-6 sm:col-span-5 sm:grid-cols-5  sm:gap-x-6">
-					<div className="col-span-2 grid gap-6 ">
-						<TotalProfit />
-						<TotalOrders />
-						<ProfitLineCharts />
-					</div>
-					<div className="col-span-3 grid gap-6 ">
-						<WeeklyTransactionsLineChart />
-						<TopSellerCard />
-					</div>
-				</div>
-				<div className="grid gap-6 sm:col-span-2">
 					<TopSellingProductsBarChart />
 				</div>
 			</main>
