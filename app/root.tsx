@@ -330,15 +330,8 @@ function App() {
 				)}
 
 				<main className="mx-auto  h-[98.5dvh] max-w-[120rem] flex-1 overflow-y-auto bg-muted/40 p-4 shadow-sm sm:p-5 md:m-2 md:rounded-md md:border  md:p-7">
-					{/* <main className="flex-1 overflow-y-auto  bg-muted/40 p-4 sm:p-5 md:m-2 md:rounded-md md:border md:p-7"> */}
-					{/* <div className="lg:hidden ">
-						<Spacer size="xs" />
-					</div> */}
-					{/* <div className="mx-auto h-full max-w-[120rem]"> */}
-
 					<Outlet />
 				</main>
-				{/* </div> */}
 			</div>
 			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
@@ -444,12 +437,12 @@ function BusinessLogo({ businessLogo }: { businessLogo: string | null }) {
 	return (
 		<div className="flex  h-[3rem] w-[3rem] flex-shrink-0 overflow-clip rounded-md opacity-90 drop-shadow-md  2xl:h-[3.8rem] 2xl:w-[3.8rem]">
 			<img
-				className="object-cover2 hidden dark:flex"
+				className="object-cover2 hidden contrast-150 dark:flex"
 				src={businessLogo ? getBusinessImgSrc(businessLogo) : VentescaLogoLight}
 				alt="Ventesca Logo"
 			/>
 			<img
-				className="object-cover2 flex dark:hidden"
+				className="object-cover2 flex contrast-150 dark:hidden"
 				src={businessLogo ? getBusinessImgSrc(businessLogo) : VentescaLogoDark}
 				alt="Ventesca Logo"
 			/>
