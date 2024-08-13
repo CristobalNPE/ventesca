@@ -1,33 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Note` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `NoteImage` table. If the table is not empty, all the data it contains will be lost.
-  - Added the required column `businessId` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `browser` to the `Session` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `os` to the `Session` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `version` to the `Session` table without a default value. This is not possible if the table is not empty.
-
-*/
--- DropIndex
-DROP INDEX "Note_ownerId_updatedAt_idx";
-
--- DropIndex
-DROP INDEX "Note_ownerId_idx";
-
--- DropIndex
-DROP INDEX "NoteImage_noteId_idx";
-
--- DropTable
-PRAGMA foreign_keys=off;
-DROP TABLE "Note";
-PRAGMA foreign_keys=on;
-
--- DropTable
-PRAGMA foreign_keys=off;
-DROP TABLE "NoteImage";
-PRAGMA foreign_keys=on;
-
 -- CreateTable
 CREATE TABLE "Category" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -194,6 +164,32 @@ CREATE TABLE "Business" (
 );
 
 -- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "email" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+    "name" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "businessId" TEXT NOT NULL,
+    CONSTRAINT "User_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "UserImage" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "altText" TEXT,
+    "contentType" TEXT NOT NULL,
+    "blob" BLOB NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "UserImage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "BusinessLogoImage" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "altText" TEXT,
@@ -203,6 +199,60 @@ CREATE TABLE "BusinessLogoImage" (
     "updatedAt" DATETIME NOT NULL,
     "businessId" TEXT NOT NULL,
     CONSTRAINT "BusinessLogoImage_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Password" (
+    "hash" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "Password_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Session" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "expirationDate" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "browser" TEXT NOT NULL,
+    "version" TEXT NOT NULL,
+    "os" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Role" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Verification" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "type" TEXT NOT NULL,
+    "target" TEXT NOT NULL,
+    "secret" TEXT NOT NULL,
+    "algorithm" TEXT NOT NULL,
+    "digits" INTEGER NOT NULL,
+    "period" INTEGER NOT NULL,
+    "charSet" TEXT NOT NULL,
+    "expiresAt" DATETIME
+);
+
+-- CreateTable
+CREATE TABLE "Connection" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "providerName" TEXT NOT NULL,
+    "providerId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "Connection_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -221,43 +271,13 @@ CREATE TABLE "_DiscountToOrder" (
     CONSTRAINT "_DiscountToOrder_B_fkey" FOREIGN KEY ("B") REFERENCES "Order" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- RedefineTables
-PRAGMA foreign_keys=OFF;
-CREATE TABLE "new_User" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
-    "name" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "businessId" TEXT NOT NULL,
-    CONSTRAINT "User_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+-- CreateTable
+CREATE TABLE "_RoleToUser" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+    CONSTRAINT "_RoleToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Role" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "_RoleToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
-INSERT INTO "new_User" ("createdAt", "email", "id", "name", "updatedAt", "username") SELECT "createdAt", "email", "id", "name", "updatedAt", "username" FROM "User";
-DROP TABLE "User";
-ALTER TABLE "new_User" RENAME TO "User";
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
-CREATE TABLE "new_Session" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "expirationDate" DATETIME NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "browser" TEXT NOT NULL,
-    "version" TEXT NOT NULL,
-    "os" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-INSERT INTO "new_Session" ("createdAt", "expirationDate", "id", "updatedAt", "userId") SELECT "createdAt", "expirationDate", "id", "updatedAt", "userId" FROM "Session";
-DROP TABLE "Session";
-ALTER TABLE "new_Session" RENAME TO "Session";
-CREATE INDEX "Session_userId_idx" ON "Session"("userId");
-PRAGMA foreign_key_check("User");
-PRAGMA foreign_key_check("Session");
-PRAGMA foreign_keys=ON;
 
 -- CreateIndex
 CREATE INDEX "Product_isDeleted_idx" ON "Product"("isDeleted");
@@ -299,7 +319,31 @@ CREATE INDEX "BulkPriceModification_executedAt_idx" ON "BulkPriceModification"("
 CREATE UNIQUE INDEX "ProductOrder_productId_orderId_key" ON "ProductOrder"("productId", "orderId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserImage_userId_key" ON "UserImage"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "BusinessLogoImage_businessId_key" ON "BusinessLogoImage"("businessId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Password_userId_key" ON "Password"("userId");
+
+-- CreateIndex
+CREATE INDEX "Session_userId_idx" ON "Session"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Verification_target_type_key" ON "Verification"("target", "type");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Connection_providerName_providerId_key" ON "Connection"("providerName", "providerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_DiscountToProduct_AB_unique" ON "_DiscountToProduct"("A", "B");
@@ -313,6 +357,12 @@ CREATE UNIQUE INDEX "_DiscountToOrder_AB_unique" ON "_DiscountToOrder"("A", "B")
 -- CreateIndex
 CREATE INDEX "_DiscountToOrder_B_index" ON "_DiscountToOrder"("B");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "_RoleToUser_AB_unique" ON "_RoleToUser"("A", "B");
 
-INSERT INTO Role VALUES('clnf2zvlw000gpcour6dyyuh6','Administrador','',1696625465540,1696625465540);
-INSERT INTO Role VALUES('clnf2zvlx000hpcou5dfrbegs','Vendedor','',1696625465542,1696625465542);
+-- CreateIndex
+CREATE INDEX "_RoleToUser_B_index" ON "_RoleToUser"("B");
+
+
+INSERT INTO Role VALUES('clzsyjov40000j9txwgnop6p4','Administrador','',1723585906336,1723585906336);
+INSERT INTO Role VALUES('clzsyjovb0001j9txwtn0jgk7','Vendedor','',1723585906344,1723585906344);
