@@ -5,10 +5,9 @@ import { Authenticator } from 'remix-auth'
 import { safeRedirect } from 'remix-utils/safe-redirect'
 import { connectionSessionStorage, providers } from './connections.server.ts'
 import { prisma } from './db.server.ts'
-import { combineHeaders, downloadFile } from './misc.tsx'
+import { combineHeaders, downloadFile, generateHexColor } from './misc.tsx'
 import { type ProviderUser } from './providers/provider.ts'
 import { authSessionStorage } from './session.server.ts'
-import { faker } from '@faker-js/faker'
 
 export const SESSION_EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 30
 export const getSessionExpirationDate = () =>
@@ -324,7 +323,7 @@ export async function getDefaultCategory({
 
 	return await prisma.category.create({
 		data: {
-			colorCode: faker.color.rgb(),
+			colorCode: generateHexColor(),
 			code: 0,
 			description: 'General',
 			business: { connect: { id: businessId } },

@@ -19,6 +19,20 @@ export function formatCurrency(amountToFormat: number | null) {
 export function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1)
 }
+
+export function generateHexColor() {
+	const r = Math.floor(Math.random() * 256)
+		.toString(16)
+		.padStart(2, '0')
+	const g = Math.floor(Math.random() * 256)
+		.toString(16)
+		.padStart(2, '0')
+	const b = Math.floor(Math.random() * 256)
+		.toString(16)
+		.padStart(2, '0')
+	return `#${r}${g}${b}`
+}
+
 export function isValidNumber(input: string) {
 	const parsed = parseInt(input)
 	// Check if the parsed value is a number and if the input string is not empty or just spaces
