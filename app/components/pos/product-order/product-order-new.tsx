@@ -22,6 +22,7 @@ import {
 } from 'react'
 import { z } from 'zod'
 import { addProductOrderActionType } from '#app/routes/pos+/product-order-actions.js'
+import { toast } from 'sonner'
 
 
 export const addProductOrderActionIntent = 'add-product-order'
@@ -67,6 +68,13 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 				input.select()
 			}
 		}, [data?.status, fetcher.state])
+
+
+		useEffect(() => {
+			if (data?.status && data?.status !== 'success'){
+				toast.info(data?.message)
+			}
+		}, [data?.status]);
 
 		return (
 			<div className="flex items-center gap-4 ">
@@ -158,7 +166,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 					</Tooltip>
 				</TooltipProvider>
 
-				{data?.status && data?.status !== 'success' ? (
+				{/* {data?.status && data?.status !== 'success' ? (
 					<div
 						className={cn(
 							'flex select-none items-center gap-2 rounded-md bg-destructive p-2 text-xs text-destructive-foreground',
@@ -176,7 +184,7 @@ export const ProductReader = forwardRef<HTMLInputElement, ProductReaderProps>(
 						/>
 						<span>{data?.message}</span>
 					</div>
-				) : null}
+				) : null} */}
 			</div>
 		)
 	},
