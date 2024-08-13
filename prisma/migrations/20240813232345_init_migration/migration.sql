@@ -364,5 +364,6 @@ CREATE UNIQUE INDEX "_RoleToUser_AB_unique" ON "_RoleToUser"("A", "B");
 CREATE INDEX "_RoleToUser_B_index" ON "_RoleToUser"("B");
 
 
+
 INSERT INTO Role VALUES('clzsyjov40000j9txwgnop6p4','Administrador','',1723585906336,1723585906336);
 INSERT INTO Role VALUES('clzsyjovb0001j9txwtn0jgk7','Vendedor','',1723585906344,1723585906344);
