@@ -195,7 +195,7 @@ export default function ProfileRoute() {
 						) : null}
 					</div>
 					<Spacer size="3xs" />
-					<div className="flex flex-wrap justify-center gap-6 ">
+					{/* <div className="flex flex-wrap justify-center gap-6 ">
 						<Card className="grid w-full max-w-lg  gap-6 p-6 ">
 							<div className="flex items-center gap-4">
 								<div className="flex items-center justify-center rounded-md bg-primary p-3">
@@ -250,7 +250,7 @@ export default function ProfileRoute() {
 								</div>
 							</div>
 						</Card>
-					</div>
+					</div> */}
 
 					<Spacer size="xs" />
 					<Button variant={'default'} size={'pill'} asChild>
