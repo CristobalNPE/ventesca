@@ -1,4 +1,4 @@
-app = "ventesca-v1"
+app = "ventesca"
 primary_region = "scl"
 kill_signal = "SIGINT"
 kill_timeout = 5
@@ -16,7 +16,6 @@ destination = "/data"
 [build]
 dockerfile = "/other/Dockerfile"
 ignorefile = "/other/Dockerfile.dockerignore"
-
 
 [[services]]
 internal_port = 8_080
@@ -55,8 +54,8 @@ script_checks = [ ]
   headers = { }
 
   [[services.http_checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/litefs/health"
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/litefs/health"
