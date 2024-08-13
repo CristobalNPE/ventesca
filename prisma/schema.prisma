@@ -109,7 +109,7 @@ model PriceModification {
 
 model BulkPriceModification {
   id                    String              @id @default(cuid())
-  status                String //executed/reverted
+  status                String //executed/revertedd
   createdAt             DateTime            @default(now())
   executedAt            DateTime?
   revertedAt            DateTime?
