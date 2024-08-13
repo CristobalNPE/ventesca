@@ -124,7 +124,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		safeRedirect(redirectTo),
 		{
 			title: 'Bienvenido',
-			description: 'Gracias por tu registro en Ventesca.',
+			description: 'Gracias por su registro en Ventesca.',
 		},
 		{ headers },
 	)
