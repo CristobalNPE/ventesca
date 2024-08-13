@@ -383,10 +383,25 @@ async function addProductOrderAction({
 			businessId: businessId,
 			status: OrderStatus.PENDING,
 		},
-		select: { id: true },
+		select: {
+			id: true,
+			_count: { select: { productOrders: true } },
+		},
 	})
 
 	invariantResponse(currentOrder, 'Debe haber una transacción en progreso.')
+
+	//set the createdAt again for a more accurate transaction time duration only if current order does not have product Orders attached yet.
+	const shouldUpdateCreatedAt = currentOrder._count.productOrders === 0
+
+	if (shouldUpdateCreatedAt) {
+		await prisma.order.update({
+			where: { id: currentOrder.id },
+			data: {
+				createdAt: new Date(),
+			},
+		})
+	}
 
 	const result = AddProductOrderSchema.safeParse({
 		intent: formData.get('intent'),
@@ -430,7 +445,7 @@ async function addProductOrderAction({
 	if (!product.isActive) {
 		return json({
 			status: 'error',
-			message: 'Articulo no se encuentra activo.',
+			message: `Articulo [${product.name}] no se encuentra habilitado para comercio.`,
 		} as const)
 	}
 
