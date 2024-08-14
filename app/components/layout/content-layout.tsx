@@ -4,7 +4,7 @@ import { Navbar } from './navbar'
 interface ContentLayoutProps {
 	title?: string
 	children: React.ReactNode
-	hasNavbar?: boolean
+	hideNavbarOnBigScreen?: boolean
 	limitHeight?: boolean
 	actions?: React.ReactNode
 }
@@ -12,21 +12,24 @@ interface ContentLayoutProps {
 export function ContentLayout({
 	title = '',
 	children,
-	hasNavbar = true,
+	hideNavbarOnBigScreen = false,
 	limitHeight = false,
 	actions,
 }: ContentLayoutProps) {
 	return (
 		<div>
-			<div className={cn('', !hasNavbar && 'lg:hidden')}>
-				<Navbar actions={actions} title={title} />
-			</div>
+			<Navbar
+				hideOnBigScreen={hideNavbarOnBigScreen}
+				actions={actions}
+				title={title}
+			/>
 
+			{/* Consider making changes to the bg-color of this container so it does not look so monotonous in light mode */}
 			<div
 				className={cn(
-					'min-h-[calc(100dvh_-_56px)] px-4 pb-6 pt-6 sm:px-6',
+					'min-h-[calc(100dvh_-_56px)] px-4 pb-6 pt-6 sm:px-6 ',
 					limitHeight && 'h-[calc(100dvh_-_56px)]',
-					!hasNavbar && limitHeight && 'h-[100dvh]',
+					hideNavbarOnBigScreen && limitHeight && 'h-[100dvh]',
 				)}
 			>
 				{children}

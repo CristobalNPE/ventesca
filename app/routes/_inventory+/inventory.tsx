@@ -6,6 +6,9 @@ import {
 } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 import { SortDirection } from '#app/types/SortDirection.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
@@ -21,8 +24,10 @@ import {
 } from '@remix-run/node'
 import { MetaFunction, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { InventoryHeader } from '../../components/inventory/inventory-header.tsx'
-import { ImportInventoryFromFileSchema } from '../../components/inventory/inventory-import.tsx'
+import {
+	ImportInventoryFromFileModal,
+	ImportInventoryFromFileSchema,
+} from '../../components/inventory/inventory-import.tsx'
 import { InventoryProductsTable } from '../../components/inventory/inventory-products-table.tsx'
 import { InventoryStats } from '../../components/inventory/inventory-stats.tsx'
 import { InventoryProvider } from '../../context/inventory/InventoryContext.tsx'
@@ -38,7 +43,16 @@ import {
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './product-service.server.ts'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+
+import { ModifyProductPriceInBulkModal } from '#app/components/inventory/inventory-bulk-price-modify-modal.tsx'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '#app/components/ui/dropdown-menu.tsx'
+import { Link } from '@remix-run/react'
+import { CreateItemDialog } from '#app/components/inventory/product-create-single.tsx'
 
 export const LOW_STOCK_CHANGE_FOR_CONFIG = '5'
 
@@ -325,7 +339,11 @@ export default function InventoryRoute() {
 
 	return (
 		<InventoryProvider data={loaderData}>
-			<ContentLayout title="Administración de Inventario" limitHeight>
+			<ContentLayout
+				title="Administración de Inventario"
+				limitHeight
+				actions={isAdmin && <InventoryOptions />}
+			>
 				<main className="flex h-full  flex-col gap-4">
 					{/* <InventoryHeader isAdmin={isAdmin} /> */}
 					<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
@@ -337,6 +355,49 @@ export default function InventoryRoute() {
 				</main>
 			</ContentLayout>
 		</InventoryProvider>
+	)
+}
+
+function InventoryOptions() {
+	return (
+		<div className="mt-4 flex w-full flex-col justify-between gap-4  md:flex-row-reverse lg:mt-0">
+			<div className="flex w-full gap-1 ">
+				<CreateItemDialog />
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button size={'sm'} className="h-7 w-6 gap-1 p-0 text-sm">
+							<Icon name="dots-vertical" />
+							<span className="sr-only">
+								Mas opciones para ingresar productos
+							</span>
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent>
+						<DropdownMenuItem asChild>
+							<Link to={'new-products'}>
+								<Icon name="cube-plus" className="mr-2" /> Ingresar multiples
+								productos
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem onSelect={e => e.preventDefault()}>
+							<ImportInventoryFromFileModal />
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</div>
+			<ModifyProductPriceInBulkModal />
+			<Button
+				asChild
+				size={'sm'}
+				className="h-7 gap-1 text-sm"
+				variant={'outline'}
+			>
+				<a href={'/inventory/generate-inventory-template'}>
+					<Icon name="file-arrow-right" size="sm" className="mr-2" />
+					<span>Exportar datos de inventario</span>
+				</a>
+			</Button>
+		</div>
 	)
 }
 

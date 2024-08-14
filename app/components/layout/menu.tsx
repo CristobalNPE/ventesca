@@ -1,4 +1,9 @@
-import { Link, useLocation } from '@remix-run/react'
+import {
+	Link,
+	useLocation,
+	useOutletContext,
+	useRouteLoaderData,
+} from '@remix-run/react'
 import { ScrollArea } from '../ui/scroll-area'
 
 import { cn } from '#app/utils/misc.tsx'
@@ -15,15 +20,17 @@ import { getMenuList } from '#app/utils/menu-list.ts'
 import { UserDropdown } from './user-dropdown'
 import { ThemeSwitch } from '#app/routes/resources+/theme-switch.tsx'
 import { Theme } from '#app/utils/theme.server.ts'
+import { type loader as RootLoader } from '#app/root.tsx'
 
 interface MenuProps {
 	isOpen: boolean | undefined
-	themeUserPreference: Theme | null
 }
 
-export function Menu({ isOpen,themeUserPreference }: MenuProps) {
+export function Menu({ isOpen }: MenuProps) {
 	const { pathname } = useLocation()
 	const menuList = getMenuList(pathname)
+	const data = useRouteLoaderData<typeof RootLoader>('root')
+	const themeUserPreference = data?.requestInfo.userPrefs.theme
 
 	return (
 		<ScrollArea className="[&>div>div[style]]:!block ">
@@ -112,7 +119,7 @@ export function Menu({ isOpen,themeUserPreference }: MenuProps) {
 								!isOpen && 'flex-col justify-normal  gap-3  ',
 							)}
 						>
-							<ThemeSwitch userPreference={themeUserPreference}/>
+							<ThemeSwitch userPreference={themeUserPreference} />
 							<UserDropdown isOpen={isOpen} />
 						</div>
 					</li>

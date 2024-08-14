@@ -9,11 +9,8 @@ import { useStore } from '#app/hooks/useStore.ts'
 import { Brand } from './brand'
 import { Theme } from '#app/utils/theme.server.ts'
 
-interface SidebarProps {
-	themeUserPreference: Theme | null
-}
 
-export function Sidebar({ themeUserPreference }: SidebarProps) {
+export function Sidebar() {
 	const sidebar = useStore(useSidebarToggle, state => state)
 
 	if (!sidebar) return null
@@ -29,7 +26,7 @@ export function Sidebar({ themeUserPreference }: SidebarProps) {
 			{/* This had an h-full before, */}
 			<div className="relative flex  flex-col overflow-y-auto px-3 py-4 shadow-md dark:shadow-zinc-800">
 				<Brand isOpen={sidebar?.isOpen} />
-				<Menu themeUserPreference={themeUserPreference} isOpen={sidebar?.isOpen} />
+				<Menu isOpen={sidebar?.isOpen} />
 			</div>
 		</aside>
 	)

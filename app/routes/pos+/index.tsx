@@ -150,7 +150,7 @@ export default function ProcessOrderRoute() {
 
 	return (
 		<CurrentPendingOrderProvider data={loaderData}>
-			<ContentLayout title='' limitHeight hasNavbar={false} >
+			<ContentLayout limitHeight hideNavbarOnBigScreen={true}>
 				<div ref={ref} className="flex h-full flex-1  gap-12 ">
 					<div className="flex-1 ">
 						<ProductReader

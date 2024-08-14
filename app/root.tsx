@@ -1,4 +1,4 @@
-import { href as iconsHref, type IconName } from '#app/components/ui/icon.tsx'
+import { href as iconsHref } from '#app/components/ui/icon.tsx'
 import { combineHeaders, getDomainUrl } from '#app/utils/misc.tsx'
 import {
 	json,
@@ -45,13 +45,6 @@ import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
 import { useOptionalUser } from './utils/user.ts'
-
-type NavigationLink = {
-	name: string
-	kbShortcut?: string
-	path: string
-	icon: IconName
-}
 
 export const links: LinksFunction = () => {
 	return [
@@ -197,26 +190,21 @@ function App() {
 	const data = useLoaderData<typeof loader>()
 	const nonce = useNonce()
 	const user = useOptionalUser()
-
 	const theme = useTheme()
-
-	const themeUserPreference = data.requestInfo.userPrefs.theme
+	const navigate = useNavigate()
+	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
 
 	useToast(data.toast)
-
-	const navigate = useNavigate()
-
 	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
-
-	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
 	useHotkeys(Key.F4, () => setOpenProductPriceReader(true), {
 		preventDefault: true,
 		enableOnFormTags: true,
 	})
+
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			{user ? (
-				<MainLayout themeUserPreference={themeUserPreference}>
+				<MainLayout>
 					<Outlet />
 				</MainLayout>
 			) : (

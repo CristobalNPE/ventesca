@@ -3,13 +3,15 @@ import { Button } from '../ui/button'
 import { Icon } from '../ui/icon'
 import { LinkWithParams } from '../ui/link-params'
 import { SheetMenu } from './sheet-menu'
+import { cn } from '#app/utils/misc.tsx'
 
 interface NavbarProps {
 	title: string
 	actions?: React.ReactNode
+	hideOnBigScreen: boolean
 }
 
-export function Navbar({ title, actions }: NavbarProps) {
+export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
 	const { pathname } = useLocation()
 
 	const paths = pathname.split('/')
@@ -17,7 +19,12 @@ export function Navbar({ title, actions }: NavbarProps) {
 	const showBackButton = paths.length > 2 && paths[1]?.length
 
 	return (
-		<header className="sticky top-0 z-10 w-full bg-background/95 shadow backdrop-blur supports-[backdrop-filter]:bg-background/60 ">
+		<header
+			className={cn(
+				'sticky top-0 z-10 w-full bg-background/95 shadow backdrop-blur supports-[backdrop-filter]:bg-background/60 ',
+				hideOnBigScreen && 'lg:hidden',
+			)}
+		>
 			<div className="mx-4 flex h-14 items-center sm:mx-8">
 				<div className="flex  items-center space-x-4 lg:space-x-0">
 					<SheetMenu />
@@ -45,7 +52,7 @@ export function Navbar({ title, actions }: NavbarProps) {
 					</div>
 				</div>
 				{/* ! ON SMALL SCREENS, PUT THIS IN A DROPDOWN ? */}
-				<div className="flex flex-1 items-center justify-end space-x-4">
+				<div className="ml-auto flex items-center justify-end space-x-4">
 					{actions}
 				</div>
 			</div>
