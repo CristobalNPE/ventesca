@@ -10,7 +10,7 @@ import { useRequestInfo } from '#app/utils/request-info.ts'
 import { type Theme, setTheme } from '#app/utils/theme.server.ts'
 
 const ThemeFormSchema = z.object({
-	theme: z.enum(['system', 'light', 'dark']),
+	theme: z.enum(['light', 'dark']),
 })
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -42,23 +42,17 @@ export function ThemeSwitch({
 	})
 
 	const optimisticMode = useOptimisticThemeMode()
-	const mode = optimisticMode ?? userPreference ?? 'system'
-	const nextMode =
-		mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system'
+	const mode = optimisticMode ?? userPreference ?? 'dark'
+	const nextMode = mode === 'dark' ? 'light' : 'dark'
 	const modeLabel = {
 		light: (
-			<Icon name="sun">
+			<Icon name="sun" className='rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"'>
 				<span className="sr-only">Light</span>
 			</Icon>
 		),
 		dark: (
-			<Icon name="moon">
+			<Icon name="moon" className='rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100'>
 				<span className="sr-only">Dark</span>
-			</Icon>
-		),
-		system: (
-			<Icon name="laptop">
-				<span className="sr-only">System</span>
 			</Icon>
 		),
 	}
@@ -73,7 +67,7 @@ export function ThemeSwitch({
 			<div className="flex gap-2">
 				<button
 					type="submit"
-					className="flex h-8 w-8 cursor-pointer items-center justify-center"
+					className="flex h-8 w-8 cursor-pointer items-center justify-center border rounded-full"
 				>
 					{modeLabel[mode]}
 				</button>
@@ -112,7 +106,7 @@ export function useTheme() {
 	const requestInfo = useRequestInfo()
 	const optimisticMode = useOptimisticThemeMode()
 	if (optimisticMode) {
-		return optimisticMode === 'system' ? hints.theme : optimisticMode
+		return optimisticMode === 'dark' ? hints.theme : optimisticMode
 	}
 	return requestInfo.userPrefs.theme ?? hints.theme
 }

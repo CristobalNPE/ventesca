@@ -21,7 +21,7 @@ type Group = {
 }
 
 export function getMenuList(pathname: string): Group[] {
-	const isAdmin = true
+	const isAdmin = userIsAdmin()
 
 	const menuList: Group[] = [
 		{

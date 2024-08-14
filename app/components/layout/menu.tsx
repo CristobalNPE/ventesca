@@ -12,12 +12,16 @@ import { Icon } from '../ui/icon'
 import { Button } from '../ui/button'
 import { CollapseMenuButton } from './collapse-menu-button'
 import { getMenuList } from '#app/utils/menu-list.ts'
+import { UserDropdown } from './user-dropdown'
+import { ThemeSwitch } from '#app/routes/resources+/theme-switch.tsx'
+import { Theme } from '#app/utils/theme.server.ts'
 
 interface MenuProps {
 	isOpen: boolean | undefined
+	themeUserPreference: Theme | null
 }
 
-export function Menu({ isOpen }: MenuProps) {
+export function Menu({ isOpen,themeUserPreference }: MenuProps) {
 	const { pathname } = useLocation()
 	const menuList = getMenuList(pathname)
 
@@ -58,11 +62,15 @@ export function Menu({ isOpen }: MenuProps) {
 														className="mb-1 h-10 w-full justify-start"
 														asChild
 													>
-														<Link unstable_viewTransition prefetch='intent' to={href}>
+														<Link
+															unstable_viewTransition
+															prefetch="intent"
+															to={href}
+														>
 															<span
 																className={cn(isOpen === false ? '' : 'mr-4')}
 															>
-																<Icon name={icon} size='md' />
+																<Icon name={icon} size="md" />
 															</span>
 															<p
 																className={cn(
@@ -98,32 +106,15 @@ export function Menu({ isOpen }: MenuProps) {
 						</li>
 					))}
 					<li className="flex w-full grow items-end">
-						<TooltipProvider disableHoverableContent>
-							<Tooltip delayDuration={100}>
-								<TooltipTrigger asChild>
-									<Button
-										onClick={() => {}}
-										variant="outline"
-										className="mt-5 h-10 w-full justify-center"
-									>
-										<span className={cn(isOpen === false ? '' : 'mr-4')}>
-											<Icon name="log-out" />
-										</span>
-										<p
-											className={cn(
-												'whitespace-nowrap',
-												isOpen === false ? 'hidden opacity-0' : 'opacity-100',
-											)}
-										>
-											Sign out
-										</p>
-									</Button>
-								</TooltipTrigger>
-								{isOpen === false && (
-									<TooltipContent side="right">Sign out</TooltipContent>
-								)}
-							</Tooltip>
-						</TooltipProvider>
+						<div
+							className={cn(
+								'flex h-24 w-full flex-row-reverse items-center justify-between  ',
+								!isOpen && 'flex-col justify-normal  gap-3  ',
+							)}
+						>
+							<ThemeSwitch userPreference={themeUserPreference}/>
+							<UserDropdown isOpen={isOpen} />
+						</div>
 					</li>
 				</ul>
 			</nav>

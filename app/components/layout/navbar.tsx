@@ -27,6 +27,7 @@ export function Navbar({ title, actions }: NavbarProps) {
 							<Button variant={'outline'} size={'sm'} className="" asChild>
 								{/*! TODO: If comming from a different path, shoud go back to that path */}
 								{/* Only show this back button is there is a path "back" */}
+
 								<LinkWithParams
 									preserveSearch
 									prefetch="intent"
@@ -40,9 +41,10 @@ export function Navbar({ title, actions }: NavbarProps) {
 								</LinkWithParams>
 							</Button>
 						) : null}
-						<h1 className="text-xl font-semibold">{title}</h1>
+						<h1 className="text-lg font-semibold tracking-wide">{title}</h1>
 					</div>
 				</div>
+				{/* ! ON SMALL SCREENS, PUT THIS IN A DROPDOWN ? */}
 				<div className="flex flex-1 items-center justify-end space-x-4">
 					{actions}
 				</div>

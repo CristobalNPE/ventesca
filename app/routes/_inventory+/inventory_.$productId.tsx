@@ -186,7 +186,7 @@ export default function ProductRoute() {
 	return (
 		<ProductContext.Provider value={{ product, isAdmin }}>
 			<ContentLayout
-				title={`${product.name} | Detalles`}
+				title={`Detalles de ${product.name}`}
 				actions={isAdmin ? <DeleteProductConfirmationModal /> : null}
 			>
 				<div className="flex flex-col gap-4 ">

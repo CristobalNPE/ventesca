@@ -1,13 +1,12 @@
+import { cn } from '#app/utils/misc.tsx'
+import { Link } from '@remix-run/react'
 import { useState } from 'react'
-import { Icon, IconName } from '../ui/icon'
+import { Button } from '../ui/button'
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '../ui/collapsible'
-import { Button } from '../ui/button'
-import { cn } from '#app/utils/misc.tsx'
-import { Link } from '@remix-run/react'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,6 +15,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
+import { Icon, IconName } from '../ui/icon'
 import {
 	Tooltip,
 	TooltipContent,
@@ -166,7 +166,6 @@ export function CollapseMenuButton({
 					</DropdownMenuItem>
 				))}
 				<DropdownMenu />
-				{/* <DropdownMenu className="fill-border" /> */}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)

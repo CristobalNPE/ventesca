@@ -1,15 +1,5 @@
-import {
-	Icon,
-	href as iconsHref,
-	type IconName,
-} from '#app/components/ui/icon.tsx'
-import {
-	cn,
-	combineHeaders,
-	getBusinessImgSrc,
-	getDomainUrl,
-	getUserImgSrc,
-} from '#app/utils/misc.tsx'
+import { href as iconsHref, type IconName } from '#app/components/ui/icon.tsx'
+import { combineHeaders, getDomainUrl } from '#app/utils/misc.tsx'
 import {
 	json,
 	type HeadersFunction,
@@ -18,50 +8,25 @@ import {
 	type MetaFunction,
 } from '@remix-run/node'
 import {
-	Form,
-	Link,
 	Links,
 	Meta,
-	NavLink,
 	Outlet,
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
 	useNavigate,
-	useSubmit,
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
 
-import { Spacer } from './components/spacer.tsx'
 import { useToast } from './components/toaster.tsx'
-import { Button } from './components/ui/button.tsx'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuPortal,
-	DropdownMenuTrigger,
-} from './components/ui/dropdown-menu.tsx'
 
-import {
-	Sheet,
-	SheetClose,
-	SheetContent,
-	SheetTrigger,
-} from './components/ui/sheet.tsx'
 import { EpicToaster } from './components/ui/sonner.tsx'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from './components/ui/tooltip.tsx'
-import { ThemeSwitch, useTheme } from './routes/resources+/theme-switch.tsx'
+import { useTheme } from './routes/resources+/theme-switch.tsx'
 import fontStyleSheetUrl from './styles/font.css?url'
 import tailwindStyleSheetUrl from './styles/tailwind.css?url'
 import { getUserId, logout } from './utils/auth.server.ts'
@@ -73,20 +38,13 @@ import { honeypot } from './utils/honeypot.server.ts'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
 
-import VentescaLogoDark from './routes/_marketing+/logos/ventesca-dark.png'
-import VentescaLogoLight from './routes/_marketing+/logos/ventesca-light.png'
+import { MainLayout } from './components/layout/main-layout.tsx'
+import { ProductPriceReader } from './routes/_inventory+/inventory.price-reader.tsx'
 import { useNonce } from './utils/nonce-provider.ts'
 import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
-import {
-	useOptionalUser,
-	userHasRole,
-	userIsAdmin,
-	useUser,
-} from './utils/user.ts'
-import { ProductPriceReader } from './routes/_inventory+/inventory.price-reader.tsx'
-import { MainLayout } from './components/layout/main-layout.tsx'
+import { useOptionalUser } from './utils/user.ts'
 
 type NavigationLink = {
 	name: string
@@ -235,133 +193,20 @@ function Document({
 	)
 }
 
-// function App() {
-// 	const data = useLoaderData<typeof loader>()
-// 	const nonce = useNonce()
-// 	const user = useOptionalUser()
-// 	const isAdmin = user ? userHasRole(user, 'Administrador') : false
-// 	const theme = useTheme()
-
-// 	useToast(data.toast)
-
-// 	const navigate = useNavigate()
-
-// 	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
-
-// 	const navigationLinks: NavigationLink[] = [
-// 		{
-// 			name: 'Punto de Venta',
-// 			kbShortcut: 'f1',
-// 			path: 'pos',
-// 			icon: 'cash-register',
-// 		},
-// 		{
-// 			name: 'Transacciones',
-// 			path: 'orders',
-// 			icon: 'file-bar-chart',
-// 		},
-// 		{
-// 			name: 'Inventario',
-// 			path: 'inventory',
-// 			icon: 'package',
-// 		},
-
-// 		{
-// 			name: 'Descuentos',
-// 			path: 'discounts',
-// 			icon: 'tag',
-// 		},
-// 		{
-// 			name: 'Categorías',
-// 			path: 'categories',
-// 			icon: 'shapes',
-// 		},
-// 		{
-// 			name: 'Proveedores',
-// 			path: 'suppliers',
-// 			icon: 'users',
-// 		},
-
-// 		//Admin only routes
-// 		...(isAdmin
-// 			? ([
-// 					{
-// 						name: 'Analítica',
-// 						path: 'analytics',
-// 						icon: 'graph',
-// 					},
-// 					{
-// 						name: 'Empresa',
-// 						path: 'business',
-// 						icon: 'briefcase',
-// 					},
-// 					{
-// 						name: 'Vendedores',
-// 						path: 'sellers',
-// 						icon: 'user-dollar',
-// 					},
-// 				] as NavigationLink[])
-// 			: []),
-// 	]
-
-// 	const secondaryLinks: NavigationLink[] = [
-// 		{
-// 			name: 'Ajustes',
-// 			path: 'settings',
-// 			icon: 'settings',
-// 		},
-// 	]
-
-// 	const businessName = user?.business.name ?? ''
-
-// 	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
-// 	useHotkeys(Key.F4, () => setOpenProductPriceReader(true), {
-// 		preventDefault: true,
-// 		enableOnFormTags: true,
-// 	})
-// 	return (
-// 		<Document nonce={nonce} theme={theme} env={data.ENV}>
-// 			<div className="flex h-[100dvh] ">
-// 				{user && (
-// 					<SideBar
-// 						themeUserPreference={data.requestInfo.userPrefs.theme}
-// 						navigationLinks={navigationLinks}
-// 						secondaryLinks={secondaryLinks}
-// 						businessName={businessName}
-// 						businessLogoId={user.business.image ? user.business.image.id : null}
-// 					/>
-// 				)}
-
-// 				<main className="mx-auto  h-[98.5dvh] max-w-[120rem] flex-1 overflow-y-auto bg-muted/40 p-4 shadow-sm sm:p-5 md:m-2 md:rounded-md md:border  md:p-7">
-// 					<Outlet />
-// 				</main>
-// 			</div>
-// 			<EpicToaster closeButton position="top-center" theme={theme} />
-// 			<EpicProgress />
-// 			{user ? (
-// 				<ProductPriceReader
-// 					open={openProductPriceReader}
-// 					setOpen={setOpenProductPriceReader}
-// 				/>
-// 			) : null}
-// 		</Document>
-// 	)
-// }
-
 function App() {
 	const data = useLoaderData<typeof loader>()
 	const nonce = useNonce()
 	const user = useOptionalUser()
-	// const isAdmin = userIsAdmin()
+
 	const theme = useTheme()
+
+	const themeUserPreference = data.requestInfo.userPrefs.theme
 
 	useToast(data.toast)
 
 	const navigate = useNavigate()
 
 	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
-
-	const businessName = user?.business.name ?? ''
 
 	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
 	useHotkeys(Key.F4, () => setOpenProductPriceReader(true), {
@@ -370,10 +215,13 @@ function App() {
 	})
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
-			<MainLayout>
+			{user ? (
+				<MainLayout themeUserPreference={themeUserPreference}>
+					<Outlet />
+				</MainLayout>
+			) : (
 				<Outlet />
-			</MainLayout>
-
+			)}
 			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
 			{user ? (
@@ -396,282 +244,6 @@ function AppWithProviders() {
 }
 
 export default withSentry(AppWithProviders)
-
-function UserDropdown() {
-	const user = useUser()
-	const submit = useSubmit()
-	const formRef = useRef<HTMLFormElement>(null)
-
-	const getUserRole = (roles: string[]) => {
-		if (roles.includes('SuperUser')) return 'SuperUser'
-		if (roles.includes('Administrador')) return 'Administrador'
-		return 'Vendedor'
-	}
-
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					className="flex justify-start rounded p-1 "
-					asChild
-					variant="ghost"
-				>
-					<Link
-						to={`/users/${user.username}`}
-						// this is for progressive enhancement
-						onClick={e => e.preventDefault()}
-						className="ml-1 flex w-full min-w-[3rem] items-center justify-center gap-3 2xl:ml-0 2xl:justify-normal   "
-					>
-						<img
-							className="h-9 w-9  rounded-full  bg-secondary object-cover ring-2 ring-primary/10"
-							alt={user.name ?? user.username}
-							src={getUserImgSrc(user.image?.id)}
-						/>
-						<div className=" hidden flex-col 2xl:flex">
-							<span className="text-body-sm font-bold">
-								{user.name ?? user.username}
-							</span>
-							<span className="text-body-xs font-bold text-foreground/60">
-								{getUserRole(user.roles.map(rol => rol.name))}
-							</span>
-						</div>
-					</Link>
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuPortal>
-				<DropdownMenuContent sideOffset={8} align="start">
-					<DropdownMenuItem asChild>
-						<Link prefetch="intent" to={`/users/${user.username}`}>
-							<Icon className="text-body-md" name="avatar">
-								Perfil
-							</Icon>
-						</Link>
-					</DropdownMenuItem>
-					<DropdownMenuItem asChild>
-						<Link prefetch="intent" to={`/users/${user.username}/notes`}>
-							<Icon className="text-body-md" name="pencil-2">
-								Mis estadísticas
-							</Icon>
-						</Link>
-					</DropdownMenuItem>
-					<DropdownMenuItem
-						asChild
-						// this prevents the menu from closing before the form submission is completed
-						onSelect={event => {
-							event.preventDefault()
-							submit(formRef.current)
-						}}
-					>
-						<Form action="/logout" method="POST" ref={formRef}>
-							<Icon className="text-body-md" name="exit">
-								<button type="submit">Cerrar Sesión</button>
-							</Icon>
-						</Form>
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenuPortal>
-		</DropdownMenu>
-	)
-}
-
-function BusinessLogo({ businessLogo }: { businessLogo: string | null }) {
-	return (
-		<div className="flex  h-[3rem] w-[3rem] flex-shrink-0 overflow-clip rounded-md opacity-90 drop-shadow-md  2xl:h-[3.8rem] 2xl:w-[3.8rem]">
-			<img
-				className="object-cover2 hidden contrast-150 dark:flex"
-				src={businessLogo ? getBusinessImgSrc(businessLogo) : VentescaLogoLight}
-				alt="Ventesca Logo"
-			/>
-			<img
-				className="object-cover2 flex contrast-150 dark:hidden"
-				src={businessLogo ? getBusinessImgSrc(businessLogo) : VentescaLogoDark}
-				alt="Ventesca Logo"
-			/>
-		</div>
-	)
-}
-
-function SideBar({
-	themeUserPreference,
-	navigationLinks,
-	secondaryLinks,
-	businessName,
-	businessLogoId,
-}: {
-	themeUserPreference?: Theme | null
-	navigationLinks: NavigationLink[]
-	secondaryLinks: NavigationLink[]
-	businessName: string
-	businessLogoId: string | null
-}) {
-	const businessNameIsBig = businessName.length >= 10
-	const businessNameIsBigger = businessName.length >= 20
-
-	return (
-		<>
-			<div className="relative hidden w-[3.5rem] flex-col  bg-background  px-4 pb-8 pt-3 lg:flex 2xl:w-[17.5rem] ">
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<div className="ml-2 flex select-none items-center justify-center gap-3 2xl:ml-0 2xl:justify-normal ">
-								<BusinessLogo businessLogo={businessLogoId} />
-								<h1
-									className={cn(
-										'hidden text-2xl font-black uppercase tracking-tight 2xl:flex',
-										businessNameIsBig && 'text-xl',
-										businessNameIsBigger && 'text-lg',
-									)}
-								>
-									{businessName}
-								</h1>
-							</div>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>Impulsado por VENTESCA</p>
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-				<nav className="mt-8 flex h-full  flex-col items-center justify-between gap-8 2xl:items-start">
-					<div className="flex w-full flex-col items-center gap-3 2xl:items-stretch 2xl:gap-2">
-						{navigationLinks.map(link => {
-							return (
-								<NavLink
-									prefetch="intent"
-									className={({ isActive }) =>
-										cn(
-											'text-md ml-1 flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground ',
-											isActive &&
-												' bg-muted-foreground/20 text-foreground  brightness-110 hover:text-foreground dark:bg-accent',
-										)
-									}
-									key={link.name}
-									to={link.path}
-								>
-									<TooltipProvider>
-										<Tooltip delayDuration={300}>
-											<TooltipTrigger asChild>
-												<div className="flex gap-3 ">
-													<Icon
-														className="shrink-0 text-2xl 2xl:text-xl"
-														name={link.icon}
-													/>
-													<div className="hidden w-full  2xl:flex">
-														{link.name}
-													</div>
-												</div>
-											</TooltipTrigger>
-											<TooltipContent side="right" className="flex 2xl:hidden">
-												<p>{link.name}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
-
-									{link.kbShortcut ? (
-										<div className="ml-auto hidden rounded border-[1px] border-b-[3px] border-muted-foreground bg-secondary px-[2px] py-[1px]  font-mono text-xs font-semibold uppercase text-muted-foreground shadow-lg  2xl:flex ">
-											{link.kbShortcut}
-										</div>
-									) : null}
-								</NavLink>
-							)
-						})}
-					</div>
-					<div>
-						{secondaryLinks.map(link => {
-							return (
-								<NavLink
-									prefetch="intent"
-									className={({ isActive }) =>
-										cn(
-											'text-md ml-1 flex select-none items-center gap-3 rounded-sm p-2 text-muted-foreground transition-colors hover:text-foreground 2xl:ml-0',
-											isActive &&
-												'bg-foreground/20 text-foreground hover:text-foreground',
-										)
-									}
-									key={link.name}
-									to={link.path}
-								>
-									<Icon
-										className="shrink-0 text-2xl 2xl:text-xl"
-										name={link.icon}
-									/>
-									<span className="hidden 2xl:flex">{link.name}</span>
-								</NavLink>
-							)
-						})}
-					</div>
-					<ThemeSwitch userPreference={themeUserPreference} />
-
-					<UserDropdown />
-				</nav>
-			</div>
-			{/* MOBILE DEVICES SIDEBAR: */}
-			<Sheet>
-				<SheetTrigger asChild>
-					<Button
-						size={'icon'}
-						variant={'default'}
-						className="absolute left-6 top-6 opacity-50 ring-4 lg:hidden"
-					>
-						<Icon className="text-2xl" name="layout-sidebar-left-expand" />
-						<span className="sr-only">Expandir Menu</span>
-					</Button>
-				</SheetTrigger>
-				<SheetContent side="left" className="sm:max-w-xs">
-					<nav className=" flex h-full flex-col justify-around gap-6">
-						<div className="flex flex-col gap-2">
-							{navigationLinks.map(link => {
-								return (
-									<SheetClose className="group flex" asChild key={link.name}>
-										<NavLink
-											prefetch="viewport"
-											className={({ isActive }) =>
-												cn(
-													'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
-													isActive &&
-														'bg-foreground/20 text-foreground hover:text-foreground',
-												)
-											}
-											to={link.path}
-										>
-											<Icon size="md" className="" name={link.icon} />
-											<span>{link.name}</span>
-										</NavLink>
-									</SheetClose>
-								)
-							})}
-						</div>
-						<div>
-							{secondaryLinks.map(link => {
-								return (
-									<SheetClose className="group flex" asChild key={link.name}>
-										<NavLink
-											className={({ isActive }) =>
-												cn(
-													'flex select-none items-center gap-3 rounded-sm p-2 text-xl text-muted-foreground transition-colors hover:text-foreground',
-													isActive &&
-														'bg-foreground/20 text-foreground hover:text-foreground',
-												)
-											}
-											to={link.path}
-										>
-											<Icon size="md" className="" name={link.icon} />
-											<span>{link.name}</span>
-										</NavLink>
-									</SheetClose>
-								)
-							})}
-						</div>
-						{/* <div className="flex flex-col gap-2">
-							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
-						</div> */}
-					</nav>
-
-					<UserDropdown />
-				</SheetContent>
-			</Sheet>
-		</>
-	)
-}
 
 export function ErrorBoundary() {
 	// the nonce doesn't rely on the loader so we can access that
