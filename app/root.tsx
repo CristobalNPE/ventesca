@@ -158,6 +158,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { toast, headers: toastHeaders } = await getToast(request)
 	const honeyProps = honeypot.getInputProps()
 
+	console.log(getEnv())
+
 	return json(
 		{
 			user,
