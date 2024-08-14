@@ -8,6 +8,7 @@ import { MetaFunction, useLoaderData } from '@remix-run/react'
 
 import { BusinessEditor } from './__business-editor.tsx'
 import { action } from './__business-editor.server.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.js'
 
 export { action }
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -35,7 +36,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function ProviderEdit() {
 	const { business } = useLoaderData<typeof loader>()
 
-	return <BusinessEditor business={business} />
+	return (
+		<ContentLayout title="Modificar datos de la empresa">
+			<BusinessEditor business={business} />
+		</ContentLayout>
+	)
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

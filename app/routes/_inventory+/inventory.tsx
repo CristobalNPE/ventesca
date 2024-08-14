@@ -38,6 +38,7 @@ import {
 	getLowStockProducts,
 	getMostProfitProduct,
 } from './product-service.server.ts'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export const LOW_STOCK_CHANGE_FOR_CONFIG = '5'
 
@@ -324,15 +325,17 @@ export default function InventoryRoute() {
 
 	return (
 		<InventoryProvider data={loaderData}>
-			<main className="flex h-full  flex-col gap-4">
-				<InventoryHeader isAdmin={isAdmin} />
-				<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
-					<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
-						<InventoryStats />
-						<InventoryProductsTable />
+			<ContentLayout title="Administración de Inventario" limitHeight>
+				<main className="flex h-full  flex-col gap-4">
+					{/* <InventoryHeader isAdmin={isAdmin} /> */}
+					<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
+						<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
+							<InventoryStats />
+							<InventoryProductsTable />
+						</div>
 					</div>
-				</div>
-			</main>
+				</main>
+			</ContentLayout>
 		</InventoryProvider>
 	)
 }

@@ -53,6 +53,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import { Key } from 'ts-key-enum'
 import { modifyOrderActionIntent } from '#app/components/pos/current-order-modify.tsx'
 import { deleteOrderActionIntent } from '#app/components/pos/current-order-delete.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -149,23 +150,25 @@ export default function ProcessOrderRoute() {
 
 	return (
 		<CurrentPendingOrderProvider data={loaderData}>
-			<div ref={ref} className="flex h-full flex-1  gap-12 ">
-				<div className="flex-1 ">
-					<ProductReader
-						ref={productReaderRef}
-						autoFocus
-						autoSubmit
-						status={'idle'}
-					/>
-					<Spacer size="4xs" />
-					{hasProductOrders ? (
-						<CurrentOrderProducts />
-					) : (
-						<CurrentOrderPlaceholder />
-					)}
+			<ContentLayout title='' limitHeight hasNavbar={false} >
+				<div ref={ref} className="flex h-full flex-1  gap-12 ">
+					<div className="flex-1 ">
+						<ProductReader
+							ref={productReaderRef}
+							autoFocus
+							autoSubmit
+							status={'idle'}
+						/>
+						<Spacer size="4xs" />
+						{hasProductOrders ? (
+							<CurrentOrderProducts />
+						) : (
+							<CurrentOrderPlaceholder />
+						)}
+					</div>
+					<CurrentOrderSettingsPanel />
 				</div>
-				<CurrentOrderSettingsPanel />
-			</div>
+			</ContentLayout>
 		</CurrentPendingOrderProvider>
 	)
 }

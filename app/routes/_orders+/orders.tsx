@@ -16,6 +16,8 @@ import {
 	getLastTwoWeeksEarnings,
 	getWeeklyDailyEarnings,
 } from './orders-service.server'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { VerifyOrderDialog } from './orders_.verify-order'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -119,15 +121,17 @@ export default function OrderReportsRoute() {
 
 	return (
 		<OrdersProvider data={loaderData}>
-			<main className="flex h-full flex-col gap-4">
-				<OrdersHeader />
-				<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
-					<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
-						<OrdersStats />
-						<OrdersReportsTable />
+			<ContentLayout title='Reportes de Transacción' limitHeight actions={<VerifyOrderDialog />} >
+				<main className="flex h-full flex-col gap-4">
+					{/* <OrdersHeader /> */}
+					<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
+						<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
+							<OrdersStats />
+							<OrdersReportsTable />
+						</div>
 					</div>
-				</div>
-			</main>
+				</main>
+			</ContentLayout>
 		</OrdersProvider>
 	)
 }

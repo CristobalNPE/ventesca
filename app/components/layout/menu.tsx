@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@remix-run/react'
 import { ScrollArea } from '../ui/scroll-area'
-import { getMenuList } from '#app/lib/menu-list.ts'
+
 import { cn } from '#app/utils/misc.tsx'
 import {
 	Tooltip,
@@ -11,6 +11,7 @@ import {
 import { Icon } from '../ui/icon'
 import { Button } from '../ui/button'
 import { CollapseMenuButton } from './collapse-menu-button'
+import { getMenuList } from '#app/utils/menu-list.ts'
 
 interface MenuProps {
 	isOpen: boolean | undefined
@@ -57,11 +58,11 @@ export function Menu({ isOpen }: MenuProps) {
 														className="mb-1 h-10 w-full justify-start"
 														asChild
 													>
-														<Link to={href}>
+														<Link unstable_viewTransition prefetch='intent' to={href}>
 															<span
 																className={cn(isOpen === false ? '' : 'mr-4')}
 															>
-																<Icon name={icon} />
+																<Icon name={icon} size='md' />
 															</span>
 															<p
 																className={cn(

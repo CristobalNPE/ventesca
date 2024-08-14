@@ -17,7 +17,7 @@ export function MainLayout({
 			<Sidebar />
 			<main
 				className={cn(
-					'min-h-[calc(100vh_-_56px)] bg-secondary/50 transition-[margin-left] duration-300 ease-in-out ',
+					'min-h-[calc(100dvh_-_56px)] bg-secondary/50 transition-[margin-left] duration-300 ease-in-out  ',
 
 					sidebar?.isOpen === false ? 'lg:ml-[90px]' : 'lg:ml-72',
 				)}

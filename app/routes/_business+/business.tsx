@@ -49,6 +49,7 @@ import { useState } from 'react'
 import { BusinessLogoImage } from '@prisma/client'
 import { ErrorList } from '#app/components/forms.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -107,161 +108,85 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { id: businessId },
 	})
 
-	const numberOfProducts = await prisma.product.count({
-		where: { businessId, isDeleted: false },
-	})
-	const numberOfCompletedOrders = await prisma.order.count({
-		where: { businessId, status: OrderStatus.FINISHED },
-	})
-	const totalProfits = await prisma.order.aggregate({
-		_sum: {
-			total: true,
-		},
-		where: { businessId, status: OrderStatus.FINISHED },
-	})
-
 	return json({
 		business,
-		numberOfProducts,
-		numberOfCompletedOrders,
-		totalProfits,
 	})
 }
 
 export default function ProfileRoute() {
-	const { business, numberOfProducts, numberOfCompletedOrders, totalProfits } =
-		useLoaderData<typeof loader>()
+	const { business } = useLoaderData<typeof loader>()
 
 	return (
-		<div className="h-full">
-			<Spacer size="xl" />
-
-			<div className="container flex flex-col items-center  rounded-3xl bg-muted p-12">
-				<div className="relative w-52">
-					<div className="absolute -top-40">
-						<div className="relative ">
-							<img
-								src={
-									business.image
-										? getBusinessImgSrc(business.image.id)
-										: VentescaLogoDark
-								}
-								alt={business.name}
-								className="hidden h-52 w-52 rounded-full bg-primary object-cover dark:flex"
-							/>
-							<img
-								src={
-									business.image
-										? getBusinessImgSrc(business.image.id)
-										: VentescaLogoLight
-								}
-								alt={business.name}
-								className="flex h-52 w-52 rounded-full bg-primary object-cover dark:hidden"
-							/>
-							<ChangeBusinessLogoDialog logo={business.image} />
+		<ContentLayout title='Detalles de la Empresa' limitHeight>
+			<div className="h-full">
+				<Spacer size="xl" />
+				<div className="container flex flex-col items-center  rounded-3xl bg-muted p-12">
+					<div className="relative w-52">
+						<div className="absolute -top-40">
+							<div className="relative ">
+								<img
+									src={
+										business.image
+											? getBusinessImgSrc(business.image.id)
+											: VentescaLogoDark
+									}
+									alt={business.name}
+									className="hidden h-52 w-52 rounded-full bg-primary object-cover dark:flex"
+								/>
+								<img
+									src={
+										business.image
+											? getBusinessImgSrc(business.image.id)
+											: VentescaLogoLight
+									}
+									alt={business.name}
+									className="flex h-52 w-52 rounded-full bg-primary object-cover dark:hidden"
+								/>
+								<ChangeBusinessLogoDialog logo={business.image} />
+							</div>
 						</div>
 					</div>
-				</div>
+					<Spacer size="sm" />
+					<div className="flex flex-col items-center ">
+						<div className="flex flex-wrap items-center justify-center gap-4">
+							<h1 className="text-center text-h2">{business.name}</h1>
+						</div>
+						<p className="mt-2 text-center text-muted-foreground">
+							Activa desde{'  '}
+							{format(business.createdAt, "d'/'MM'/'yyyy", {
+								locale: es,
+							})}
+						</p>
+						<Spacer size="3xs" />
+						<div className="text-center text-lg font-thin">
+							{business.address ? (
+								<div className=" flex items-center justify-center gap-2">
+									<Icon name="map-pin-filled" /> <span>{business.address}</span>
+								</div>
+							) : null}
+							{business.email ? (
+								<div className="flex items-center justify-center gap-2">
+									<Icon name="envelope-closed" /> <span>{business.email}</span>
+								</div>
+							) : null}
+							{business.phone ? (
+								<div className="flex items-center justify-center gap-2">
+									<Icon name="phone" /> <span>{business.phone}</span>
+								</div>
+							) : null}
+						</div>
+						<Spacer size="3xs" />
 
-				<Spacer size="sm" />
-
-				<div className="flex flex-col items-center ">
-					<div className="flex flex-wrap items-center justify-center gap-4">
-						<h1 className="text-center text-h2">{business.name}</h1>
+						<Button variant={'default'} size={'pill'} asChild>
+							<Link to="edit">
+								Modificar datos de la empresa{' '}
+								<Icon name="pencil-1" className="ml-2" />
+							</Link>
+						</Button>
 					</div>
-					<p className="mt-2 text-center text-muted-foreground">
-						Activa desde{'  '}
-						{format(business.createdAt, "d'/'MM'/'yyyy", {
-							locale: es,
-						})}
-					</p>
-					<Spacer size="3xs" />
-
-					<div className="text-center text-lg font-thin">
-						{business.address ? (
-							<div className=" flex items-center justify-center gap-2">
-								<Icon name="map-pin-filled" /> <span>{business.address}</span>
-							</div>
-						) : null}
-						{business.email ? (
-							<div className="flex items-center justify-center gap-2">
-								<Icon name="envelope-closed" /> <span>{business.email}</span>
-							</div>
-						) : null}
-						{business.phone ? (
-							<div className="flex items-center justify-center gap-2">
-								<Icon name="phone" /> <span>{business.phone}</span>
-							</div>
-						) : null}
-					</div>
-					<Spacer size="3xs" />
-					{/* <div className="flex flex-wrap justify-center gap-6 ">
-						<Card className="grid w-full max-w-lg  gap-6 p-6 ">
-							<div className="flex items-center gap-4">
-								<div className="flex items-center justify-center rounded-md bg-primary p-3">
-									<Icon
-										name="package"
-										className="h-6 w-6 text-primary-foreground"
-									/>
-								</div>
-								<div className="grid gap-1">
-									<h3 className="text-xl font-semibold">
-										{numberOfProducts} productos registrados
-									</h3>
-									<p className="text-sm text-muted-foreground">
-										Su catalogo de productos sigue creciendo.
-									</p>
-								</div>
-							</div>
-						</Card>
-						<Card className="grid w-full max-w-lg  gap-6 p-6">
-							<div className="flex items-center gap-4">
-								<div className="flex items-center justify-center rounded-md bg-primary p-3">
-									<Icon
-										name="check"
-										className="h-6 w-6 text-primary-foreground"
-									/>
-								</div>
-								<div className="grid gap-1">
-									<h3 className="text-xl font-semibold">
-										{numberOfCompletedOrders} transacciones completadas.
-									</h3>
-									<p className="text-sm text-muted-foreground">
-										Su negocio prospera con cada transacción finalizada.
-									</p>
-								</div>
-							</div>
-						</Card>
-						<Card className="grid w-full max-w-lg  gap-6 p-6">
-							<div className="flex items-center gap-4">
-								<div className="flex items-center justify-center rounded-md bg-primary p-3">
-									<Icon
-										name="currency-dollar"
-										className="h-6 w-6 text-primary-foreground"
-									/>
-								</div>
-								<div className="grid gap-1">
-									<h3 className="text-xl font-semibold">
-										{formatCurrency(totalProfits._sum.total)} ganancias totales.
-									</h3>
-									<p className="text-sm text-muted-foreground">
-										Su trabajo se ve reflejado en un aumento de ingresos.
-									</p>
-								</div>
-							</div>
-						</Card>
-					</div> */}
-
-					<Spacer size="xs" />
-					<Button variant={'default'} size={'pill'} asChild>
-						<Link to="edit">
-							Modificar datos de la empresa{' '}
-							<Icon name="pencil-1" className="ml-2" />
-						</Link>
-					</Button>
 				</div>
 			</div>
-		</div>
+		</ContentLayout>
 	)
 }
 const MAX_SIZE = 1024 * 1024 * 3 // 3MB

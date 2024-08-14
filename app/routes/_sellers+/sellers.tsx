@@ -22,6 +22,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -46,45 +47,52 @@ export default function SellersRoute() {
 	const { sellers } = useLoaderData<typeof loader>()
 
 	return (
-		<main className=" h-full">
-			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
-				<h1 className="text-xl font-semibold">Vendedores</h1>
-			</div>
-			<Spacer size={'4xs'} />
-
-			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
-				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-					{sellers.length === 0 ? (
-						<div className="flex h-full flex-col items-center justify-center gap-4 rounded-sm border border-dashed text-muted-foreground">
-							<p>Sin vendedores registrados en sistema.</p>
-							<Button asChild className="flex items-center gap-2">
-								<Link to={'new'}>
-									<Icon name="user-plus" />
-									<span>Registrar nuevo vendedor</span>
-								</Link>
-							</Button>
-						</div>
-					) : (
-						<>
-							<Card>
-								<CardHeader>
-									<Button asChild className="flex items-center gap-2">
-										<Link to={'new'}>
-											<Icon name="user-plus" />
-											<span>Registrar nuevo vendedor</span>
-										</Link>
-									</Button>
-								</CardHeader>
-							</Card>
-							<SellersCard sellers={sellers} />
-						</>
-					)}
+		<ContentLayout
+			title="Vendedores"
+			actions={
+				<Button asChild className="flex items-center gap-2">
+					<Link to={'new'}>
+						<Icon name="user-plus" />
+						<span>Registrar nuevo vendedor</span>
+					</Link>
+				</Button>
+			}
+		>
+			<main className=" h-full">
+				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
+					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+						{sellers.length === 0 ? (
+							<div className="flex h-full flex-col items-center justify-center gap-4 rounded-sm border border-dashed text-muted-foreground">
+								<p>Sin vendedores registrados en sistema.</p>
+								<Button asChild className="flex items-center gap-2">
+									<Link to={'new'}>
+										<Icon name="user-plus" />
+										<span>Registrar nuevo vendedor</span>
+									</Link>
+								</Button>
+							</div>
+						) : (
+							<>
+								<Card>
+									<CardHeader>
+										<Button asChild className="flex items-center gap-2">
+											<Link to={'new'}>
+												<Icon name="user-plus" />
+												<span>Registrar nuevo vendedor</span>
+											</Link>
+										</Button>
+									</CardHeader>
+								</Card>
+								<SellersCard sellers={sellers} />
+							</>
+						)}
+					</div>
+					<div className="lg:col-span-2">
+						<Outlet />
+					</div>
 				</div>
-				<div className="lg:col-span-2">
-					<Outlet />
-				</div>
-			</div>
-		</main>
+			</main>
+		</ContentLayout>
 	)
 }
 

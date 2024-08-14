@@ -36,8 +36,8 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, useDebounce, useIsPending } from '#app/utils/misc.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 // import { updateDiscountValidity } from './discounts_.$discountId'
-
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -90,43 +90,41 @@ export default function DiscountsPage() {
 	}
 
 	return (
-		<main className="flex flex-col">
-			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
-				<h1 className="text-xl font-semibold">Descuentos y Promociones</h1>
-				{isAdmin && (
-					<Button variant={'outline'} asChild>
-						<Link
-							onClick={() => scrollToElement()}
-							preventScrollReset={true}
-							to={'new'}
-							className="flex items-center justify-center gap-2"
-						>
-							<Icon name="plus" />
-							<span>Registrar Descuento</span>
-						</Link>
-					</Button>
-				)}
-			</div>
-			<Spacer size={'4xs'} />
-			<div className="flex flex-col  ">
+		<ContentLayout
+			title="Descuentos y Promociones"
+			actions={
+				<Button variant={'outline'} asChild>
+					<Link
+						onClick={() => scrollToElement()}
+						preventScrollReset={true}
+						to={'new'}
+						className="flex items-center justify-center gap-2"
+					>
+						<Icon name="plus" />
+						<span>Registrar Descuento</span>
+					</Link>
+				</Button>
+			}
+		>
+			<main className="flex flex-col">
 				{/* <div className="grid gap-4 md:grid-cols-2 md:gap-8">
-					<DataCard
-						title={'Descuentos Activos'}
-						value={amountOfActiveDiscounts.toString()}
-						icon={'tag'}
-						subtext={'22 descuentos expiran pronto.'}
-					/>
-					<DataCard
-						title={'Descuento Destacado'}
-						value={'Descuento Invierno 2024'}
-						icon={'tag'}
-						subtext={'Utilizado 42 veces.'}
-					/>
-				</div> */}
+						<DataCard
+							title={'Descuentos Activos'}
+							value={amountOfActiveDiscounts.toString()}
+							icon={'tag'}
+							subtext={'22 descuentos expiran pronto.'}
+						/>
+						<DataCard
+							title={'Descuento Destacado'}
+							value={'Descuento Invierno 2024'}
+							icon={'tag'}
+							subtext={'Utilizado 42 veces.'}
+						/>
+					</div> */}
 				{/* <Spacer size={'4xs'} /> */}
 				<DiscountsTableCard totalDiscounts={0} discounts={discounts} />
-			</div>
-		</main>
+			</main>
+		</ContentLayout>
 	)
 }
 

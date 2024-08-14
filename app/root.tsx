@@ -79,8 +79,14 @@ import { useNonce } from './utils/nonce-provider.ts'
 import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'
 import { getToast } from './utils/toast.server.ts'
-import { useOptionalUser, userHasRole, useUser } from './utils/user.ts'
+import {
+	useOptionalUser,
+	userHasRole,
+	userIsAdmin,
+	useUser,
+} from './utils/user.ts'
 import { ProductPriceReader } from './routes/_inventory+/inventory.price-reader.tsx'
+import { MainLayout } from './components/layout/main-layout.tsx'
 
 type NavigationLink = {
 	name: string
@@ -158,8 +164,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { toast, headers: toastHeaders } = await getToast(request)
 	const honeyProps = honeypot.getInputProps()
 
-	console.log(getEnv())
-
 	return json(
 		{
 			user,
@@ -205,7 +209,7 @@ function Document({
 	allowIndexing?: boolean
 }) {
 	return (
-		<html lang="es" className={`${theme} h-[100dvh] overflow-hidden`}>
+		<html lang="es" className={`${theme} `}>
 			<head>
 				<ClientHintCheck nonce={nonce} />
 				<Meta />
@@ -231,11 +235,124 @@ function Document({
 	)
 }
 
+// function App() {
+// 	const data = useLoaderData<typeof loader>()
+// 	const nonce = useNonce()
+// 	const user = useOptionalUser()
+// 	const isAdmin = user ? userHasRole(user, 'Administrador') : false
+// 	const theme = useTheme()
+
+// 	useToast(data.toast)
+
+// 	const navigate = useNavigate()
+
+// 	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
+
+// 	const navigationLinks: NavigationLink[] = [
+// 		{
+// 			name: 'Punto de Venta',
+// 			kbShortcut: 'f1',
+// 			path: 'pos',
+// 			icon: 'cash-register',
+// 		},
+// 		{
+// 			name: 'Transacciones',
+// 			path: 'orders',
+// 			icon: 'file-bar-chart',
+// 		},
+// 		{
+// 			name: 'Inventario',
+// 			path: 'inventory',
+// 			icon: 'package',
+// 		},
+
+// 		{
+// 			name: 'Descuentos',
+// 			path: 'discounts',
+// 			icon: 'tag',
+// 		},
+// 		{
+// 			name: 'Categorías',
+// 			path: 'categories',
+// 			icon: 'shapes',
+// 		},
+// 		{
+// 			name: 'Proveedores',
+// 			path: 'suppliers',
+// 			icon: 'users',
+// 		},
+
+// 		//Admin only routes
+// 		...(isAdmin
+// 			? ([
+// 					{
+// 						name: 'Analítica',
+// 						path: 'analytics',
+// 						icon: 'graph',
+// 					},
+// 					{
+// 						name: 'Empresa',
+// 						path: 'business',
+// 						icon: 'briefcase',
+// 					},
+// 					{
+// 						name: 'Vendedores',
+// 						path: 'sellers',
+// 						icon: 'user-dollar',
+// 					},
+// 				] as NavigationLink[])
+// 			: []),
+// 	]
+
+// 	const secondaryLinks: NavigationLink[] = [
+// 		{
+// 			name: 'Ajustes',
+// 			path: 'settings',
+// 			icon: 'settings',
+// 		},
+// 	]
+
+// 	const businessName = user?.business.name ?? ''
+
+// 	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
+// 	useHotkeys(Key.F4, () => setOpenProductPriceReader(true), {
+// 		preventDefault: true,
+// 		enableOnFormTags: true,
+// 	})
+// 	return (
+// 		<Document nonce={nonce} theme={theme} env={data.ENV}>
+// 			<div className="flex h-[100dvh] ">
+// 				{user && (
+// 					<SideBar
+// 						themeUserPreference={data.requestInfo.userPrefs.theme}
+// 						navigationLinks={navigationLinks}
+// 						secondaryLinks={secondaryLinks}
+// 						businessName={businessName}
+// 						businessLogoId={user.business.image ? user.business.image.id : null}
+// 					/>
+// 				)}
+
+// 				<main className="mx-auto  h-[98.5dvh] max-w-[120rem] flex-1 overflow-y-auto bg-muted/40 p-4 shadow-sm sm:p-5 md:m-2 md:rounded-md md:border  md:p-7">
+// 					<Outlet />
+// 				</main>
+// 			</div>
+// 			<EpicToaster closeButton position="top-center" theme={theme} />
+// 			<EpicProgress />
+// 			{user ? (
+// 				<ProductPriceReader
+// 					open={openProductPriceReader}
+// 					setOpen={setOpenProductPriceReader}
+// 				/>
+// 			) : null}
+// 		</Document>
+// 	)
+// }
+
 function App() {
 	const data = useLoaderData<typeof loader>()
 	const nonce = useNonce()
 	const user = useOptionalUser()
-	const isAdmin = user ? userHasRole(user, 'Administrador') : false
+	// const isAdmin = userIsAdmin()
 	const theme = useTheme()
 
 	useToast(data.toast)
@@ -243,70 +360,6 @@ function App() {
 	const navigate = useNavigate()
 
 	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
-
-	const navigationLinks: NavigationLink[] = [
-		{
-			name: 'Punto de Venta',
-			kbShortcut: 'f1',
-			path: 'pos',
-			icon: 'cash-register',
-		},
-		{
-			name: 'Transacciones',
-			path: 'orders',
-			icon: 'file-bar-chart',
-		},
-		{
-			name: 'Inventario',
-			path: 'inventory',
-			icon: 'package',
-		},
-
-		{
-			name: 'Descuentos',
-			path: 'discounts',
-			icon: 'tag',
-		},
-		{
-			name: 'Categorías',
-			path: 'categories',
-			icon: 'shapes',
-		},
-		{
-			name: 'Proveedores',
-			path: 'suppliers',
-			icon: 'users',
-		},
-
-		//Admin only routes
-		...(isAdmin
-			? ([
-					{
-						name: 'Analítica',
-						path: 'analytics',
-						icon: 'graph',
-					},
-					{
-						name: 'Empresa',
-						path: 'business',
-						icon: 'briefcase',
-					},
-					{
-						name: 'Vendedores',
-						path: 'sellers',
-						icon: 'user-dollar',
-					},
-				] as NavigationLink[])
-			: []),
-	]
-
-	const secondaryLinks: NavigationLink[] = [
-		{
-			name: 'Ajustes',
-			path: 'settings',
-			icon: 'settings',
-		},
-	]
 
 	const businessName = user?.business.name ?? ''
 
@@ -317,21 +370,10 @@ function App() {
 	})
 	return (
 		<Document nonce={nonce} theme={theme} env={data.ENV}>
-			<div className="flex h-[100dvh] ">
-				{user && (
-					<SideBar
-						themeUserPreference={data.requestInfo.userPrefs.theme}
-						navigationLinks={navigationLinks}
-						secondaryLinks={secondaryLinks}
-						businessName={businessName}
-						businessLogoId={user.business.image ? user.business.image.id : null}
-					/>
-				)}
+			<MainLayout>
+				<Outlet />
+			</MainLayout>
 
-				<main className="mx-auto  h-[98.5dvh] max-w-[120rem] flex-1 overflow-y-auto bg-muted/40 p-4 shadow-sm sm:p-5 md:m-2 md:rounded-md md:border  md:p-7">
-					<Outlet />
-				</main>
-			</div>
 			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
 			{user ? (

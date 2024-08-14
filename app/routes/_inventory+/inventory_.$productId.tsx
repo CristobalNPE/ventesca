@@ -48,6 +48,7 @@ import {
 	getCurrentWeekProductSales,
 	softDeleteProduct,
 } from './product-service.server.ts'
+import { ContentLayout } from '#app/components/layout/content-layout.js'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -184,130 +185,116 @@ export default function ProductRoute() {
 
 	return (
 		<ProductContext.Provider value={{ product, isAdmin }}>
-			<div className="flex flex-col gap-4 ">
-				<div className="flex flex-col items-center justify-between sm:flex-row">
-					<div className="mb-4 flex flex-col items-center gap-2 text-center md:flex-row md:gap-4">
-						<Button variant={'outline'} size={'sm'} asChild>
-							<LinkWithParams
-								preserveSearch
-								prefetch="intent"
-								unstable_viewTransition
-								to={'..'}
-								relative="path"
-							>
-								<Icon name={'chevron-left'} size="sm" />
-								<span className="sr-only">Volver</span>
-							</LinkWithParams>
-						</Button>
-						<h1 className="text-h5 md:text-h4">{product.name}</h1>
-					</div>
-					{isAdmin ? <DeleteProductConfirmationModal /> : null}
-				</div>
-
-				<div className=" grid grid-cols-1 gap-4  md:grid-cols-2 xl:grid-cols-3 ">
-					<ModifyStockDialog />
-					<ModifySellingPriceDialog />
-
-					<div
-						onMouseEnter={() => setIsActiveHovered(true)}
-						onMouseLeave={() => setIsActiveHovered(false)}
-						className="md:col-span-2 xl:col-span-1 "
-					>
-						<ModifyStatusDialog />
-					</div>
-				</div>
-				<div className="grid grid-cols-1 gap-y-4  md:grid-cols-3 md:gap-4">
-					<div className="col-span-2 grid gap-4">
-						<div>
-							<Outlet />
+			<ContentLayout
+				title={`${product.name} | Detalles`}
+				actions={isAdmin ? <DeleteProductConfirmationModal /> : null}
+			>
+				<div className="flex flex-col gap-4 ">
+					
+					<div className=" grid grid-cols-1 gap-4  md:grid-cols-2 xl:grid-cols-3 ">
+						<ModifyStockDialog />
+						<ModifySellingPriceDialog />
+						<div
+							onMouseEnter={() => setIsActiveHovered(true)}
+							onMouseLeave={() => setIsActiveHovered(false)}
+							className="md:col-span-2 xl:col-span-1 "
+						>
+							<ModifyStatusDialog />
 						</div>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>Origen y Clasificación del Producto</CardTitle>
-								<CardDescription>
-									Categoría y proveedor asignados al producto.
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="flex flex-col gap-4 md:flex-row md:gap-12">
-								<ModifyCategorySelect categories={businessCategories} />
-								<ModifySupplierSelect suppliers={businessSuppliers} />
-							</CardContent>
-						</Card>
 					</div>
-
-					<div className="col-span-1 grid auto-rows-min gap-4">
-						{alerts.some(alert => alert.condition) ? (
-							<div
-								className={cn(
-									'flex h-fit flex-col gap-2 ',
-									isActiveHovered &&
-										'rounded-md bg-destructive/30 ring-2  ring-destructive/50 transition-all',
-								)}
-							>
-								{alerts.map((alert, i) => {
-									if (alert.condition) {
-										return (
-											<Alert
-												key={i}
-												variant="destructive"
-												className="group animate-slide-left p-3 shadow-sm  transition-colors hover:bg-destructive hover:shadow-md"
-											>
-												<Icon
-													name="alert-triangle"
-													className="h-4 w-4 transition-all group-hover:translate-y-2 group-hover:scale-150"
-												/>
-												<AlertTitle className="font-bold transition-all duration-300 group-hover:translate-x-2">
-													{alert.title}
-												</AlertTitle>
-												<AlertDescription className="transition-all duration-300 group-hover:translate-x-2">
-													{alert.description}
-												</AlertDescription>
-											</Alert>
-										)
-									}
-								})}
+					<div className="grid grid-cols-1 gap-y-4  md:grid-cols-3 md:gap-4">
+						<div className="col-span-2 grid gap-4">
+							<div>
+								<Outlet />
 							</div>
-						) : null}
-						<ProductDiscountsCard
-							associatedDiscounts={product.discounts}
-							globalDiscounts={globalDiscounts}
-						/>
+							<Card>
+								<CardHeader>
+									<CardTitle>Origen y Clasificación del Producto</CardTitle>
+									<CardDescription>
+										Categoría y proveedor asignados al producto.
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="flex flex-col gap-4 md:flex-row md:gap-12">
+									<ModifyCategorySelect categories={businessCategories} />
+									<ModifySupplierSelect suppliers={businessSuppliers} />
+								</CardContent>
+							</Card>
+						</div>
+						<div className="col-span-1 grid auto-rows-min gap-4">
+							{alerts.some(alert => alert.condition) ? (
+								<div
+									className={cn(
+										'flex h-fit flex-col gap-2 ',
+										isActiveHovered &&
+											'rounded-md bg-destructive/30 ring-2  ring-destructive/50 transition-all',
+									)}
+								>
+									{alerts.map((alert, i) => {
+										if (alert.condition) {
+											return (
+												<Alert
+													key={i}
+													variant="destructive"
+													className="group animate-slide-left p-3 shadow-sm  transition-colors hover:bg-destructive hover:shadow-md"
+												>
+													<Icon
+														name="alert-triangle"
+														className="h-4 w-4 transition-all group-hover:translate-y-2 group-hover:scale-150"
+													/>
+													<AlertTitle className="font-bold transition-all duration-300 group-hover:translate-x-2">
+														{alert.title}
+													</AlertTitle>
+													<AlertDescription className="transition-all duration-300 group-hover:translate-x-2">
+														{alert.description}
+													</AlertDescription>
+												</Alert>
+											)
+										}
+									})}
+								</div>
+							) : null}
+							<ProductDiscountsCard
+								associatedDiscounts={product.discounts}
+								globalDiscounts={globalDiscounts}
+							/>
+						</div>
 					</div>
-				</div>
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-					<MetricCard
-						title={'Ventas Netas'}
-						description="Total de ventas ajustado por devoluciones."
-						value={totalSales}
-						icon={'shopping-bag'}
-					/>
-					<MetricCard
-						title={'Devoluciones'}
-						description="Total de unidades devueltas."
-						value={totalReturns}
-						icon={'reset'}
-					/>
-					<div className="md:col-span-2 xl:col-span-1 ">
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 						<MetricCard
-							title={'Ganancias'}
-							description={`Generadas en ${totalSales + totalReturns} transacciones.`}
-							value={formatCurrency(product.productAnalytics?.totalProfit ?? 0)}
-							icon={'moneybag'}
+							title={'Ventas Netas'}
+							description="Total de ventas ajustado por devoluciones."
+							value={totalSales}
+							icon={'shopping-bag'}
 						/>
+						<MetricCard
+							title={'Devoluciones'}
+							description="Total de unidades devueltas."
+							value={totalReturns}
+							icon={'reset'}
+						/>
+						<div className="md:col-span-2 xl:col-span-1 ">
+							<MetricCard
+								title={'Ganancias'}
+								description={`Generadas en ${totalSales + totalReturns} transacciones.`}
+								value={formatCurrency(
+									product.productAnalytics?.totalProfit ?? 0,
+								)}
+								icon={'moneybag'}
+							/>
+						</div>
+					</div>
+					<div className="grid grid-cols-1 gap-y-4  md:grid-cols-4 md:gap-4">
+						<div className="col-span-2 grid gap-4">
+							<ChartsCard currentWeekSales={currentWeekSales} />
+						</div>
+						<div className="col-span-2 grid gap-4">
+							<PriceModificationHistoryCard
+								priceHistory={processedPriceHistory}
+							/>
+						</div>
 					</div>
 				</div>
-				<div className="grid grid-cols-1 gap-y-4  md:grid-cols-4 md:gap-4">
-					<div className="col-span-2 grid gap-4">
-						<ChartsCard currentWeekSales={currentWeekSales} />
-					</div>
-					<div className="col-span-2 grid gap-4">
-						<PriceModificationHistoryCard
-							priceHistory={processedPriceHistory}
-						/>
-					</div>
-				</div>
-			</div>
+			</ContentLayout>
 		</ProductContext.Provider>
 	)
 }

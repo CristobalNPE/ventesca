@@ -14,6 +14,7 @@ import { OrderReceiptDisplay } from '#app/components/orders/order-receipt-displa
 import { OrderProvider } from '#app/context/orders/OrderContext.tsx'
 import { cn } from '#app/utils/misc.tsx'
 import { userIsAdmin } from '#app/utils/user.ts'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -56,31 +57,32 @@ export default function OrderRoute() {
 
 	return (
 		<OrderProvider data={loaderData}>
-			<main className="flex h-full flex-col gap-4">
-				<OrderHeader />
-				<div
-					className={cn(
-						'grid flex-1 grid-cols-1 gap-y-4 lg:grid-cols-6 lg:gap-4',
-						shouldShowReceipt && 'lg:grid-cols-7',
-					)}
-				>
-					<div className={'col-span-2  overflow-x-clip'}>
-						<OrderDetails />
-					</div>
-
+			<ContentLayout title={`Transacción #${loaderData.order.id.slice(-6).toUpperCase()}`} >
+				<main className="flex h-full flex-col gap-4">
+					{/* <OrderHeader /> */}
 					<div
-						className={cn('col-span-4 ', shouldShowReceipt && 'lg:col-span-3')}
+						className={cn(
+							'grid flex-1 grid-cols-1 gap-y-4 lg:grid-cols-6 lg:gap-4',
+							shouldShowReceipt && 'lg:grid-cols-7',
+						)}
 					>
-						<OrderProductsTable />
-					</div>
-					{shouldShowReceipt && (
-						<div className="col-span-2  ">
-							<OrderReceiptDisplay />
+						<div className={'col-span-2  overflow-x-clip'}>
+							<OrderDetails />
 						</div>
-					)}
-				</div>
-				<OrderActions />
-			</main>
+						<div
+							className={cn('col-span-4 ', shouldShowReceipt && 'lg:col-span-3')}
+						>
+							<OrderProductsTable />
+						</div>
+						{shouldShowReceipt && (
+							<div className="col-span-2  ">
+								<OrderReceiptDisplay />
+							</div>
+						)}
+					</div>
+					<OrderActions />
+				</main>
+			</ContentLayout>
 		</OrderProvider>
 	)
 }

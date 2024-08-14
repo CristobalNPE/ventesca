@@ -33,6 +33,7 @@ import {
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -72,50 +73,47 @@ export default function CategoriesRoute() {
 	const { categories, categoryWithTopProfits } = useLoaderData<typeof loader>()
 
 	return (
-		<main className=" h-full">
-			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
-				<h1 className="text-xl font-semibold">Categorías</h1>
-			</div>
-			<Spacer size={'4xs'} />
-
-			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
-				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-					{categoryWithTopProfits ? (
-						<Card>
-							<CardHeader className="pb-2">
-								<CardDescription>Mayores ingresos esta semana</CardDescription>
-								<CardTitle className="flex  items-center justify-between text-3xl">
-									<Link to={categoryWithTopProfits.id} className=" text-2xl">
-										{categoryWithTopProfits.description}
-									</Link>
-									<span className="text-muted-foreground">
-										{formatCurrency(categoryWithTopProfits.totalProfit)}
-									</span>
-								</CardTitle>
-							</CardHeader>
-							<CardContent></CardContent>
-							{isAdmin ? (
-								<CardFooter>
+		<ContentLayout title='Categorías'>
+			<main className=" h-full">
+	
+				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
+					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+						{categoryWithTopProfits ? (
+							<Card>
+								<CardHeader className="pb-2">
+									<CardDescription>Mayores ingresos esta semana</CardDescription>
+									<CardTitle className="flex  items-center justify-between text-3xl">
+										<Link to={categoryWithTopProfits.id} className=" text-2xl">
+											{categoryWithTopProfits.description}
+										</Link>
+										<span className="text-muted-foreground">
+											{formatCurrency(categoryWithTopProfits.totalProfit)}
+										</span>
+									</CardTitle>
+								</CardHeader>
+								<CardContent></CardContent>
+								{isAdmin ? (
+									<CardFooter>
+										<CreateCategoryDialog />
+									</CardFooter>
+								) : null}
+							</Card>
+						) : isAdmin ? (
+							<Card>
+								<CardHeader className="pb-2">
 									<CreateCategoryDialog />
-								</CardFooter>
-							) : null}
-						</Card>
-					) : isAdmin ? (
-						<Card>
-							<CardHeader className="pb-2">
-								<CreateCategoryDialog />
-							</CardHeader>
-							<CardContent></CardContent>
-						</Card>
-					) : null}
-
-					<CategoriesCard categories={categories} />
+								</CardHeader>
+								<CardContent></CardContent>
+							</Card>
+						) : null}
+						<CategoriesCard categories={categories} />
+					</div>
+					<div className="lg:col-span-2">
+						<Outlet />
+					</div>
 				</div>
-				<div className="lg:col-span-2">
-					<Outlet />
-				</div>
-			</div>
-		</main>
+			</main>
+		</ContentLayout>
 	)
 }
 

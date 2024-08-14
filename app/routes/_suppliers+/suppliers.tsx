@@ -43,6 +43,7 @@ import { cn , useDebounce, useIsPending } from '#app/utils/misc.tsx'
 
 
 import { userHasRole, useUser } from '#app/utils/user.ts'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -63,29 +64,26 @@ export default function SuppliersRoute() {
 	const { suppliers } = useLoaderData<typeof loader>()
 
 	return (
-		<main className=" h-full">
-			<div className="flex flex-col items-center justify-between gap-2 border-b-2 border-secondary pb-3 text-center md:flex-row md:text-left">
-				<h1 className="text-xl font-semibold">Proveedores</h1>
-			</div>
-			<Spacer size={'4xs'} />
-
-			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
-				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-					{isAdmin ? (
-						<Button asChild className="flex items-center gap-2">
-							<Link to={'new'}>
-								<Icon name="plus" />
-								<span>Registrar nuevo Proveedor</span>
-							</Link>
-						</Button>
-					) : null}
-					<SuppliersCard suppliers={suppliers} />
+		<ContentLayout title='Proveedores' limitHeight>
+			<main className=" h-full">
+				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
+					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+						{isAdmin ? (
+							<Button asChild className="flex items-center gap-2">
+								<Link to={'new'}>
+									<Icon name="plus" />
+									<span>Registrar nuevo Proveedor</span>
+								</Link>
+							</Button>
+						) : null}
+						<SuppliersCard suppliers={suppliers} />
+					</div>
+					<div className="lg:col-span-2">
+						<Outlet />
+					</div>
 				</div>
-				<div className="lg:col-span-2">
-					<Outlet />
-				</div>
-			</div>
-		</main>
+			</main>
+		</ContentLayout>
 	)
 }
 

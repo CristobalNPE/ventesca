@@ -19,6 +19,7 @@ import {
 	getTotalProfits,
 	getWeeklyProfitsForMonth,
 } from './analytics-service.server'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -53,24 +54,24 @@ export default function Dashboard() {
 	const loaderData = useLoaderData<typeof loader>()
 	return (
 		<AnalyticsProvider data={loaderData}>
-			<AnalyticsHeader />
-			<Spacer size="4xs" />
-			<main className="grid gap-6  xl:grid-cols-7">
-				<div className="grid gap-y-6 xl:col-span-5 xl:grid-cols-5  xl:gap-x-6">
-					<div className="grid gap-6 xl:col-span-2 ">
-						<TotalProfit />
-						<TotalOrders />
-						<ProfitLineCharts />
+			<ContentLayout title="Analíticas de la Empresa">
+				<main className="grid gap-6  xl:grid-cols-7 ">
+					<div className="grid gap-y-6 xl:col-span-5 xl:grid-cols-5  xl:gap-x-6 ">
+						<div className="grid gap-4 xl:col-span-2 ">
+							<TotalProfit />
+							<TotalOrders />
+							<ProfitLineCharts />
+						</div>
+						<div className="grid gap-6 xl:col-span-3 ">
+							<WeeklyTransactionsLineChart />
+							<TopSellerCard />
+						</div>
 					</div>
-					<div className="grid gap-6 xl:col-span-3 ">
-						<WeeklyTransactionsLineChart />
-						<TopSellerCard />
+					<div className="grid gap-6 xl:col-span-2">
+						<TopSellingProductsBarChart />
 					</div>
-				</div>
-				<div className="grid gap-6 xl:col-span-2">
-					<TopSellingProductsBarChart />
-				</div>
-			</main>
+				</main>
+			</ContentLayout>
 		</AnalyticsProvider>
 	)
 }
