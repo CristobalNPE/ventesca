@@ -3,11 +3,9 @@ import { type ActionFunctionArgs, json, redirect } from '@remix-run/node'
 import { prisma } from '#app/utils/db.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { OrderStatus } from '../../types/orders/order-status.ts'
-import {
-	OrderAction,
-	updateProductStockAndAnalytics,
-} from '../_inventory+/product-service.server.ts'
+
 import { OrderReportEditSchema } from './__order-editor'
+import { OrderAction, updateProductStockAndAnalytics } from '#app/services/inventory/product-management.server.ts'
 
 export async function action({ request }: ActionFunctionArgs) {
 	await requireUserWithRole(request, 'Administrador')

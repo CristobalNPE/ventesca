@@ -44,7 +44,7 @@ import { BulkPriceModificationScope } from '../../types/inventory/BulkPriceModif
 import { BulkPriceModificationStatus } from '../../types/inventory/BulkPriceModificationStatus'
 import { BulkPriceModificationStrategy } from '../../types/inventory/BulkPriceModificationStrategy'
 import { PriceModificationStatus } from '../../types/inventory/PriceModificationStatus'
-import { getInventoryValueByCategory } from './product-service.server'
+import { getInventoryValueByCategory } from '#app/services/inventory/inventory-analysis.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
