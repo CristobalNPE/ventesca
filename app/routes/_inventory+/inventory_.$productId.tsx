@@ -1,13 +1,3 @@
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { type MetaFunction, Outlet, useLoaderData } from '@remix-run/react'
-import { useState } from 'react'
-import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { ContentLayout } from '#app/components/layout/content-layout.js'
 import { MetricCard } from '#app/components/metric-card.tsx'
@@ -16,7 +6,6 @@ import {
 	AlertDescription,
 	AlertTitle,
 } from '#app/components/ui/alert.tsx'
-import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
 	CardContent,
@@ -25,12 +14,23 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Outlet, useLoaderData, type MetaFunction } from '@remix-run/react'
+import { useState } from 'react'
+import { z } from 'zod'
 
+import { getCurrentWeekProductSales } from '#app/services/inventory/product-analytics.server.ts'
+import { softDeleteProduct } from '#app/services/inventory/product-management.server.ts'
 import { processPriceHistory } from '#app/utils/inventory/product-calculations.js'
 import { getProductAlerts } from '#app/utils/inventory/product-status.js'
 import { useIsUserAdmin } from '#app/utils/user.ts'
@@ -45,8 +45,6 @@ import { PriceModificationHistoryCard } from '../../components/inventory/product
 import { ChartsCard } from '../../components/inventory/product-sales-chart.tsx'
 import { ProductContext } from '../../context/inventory/ProductContext.tsx'
 import { DiscountScope } from '../../types/discounts/discount-scope.ts'
-import { softDeleteProduct } from '#app/services/inventory/product-management.server.ts'
-
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -188,7 +186,6 @@ export default function ProductRoute() {
 				actions={isAdmin ? <DeleteProductConfirmationModal /> : null}
 			>
 				<div className="flex flex-col gap-4 ">
-					
 					<div className=" grid grid-cols-1 gap-4  md:grid-cols-2 xl:grid-cols-3 ">
 						<ModifyStockDialog />
 						<ModifySellingPriceDialog />
@@ -219,7 +216,7 @@ export default function ProductRoute() {
 							</Card>
 						</div>
 						<div className="col-span-1 grid auto-rows-min gap-4">
-							{alerts.some(alert => alert.condition) ? (
+							{alerts.some((alert) => alert.condition) ? (
 								<div
 									className={cn(
 										'flex h-fit flex-col gap-2 ',
