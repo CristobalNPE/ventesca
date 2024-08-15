@@ -57,12 +57,12 @@ export default function OrderRoute() {
 
 	return (
 		<OrderProvider data={loaderData}>
-			<ContentLayout title={`Transacción #${loaderData.order.id.slice(-6).toUpperCase()}`} >
+			<ContentLayout title={`Transacción #${loaderData.order.id.slice(-6).toUpperCase()}`} limitHeight>
 				<main className="flex h-full flex-col gap-4">
 					{/* <OrderHeader /> */}
 					<div
 						className={cn(
-							'grid flex-1 grid-cols-1 gap-y-4 lg:grid-cols-6 lg:gap-4',
+							'grid flex-1 grid-cols-1 gap-y-4 lg:grid-cols-6 lg:gap-4  ',
 							shouldShowReceipt && 'lg:grid-cols-7',
 						)}
 					>
