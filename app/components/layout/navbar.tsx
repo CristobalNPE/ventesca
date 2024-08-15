@@ -22,11 +22,14 @@ interface NavbarProps {
 }
 
 export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
-	const { pathname } = useLocation()
+	const { pathname, state } = useLocation()
 
 	const paths = pathname.split('/')
 
 	const showBackButton = paths.length > 2 && paths[1]?.length
+
+	let origin = '..'
+	if (state && state.origin) origin = `/${state.origin}`
 
 	return (
 		<header
@@ -49,7 +52,7 @@ export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
 									preserveSearch
 									prefetch="intent"
 									unstable_viewTransition
-									to={'..'}
+									to={origin}
 									relative="path"
 								>
 									<Icon name={'double-arrow-left'} size="md" />
