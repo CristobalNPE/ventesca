@@ -171,7 +171,7 @@ function InventoryOptions() {
 				className="h-7 gap-1 text-sm"
 				variant={'outline'}
 			>
-				<a href={'/inventory/generate-inventory-template'}>
+				<a href={'/inventory/template-generator'}>
 					<Icon name="file-arrow-right" size="sm" className="mr-2" />
 					<span>Exportar datos de inventario</span>
 				</a>
