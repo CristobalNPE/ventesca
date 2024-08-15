@@ -18,7 +18,7 @@ import { PropsWithChildren, useEffect, useState } from 'react'
 
 // Base component props
 type MetricCardProps = {
-	title: string
+	title?: string
 	description?: string
 	subText?: string
 	value: string | number
@@ -36,8 +36,13 @@ export function MetricCard({
 	isNegative,
 }: MetricCardProps) {
 	return (
-		<Card className="rounded-lg bg-background p-6 shadow-sm h-full grid">
-			<div className="flex items-center justify-between gap-4 md:gap-2">
+		<Card className="grid h-full rounded-lg bg-background p-6 shadow-sm">
+			<div
+				className={cn(
+					'flex items-center justify-between gap-4 md:gap-2',
+					!title && !description && 'justify-center',
+				)}
+			>
 				<div className="flex items-center gap-4">
 					<div
 						className={cn(
