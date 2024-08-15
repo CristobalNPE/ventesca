@@ -23,8 +23,7 @@ export function OrderDetails() {
 	return (
 		<div className="flex flex-col gap-4">
 			<MetricCard
-				title={'Estado'}
-				description="Estado de la transacción"
+			
 				value={order.status}
 				icon={
 					order.status === OrderStatus.PENDING
