@@ -1,5 +1,5 @@
 import { type IconName } from '#app/components/ui/icon.tsx'
-import { userIsAdmin } from './user'
+import { useIsUserAdmin } from './user'
 
 type Submenu = {
 	href: string
@@ -21,7 +21,7 @@ type Group = {
 }
 
 export function getMenuList(pathname: string): Group[] {
-	const isAdmin = userIsAdmin()
+	const isAdmin = useIsUserAdmin()
 
 	const menuList: Group[] = [
 		{

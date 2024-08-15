@@ -25,7 +25,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 import { SortDirection } from '#app/types/SortDirection.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { userIsAdmin } from '#app/utils/user.ts'
+import { useIsUserAdmin } from '#app/utils/user.ts'
 import {
 	ImportInventoryFromFileModal,
 	ImportInventoryFromFileSchema,
@@ -334,7 +334,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function InventoryRoute() {
-	const isAdmin = userIsAdmin()
+	const isAdmin = useIsUserAdmin()
 	const loaderData = useLoaderData<typeof loader>()
 
 	return (

@@ -24,6 +24,11 @@ export function useUser() {
 	return maybeUser
 }
 
+export function useIsUserAdmin() {
+	const user = useUser()
+	return userHasRole(user, 'Administrador')
+}
+
 type Action = 'create' | 'read' | 'update' | 'delete'
 type Entity = 'user' | 'note'
 type Access = 'own' | 'any' | 'own,any' | 'any,own'
@@ -44,31 +49,10 @@ export function parsePermissionString(permissionString: PermissionString) {
 	}
 }
 
-export function userHasPermission(
-	user: Pick<ReturnType<typeof useUser>, 'roles'> | null | undefined,
-	permission: PermissionString,
-) {
-	if (!user) return false
-	const { action, entity, access } = parsePermissionString(permission)
-	return user.roles.some(role =>
-		role.permissions.some(
-			permission =>
-				permission.entity === entity &&
-				permission.action === action &&
-				(!access || access.includes(permission.access)),
-		),
-	)
-}
-
 export function userHasRole(
 	user: Pick<ReturnType<typeof useUser>, 'roles'> | null,
 	role: string,
 ) {
 	if (!user) return false
 	return user.roles.some(r => r.name === role)
-}
-
-export function userIsAdmin() {
-	const user = useUser()
-	return userHasRole(user, 'Administrador')
 }

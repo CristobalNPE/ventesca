@@ -14,7 +14,7 @@ import { OrderProvider } from '#app/context/orders/OrderContext.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn } from '#app/utils/misc.tsx'
-import { userIsAdmin } from '#app/utils/user.ts'
+import { useIsUserAdmin } from '#app/utils/user.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -52,7 +52,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function OrderRoute() {
 	const loaderData = useLoaderData<typeof loader>()
-	const isAdmin = userIsAdmin()
+	const isAdmin = useIsUserAdmin()
 	const shouldShowReceipt = loaderData.order.productOrders.length > 0
 
 	return (

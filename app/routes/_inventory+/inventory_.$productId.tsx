@@ -33,7 +33,7 @@ import { redirectWithToast } from '#app/utils/toast.server.ts'
 
 import { processPriceHistory } from '#app/utils/inventory/product-calculations.js'
 import { getProductAlerts } from '#app/utils/inventory/product-status.js'
-import { userIsAdmin } from '#app/utils/user.ts'
+import { useIsUserAdmin } from '#app/utils/user.ts'
 import { DeleteProductConfirmationModal } from '../../components/inventory/product-delete.tsx'
 import { ProductDiscountsCard } from '../../components/inventory/product-discounts.tsx'
 import { ModifyCategorySelect } from '../../components/inventory/product-modify-category.tsx'
@@ -165,7 +165,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function ProductRoute() {
-	const isAdmin = userIsAdmin()
+	const isAdmin = useIsUserAdmin()
 	const {
 		product,
 		globalDiscounts,

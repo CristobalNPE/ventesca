@@ -21,7 +21,7 @@ import {
 } from '#app/utils/inventory/product-calculations.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 
-import { userIsAdmin } from '#app/utils/user.ts'
+import { useIsUserAdmin } from '#app/utils/user.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -38,7 +38,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function ProductDetails() {
 	const { product } = useLoaderData<typeof loader>()
-	const isAdmin = userIsAdmin()
+	const isAdmin = useIsUserAdmin()
 
 	const profitMargin = calculateProfitMargin({
 		sellingPrice: product.sellingPrice,
