@@ -18,11 +18,9 @@ import { FinishTransactionSchema } from '../../components/pos/current-order-fini
 import { SetPaymentMethodSchema } from '../../components/pos/current-order-payment-method.tsx'
 import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { OrderStatus } from '../../types/orders/order-status.ts'
+import { OrderAction, updateProductStockAndAnalytics } from '#app/services/inventory/product-management.server.ts'
 
-import {
-	OrderAction,
-	updateProductStockAndAnalytics,
-} from '../_inventory+/product-service.server.ts'
+
 
 export async function discardOrderAction(formData: FormData) {
 	const submission = parseWithZod(formData, {
