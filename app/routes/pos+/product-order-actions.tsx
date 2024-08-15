@@ -1,12 +1,7 @@
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import { type Discount, type ProductOrder } from '@prisma/client'
 import { json, redirect, type ActionFunctionArgs } from '@remix-run/node'
-import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
-import { DiscountScope } from '../../types/discounts/discount-scope.ts'
-import { DiscountType } from '../../types/discounts/discount-type.ts'
 import {
 	DeleteFormSchema,
 	deleteProductOrderActionIntent,
@@ -15,6 +10,8 @@ import {
 	addProductOrderActionIntent,
 	AddProductOrderSchema,
 } from '#app/components/pos/product-order/product-order-new.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import {
 	changeProductOrderQuantityActionIntent,
 	ChangeProductOrderQuantitySchema,
@@ -27,6 +24,9 @@ import {
 	updateProductOrderTypeActionIntent,
 	UpdateProductOrderTypeSchema,
 } from '../../components/pos/product-order/product-order-type.tsx'
+import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
+import { DiscountScope } from '../../types/discounts/discount-scope.ts'
+import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { OrderStatus } from '../../types/orders/order-status.ts'
 import { ProductOrderType } from '../../types/orders/productOrderType.ts'
 

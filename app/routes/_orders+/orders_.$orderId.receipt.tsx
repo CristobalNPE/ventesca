@@ -1,8 +1,4 @@
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { Prisma } from '@prisma/client'
-import * as QRCode from 'qrcode'
+import { type Prisma } from '@prisma/client'
 
 import {
 	Document,
@@ -17,7 +13,11 @@ import {
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import * as QRCode from 'qrcode'
 import { pdf } from 'remix-utils/responses'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { ProductOrderType } from '../../types/orders/productOrderType'
 
 Font.register({

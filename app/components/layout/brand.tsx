@@ -1,3 +1,5 @@
+import VentescaLogoDark from '#app/routes/_marketing+/logos/ventesca-dark.png'
+import VentescaLogoLight from '#app/routes/_marketing+/logos/ventesca-light.png'
 import { cn, getBusinessImgSrc } from '#app/utils/misc.tsx'
 import { useOptionalUser } from '#app/utils/user.ts'
 import {
@@ -7,8 +9,6 @@ import {
 	TooltipTrigger,
 } from '../ui/tooltip'
 
-import VentescaLogoDark from '#app/routes/_marketing+/logos/ventesca-dark.png'
-import VentescaLogoLight from '#app/routes/_marketing+/logos/ventesca-light.png'
 
 interface BrandProps {
 	isOpen: boolean

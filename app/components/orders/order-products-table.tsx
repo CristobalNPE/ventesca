@@ -1,3 +1,5 @@
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Badge } from '#app/components/ui/badge.tsx'
 import {
 	Card,
@@ -7,10 +9,6 @@ import {
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-
 import {
 	Table,
 	TableBody,
@@ -19,14 +17,16 @@ import {
 	TableHeader,
 	TableRow,
 } from '#app/components/ui/table.tsx'
-
+import { productOrderTypeBgColors } from '#app/constants/productOrderTypesColors.js'
+import { useOrder } from '#app/context/orders/OrderContext.tsx'
 import { OrderStatus } from '#app/types/orders/order-status.ts'
+import { ProductOrderType } from '#app/types/orders/productOrderType.js'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
+
+
 import { PaginationBar } from '../pagination-bar'
 import { ScrollArea } from '../ui/scroll-area'
 import { OrdersFilters } from './orders-filters'
-import { useOrder } from '#app/context/orders/OrderContext.tsx'
-import { ProductOrderType } from '#app/types/orders/productOrderType.js'
-import { productOrderTypeBgColors } from '#app/constants/productOrderTypesColors.js'
 
 
 export function OrderProductsTable() {

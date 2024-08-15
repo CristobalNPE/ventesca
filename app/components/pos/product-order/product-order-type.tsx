@@ -1,12 +1,12 @@
 import { useFetcher } from '@remix-run/react'
 import { useEffect } from 'react'
 import { z } from 'zod'
-import { cn } from '#app/utils/misc.tsx'
 import { productOrderTypeBgColors } from '#app/constants/productOrderTypesColors.ts'
 import {
 	ProductOrderType,
 	ProductOrderTypeSchema,
 } from '#app/types/orders/productOrderType.ts'
+import { cn } from '#app/utils/misc.tsx'
 
 export const updateProductOrderTypeActionIntent = 'update-po-type'
 

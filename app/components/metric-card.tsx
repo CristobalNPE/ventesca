@@ -1,6 +1,8 @@
+import { type PropsWithChildren, useEffect, useState } from 'react'
+import { Label } from 'recharts'
 import { cn } from '#app/utils/misc.tsx'
 
-import { Label } from 'recharts'
+import { Button } from './ui/button'
 import { Card } from './ui/card'
 import {
 	Dialog,
@@ -11,10 +13,8 @@ import {
 	DialogDescription,
 	DialogFooter,
 } from './ui/dialog'
-import { Icon, IconName } from './ui/icon'
+import { Icon, type IconName } from './ui/icon'
 import { Input } from './ui/input'
-import { Button } from './ui/button'
-import { PropsWithChildren, useEffect, useState } from 'react'
 
 // Base component props
 type MetricCardProps = {

@@ -1,3 +1,5 @@
+import { type Discount } from '@prisma/client'
+import { Link } from '@remix-run/react'
 import {
   Card,
   CardContent,
@@ -7,8 +9,6 @@ import {
   CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Discount } from '@prisma/client'
-import { Link } from '@remix-run/react'
 
 export function ProductDiscountsCard({
 	associatedDiscounts,

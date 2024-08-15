@@ -1,22 +1,22 @@
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { Prisma } from '@prisma/client'
+import { type Prisma } from '@prisma/client'
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
-import { MetaFunction, useLoaderData } from '@remix-run/react'
-
+import { type MetaFunction, useLoaderData } from '@remix-run/react'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { OrdersHeader } from '#app/components/orders/orders-header.tsx'
+
 import { OrdersReportsTable } from '#app/components/orders/orders-reports-table.tsx'
 import { OrdersStats } from '#app/components/orders/orders-stats.tsx'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 import { OrdersProvider } from '#app/context/orders/OrdersContext.tsx'
 import { SortDirection } from '#app/types/SortDirection.ts'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { getTimePeriodBoundaries } from '#app/utils/time-periods.ts'
 import {
 	getLastTwoDaysEarnings,
 	getLastTwoWeeksEarnings,
 	getWeeklyDailyEarnings,
 } from './orders-service.server'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { VerifyOrderDialog } from './orders_.verify-order'
 
 export async function loader({ request }: LoaderFunctionArgs) {

@@ -1,21 +1,21 @@
-import { getFormProps, getInputProps } from '@conform-to/react'
-import { useFetcher } from '@remix-run/react'
-import { action } from '../../routes/_inventory+/inventory.edit'
+import { getFormProps, getInputProps , useForm } from '@conform-to/react'
 
-import { useForm } from '@conform-to/react'
+
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
 
+import { z } from 'zod'
 import { ErrorList, StyledField } from '#app/components/forms.tsx'
 import { EditableMetricCard } from '#app/components/metric-card.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	calculateMarkupPercentage,
 	calculateProfitMargin,
 } from '#app/utils/inventory/product-calculations.js'
-import { z } from 'zod'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useProductContext } from '../../context/inventory/ProductContext'
+import { type action } from '../../routes/_inventory+/inventory.edit'
 
 export const updateProductSellingPriceActionIntent =
 	'update-product-sellingPrice'

@@ -7,7 +7,7 @@ import {
 } from '#app/components/ui/card.tsx'
 import { useAnalytics } from '#app/context/analytics/AnalyticsContext.tsx'
 import { formatCurrency, getUserImgSrc } from '#app/utils/misc.tsx'
-import { Icon, IconName } from '../ui/icon'
+import { Icon, type IconName } from '../ui/icon'
 
 export function TopSellerCard() {
 	const { sellerStatsForWeek } = useAnalytics()

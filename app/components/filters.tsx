@@ -1,3 +1,4 @@
+import { Link, useLocation } from '@remix-run/react'
 import { Label as FormLabel } from '#app/components/ui/label.tsx'
 import {
 	Select,
@@ -6,7 +7,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '#app/components/ui/select.tsx'
-import { Link, useLocation } from '@remix-run/react'
+import { SortDirection } from '#app/types/SortDirection.ts'
 import { Button } from './ui/button'
 import { Icon } from './ui/icon'
 import {
@@ -16,7 +17,6 @@ import {
 	TooltipTrigger,
 } from './ui/tooltip'
 
-import { SortDirection } from '#app/types/SortDirection.ts'
 
 export function FilterSelect({
 	label,

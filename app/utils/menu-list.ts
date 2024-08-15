@@ -1,4 +1,4 @@
-import { IconName } from '#app/components/ui/icon.tsx'
+import { type IconName } from '#app/components/ui/icon.tsx'
 import { userIsAdmin } from './user'
 
 type Submenu = {

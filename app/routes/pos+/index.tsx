@@ -5,16 +5,28 @@ import {
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import {
-	MetaFunction,
+	type MetaFunction,
 	useFetchers,
 	useLoaderData,
 	useLocation,
 	useRevalidator,
 } from '@remix-run/react'
 
+import { useEffect, useRef } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { Key } from 'ts-key-enum'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { deleteOrderActionIntent } from '#app/components/pos/current-order-delete.tsx'
+import { modifyOrderActionIntent } from '#app/components/pos/current-order-modify.tsx'
+import { CurrentOrderPlaceholder } from '#app/components/pos/current-order-placeholder.tsx'
+import { CurrentOrderProducts } from '#app/components/pos/current-order-products.tsx'
+import { CurrentOrderSettingsPanel } from '#app/components/pos/current-order-settings-panel.tsx'
+import {
+	addProductOrderActionIntent,
+	ProductReader,
+} from '#app/components/pos/product-order/product-order-new.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { useEffect, useRef } from 'react'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 import {
 	applyDirectDiscountActionIntent,
@@ -25,13 +37,6 @@ import { finishOrderActionIntent } from '../../components/pos/current-order-fini
 
 import { setPaymentMethodActionIntent } from '../../components/pos/current-order-payment-method.tsx'
 
-import { CurrentOrderPlaceholder } from '#app/components/pos/current-order-placeholder.tsx'
-import { CurrentOrderProducts } from '#app/components/pos/current-order-products.tsx'
-import { CurrentOrderSettingsPanel } from '#app/components/pos/current-order-settings-panel.tsx'
-import {
-	addProductOrderActionIntent,
-	ProductReader,
-} from '#app/components/pos/product-order/product-order-new.tsx'
 import { CurrentPendingOrderProvider } from '#app/context/pos/CurrentPendingOrderContext.tsx'
 import {
 	applyDirectDiscountAction,
@@ -49,11 +54,6 @@ import {
 	fetchOrderDetails,
 } from './pos-service.server.ts'
 
-import { useHotkeys } from 'react-hotkeys-hook'
-import { Key } from 'ts-key-enum'
-import { modifyOrderActionIntent } from '#app/components/pos/current-order-modify.tsx'
-import { deleteOrderActionIntent } from '#app/components/pos/current-order-delete.tsx'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

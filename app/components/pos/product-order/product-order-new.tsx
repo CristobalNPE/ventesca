@@ -1,5 +1,15 @@
 import { useFetcher } from '@remix-run/react'
 
+import {
+	forwardRef,
+	useEffect,
+	useId,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react'
+import { toast } from 'sonner'
+import { z } from 'zod'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { Label } from '#app/components/ui/label.tsx'
@@ -11,18 +21,8 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
+import { type addProductOrderActionType } from '#app/routes/pos+/product-order-actions.js'
 import { cn, useDebounce } from '#app/utils/misc.tsx'
-import {
-	forwardRef,
-	useEffect,
-	useId,
-	useImperativeHandle,
-	useRef,
-	useState,
-} from 'react'
-import { z } from 'zod'
-import { addProductOrderActionType } from '#app/routes/pos+/product-order-actions.js'
-import { toast } from 'sonner'
 
 
 export const addProductOrderActionIntent = 'add-product-order'

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useUrlParams } from './useUrlParams'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 import { SortDirection } from '#app/types/SortDirection.ts'
+import { useUrlParams } from './useUrlParams'
 
 /**
  * @description Custom hook to handle the sort direction

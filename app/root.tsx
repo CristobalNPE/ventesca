@@ -1,5 +1,3 @@
-import { href as iconsHref } from '#app/components/ui/icon.tsx'
-import { combineHeaders, getDomainUrl } from '#app/utils/misc.tsx'
 import {
 	json,
 	type HeadersFunction,
@@ -18,14 +16,20 @@ import {
 } from '@remix-run/react'
 import { withSentry } from '@sentry/remix'
 import { useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
+import { Key } from 'ts-key-enum'
+import { href as iconsHref } from '#app/components/ui/icon.tsx'
+import { combineHeaders, getDomainUrl } from '#app/utils/misc.tsx'
 
 import { GeneralErrorBoundary } from './components/error-boundary.tsx'
+import { MainLayout } from './components/layout/main-layout.tsx'
 import { EpicProgress } from './components/progress-bar.tsx'
 
 import { useToast } from './components/toaster.tsx'
 
 import { EpicToaster } from './components/ui/sonner.tsx'
+import { ProductPriceReader } from './routes/_inventory+/inventory.price-reader.tsx'
 import { useTheme } from './routes/resources+/theme-switch.tsx'
 import fontStyleSheetUrl from './styles/font.css?url'
 import tailwindStyleSheetUrl from './styles/tailwind.css?url'
@@ -35,11 +39,7 @@ import { prisma } from './utils/db.server.ts'
 import { getEnv } from './utils/env.server.ts'
 import { honeypot } from './utils/honeypot.server.ts'
 
-import { useHotkeys } from 'react-hotkeys-hook'
-import { Key } from 'ts-key-enum'
 
-import { MainLayout } from './components/layout/main-layout.tsx'
-import { ProductPriceReader } from './routes/_inventory+/inventory.price-reader.tsx'
 import { useNonce } from './utils/nonce-provider.ts'
 import { getTheme, type Theme } from './utils/theme.server.ts'
 import { makeTimings, time } from './utils/timing.server.ts'

@@ -8,12 +8,6 @@ import {
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
-
-import { useInventory } from '../../context/inventory/InventoryContext'
-import { InventoryFilters } from './inventory-filters'
-import { InventorySearchBar } from './inventory-search-bar'
-
 import {
 	Table,
 	TableBody,
@@ -22,8 +16,14 @@ import {
 	TableHeader,
 	TableRow,
 } from '#app/components/ui/table.tsx'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 
+import { useInventory } from '../../context/inventory/InventoryContext'
 import { ScrollArea } from '../ui/scroll-area'
+import { InventoryFilters } from './inventory-filters'
+import { InventorySearchBar } from './inventory-search-bar'
+
+
 
 
 export function InventoryProductsTable() {

@@ -1,3 +1,6 @@
+import { format, getWeek } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { CartesianGrid, Line, LineChart, XAxis } from 'recharts'
 import {
 	Card,
 	CardContent,
@@ -7,7 +10,7 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
@@ -20,9 +23,6 @@ import {
 } from '#app/components/ui/tabs.tsx'
 import { useAnalytics } from '#app/context/analytics/AnalyticsContext.tsx'
 import { formatCurrency } from '#app/utils/misc.tsx'
-import { format, getWeek } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts'
 
 const chartConfig = {
 	profit: {

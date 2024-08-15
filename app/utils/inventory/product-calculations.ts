@@ -1,6 +1,6 @@
+import { type PriceModification } from '@prisma/client'
+import { type SerializeFrom } from '@remix-run/node'
 import { PriceModificationStatus } from '#app/types/inventory/PriceModificationStatus.js'
-import { PriceModification } from '@prisma/client'
-import { SerializeFrom } from '@remix-run/node'
 
 export function calculateProfitMargin({
 	sellingPrice,

@@ -16,6 +16,7 @@ import {
 } from '@remix-run/react'
 import { format as formatRut } from '@validatecl/rut'
 import { useId } from 'react'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
@@ -43,7 +44,6 @@ import { cn , useDebounce, useIsPending } from '#app/utils/misc.tsx'
 
 
 import { userHasRole, useUser } from '#app/utils/user.ts'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

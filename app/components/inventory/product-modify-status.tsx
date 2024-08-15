@@ -1,17 +1,17 @@
-import { getFormProps } from '@conform-to/react'
-import { useFetcher } from '@remix-run/react'
-import { action } from '../../routes/_inventory+/inventory.edit'
+import { getFormProps , useForm } from '@conform-to/react'
 
-import { useForm } from '@conform-to/react'
+
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
 
-import { EditableMetricCard } from '#app/components/metric-card.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { z } from 'zod'
-import { useProductContext } from '../../context/inventory/ProductContext'
 import { ErrorList } from '#app/components/forms.tsx'
+import { EditableMetricCard } from '#app/components/metric-card.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { getProductStatus } from '#app/utils/inventory/product-status.js'
+import { useProductContext } from '../../context/inventory/ProductContext'
+import { type action } from '../../routes/_inventory+/inventory.edit'
 
 export const updateProductStatusActionIntent = 'update-product-status'
 

@@ -1,7 +1,27 @@
+import {
+	getFormProps,
+	getInputProps,
+	useForm,
+	useInputControl,
+} from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+	Form,
+	json,
+	Link,
+	redirect,
+	useActionData,
+	useLoaderData,
+} from '@remix-run/react'
+import { type ChangeEvent, useState } from 'react'
+import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { Input } from '#app/components/ui/input.tsx'
 import { Label } from '#app/components/ui/label.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
 	Tabs,
 	TabsContent,
@@ -12,26 +32,8 @@ import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import {
-	getFormProps,
-	getInputProps,
-	useForm,
-	useInputControl,
-} from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
-import {
-	Form,
-	json,
-	Link,
-	redirect,
-	useActionData,
-	useLoaderData,
-} from '@remix-run/react'
 
-import { ChangeEvent, useState } from 'react'
-import { z } from 'zod'
+import { redirectWithToast } from '#app/utils/toast.server.js'
 import {
 	BulkPriceModificationDirection,
 	BulkPriceModificationDirectionSchema,
@@ -40,13 +42,11 @@ import {
 	BulkPriceModificationScope,
 	BulkPriceModificationScopeSchema,
 } from '../../types/inventory/BulkPriceModificationScope'
+import { BulkPriceModificationStatus } from '../../types/inventory/BulkPriceModificationStatus'
 import {
 	BulkPriceModificationStrategy,
 	BulkPriceModificationStrategySchema,
 } from '../../types/inventory/BulkPriceModificationStrategy'
-import { BulkPriceModificationStatus } from '../../types/inventory/BulkPriceModificationStatus'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { redirectWithToast } from '#app/utils/toast.server.js'
 import { PriceModificationStatus } from '../../types/inventory/PriceModificationStatus'
 
 const setupBulkPriceModificationActionIntent = 'setup-bulk-price-adjustment'

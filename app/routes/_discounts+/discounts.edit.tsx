@@ -5,6 +5,9 @@ import { z } from 'zod'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { type DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
+import { type DiscountScope } from '../../types/discounts/discount-scope.ts'
+import { DiscountType } from '../../types/discounts/discount-type.ts'
 import {
 	DiscountAppmethodEditorSchema,
 	updateDiscountAppMethodActionIntent,
@@ -38,9 +41,6 @@ import {
 	DiscountValueEditorSchema,
 	updateDiscountValueActionIntent,
 } from './__discounts-editors/value-editor.tsx'
-import { type DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
-import { type DiscountScope } from '../../types/discounts/discount-scope.ts'
-import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { buildDescription } from './discounts_.new.tsx'
 
 export async function action({ request }: ActionFunctionArgs) {

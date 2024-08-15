@@ -1,3 +1,7 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
+import { z } from 'zod'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -12,11 +16,7 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { useFetcher } from '@remix-run/react'
-import { z } from 'zod'
-import { action } from '../../routes/_inventory+/inventory.edit'
+import { type action } from '../../routes/_inventory+/inventory.edit'
 import {
 	PRODUCT_NAME_MAX,
 	PRODUCT_NAME_MIN,

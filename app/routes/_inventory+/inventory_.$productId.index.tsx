@@ -1,3 +1,9 @@
+import { invariantResponse } from '@epic-web/invariant'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { Link, useLoaderData } from '@remix-run/react'
+import { format, formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { CardContentItem } from '#app/components/card-content-item.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -9,19 +15,13 @@ import {
 import { Icon, IconName } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { invariantResponse } from '@epic-web/invariant'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
-import { format, formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-
 import {
 	calculateMarkupPercentage,
 	calculateProfitMargin,
 } from '#app/utils/inventory/product-calculations.ts'
+import { formatCurrency } from '#app/utils/misc.tsx'
+
 import { userIsAdmin } from '#app/utils/user.ts'
-import { CardContentItem } from '#app/components/card-content-item.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

@@ -15,12 +15,12 @@ import {
 } from '#app/components/ui/select.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/_discounts+/discounts.edit.tsx'
-import { discountAppmethodNames } from '../_constants/discountAppmethodNames.ts'
 import {
 	type DiscountApplicationMethod,
 	DiscountApplicationMethodSchema,
 	allDiscountApplicationMethods,
 } from '../../../types/discounts/discount-applicationMethod.ts'
+import { discountAppmethodNames } from '../_constants/discountAppmethodNames.ts'
 
 export const updateDiscountAppMethodActionIntent = 'update-discount-appmethod'
 

@@ -1,10 +1,13 @@
-import { useInputControl } from '@conform-to/react'
-import { useFetcher } from '@remix-run/react'
-import { action } from '../../routes/_inventory+/inventory.edit'
+import { useInputControl , useForm } from '@conform-to/react'
 
-import { useForm } from '@conform-to/react'
+
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
+import { type Supplier } from '@prisma/client'
+import { useFetcher } from '@remix-run/react'
+import { useEffect } from 'react'
+import { useSpinDelay } from 'spin-delay'
+import { z } from 'zod'
 import { Icon } from '#app/components/ui/icon.tsx'
 import {
 	Select,
@@ -14,11 +17,8 @@ import {
 	SelectValue,
 } from '#app/components/ui/select.tsx'
 import { cn } from '#app/utils/misc.tsx'
-import { Supplier } from '@prisma/client'
-import { useEffect } from 'react'
-import { useSpinDelay } from 'spin-delay'
-import { z } from 'zod'
 import { useProductContext } from '../../context/inventory/ProductContext'
+import { type action } from '../../routes/_inventory+/inventory.edit'
 
 export const updateProductSupplierActionIntent = 'update-product-supplier'
 

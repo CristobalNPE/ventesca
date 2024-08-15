@@ -2,6 +2,7 @@ import { getFormProps, useForm } from '@conform-to/react'
 import { Form, useActionData } from '@remix-run/react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { useRef } from 'react'
 import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import {
@@ -20,7 +21,6 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/pos+/index.tsx'
 import { formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 import { type OrderDetails } from '../../types/orders/OrderData.ts'
-import { useRef } from 'react'
 
 export const finishOrderActionIntent = 'finish-order'
 

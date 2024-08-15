@@ -1,32 +1,7 @@
-import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { getBusinessId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { invariant, invariantResponse } from '@epic-web/invariant'
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
+import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
 import { Form, json, useLoaderData } from '@remix-run/react'
 
-import { Spacer } from '#app/components/spacer.tsx'
-import {
-	AlertDialog,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '#app/components/ui/alert-dialog.tsx'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '#app/components/ui/card.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
 	Table,
@@ -39,12 +14,37 @@ import {
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { getInventoryValueByCategory } from './product-service.server'
+import { Spacer } from '#app/components/spacer.tsx'
+import {
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '#app/components/ui/alert-dialog.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { getBusinessId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { BulkPriceModificationDirection } from '../../types/inventory/BulkPriceModificationDirection'
 import { BulkPriceModificationScope } from '../../types/inventory/BulkPriceModificationScope'
 import { BulkPriceModificationStatus } from '../../types/inventory/BulkPriceModificationStatus'
 import { BulkPriceModificationStrategy } from '../../types/inventory/BulkPriceModificationStrategy'
 import { PriceModificationStatus } from '../../types/inventory/PriceModificationStatus'
+import { getInventoryValueByCategory } from './product-service.server'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')

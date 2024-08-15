@@ -1,20 +1,20 @@
 import { invariantResponse } from '@epic-web/invariant'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { MetaFunction, useLoaderData } from '@remix-run/react'
-
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
+import { type MetaFunction, useLoaderData } from '@remix-run/react'
 
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { OrderActions } from '#app/components/orders/order-actions.tsx'
+
 import { OrderDetails } from '#app/components/orders/order-details.tsx'
 import { OrderHeader } from '#app/components/orders/order-header.tsx'
 import { OrderProductsTable } from '#app/components/orders/order-products-table.tsx'
 import { OrderReceiptDisplay } from '#app/components/orders/order-receipt-display.tsx'
 import { OrderProvider } from '#app/context/orders/OrderContext.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { cn } from '#app/utils/misc.tsx'
 import { userIsAdmin } from '#app/utils/user.ts'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

@@ -1,4 +1,3 @@
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import {
 	getFormProps,
 	getInputProps,
@@ -6,10 +5,11 @@ import {
 	useInputControl,
 } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { Order } from '@prisma/client'
+import { type Order } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
 import { z } from 'zod'
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -21,8 +21,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { useIsPending } from '#app/utils/misc.tsx'
 
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
@@ -33,6 +31,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '#app/components/ui/select.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import { useIsPending } from '#app/utils/misc.tsx'
 import {
 	allOrderStatuses,
 	OrderStatus,
@@ -42,7 +42,7 @@ import {
 	allPaymentMethods,
 	PaymentMethodSchema,
 } from '../../types/orders/payment-method.ts'
-import { action } from './__order-editor.server.tsx'
+import { type action } from './__order-editor.server.tsx'
 
 export const OrderReportEditSchema = z.object({
 	id: z.string().optional(),

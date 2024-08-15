@@ -1,3 +1,6 @@
+import { Link } from '@remix-run/react'
+import { TrendingUp } from 'lucide-react'
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
 import {
 	Card,
 	CardContent,
@@ -7,16 +10,13 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
 import { useAnalytics } from '#app/context/analytics/AnalyticsContext.tsx'
-import { TrendingUp } from 'lucide-react'
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
 import { Icon } from '../ui/icon'
-import { Link } from '@remix-run/react'
 
 const barChartData = [
 	{ month: 'January', desktop: 900, mobile: 80 },

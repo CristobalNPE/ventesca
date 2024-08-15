@@ -1,7 +1,6 @@
-import { useOrder } from '#app/context/orders/OrderContext.tsx'
 import { useRef } from 'react'
+import { useOrder } from '#app/context/orders/OrderContext.tsx'
 import { Button } from '../ui/button'
-import { Icon } from '../ui/icon'
 import {
 	Card,
 	CardHeader,
@@ -9,6 +8,7 @@ import {
 	CardContent,
 	CardFooter,
 } from '../ui/card'
+import { Icon } from '../ui/icon'
 
 export function OrderReceiptDisplay() {
 	const { order } = useOrder()

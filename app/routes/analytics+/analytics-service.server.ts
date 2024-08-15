@@ -1,6 +1,4 @@
-import { OrderStatus } from '#app/types/orders/order-status.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { User } from '@prisma/client'
+import { type User } from '@prisma/client'
 import {
 	eachDayOfInterval,
 	endOfDay,
@@ -12,6 +10,8 @@ import {
 	startOfWeek,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { OrderStatus } from '#app/types/orders/order-status.ts'
+import { prisma } from '#app/utils/db.server.ts'
 
 export async function getTopSellerStatsForWeek({
 	businessId,

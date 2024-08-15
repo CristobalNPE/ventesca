@@ -1,18 +1,18 @@
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import {
-  useDebounce,
-  useIsPending
-} from '#app/utils/misc.tsx'
-
-import { Label as FormLabel } from '#app/components/ui/label.tsx'
 import {
   Form,
   useSearchParams,
   useSubmit
 } from '@remix-run/react'
 import { useId } from 'react'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
+import { Label as FormLabel } from '#app/components/ui/label.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
+import {
+  useDebounce,
+  useIsPending
+} from '#app/utils/misc.tsx'
+
 
 export function InventorySearchBar({
 	status,

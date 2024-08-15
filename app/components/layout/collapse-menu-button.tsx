@@ -1,6 +1,6 @@
-import { cn } from '#app/utils/misc.tsx'
 import { Link } from '@remix-run/react'
 import { useState } from 'react'
+import { cn } from '#app/utils/misc.tsx'
 import { Button } from '../ui/button'
 import {
 	Collapsible,
@@ -15,7 +15,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { Icon, IconName } from '../ui/icon'
+import { Icon, type IconName } from '../ui/icon'
 import {
 	Tooltip,
 	TooltipContent,

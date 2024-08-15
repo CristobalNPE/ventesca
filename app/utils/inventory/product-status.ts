@@ -1,6 +1,6 @@
 // app/utils/product-status.ts
 
-import { Product } from '@prisma/client'
+import { type Product } from '@prisma/client'
 
 export type ProductAlert = {
 	condition: boolean

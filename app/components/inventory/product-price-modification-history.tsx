@@ -1,3 +1,7 @@
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+
+import { Badge } from '#app/components/ui/badge.tsx'
 import {
   Card,
   CardContent,
@@ -6,11 +10,6 @@ import {
   CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-
-import { Badge } from '#app/components/ui/badge.tsx'
 import {
   Table,
   TableBody,
@@ -19,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from '#app/components/ui/table.tsx'
-import { ProcessedPriceHistory } from '#app/utils/inventory/product-calculations.js'
+import { type ProcessedPriceHistory } from '#app/utils/inventory/product-calculations.js'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 
 export function PriceModificationHistoryCard({
 	priceHistory,

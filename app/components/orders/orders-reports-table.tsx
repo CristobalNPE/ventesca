@@ -1,3 +1,6 @@
+import { useSearchParams } from '@remix-run/react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Badge } from '#app/components/ui/badge.tsx'
 import {
 	Card,
@@ -7,10 +10,6 @@ import {
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
-import { useSearchParams } from '@remix-run/react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 import {
 	Table,
@@ -21,12 +20,13 @@ import {
 	TableRow,
 } from '#app/components/ui/table.tsx'
 
-import { TimePeriod, getTimePeriodBoundaries } from '#app/utils/time-periods.ts'
-
-import { useOrders } from '#app/context/orders/OrdersContext.tsx'
 
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+import { useOrders } from '#app/context/orders/OrdersContext.tsx'
+
 import { OrderStatus } from '#app/types/orders/order-status.ts'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import { TimePeriod, getTimePeriodBoundaries } from '#app/utils/time-periods.ts'
 import { PaginationBar } from '../pagination-bar'
 import { ScrollArea } from '../ui/scroll-area'
 import { OrdersFilters } from './orders-filters'

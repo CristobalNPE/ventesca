@@ -1,6 +1,3 @@
-import { useCurrentPendingOrder } from '#app/context/pos/CurrentPendingOrderContext.tsx'
-import { useRoveFocus } from '#app/hooks/useRoveFocus.ts'
-
 import {
 	Table,
 	TableBody,
@@ -8,6 +5,9 @@ import {
 	TableHeader,
 	TableRow,
 } from '#app/components/ui/table.tsx'
+import { useCurrentPendingOrder } from '#app/context/pos/CurrentPendingOrderContext.tsx'
+import { useRoveFocus } from '#app/hooks/useRoveFocus.ts'
+
 
 import { ScrollArea } from '../ui/scroll-area'
 import { ProductOrderRow } from './product-order/product-order-row'

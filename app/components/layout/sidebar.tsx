@@ -1,13 +1,13 @@
-import { cn } from '#app/utils/misc.tsx'
 import { Link } from '@remix-run/react'
-import { Button } from '../ui/button'
-import { SidebarToggle } from './sidebar-toggle'
-import { Icon } from '../ui/icon'
-import { Menu } from './menu'
 import { useSidebarToggle } from '#app/hooks/useSidebarToggle.ts'
 import { useStore } from '#app/hooks/useStore.ts'
-import { Brand } from './brand'
+import { cn } from '#app/utils/misc.tsx'
 import { Theme } from '#app/utils/theme.server.ts'
+import { Button } from '../ui/button'
+import { Icon } from '../ui/icon'
+import { Brand } from './brand'
+import { Menu } from './menu'
+import { SidebarToggle } from './sidebar-toggle'
 
 export function Sidebar() {
 	const sidebar = useStore(useSidebarToggle, state => state)

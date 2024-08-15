@@ -1,3 +1,6 @@
+import { type Category, Supplier } from '@prisma/client'
+import { useNavigate, useSearchParams } from '@remix-run/react'
+import { useState } from 'react'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 
@@ -9,20 +12,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '#app/components/ui/select.tsx'
-import { Category, Supplier } from '@prisma/client'
-import { useNavigate, useSearchParams } from '@remix-run/react'
-import { useState } from 'react'
 
-import { SortDirection } from '#app/types/SortDirection.ts'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+import { useFilter } from '#app/hooks/useFilter.ts'
+import { useSortDirection } from '#app/hooks/useSortDirection.ts'
 import { LOW_STOCK_CHANGE_FOR_CONFIG } from '#app/routes/_inventory+/inventory.tsx'
+import { SortDirection } from '#app/types/SortDirection.ts'
 import {
 	FilterSelect,
 	RemoveFiltersButton,
 	SortDirectionButton,
 } from '../filters'
-import { useFilter } from '#app/hooks/useFilter.ts'
-import { useSortDirection } from '#app/hooks/useSortDirection.ts'
 
 export function InventoryFilters({
 	categories,

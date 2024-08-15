@@ -7,10 +7,10 @@ import {
 	renderToStream,
 } from '@react-pdf/renderer'
 import { type LoaderFunctionArgs } from '@remix-run/server-runtime'
-import { prisma } from '#app/utils/db.server.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
 import { OrderStatus } from '#app/types/orders/order-status.ts'
 import { ProductOrderType } from '#app/types/orders/productOrderType.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { formatCurrency } from '#app/utils/misc.tsx'
 
 export type TransactionReportDataType = {
 	id: string

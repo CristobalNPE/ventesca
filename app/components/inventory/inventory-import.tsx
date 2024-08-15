@@ -1,3 +1,8 @@
+import { getFormProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { Form, useActionData } from '@remix-run/react'
+import { useEffect, useState } from 'react'
+import { z } from 'zod'
 import { Dropzone } from '#app/components/dropzone.tsx'
 import { ErrorList } from '#app/components/forms.tsx'
 import { ResultCard } from '#app/components/result-card.tsx'
@@ -26,13 +31,8 @@ import {
 	PopoverTrigger,
 } from '#app/components/ui/popover.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { action } from '#app/routes/_inventory+/inventory.tsx'
+import { type action } from '#app/routes/_inventory+/inventory.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
-import { getFormProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { Form, useActionData } from '@remix-run/react'
-import { useEffect, useState } from 'react'
-import { z } from 'zod'
 // export const importInventoryFromFileActionIntent = 'import-inventory-file'
 
 export const ImportInventoryFromFileSchema = z.object({

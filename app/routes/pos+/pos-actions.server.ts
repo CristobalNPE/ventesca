@@ -1,11 +1,13 @@
 import { parseWithZod } from '@conform-to/zod'
 import { json, redirect } from '@remix-run/node'
 
+import { z } from 'zod'
+import { DeleteOrderSchema } from '#app/components/pos/current-order-delete.tsx'
+import { ModifyOrderSchema } from '#app/components/pos/current-order-modify.tsx'
+import { ProductOrderType } from '#app/types/orders/productOrderType.js'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { z } from 'zod'
-import { DiscountType } from '../../types/discounts/discount-type.ts'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 import {
 	DirectDiscountSchema,
@@ -14,15 +16,13 @@ import {
 import { DiscardOrderSchema } from '../../components/pos/current-order-discard.tsx'
 import { FinishTransactionSchema } from '../../components/pos/current-order-finish.tsx'
 import { SetPaymentMethodSchema } from '../../components/pos/current-order-payment-method.tsx'
+import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { OrderStatus } from '../../types/orders/order-status.ts'
 
-import { DeleteOrderSchema } from '#app/components/pos/current-order-delete.tsx'
-import { ModifyOrderSchema } from '#app/components/pos/current-order-modify.tsx'
 import {
 	OrderAction,
 	updateProductStockAndAnalytics,
 } from '../_inventory+/product-service.server.ts'
-import { ProductOrderType } from '#app/types/orders/productOrderType.js'
 
 export async function discardOrderAction(formData: FormData) {
 	const submission = parseWithZod(formData, {

@@ -1,6 +1,8 @@
+import { format, formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { useOrder } from '#app/context/orders/OrderContext.tsx'
 import { OrderStatus } from '#app/types/orders/order-status.js'
-import { format, formatRelative, subDays } from 'date-fns'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { CardContentItem } from '../card-content-item'
 import { MetricCard } from '../metric-card'
 import {
@@ -12,8 +14,6 @@ import {
 	CardFooter,
 } from '../ui/card'
 import { Icon } from '../ui/icon'
-import { es } from 'date-fns/locale'
-import { formatCurrency } from '#app/utils/misc.tsx'
 
 export function OrderDetails() {
 	const { order } = useOrder()

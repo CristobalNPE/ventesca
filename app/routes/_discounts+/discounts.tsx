@@ -8,6 +8,7 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { useId, useRef } from 'react'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { PaginationBar } from '#app/components/pagination-bar.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { Badge } from '#app/components/ui/badge.tsx'
@@ -36,7 +37,6 @@ import {
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, useDebounce, useIsPending } from '#app/utils/misc.tsx'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 // import { updateDiscountValidity } from './discounts_.$discountId'
 
 export async function loader({ request }: LoaderFunctionArgs) {

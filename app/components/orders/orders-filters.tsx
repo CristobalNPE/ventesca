@@ -1,11 +1,11 @@
+import { type User } from '@prisma/client'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
-import { SortDirection } from '#app/types/SortDirection.ts'
-import { allOrderStatuses } from '#app/types/orders/order-status.ts'
-import { allTimePeriods, timePeriodNames } from '#app/utils/time-periods.ts'
-import { User } from '@prisma/client'
-
 import { useFilter } from '#app/hooks/useFilter.ts'
 import { useSortDirection } from '#app/hooks/useSortDirection.ts'
+import { allOrderStatuses } from '#app/types/orders/order-status.ts'
+import { SortDirection } from '#app/types/SortDirection.ts'
+import { allTimePeriods, timePeriodNames } from '#app/utils/time-periods.ts'
+
 
 import {
 	FilterSelect,

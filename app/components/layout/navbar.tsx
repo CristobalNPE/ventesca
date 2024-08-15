@@ -1,9 +1,6 @@
 import { useLocation } from '@remix-run/react'
-import { Button } from '../ui/button'
-import { Icon } from '../ui/icon'
-import { LinkWithParams } from '../ui/link-params'
-import { SheetMenu } from './sheet-menu'
 import { cn } from '#app/utils/misc.tsx'
+import { Button } from '../ui/button'
 import {
 	Drawer,
 	DrawerClose,
@@ -14,6 +11,9 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '../ui/drawer'
+import { Icon } from '../ui/icon'
+import { LinkWithParams } from '../ui/link-params'
+import { SheetMenu } from './sheet-menu'
 
 interface NavbarProps {
 	title: string

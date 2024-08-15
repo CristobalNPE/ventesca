@@ -1,6 +1,6 @@
-import { loader } from '#app/routes/analytics+/index.tsx'
-import { SerializeFrom } from '@remix-run/node'
+import { type SerializeFrom } from '@remix-run/node'
 import { createContext, useContext } from 'react'
+import { type loader } from '#app/routes/analytics+/index.tsx'
 type LoaderData = SerializeFrom<typeof loader>
 const AnalyticsContext = createContext<LoaderData | null>(null)
 export function AnalyticsProvider({

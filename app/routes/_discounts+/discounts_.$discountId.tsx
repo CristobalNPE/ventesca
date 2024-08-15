@@ -45,6 +45,9 @@ import { cn, formatCurrency, useIsPending } from '#app/utils/misc.tsx'
 
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 
+import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
+import { DiscountScope } from '../../types/discounts/discount-scope.ts'
+import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { DiscountAppmethodEditModal } from './__discounts-editors/applicationMethod-editor.tsx'
 import { DiscountDescriptionEditModal } from './__discounts-editors/description-editor.tsx'
 import { DiscountNameEditModal } from './__discounts-editors/name-editor.tsx'
@@ -54,9 +57,6 @@ import { DiscountValidperiodEditModal } from './__discounts-editors/validPeriod-
 import { DiscountValueEditModal } from './__discounts-editors/value-editor.tsx'
 import { discountAppmethodNames } from './_constants/discountAppmethodNames.ts'
 import { discountTypeNames } from './_constants/discountTypeNames.ts'
-import { DiscountApplicationMethod } from '../../types/discounts/discount-applicationMethod.ts'
-import { DiscountScope } from '../../types/discounts/discount-scope.ts'
-import { DiscountType } from '../../types/discounts/discount-type.ts'
 import { DiscountItemsList } from './discounts.product-picker.tsx'
 
 const DeleteFormSchema = z.object({

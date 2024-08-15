@@ -1,4 +1,21 @@
+import { parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import {
+	json,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { type MetaFunction, Outlet, useLoaderData } from '@remix-run/react'
+import { useState } from 'react'
+import { z } from 'zod'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.js'
+import { MetricCard } from '#app/components/metric-card.tsx'
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from '#app/components/ui/alert.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -8,31 +25,15 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { parseWithZod } from '@conform-to/zod'
-import { invariantResponse } from '@epic-web/invariant'
-import {
-	json,
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { MetaFunction, Outlet, useLoaderData } from '@remix-run/react'
-import { z } from 'zod'
 
-import { MetricCard } from '#app/components/metric-card.tsx'
-import {
-	Alert,
-	AlertDescription,
-	AlertTitle,
-} from '#app/components/ui/alert.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { processPriceHistory } from '#app/utils/inventory/product-calculations.js'
 import { getProductAlerts } from '#app/utils/inventory/product-status.js'
 import { userIsAdmin } from '#app/utils/user.ts'
-import { useState } from 'react'
 import { DeleteProductConfirmationModal } from '../../components/inventory/product-delete.tsx'
 import { ProductDiscountsCard } from '../../components/inventory/product-discounts.tsx'
 import { ModifyCategorySelect } from '../../components/inventory/product-modify-category.tsx'
@@ -48,7 +49,6 @@ import {
 	getCurrentWeekProductSales,
 	softDeleteProduct,
 } from './product-service.server.ts'
-import { ContentLayout } from '#app/components/layout/content-layout.js'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

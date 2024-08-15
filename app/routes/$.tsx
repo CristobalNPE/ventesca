@@ -7,8 +7,8 @@
 
 import { Link, useLocation } from '@remix-run/react'
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
 import { ContentLayout } from '#app/components/layout/content-layout.js'
+import { Icon } from '#app/components/ui/icon.tsx'
 
 export async function loader() {
 	throw new Response('Not found', { status: 404 })

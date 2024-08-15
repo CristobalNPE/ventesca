@@ -1,7 +1,7 @@
+import { cva, type VariantProps } from 'class-variance-authority'
 import { Badge } from '#app/components/ui/badge.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
 import { cn } from '#app/utils/misc.tsx'
-import { cva, VariantProps } from 'class-variance-authority'
 
 const cardVariants = cva('text-base font-semibold text-foreground', {
 	variants: {

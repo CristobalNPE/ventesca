@@ -1,7 +1,9 @@
 import { useInputControl } from '@conform-to/react'
 import { REGEXP_ONLY_DIGITS_AND_CHARS, type OTPInputProps } from 'input-otp'
 import React, { useId, useRef } from 'react'
+import { cn } from '#app/utils/misc.tsx'
 import { Checkbox, type CheckboxProps } from './ui/checkbox.tsx'
+import { Icon, type IconName } from './ui/icon.tsx'
 import {
 	InputOTP,
 	InputOTPGroup,
@@ -11,8 +13,6 @@ import {
 import { Input } from './ui/input.tsx'
 import { Label } from './ui/label.tsx'
 import { Textarea } from './ui/textarea.tsx'
-import { cn } from '#app/utils/misc.tsx'
-import { Icon, IconName } from './ui/icon.tsx'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 

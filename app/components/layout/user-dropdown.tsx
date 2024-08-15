@@ -1,8 +1,8 @@
+import { Form, Link, useSubmit } from '@remix-run/react'
+import { useRef } from 'react'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { getUserImgSrc } from '#app/utils/misc.tsx'
 import { useUser } from '#app/utils/user.ts'
-import { Form, Link, useSubmit } from '@remix-run/react'
-import { useRef } from 'react'
 import { Button } from '../ui/button'
 import {
 	DropdownMenu,

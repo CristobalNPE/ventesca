@@ -1,6 +1,6 @@
-import { loader } from '#app/routes/_orders+/orders_.$orderId.js'
-import { SerializeFrom } from '@remix-run/node'
+import { type SerializeFrom } from '@remix-run/node'
 import { createContext, useContext } from 'react'
+import { type loader } from '#app/routes/_orders+/orders_.$orderId.js'
 type LoaderData = SerializeFrom<typeof loader>
 const OrderContext = createContext<LoaderData | null>(null)
 export function OrderProvider({

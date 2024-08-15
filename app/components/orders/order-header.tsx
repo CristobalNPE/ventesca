@@ -1,10 +1,10 @@
+import { useLocation } from '@remix-run/react'
 import { Button } from '#app/components/ui/button.tsx'
 
 import { Icon } from '#app/components/ui/icon.tsx'
 
 import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import { useOrder } from '#app/context/orders/OrderContext.tsx'
-import { useLocation } from '@remix-run/react'
 
 export function OrderHeader() {
 	const { order } = useOrder()

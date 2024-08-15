@@ -1,20 +1,20 @@
-import { Icon } from '#app/components/ui/icon.tsx'
-import { TableCell, TableRow } from '#app/components/ui/table.tsx'
-import { cn } from '#app/utils/misc.tsx'
 import {
 	type Discount,
 	type ProductOrder as ProductOrderModel,
 } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
+import { useFetchers } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { useSpinDelay } from 'spin-delay'
 import { Key } from 'ts-key-enum'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { TableCell, TableRow } from '#app/components/ui/table.tsx'
 
 import { productOrderTypeBgFocusColors } from '#app/constants/productOrderTypesColors.ts'
 import { ProductOrderType } from '#app/types/orders/productOrderType.ts'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { useFetchers } from '@remix-run/react'
-import { useSpinDelay } from 'spin-delay'
+import { cn , formatCurrency } from '#app/utils/misc.tsx'
+
 import {
 	DeleteProductOrder,
 	useDeleteProductOrder,

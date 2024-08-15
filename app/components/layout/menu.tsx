@@ -4,23 +4,23 @@ import {
 	useOutletContext,
 	useRouteLoaderData,
 } from '@remix-run/react'
+import { type loader as RootLoader } from '#app/root.tsx'
+import { ThemeSwitch } from '#app/routes/resources+/theme-switch.tsx'
+import { getMenuList } from '#app/utils/menu-list.ts'
+import { cn } from '#app/utils/misc.tsx'
+import { Theme } from '#app/utils/theme.server.ts'
+import { Button } from '../ui/button'
+import { Icon } from '../ui/icon'
 import { ScrollArea } from '../ui/scroll-area'
 
-import { cn } from '#app/utils/misc.tsx'
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from '../ui/tooltip'
-import { Icon } from '../ui/icon'
-import { Button } from '../ui/button'
 import { CollapseMenuButton } from './collapse-menu-button'
-import { getMenuList } from '#app/utils/menu-list.ts'
 import { UserDropdown } from './user-dropdown'
-import { ThemeSwitch } from '#app/routes/resources+/theme-switch.tsx'
-import { Theme } from '#app/utils/theme.server.ts'
-import { type loader as RootLoader } from '#app/root.tsx'
 
 interface MenuProps {
 	isOpen: boolean | undefined

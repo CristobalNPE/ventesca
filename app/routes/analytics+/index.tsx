@@ -1,3 +1,5 @@
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
 import { AnalyticsHeader } from '#app/components/analytics/analytics-header.tsx'
 import { ProfitLineCharts } from '#app/components/analytics/profit-charts.tsx'
 import { TopSellerCard } from '#app/components/analytics/top-seller-card.tsx'
@@ -5,12 +7,11 @@ import { TopSellingProductsBarChart } from '#app/components/analytics/top-sellin
 import { TotalOrders } from '#app/components/analytics/total-orders-card.js'
 import { TotalProfit } from '#app/components/analytics/total-profit-card.tsx'
 import { WeeklyTransactionsLineChart } from '#app/components/analytics/weekly-transactions-chart.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { Spacer } from '#app/components/spacer.tsx'
 import { AnalyticsProvider } from '#app/context/analytics/AnalyticsContext.tsx'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { json, LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
 import {
 	getCompletedOrdersCount,
 	getDailyProfitsForWeek,
@@ -19,7 +20,6 @@ import {
 	getTotalProfits,
 	getWeeklyProfitsForMonth,
 } from './analytics-service.server'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')

@@ -1,11 +1,11 @@
 import { getFormProps, useForm } from '@conform-to/react'
 
+import { Form, useActionData } from '@remix-run/react'
+import { z } from 'zod'
 import { ErrorList } from '#app/components/forms.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { type action } from '#app/routes/pos+/index.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
-import { Form, useActionData } from '@remix-run/react'
-import { z } from 'zod'
 
 export const modifyOrderActionIntent = 'modify-order'
 

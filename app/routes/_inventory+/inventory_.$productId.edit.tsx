@@ -1,3 +1,16 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { invariantResponse } from '@epic-web/invariant'
+import {
+	type ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { formatRelative, subDays } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { z } from 'zod'
+import { ErrorList, StyledField } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Card,
@@ -5,28 +18,15 @@ import {
 	CardFooter,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
+import { Icon, type IconName } from '#app/components/ui/icon.tsx'
+import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { useIsPending } from '#app/utils/misc.tsx'
-import { invariantResponse } from '@epic-web/invariant'
-import {
-	ActionFunctionArgs,
-	json,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { formatRelative, subDays } from 'date-fns'
-import { es } from 'date-fns/locale'
 
-import { ErrorList, StyledField } from '#app/components/forms.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { shouldDeactivateProduct } from '#app/utils/inventory/product-status.js'
 import { redirectWithToast } from '#app/utils/toast.server.js'
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
-import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { z } from 'zod'
 
 export const PRODUCT_NAME_MAX = 99
 export const PRODUCT_NAME_MIN = 3

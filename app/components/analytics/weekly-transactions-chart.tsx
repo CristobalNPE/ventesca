@@ -1,4 +1,10 @@
 import {
+	CartesianGrid,
+	Line,
+	LineChart,
+	XAxis
+} from 'recharts'
+import {
 	Card,
 	CardContent,
 	CardDescription,
@@ -7,18 +13,12 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import {
-	CartesianGrid,
-	Line,
-	LineChart,
-	XAxis
-} from 'recharts'
 
 const line2ChartData = [
 	{ month: 'January', desktop: 186, mobile: 80 },

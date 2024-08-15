@@ -1,3 +1,5 @@
+import { getFormProps, useForm } from '@conform-to/react'
+import { Form, useActionData } from '@remix-run/react'
 import { ErrorList } from '#app/components/forms.tsx'
 import {
 	AlertDialog,
@@ -12,10 +14,8 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { action } from '#app/routes/_inventory+/inventory_.$productId.tsx'
+import { type action } from '#app/routes/_inventory+/inventory_.$productId.tsx'
 import { useIsPending } from '#app/utils/misc.tsx'
-import { getFormProps, useForm } from '@conform-to/react'
-import { Form, useActionData } from '@remix-run/react'
 import { useProductContext } from '../../context/inventory/ProductContext'
 
 export function DeleteProductConfirmationModal() {

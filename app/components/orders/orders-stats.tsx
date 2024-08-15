@@ -1,3 +1,10 @@
+import { endOfWeek, format, startOfWeek } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Bar, BarChart, CartesianGrid, type TooltipProps, XAxis } from 'recharts'
+import {
+	type NameType,
+	type ValueType,
+} from 'recharts/types/component/DefaultTooltipContent'
 import {
 	Card,
 	CardContent,
@@ -6,23 +13,16 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Progress } from '#app/components/ui/progress.tsx'
-import { formatCurrency } from '#app/utils/misc.tsx'
-import { endOfWeek, format, startOfWeek } from 'date-fns'
-import { es } from 'date-fns/locale'
-
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 } from '#app/components/ui/chart.tsx'
-import { Bar, BarChart, CartesianGrid, TooltipProps, XAxis } from 'recharts'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Progress } from '#app/components/ui/progress.tsx'
 import { useOrders } from '#app/context/orders/OrdersContext.tsx'
-import {
-	NameType,
-	ValueType,
-} from 'recharts/types/component/DefaultTooltipContent'
+import { formatCurrency } from '#app/utils/misc.tsx'
+
 
 const chartConfig = {
 	earnings: {

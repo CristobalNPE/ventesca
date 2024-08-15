@@ -1,4 +1,3 @@
-import { prisma } from '#app/utils/db.server.ts'
 import { type Order } from '@prisma/client'
 import {
 	eachDayOfInterval,
@@ -14,6 +13,7 @@ import {
 	subWeeks,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { prisma } from '#app/utils/db.server.ts'
 
 import { OrderStatus } from '../../types/orders/order-status.ts'
 

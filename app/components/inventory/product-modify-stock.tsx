@@ -1,17 +1,17 @@
-import { getFormProps, getInputProps } from '@conform-to/react'
-import { useFetcher } from '@remix-run/react'
-import { action } from '../../routes/_inventory+/inventory.edit'
+import { getFormProps, getInputProps , useForm } from '@conform-to/react'
 
-import { useForm } from '@conform-to/react'
+
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
+import { useFetcher } from '@remix-run/react'
 
+import { z } from 'zod'
 import { ErrorList, StyledField } from '#app/components/forms.tsx'
 import { EditableMetricCard } from '#app/components/metric-card.tsx'
-import { IconName } from '#app/components/ui/icon.tsx'
+import { type IconName } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { cn } from '#app/utils/misc.tsx'
-import { z } from 'zod'
 import { useProductContext } from '../../context/inventory/ProductContext'
+import { type action } from '../../routes/_inventory+/inventory.edit'
 
 const STOCK_MAX = 9999
 const STOCK_MIN = 0

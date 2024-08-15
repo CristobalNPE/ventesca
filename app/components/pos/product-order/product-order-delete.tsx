@@ -1,5 +1,8 @@
 import { getFormProps, useForm } from '@conform-to/react'
 
+import { useFetcher } from '@remix-run/react'
+import { useCallback } from 'react'
+import { z } from 'zod'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import {
@@ -8,11 +11,8 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
-import { useFetcher } from '@remix-run/react'
-import { z } from 'zod'
 import { type deleteProductOrderActionType } from '#app/routes/pos+/product-order-actions.tsx'
 import { cn } from '#app/utils/misc.tsx'
-import { useCallback } from 'react'
 
 export const deleteProductOrderActionIntent = 'delete-product-order'
 export const DeleteFormSchema = z.object({

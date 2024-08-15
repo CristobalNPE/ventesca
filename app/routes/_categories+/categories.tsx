@@ -1,16 +1,3 @@
-import { Spacer } from '#app/components/spacer.tsx'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '#app/components/ui/card.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn, formatCurrency, generateHexColor } from '#app/utils/misc.tsx'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import { type Category } from '@prisma/client'
@@ -24,6 +11,20 @@ import {
 import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
 import { endOfWeek, startOfWeek } from 'date-fns'
 import { z } from 'zod'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { Spacer } from '#app/components/spacer.tsx'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, formatCurrency, generateHexColor } from '#app/utils/misc.tsx'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userHasRole, useUser } from '#app/utils/user.ts'
@@ -33,7 +34,6 @@ import {
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -45,7 +45,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const categories = await prisma.category.findMany({
 		where: { businessId },
-		select: { id: true, code: true, description: true },
+		select: {
+			id: true,
+			code: true,
+			description: true,
+			_count: { select: { products: true } },
+		},
 	})
 
 	return json({ categories, categoryWithTopProfits })
@@ -73,8 +78,32 @@ export default function CategoriesRoute() {
 	const { categories, categoryWithTopProfits } = useLoaderData<typeof loader>()
 
 	return (
-		<ContentLayout title='Categorías'>
-			<main className=" h-full">
+		<ContentLayout
+			title="Categorías"
+			actions={isAdmin && <CreateCategoryDialog />}
+		>
+			<main className="grid gap-y-4 lg:grid-cols-2 lg:gap-4">
+				<div className="flex flex-col gap-4">
+					{categoryWithTopProfits ? (
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription>Mayores ingresos esta semana</CardDescription>
+								<CardTitle className="flex  items-center justify-between text-3xl">
+									<Link to={categoryWithTopProfits.id} className=" text-2xl">
+										{categoryWithTopProfits.description}
+									</Link>
+									<span className="text-muted-foreground">
+										{formatCurrency(categoryWithTopProfits.totalProfit)}
+									</span>
+								</CardTitle>
+							</CardHeader>
+							<CardContent></CardContent>
+						</Card>
+					) : null}
+					<CategoriesCard categories={categories} />
+				</div>
+			</main>
+			{/* <main className=" h-full">
 	
 				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
 					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
@@ -101,7 +130,7 @@ export default function CategoriesRoute() {
 						) : isAdmin ? (
 							<Card>
 								<CardHeader className="pb-2">
-									<CreateCategoryDialog />
+								
 								</CardHeader>
 								<CardContent></CardContent>
 							</Card>
@@ -112,7 +141,7 @@ export default function CategoriesRoute() {
 						<Outlet />
 					</div>
 				</div>
-			</main>
+			</main> */}
 		</ContentLayout>
 	)
 }
@@ -120,7 +149,11 @@ export default function CategoriesRoute() {
 function CategoriesCard({
 	categories,
 }: {
-	categories: SerializeFrom<Pick<Category, 'id' | 'code' | 'description'>>[]
+	categories: SerializeFrom<
+		Pick<Category, 'id' | 'code' | 'description'> & {
+			_count: { products: number }
+		}
+	>[]
 }) {
 	const location = useLocation()
 
@@ -155,12 +188,16 @@ function CategoriesCard({
 						preserveSearch
 						to={category.id}
 					>
-						<span className="flex-1 text-nowrap font-semibold">
+						<span className="sm:w-[5rem]  text-nowrap font-semibold">
 							{category.code}
 						</span>
 
-						<span className="w-[15rem] text-nowrap  text-start  text-muted-foreground">
+						<span className="sm:min-w-[15rem] flex-1 text-nowrap  text-start  text-muted-foreground">
 							{category.description}
+						</span>
+						<span className="sm:w-[10rem] text-nowrap  text-end  text-muted-foreground">
+							<span className="font-bold">{category._count.products}</span>{' '}
+							{category._count.products === 1 ? 'producto' : 'productos'}
 						</span>
 					</LinkWithParams>
 				))}

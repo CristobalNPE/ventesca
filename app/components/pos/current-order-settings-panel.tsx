@@ -1,28 +1,28 @@
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
-import { PaymentMethodPanel } from '#app/components/pos/current-order-payment-method.tsx'
-import { useCurrentPendingOrder } from '#app/context/pos/CurrentPendingOrderContext.tsx'
 
-import { PaymentMethod } from '#app/types/orders/payment-method.ts'
 
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { type Discount } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Link, useNavigate } from '@remix-run/react'
 import React from 'react'
-import { OrderDetailsSchema } from '../../types/orders/OrderData.ts'
 
-import { useResponsive } from '#app/hooks/useResponsive.ts'
-import { DiscountSheet } from '#app/routes/_discounts+/discount-sheet.tsx'
 import { type OrderDetails } from '#app/types/orders/OrderData.ts'
 import { toast } from 'sonner'
+import { PaymentMethodPanel } from '#app/components/pos/current-order-payment-method.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
+import { useCurrentPendingOrder } from '#app/context/pos/CurrentPendingOrderContext.tsx'
+import { useResponsive } from '#app/hooks/useResponsive.ts'
+import { DiscountSheet } from '#app/routes/_discounts+/discount-sheet.tsx'
+import { type PaymentMethod } from '#app/types/orders/payment-method.ts'
+import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import {
 	DirectDiscount,
 	RemoveDirectDiscount,
 } from '../../components/pos/current-order-direct-discount.tsx'
 import { DiscardOrder } from '../../components/pos/current-order-discard.tsx'
+import { OrderDetailsSchema } from '../../types/orders/OrderData.ts'
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet.tsx'
 
 export function CurrentOrderSettingsPanel() {

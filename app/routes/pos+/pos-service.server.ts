@@ -1,10 +1,10 @@
+import { type Prisma } from '@prisma/client'
+import { DiscountScope } from '#app/types/discounts/discount-scope.ts'
+import { ProductOrderType } from '#app/types/orders/productOrderType.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { Prisma } from '@prisma/client'
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 import { OrderStatus } from '../../types/orders/order-status.ts'
 import { PaymentMethod } from '../../types/orders/payment-method.ts'
-import { ProductOrderType } from '#app/types/orders/productOrderType.ts'
-import { DiscountScope } from '#app/types/discounts/discount-scope.ts'
 
 
 const orderDetailsSelect = {

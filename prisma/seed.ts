@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker'
 import { allDiscountApplicationMethods } from '#app/types/discounts/discount-applicationMethod.ts'
 import { allDiscountScopes } from '#app/types/discounts/discount-scope.ts'
 import { allDiscountTypes } from '#app/types/discounts/discount-type.ts'
@@ -9,7 +10,6 @@ import { allPaymentMethods } from '#app/types/orders/payment-method.ts'
 import { allProductOrderTypes } from '#app/types/orders/productOrderType.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { createPassword } from '#tests/db-utils.ts'
-import { faker } from '@faker-js/faker'
 
 interface SeedConfig {
 	businessCount: number

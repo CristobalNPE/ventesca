@@ -1,6 +1,6 @@
-import { loader } from '#app/routes/pos+/index.tsx'
-import { SerializeFrom } from '@remix-run/node'
+import { type SerializeFrom } from '@remix-run/node'
 import { createContext, useContext } from 'react'
+import { type loader } from '#app/routes/pos+/index.tsx'
 type LoaderData = SerializeFrom<typeof loader>
 const CurrentPendingOrderContext = createContext<LoaderData | null>(null)
 export function CurrentPendingOrderProvider({

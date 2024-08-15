@@ -1,4 +1,7 @@
 import {
+  Link
+} from '@remix-run/react'
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -12,9 +15,6 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 
-import {
-  Link
-} from '@remix-run/react'
 
 export function ModifyProductPriceInBulkModal() {
 	return (

@@ -1,3 +1,19 @@
+import { parseWithZod } from '@conform-to/zod'
+import { type Prisma, type Product } from '@prisma/client'
+import {
+	type ActionFunctionArgs,
+	unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+	json,
+	unstable_parseMultipartFormData as parseMultipartFormData,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { type MetaFunction, useLoaderData , Link } from '@remix-run/react'
+import { z } from 'zod'
+import { ModifyProductPriceInBulkModal } from '#app/components/inventory/inventory-bulk-price-modify-modal.tsx'
+import { CreateItemDialog } from '#app/components/inventory/product-create-single.tsx'
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import {
 	getBusinessId,
 	getDefaultCategory,
@@ -6,24 +22,10 @@ import {
 } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 import { SortDirection } from '#app/types/SortDirection.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { userIsAdmin } from '#app/utils/user.ts'
-import { parseWithZod } from '@conform-to/zod'
-import { Prisma, Product } from '@prisma/client'
-import {
-	ActionFunctionArgs,
-	unstable_createMemoryUploadHandler as createMemoryUploadHandler,
-	json,
-	unstable_parseMultipartFormData as parseMultipartFormData,
-	type LoaderFunctionArgs,
-} from '@remix-run/node'
-import { MetaFunction, useLoaderData } from '@remix-run/react'
-import { z } from 'zod'
 import {
 	ImportInventoryFromFileModal,
 	ImportInventoryFromFileSchema,
@@ -32,7 +34,7 @@ import { InventoryProductsTable } from '../../components/inventory/inventory-pro
 import { InventoryStats } from '../../components/inventory/inventory-stats.tsx'
 import { InventoryProvider } from '../../context/inventory/InventoryContext.tsx'
 import {
-	ParsedProduct,
+	type ParsedProduct,
 	parseExcelTemplate,
 	validateParsedProduct,
 	validateTemplate,
@@ -44,15 +46,13 @@ import {
 	getMostProfitProduct,
 } from './product-service.server.ts'
 
-import { ModifyProductPriceInBulkModal } from '#app/components/inventory/inventory-bulk-price-modify-modal.tsx'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu.tsx'
-import { Link } from '@remix-run/react'
-import { CreateItemDialog } from '#app/components/inventory/product-create-single.tsx'
+
 
 export const LOW_STOCK_CHANGE_FOR_CONFIG = '5'
 

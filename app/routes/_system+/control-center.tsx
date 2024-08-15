@@ -1,3 +1,5 @@
+import JsBarcode from 'jsbarcode'
+import { useEffect, useState } from 'react'
 import { ResultCard } from '#app/components/result-card.tsx'
 import {
 	Accordion,
@@ -17,8 +19,6 @@ import {
 	AlertDialogTrigger,
 } from '#app/components/ui/alert-dialog.tsx'
 import { cn } from '#app/utils/misc.tsx'
-import JsBarcode from 'jsbarcode'
-import { useEffect, useState } from 'react'
 
 export default function Page() {
 	const [barcode, setBarcode] = useState('')

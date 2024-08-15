@@ -1,4 +1,4 @@
-import { Product } from '@prisma/client'
+import { type Product } from '@prisma/client'
 import { createContext, useContext } from 'react'
 
 type ProductContextType = {

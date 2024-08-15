@@ -1,3 +1,4 @@
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
 import {
 	Card,
 	CardContent,
@@ -5,15 +6,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-
 import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
+import { Icon } from '#app/components/ui/icon.tsx'
+
 
 const weeklyChartConfig = {
 	totalSales: {

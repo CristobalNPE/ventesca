@@ -1,6 +1,4 @@
-import { prisma } from '#app/utils/db.server.js'
-import { capitalize } from '#app/utils/misc.tsx'
-import { Prisma, type ProductOrder as ProductOrderModel } from '@prisma/client'
+import { type Prisma, type ProductOrder as ProductOrderModel } from '@prisma/client'
 import {
 	eachDayOfInterval,
 	endOfDay,
@@ -10,6 +8,8 @@ import {
 	startOfWeek,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { prisma } from '#app/utils/db.server.js'
+import { capitalize } from '#app/utils/misc.tsx'
 import { OrderStatus } from '../../types/orders/order-status'
 import { ProductOrderType } from '../../types/orders/productOrderType'
 export enum OrderAction {

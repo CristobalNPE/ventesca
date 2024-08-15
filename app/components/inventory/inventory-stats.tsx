@@ -1,3 +1,10 @@
+import { useNavigate } from '@remix-run/react'
+import { Label, Pie, PieChart } from 'recharts'
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from '#app/components/ui/alert.tsx'
 import {
 	Card,
 	CardContent,
@@ -6,20 +13,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { formatCurrency } from '#app/utils/misc.tsx'
 
 import {
-	Alert,
-	AlertDescription,
-	AlertTitle,
-} from '#app/components/ui/alert.tsx'
-import {
-	ChartConfig,
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
 import {
 	Tabs,
 	TabsContent,
@@ -27,8 +28,7 @@ import {
 	TabsTrigger,
 } from '#app/components/ui/tabs.js'
 import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
-import { useNavigate } from '@remix-run/react'
-import { Label, Pie, PieChart } from 'recharts'
+import { formatCurrency } from '#app/utils/misc.tsx'
 import { useInventory } from '../../context/inventory/InventoryContext'
 import { LOW_STOCK_CHANGE_FOR_CONFIG } from '../../routes/_inventory+/inventory'
 const chartConfig = {} satisfies ChartConfig

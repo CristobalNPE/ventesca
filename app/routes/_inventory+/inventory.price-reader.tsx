@@ -1,10 +1,12 @@
+import { type Product } from '@prisma/client'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { Link, useFetcher, useNavigate } from '@remix-run/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { formatCurrency, useDebounce } from '#app/utils/misc.tsx'
-import { json, LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useFetcher, useNavigate } from '@remix-run/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
 import {
 	Dialog,
 	DialogContent,
@@ -13,8 +15,6 @@ import {
 	DialogTitle,
 } from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
-import { Button } from '#app/components/ui/button.tsx'
-import { Product } from '@prisma/client'
 
 enum VerifySearchStatus {
 	FOUND = 'found',
