@@ -28,15 +28,19 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button className="flex rounded p-0 hover:bg-transparent group" asChild variant="ghost">
+				<Button
+					className="group flex rounded p-0 hover:bg-transparent"
+					asChild
+					variant="ghost"
+				>
 					<Link
 						to={`/users/${user.username}`}
 						// this is for progressive enhancement
 						onClick={e => e.preventDefault()}
-						className="ml-1   flex px-4 min-w-[3rem]  shrink-0 items-center  gap-3 lg:justify-start 2xl:ml-0   "
+						className="ml-1   flex min-w-[3rem] shrink-0  items-center gap-3  px-4 lg:justify-start 2xl:ml-0   "
 					>
 						<img
-							className="max-w-[2.5rem]   group-hover:ring-primary group-hover:scale-105 transition-all shrink-0 rounded-full  bg-secondary object-cover ring-2 ring-primary/10"
+							className="aspect-square max-w-[2.5rem]  shrink-0 rounded-full bg-secondary ring-2 ring-primary/10  transition-all group-hover:scale-105 group-hover:ring-primary"
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
@@ -54,7 +58,7 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuPortal>
-				<DropdownMenuContent sideOffset={8} align="end">
+				<DropdownMenuContent className="z-[300]" sideOffset={8} align="end">
 					<DropdownMenuItem asChild>
 						<Link prefetch="intent" to={`/users/${user.username}`}>
 							<Icon className="text-body-md" name="avatar">
@@ -62,9 +66,7 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 							</Icon>
 						</Link>
 					</DropdownMenuItem>
-					<DropdownMenuItem asChild>
-				
-					</DropdownMenuItem>
+					<DropdownMenuItem asChild></DropdownMenuItem>
 					<DropdownMenuItem
 						asChild
 						// this prevents the menu from closing before the form submission is completed

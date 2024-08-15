@@ -9,7 +9,6 @@ import { useStore } from '#app/hooks/useStore.ts'
 import { Brand } from './brand'
 import { Theme } from '#app/utils/theme.server.ts'
 
-
 export function Sidebar() {
 	const sidebar = useStore(useSidebarToggle, state => state)
 
@@ -18,7 +17,7 @@ export function Sidebar() {
 	return (
 		<aside
 			className={cn(
-				'fixed left-0 top-0 z-20 h-screen -translate-x-full transition-[width] duration-300 ease-in-out lg:translate-x-0',
+				'fixed left-0 top-0 z-[200] h-screen -translate-x-full select-none transition-[width] duration-300 ease-in-out lg:translate-x-0',
 				sidebar?.isOpen === false ? 'w-[90px]' : 'w-72',
 			)}
 		>
