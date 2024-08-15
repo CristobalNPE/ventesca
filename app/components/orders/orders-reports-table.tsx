@@ -40,7 +40,7 @@ export function OrdersReportsTable() {
 		<Card className="w-full">
 			<CardHeader className="flex flex-col gap-2">
 				<div className="flex flex-wrap items-center gap-4">
-					<div className="flex w-full items-center justify-between">
+					<div className="flex flex-col sm:flex-row text-center gap-2 w-full items-center justify-between">
 						<CardTitle>
 							Transacciones - {getCardTitleFromParams(searchParams)}
 						</CardTitle>
