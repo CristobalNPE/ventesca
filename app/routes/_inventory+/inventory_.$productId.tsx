@@ -45,10 +45,8 @@ import { PriceModificationHistoryCard } from '../../components/inventory/product
 import { ChartsCard } from '../../components/inventory/product-sales-chart.tsx'
 import { ProductContext } from '../../context/inventory/ProductContext.tsx'
 import { DiscountScope } from '../../types/discounts/discount-scope.ts'
-import {
-	getCurrentWeekProductSales,
-	softDeleteProduct,
-} from './product-service.server.ts'
+import { softDeleteProduct } from '#app/services/inventory/product-management.server.ts'
+
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
