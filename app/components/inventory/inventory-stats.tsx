@@ -27,10 +27,12 @@ import {
 	TabsList,
 	TabsTrigger,
 } from '#app/components/ui/tabs.js'
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+
 import { formatCurrency } from '#app/utils/misc.tsx'
 import { useInventory } from '../../context/inventory/InventoryContext'
 import { LOW_STOCK_CHANGE_FOR_CONFIG } from '../../routes/_inventory+/inventory'
+import { FILTER_PARAMS } from '#app/utils/params.ts'
+
 const chartConfig = {} satisfies ChartConfig
 export function InventoryStats() {
 	const { stockData, bestSeller, mostProfit, hasActiveProducts } =
@@ -157,7 +159,7 @@ function InventoryValueChartCard() {
 						<Pie
 							data={chartData}
 							dataKey="totalSellingValue"
-							nameKey="categoryDescription"
+							nameKey="categoryName"
 							innerRadius={90}
 							strokeWidth={5}
 						>

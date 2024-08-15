@@ -1,5 +1,5 @@
 import { type User } from '@prisma/client'
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+
 import { useFilter } from '#app/hooks/useFilter.ts'
 import { useSortDirection } from '#app/hooks/useSortDirection.ts'
 import { allOrderStatuses } from '#app/types/orders/order-status.ts'
@@ -12,6 +12,7 @@ import {
 	RemoveFiltersButton,
 	SortDirectionButton,
 } from '../filters'
+import { FILTER_PARAMS } from '#app/utils/params.ts'
 
 export function OrdersFilters({
 	sellers,

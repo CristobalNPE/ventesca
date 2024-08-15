@@ -21,7 +21,7 @@ import {
 } from '#app/components/ui/table.tsx'
 
 
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+
 import { useOrders } from '#app/context/orders/OrdersContext.tsx'
 
 import { OrderStatus } from '#app/types/orders/order-status.ts'
@@ -30,6 +30,7 @@ import { TimePeriod, getTimePeriodBoundaries } from '#app/utils/time-periods.ts'
 import { PaginationBar } from '../pagination-bar'
 import { ScrollArea } from '../ui/scroll-area'
 import { OrdersFilters } from './orders-filters'
+import { FILTER_PARAMS } from '#app/utils/params.ts'
 
 export function OrdersReportsTable() {
 	const { orders, numberOfOrders, businessSellers } = useOrders()

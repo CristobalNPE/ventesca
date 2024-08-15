@@ -21,10 +21,10 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import {
 	type action,
 	type loader,
-} from '#app/routes/_categories+/categories.$categoryId.tsx'
+} from '#app/routes/_categories+/categories_.$categoryId.js'
 import {
-	CATEGORY_DESC_MAX,
-	CATEGORY_DESC_MIN,
+	CATEGORY_NAME_MAX,
+	CATEGORY_NAME_MIN,
 	CODE_MIN,
 } from './__new-category.tsx'
 
@@ -36,11 +36,11 @@ export const EditCategorySchema = z.object({
 		.string({
 			required_error: 'Campo obligatorio',
 		})
-		.min(CATEGORY_DESC_MIN, {
+		.min(CATEGORY_NAME_MIN, {
 			message: 'La descripción debe contener al menos 3 caracteres.',
 		})
-		.max(CATEGORY_DESC_MAX, {
-			message: `La descripción no puede ser mayor a ${CATEGORY_DESC_MAX} caracteres.`,
+		.max(CATEGORY_NAME_MAX, {
+			message: `La descripción no puede ser mayor a ${CATEGORY_NAME_MAX} caracteres.`,
 		}),
 	code: z
 		.number({

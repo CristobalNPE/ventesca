@@ -6,7 +6,7 @@ import { OrdersHeader } from '#app/components/orders/orders-header.tsx'
 
 import { OrdersReportsTable } from '#app/components/orders/orders-reports-table.tsx'
 import { OrdersStats } from '#app/components/orders/orders-stats.tsx'
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+
 import { OrdersProvider } from '#app/context/orders/OrdersContext.tsx'
 import { SortDirection } from '#app/types/SortDirection.ts'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
@@ -18,6 +18,7 @@ import {
 	getWeeklyDailyEarnings,
 } from './orders-service.server'
 import { VerifyOrderDialog } from './orders_.verify-order'
+import { FILTER_PARAMS } from '#app/utils/params.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)

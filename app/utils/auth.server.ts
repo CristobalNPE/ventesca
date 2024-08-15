@@ -187,43 +187,43 @@ export async function signup({
 	return { id, expirationDate }
 }
 
-export async function signupWithConnection({
-	email,
-	username,
-	name,
-	providerId,
-	providerName,
-	imageUrl,
-}: {
-	email: User['email']
-	username: User['username']
-	name: User['name']
-	providerId: Connection['providerId']
-	providerName: Connection['providerName']
-	imageUrl?: string
-}) {
-	const session = await prisma.session.create({
-		data: {
-			expirationDate: getSessionExpirationDate(),
-			user: {
-				create: {
-					business: { create: { name: `Empresa de ${name}` } },
-					email: email.toLowerCase(),
-					username: username.toLowerCase(),
-					name,
-					roles: { connect: { name: 'user' } },
-					connections: { create: { providerId, providerName } },
-					image: imageUrl
-						? { create: await downloadFile(imageUrl) }
-						: undefined,
-				},
-			},
-		},
-		select: { id: true, expirationDate: true },
-	})
+// export async function signupWithConnection({
+// 	email,
+// 	username,
+// 	name,
+// 	providerId,
+// 	providerName,
+// 	imageUrl,
+// }: {
+// 	email: User['email']
+// 	username: User['username']
+// 	name: User['name']
+// 	providerId: Connection['providerId']
+// 	providerName: Connection['providerName']
+// 	imageUrl?: string
+// }) {
+// 	const session = await prisma.session.create({
+// 		data: {
+// 			expirationDate: getSessionExpirationDate(),
+// 			user: {
+// 				create: {
+// 					business: { create: { name: `Empresa de ${name}` } },
+// 					email: email.toLowerCase(),
+// 					username: username.toLowerCase(),
+// 					name,
+// 					roles: { connect: { name: 'user' } },
+// 					connections: { create: { providerId, providerName } },
+// 					image: imageUrl
+// 						? { create: await downloadFile(imageUrl) }
+// 						: undefined,
+// 				},
+// 			},
+// 		},
+// 		select: { id: true, expirationDate: true },
+// 	})
 
-	return session
-}
+// 	return session
+// }
 
 export async function logout(
 	{
@@ -325,7 +325,9 @@ export async function getDefaultCategory({
 		data: {
 			colorCode: generateHexColor(),
 			code: 0,
-			description: 'General',
+			name: 'General',
+			description:
+				'Productos que no pertenecen a una categoría específica, o se encuentran sin clasificar.',
 			business: { connect: { id: businessId } },
 			isEssential: true,
 		},

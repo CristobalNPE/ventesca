@@ -21,21 +21,21 @@ import { useIsPending } from '#app/utils/misc.tsx'
 
 export const createCategoryActionIntent = 'create-category'
 
-export const CATEGORY_DESC_MIN = 3
-export const CATEGORY_DESC_MAX = 20
+export const CATEGORY_NAME_MIN = 3
+export const CATEGORY_NAME_MAX = 20
 export const CODE_MIN = 1
 
 export const CreateCategorySchema = z.object({
 	intent: z.literal(createCategoryActionIntent),
-	description: z
+	name: z
 		.string({
 			required_error: 'Campo obligatorio',
 		})
-		.min(CATEGORY_DESC_MIN, {
-			message: 'La descripción debe contener al menos 3 caracteres.',
+		.min(CATEGORY_NAME_MIN, {
+			message: 'El nombre debe contener al menos 3 caracteres.',
 		})
-		.max(CATEGORY_DESC_MAX, {
-			message: `La descripción no puede ser mayor a ${CATEGORY_DESC_MAX} caracteres.`,
+		.max(CATEGORY_NAME_MAX, {
+			message: `El nombre no puede contener mas de ${CATEGORY_NAME_MAX} caracteres.`,
 		}),
 	code: z
 		.number({
@@ -89,14 +89,14 @@ export function CreateCategoryDialog() {
 						/>
 						<Field
 							className="grow"
-							labelProps={{ children: 'Descripción categoría' }}
+							labelProps={{ children: 'Nombre categoría' }}
 							inputProps={{
-								...getInputProps(fields.description, {
+								...getInputProps(fields.name, {
 									type: 'text',
 									ariaAttributes: true,
 								}),
 							}}
-							errors={fields.description.errors}
+							errors={fields.name.errors}
 						/>
 					</div>
 					<ErrorList id={form.errorId} errors={form.errors} />

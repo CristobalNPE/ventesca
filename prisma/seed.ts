@@ -150,7 +150,8 @@ async function createCategories(businessId: string, count: number) {
 			data: {
 				code: faker.number.int({ min: 1000, max: 9999 }),
 				colorCode: faker.internet.color(),
-				description: faker.commerce.department(),
+				name: faker.commerce.department(),
+				description: `${faker.commerce.department()} ${faker.commerce.productAdjective}`,
 				businessId,
 				isEssential: faker.datatype.boolean(),
 			},

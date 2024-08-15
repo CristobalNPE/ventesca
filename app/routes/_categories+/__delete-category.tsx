@@ -16,7 +16,7 @@ import {
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { type action } from '#app/routes/_categories+/categories.$categoryId.tsx'
+import { type action } from '#app/routes/_categories+/categories_.$categoryId.js'
 import { useIsPending } from '#app/utils/misc.tsx'
 
 export const deleteCategoryActionIntent = 'delete-category'

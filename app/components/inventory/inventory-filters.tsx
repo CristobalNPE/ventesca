@@ -13,7 +13,6 @@ import {
 	SelectValue,
 } from '#app/components/ui/select.tsx'
 
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
 import { useFilter } from '#app/hooks/useFilter.ts'
 import { useSortDirection } from '#app/hooks/useSortDirection.ts'
 import { LOW_STOCK_CHANGE_FOR_CONFIG } from '#app/routes/_inventory+/inventory.tsx'
@@ -23,11 +22,12 @@ import {
 	RemoveFiltersButton,
 	SortDirectionButton,
 } from '../filters'
+import { FILTER_PARAMS } from '#app/utils/params.ts'
 
 export function InventoryFilters({
 	categories,
 }: {
-	categories: Pick<Category, 'id' | 'description'>[]
+	categories: Pick<Category, 'id' | 'name'>[]
 }) {
 	const [stockFilter, setStockFilter] = useFilter(FILTER_PARAMS.STOCK, 'all')
 	const [categoryFilter, setCategoryFilter] = useFilter(
@@ -62,9 +62,9 @@ export function InventoryFilters({
 				label="Categoría"
 				filter={categoryFilter}
 				setFilter={setCategoryFilter}
-				options={categories.map(category => ({
+				options={categories.map((category) => ({
 					value: category.id,
-					label: category.description,
+					label: category.name,
 				}))}
 				topOption={{ value: 'all', label: 'Sin Filtros' }}
 			/>

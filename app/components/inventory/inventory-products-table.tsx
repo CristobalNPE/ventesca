@@ -99,7 +99,7 @@ export function InventoryProductsTable() {
 									</TableCell>
 									<TableCell className="text-center">
 										<Badge variant="outline" className="">
-											{product.category.description}
+											{product.category.name}
 										</Badge>
 									</TableCell>
 									<TableCell className="text-center">

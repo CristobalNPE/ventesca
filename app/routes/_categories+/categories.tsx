@@ -21,6 +21,7 @@ import {
 	CreateCategoryDialog,
 	CreateCategorySchema,
 } from './__new-category.tsx'
+import { SearchBar } from '#app/components/SearchBar.js'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -66,7 +67,16 @@ export default function CategoriesRoute() {
 			title="Categorías"
 			actions={isAdmin && <CreateCategoryDialog />}
 		>
-			{/* TODO: Add a search bar */}
+			{/* TODO: Add a search bar and filters*/}
+			<div>
+				<SearchBar
+					status={'error'}
+					formAction={''}
+					queryName={''}
+					label={''}
+					icon={'id'}
+				/>
+			</div>
 			<main className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 				{categories.map((category) => (
 					<CategoryCard key={category.id} category={category} />

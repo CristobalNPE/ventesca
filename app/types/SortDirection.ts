@@ -1,17 +1,13 @@
 import { z } from 'zod'
 
-export const SortDirection = {
-	ASC: 'ASC',
-	DESC: 'DESC',
-} as const
+export enum SortDirection {
+	ASC = 'asc',
+	DESC = 'desc',
+}
 
-export type SortDirection =
-	keyof typeof SortDirection
+export const allSortDirections = [
+	SortDirection.ASC,
+	SortDirection.DESC,
+] as const
 
-export const allSortDirections = Object.values(
-	SortDirection,
-) as [SortDirection, ...SortDirection[]]
-
-export const SortDirectionSchema = z.enum(
-	allSortDirections,
-)
+export const SortDirectionSchema = z.enum(allSortDirections)

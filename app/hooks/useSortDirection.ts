@@ -1,17 +1,18 @@
 import { useState } from 'react'
-import { FILTER_PARAMS } from '#app/constants/filterParams.ts'
+
 import { SortDirection } from '#app/types/SortDirection.ts'
 import { useUrlParams } from './useUrlParams'
+import { FILTER_PARAMS } from '#app/utils/params.ts'
 
 /**
  * @description Custom hook to handle the sort direction
  * @returns - The sort direction and a function to update it
  */
 export const useSortDirection = () => {
-	const { searchParams, updateUrlParams } = useUrlParams(SortDirection.DESC)
+	const { searchParams, updateUrlParams } = useUrlParams(SortDirection.ASC)
 	const [sortDirection, setSortDirection] = useState(
 		(searchParams.get(FILTER_PARAMS.SORT_DIRECTION) as SortDirection) ||
-			SortDirection.DESC,
+			SortDirection.ASC,
 	)
 
 	const handleDirectionChange = (newDirection: SortDirection) => {
