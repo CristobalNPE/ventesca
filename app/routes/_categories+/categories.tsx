@@ -22,6 +22,11 @@ import {
 	CreateCategorySchema,
 } from './__new-category.tsx'
 import { SearchBar } from '#app/components/SearchBar.js'
+import { CategorySearchBar } from '#app/components/categories/category-search-bar.tsx'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Input } from '#app/components/ui/input.tsx'
+import { Category } from '@prisma/client'
+import { Icon } from '#app/components/ui/icon.js'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -61,27 +66,65 @@ export default function CategoriesRoute() {
 	const isAdmin = useIsUserAdmin()
 
 	const { categories } = useLoaderData<typeof loader>()
+	const [searchQuery, setSearchQuery] = useState('')
+	const searchInputRef = useRef<HTMLInputElement>(null)
+	
+	const filteredCategories = useMemo(() => {
+		return categories.filter(
+			(category) =>
+				category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				category.code === Number(searchQuery),
+		)
+	}, [categories, searchQuery])
+
+	useEffect(() => {
+		if (searchInputRef.current && filteredCategories.length === 0) {
+			searchInputRef.current.select()
+		}
+	}, [filteredCategories])
 
 	return (
 		<ContentLayout
-			title="Categorías"
+			title={`Categorías • ${categories.length} ${categories.length === 1 ? 'registrada' : 'registradas'}`}
 			actions={isAdmin && <CreateCategoryDialog />}
 		>
-			{/* TODO: Add a search bar and filters*/}
-			<div>
-				<SearchBar
-					status={'error'}
-					formAction={''}
-					queryName={''}
-					label={''}
-					icon={'id'}
-				/>
+			{/* TODO: Add filters*/}
+			<div className="mb-8 flex items-center justify-center">
+				{/*! We use client side search due to the small potential number of categories */}
+				<div className="relative">
+					<Input
+						ref={searchInputRef}
+						autoFocus
+						className="w-fit min-w-[20rem] pr-[3rem] "
+						type="text"
+						placeholder="Buscar categoría"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					<Icon
+						name="magnifying-glass"
+						className="absolute bottom-1/2 right-4 translate-y-1/2 transform"
+					/>
+				</div>
 			</div>
-			<main className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-				{categories.map((category) => (
-					<CategoryCard key={category.id} category={category} />
-				))}
-			</main>
+			{filteredCategories.length > 0 ? (
+				<main className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+					{filteredCategories.map((category) => (
+						<CategoryCard key={category.id} category={category} />
+					))}
+				</main>
+			) : (
+				<div className="mt-12 flex flex-col items-center justify-center gap-4">
+					<Icon
+						name="question-mark-circled"
+						className="text-muted-foreground"
+						size="lg"
+					/>
+					<p className="text-center text-sm text-muted-foreground">
+						No se encontraron categorías bajo el criterio de búsqueda.
+					</p>
+				</div>
+			)}
 		</ContentLayout>
 	)
 }
