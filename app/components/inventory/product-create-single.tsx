@@ -86,7 +86,7 @@ export function CreateItemDialog() {
 								autoFocus: true,
 
 								...getInputProps(fields.code, {
-									type: 'number',
+									type: 'text',
 									ariaAttributes: true,
 								}),
 							}}
