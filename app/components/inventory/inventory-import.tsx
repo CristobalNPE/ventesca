@@ -265,7 +265,7 @@ export function ImportInventoryFromFileModal() {
 										variant={'secondary'}
 										className="w-[15rem]"
 									>
-										<a href={'/inventory/template-generator'}>
+										<a href={'/resources/inventory/template-generator'}>
 											<Icon
 												name="file-arrow-right"
 												size="sm"
