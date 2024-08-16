@@ -24,6 +24,7 @@ export const createCategoryActionIntent = 'create-category'
 export const CATEGORY_NAME_MIN = 3
 export const CATEGORY_NAME_MAX = 20
 export const CODE_MIN = 1
+export const CODE_MAX = 999
 
 export const CreateCategorySchema = z.object({
 	intent: z.literal(createCategoryActionIntent),
@@ -42,7 +43,8 @@ export const CreateCategorySchema = z.object({
 			required_error: 'Campo obligatorio',
 			invalid_type_error: 'Debe ser un número',
 		})
-		.min(CODE_MIN, { message: 'El código no puede ser negativo.' }),
+		.min(CODE_MIN, { message: 'El código no puede ser negativo.' })
+		.max(CODE_MAX, { message: 'El código no puede ser mayor a 999.' }),
 })
 
 export function CreateCategoryDialog() {
