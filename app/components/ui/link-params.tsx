@@ -1,10 +1,10 @@
 import { NavLink, type NavLinkProps, useLocation } from '@remix-run/react'
 
-type LinkWithParamsProps = NavLinkProps & { preserveSearch: boolean }
+type LinkWithParamsProps = NavLinkProps & { preserveSearch?: boolean }
 
 export function LinkWithParams({
 	to,
-	preserveSearch,
+	preserveSearch = true,
 	children,
 	...props
 }: LinkWithParamsProps) {
