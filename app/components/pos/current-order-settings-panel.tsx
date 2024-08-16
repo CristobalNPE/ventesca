@@ -1,6 +1,5 @@
 // import { updateDiscountValidity } from '../_discounts+/discounts_.$discountId.tsx'
 
-
 import { type Discount } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Link, useNavigate } from '@remix-run/react'
@@ -84,7 +83,7 @@ function CurrentOrderIdPanel({ orderId }: { orderId: string }) {
 			</div>
 			<div
 				onClick={() => {
-					navigator.clipboard.writeText(orderId)
+					void navigator.clipboard.writeText(orderId)
 					toast.success('ID copiado al portapapeles')
 				}}
 				className="cursor-pointer rounded-md p-1 font-semibold uppercase text-foreground hover:bg-secondary"
@@ -172,7 +171,7 @@ const DiscountsPanel = ({
 						Promociones aplicables ({activeDiscounts.length})
 					</div>
 					<ul className="mt-1 flex flex-col font-semibold tracking-tight">
-						{activeDiscounts.map(discount => {
+						{activeDiscounts.map((discount) => {
 							return <DiscountSheet key={discount.id} discount={discount} />
 						})}
 					</ul>
@@ -207,7 +206,7 @@ const OrderOptionsPanel = ({ order }: { order: OrderDetails }) => {
 				onClick={() => {
 					navigate(`/orders/${order.id}`, {
 						unstable_viewTransition: true,
-						state: { origin: 'pos' },
+						state: { origin: '/pos' },
 					})
 				}}
 			>
