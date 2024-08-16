@@ -195,7 +195,7 @@ function App() {
 	const [openProductPriceReader, setOpenProductPriceReader] = useState(false)
 
 	useToast(data.toast)
-	useHotkeys(Key.F1, () => navigate('/pos'), { preventDefault: true })
+	useHotkeys(Key.F2, () => navigate('/pos'), { preventDefault: true })
 	useHotkeys(Key.F4, () => setOpenProductPriceReader(true), {
 		preventDefault: true,
 		enableOnFormTags: true,
