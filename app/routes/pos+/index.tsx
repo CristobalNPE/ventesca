@@ -144,7 +144,7 @@ export default function ProcessOrderRoute() {
 		() => productReaderRef.current?.focus(),
 		{ preventDefault: true },
 	)
-	useHotkeys(Key.F1, () => productReaderRef.current?.focus(), {
+	useHotkeys(Key.F2, () => productReaderRef.current?.focus(), {
 		preventDefault: true,
 	})
 
