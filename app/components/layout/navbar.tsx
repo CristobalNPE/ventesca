@@ -26,11 +26,11 @@ export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
 
 	const paths = pathname.split('/')
 
-	const showBackButton = paths.length > 2 && paths[1]?.length
-
 	let origin = '..'
 	if (state && state.origin) origin = `${state.origin}`
 
+	const showBackButton =
+		(paths.length > 2 && paths[1]?.length) || (origin && origin !== '..')
 	return (
 		<header
 			className={cn(
@@ -76,7 +76,7 @@ export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
 								<span className="sr-only">Opciones</span>
 							</Button>
 						</DrawerTrigger>
-						<DrawerContent className="flex flex-col p-6">
+						<DrawerContent className="flex flex-col gap-3 p-6">
 							<DrawerHeader>
 								<DrawerTitle></DrawerTitle>
 							</DrawerHeader>
