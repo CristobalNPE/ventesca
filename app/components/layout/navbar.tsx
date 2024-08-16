@@ -29,7 +29,7 @@ export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
 	const showBackButton = paths.length > 2 && paths[1]?.length
 
 	let origin = '..'
-	if (state && state.origin) origin = `/${state.origin}`
+	if (state && state.origin) origin = `${state.origin}`
 
 	return (
 		<header
@@ -45,9 +45,6 @@ export function Navbar({ title, actions, hideOnBigScreen }: NavbarProps) {
 					<div className="flex items-center gap-4 ">
 						{showBackButton ? (
 							<Button variant={'outline'} className="" size={'sm'} asChild>
-								{/*! TODO: If comming from a different path, shoud go back to that path */}
-								{/* Only show this back button is there is a path "back" */}
-
 								<LinkWithParams
 									preserveSearch
 									prefetch="intent"
