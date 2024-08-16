@@ -13,7 +13,7 @@ import {
 	parseExcelTemplate,
 	validateParsedProduct,
 	validateTemplate,
-} from '#app/routes/_inventory+/inventory.template-generator.server.ts'
+} from '#app/routes/_inventory+/inventory_.template-generator.server.ts'
 import { ImportInventoryFromFileSchema } from '../../components/inventory/inventory-import.tsx'
 
 export async function createProductsFromImport({

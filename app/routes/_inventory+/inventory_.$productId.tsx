@@ -67,7 +67,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			categoryId: true,
 			supplierId: true,
 			discounts: { select: { id: true, name: true } },
-			category: { select: { description: true, id: true } },
+			category: { select: { name: true, id: true } },
 			supplier: { select: { fantasyName: true, id: true } },
 			productAnalytics: {
 				select: {
@@ -87,7 +87,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	const businessCategoriesPromise = prisma.category.findMany({
 		where: { businessId },
-		select: { id: true, description: true },
+		select: { id: true, name: true },
 	})
 	const businessSuppliersPromise = prisma.supplier.findMany({
 		where: { businessId },

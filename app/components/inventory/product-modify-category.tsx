@@ -31,7 +31,7 @@ export const CategoryEditorSchema = z.object({
 export function ModifyCategorySelect({
 	categories,
 }: {
-	categories: Pick<Category, 'id' | 'description'>[]
+	categories: Pick<Category, 'id' | 'name'>[]
 }) {
 	const { product, isAdmin } = useProductContext()
 
@@ -96,7 +96,7 @@ export function ModifyCategorySelect({
 				<SelectContent>
 					{categories.map(category => (
 						<SelectItem key={category.id} value={category.id}>
-							{category.description}
+							{category.name}
 						</SelectItem>
 					))}
 				</SelectContent>
