@@ -1,6 +1,3 @@
-import { Link } from '@remix-run/react'
-import { TrendingUp } from 'lucide-react'
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
 import {
 	Card,
 	CardContent,
@@ -16,20 +13,9 @@ import {
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
 import { useAnalytics } from '#app/context/analytics/AnalyticsContext.tsx'
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
 import { Icon } from '../ui/icon'
-
-const barChartData = [
-	{ month: 'January', desktop: 900, mobile: 80 },
-	{ month: 'February', desktop: 850, mobile: 200 },
-	{ month: 'March', desktop: 700, mobile: 120 },
-	{ month: 'April', desktop: 600, mobile: 190 },
-	{ month: 'May', desktop: 500, mobile: 130 },
-	{ month: 'June', desktop: 400, mobile: 140 },
-	{ month: 'July', desktop: 350, mobile: 120 },
-	{ month: 'August', desktop: 300, mobile: 190 },
-	{ month: 'September', desktop: 250, mobile: 130 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-]
+import { LinkWithOrigin } from '../ui/link-origin'
 
 const barChartConfig = {
 	totalSales: {
@@ -77,7 +63,7 @@ export function TopSellingProductsBarChart() {
 							tickLine={false}
 							tickMargin={10}
 							axisLine={false}
-							tickFormatter={value => value.slice(0, 3)}
+							tickFormatter={(value) => value.slice(0, 3)}
 							hide
 						/>
 						<XAxis dataKey="totalSales" type="number" hide />
@@ -104,15 +90,15 @@ export function TopSellingProductsBarChart() {
 			</CardContent>
 			<CardFooter className="flex-col items-start gap-2 text-sm ">
 				<div className="flex w-full flex-col items-center justify-center gap-2 rounded-sm  p-2 text-lg leading-none text-foreground">
-					<Link
+					<LinkWithOrigin
 						prefetch="intent"
 						unstable_viewTransition
-						className="flex items-center gap-3 justify-center"
+						className="flex items-center justify-center gap-3"
 						to={`/inventory/${topSellingProducts[0]!.id}`}
 					>
 						<Icon name="trophy" size="lg" />
 						<div>{topSellingProducts[0]!.name}</div>
-					</Link>
+					</LinkWithOrigin>
 					<div className="text-sm text-muted-foreground">Mas vendido</div>
 				</div>
 			</CardFooter>
