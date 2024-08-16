@@ -46,7 +46,7 @@ export function DeleteCategory({
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button size="sm" variant="ghost" className="h-8 gap-1">
+				<Button size="sm" variant="destructive" className="h-8 gap-1">
 					<Icon name="trash" className="h-3.5 w-3.5" />
 					<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
 						Eliminar categoría
