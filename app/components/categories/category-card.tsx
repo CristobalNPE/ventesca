@@ -9,6 +9,7 @@ import { type Category } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 
 import { Button } from '#app/components/ui/button.tsx'
+import { CategoryColorIndicator } from './category-color-indicator'
 
 export function CategoryCard({
 	category,
@@ -18,18 +19,16 @@ export function CategoryCard({
 	> & { _count: { products: number } }
 }) {
 	return (
-		<Card className="shadow-md ">
+		<Card className="min-w-[17rem] shadow-md hover:z-30">
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<div className="relative flex aspect-square h-7 w-7 items-center justify-center  overflow-hidden rounded-full border">
-						<input
-							type="color"
-							className="absolute h-36  w-36 appearance-none border-none bg-transparent "
-							disabled
-							value={category.colorCode}
-						/>
+				<CardTitle className="flex items-center justify-between gap-2">
+					<div className="flex items-center gap-2">
+						<CategoryColorIndicator colorCode={category.colorCode} />
+						<span>{category.name}</span>
 					</div>
-					{category.name}
+					<span className="whitespace-nowrap text-sm tracking-wide text-muted-foreground">
+						# {category.code.toString().padStart(3, '0')}
+					</span>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className={`flex h-[10rem] flex-col gap-4`}>
@@ -37,7 +36,10 @@ export function CategoryCard({
 					{category.description}
 				</p>
 				<div className="mt-auto flex items-center  justify-between ">
-					<span className="">{category._count.products} {category._count.products === 1 ? 'producto' : 'productos'}</span>
+					<span className="">
+						{category._count.products}{' '}
+						{category._count.products === 1 ? 'producto' : 'productos'}
+					</span>
 					<Button variant={'secondary'} asChild>
 						<LinkWithParams
 							to={category.id}
