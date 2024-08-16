@@ -57,7 +57,7 @@ export default function ProductDetails() {
 					<CardTitle>Detalles del producto</CardTitle>
 					<CardDescription>
 						Registrado en sistema el{' '}
-						{format(product.createdAt, "dd'/'MM'/'yyyy 'a las' HH:MM", {
+						{format(product.createdAt, "dd'/'MM'/'yyyy 'a las' HH:MM ", {
 							locale: es,
 						})}
 						hrs.
@@ -95,7 +95,7 @@ export default function ProductDetails() {
 				/>
 			</CardContent>
 			<CardFooter className="flex  flex-row items-center justify-end border-t bg-muted/50 p-3 text-sm text-muted-foreground">
-				<span className="flex items-center gap-2">
+				<span className="flex items-center gap-1">
 					<Icon size="sm" name="clock" /> Última modificación{' '}
 					{formatRelative(subDays(product.updatedAt, 0), new Date(), {
 						locale: es,
