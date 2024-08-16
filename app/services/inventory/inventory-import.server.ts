@@ -1,3 +1,5 @@
+import { ImportInventoryFromFileSchema } from '#app/components/inventory/inventory-import.tsx'
+import { ParsedProduct, parseExcelTemplate, validateParsedProduct, validateTemplate } from '#app/routes/resources+/inventory.template-generator.tsx'
 import {
 	getDefaultCategory,
 	getDefaultSupplier,
@@ -8,13 +10,7 @@ import { type Product } from '@prisma/client'
 import { json } from '@remix-run/node'
 import { z } from 'zod'
 
-import {
-	ParsedProduct,
-	parseExcelTemplate,
-	validateParsedProduct,
-	validateTemplate,
-} from '#app/routes/_inventory+/inventory_.template-generator.server.ts'
-import { ImportInventoryFromFileSchema } from '../../components/inventory/inventory-import.tsx'
+
 
 export async function createProductsFromImport({
 	formData,
