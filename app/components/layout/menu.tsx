@@ -1,14 +1,12 @@
-import {
-	Link,
-	useLocation,
-	useOutletContext,
-	useRouteLoaderData,
-} from '@remix-run/react'
 import { type loader as RootLoader } from '#app/root.tsx'
 import { ThemeSwitch } from '#app/routes/resources+/theme-switch.tsx'
 import { getMenuList } from '#app/utils/menu-list.ts'
 import { cn } from '#app/utils/misc.tsx'
-import { Theme } from '#app/utils/theme.server.ts'
+import {
+	Link,
+	useLocation,
+	useRouteLoaderData
+} from '@remix-run/react'
 import { Button } from '../ui/button'
 import { Icon } from '../ui/icon'
 import { ScrollArea } from '../ui/scroll-area'
