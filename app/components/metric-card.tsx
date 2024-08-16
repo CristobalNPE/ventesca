@@ -1,20 +1,16 @@
-import { type PropsWithChildren, useEffect, useState } from 'react'
-import { Label } from 'recharts'
 import { cn } from '#app/utils/misc.tsx'
+import { type PropsWithChildren, useEffect, useState } from 'react'
 
-import { Button } from './ui/button'
 import { Card } from './ui/card'
 import {
 	Dialog,
-	DialogTrigger,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogDescription,
-	DialogFooter,
+	DialogTrigger,
 } from './ui/dialog'
 import { Icon, type IconName } from './ui/icon'
-import { Input } from './ui/input'
 
 // Base component props
 type MetricCardProps = {
@@ -60,13 +56,16 @@ export function MetricCard({
 					</div>
 					<div>
 						<h3 className="text-xl font-semibold">{title}</h3>
-						<p className="text-sm text-muted-foreground">{description}</p>
+						<p className="hidden text-sm text-muted-foreground sm:block">
+							{description}
+						</p>
 					</div>
 				</div>
 				<div
 					className={cn(
 						'flex flex-col items-center text-3xl font-bold leading-none',
 						isNegative && 'text-destructive',
+						!title && !description && 'text-xl',
 					)}
 				>
 					<span>{value}</span>
