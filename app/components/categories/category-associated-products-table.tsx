@@ -1,5 +1,3 @@
-import { PaginationBar } from '#app/components/pagination-bar.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
 import {
 	Card,
 	CardDescription,
@@ -7,7 +5,6 @@ import {
 	CardTitle,
 } from '#app/components/ui/card.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
 import {
 	Table,
 	TableBody,
@@ -18,13 +15,22 @@ import {
 } from '#app/components/ui/table.tsx'
 import { useCategory } from '#app/context/categories/CategoryContext.tsx'
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
+import { useSearchParams } from '@remix-run/react'
 import { Button } from '../ui/button'
 import { LinkWithOrigin } from '../ui/link-origin'
 
+import { useEffect } from 'react'
 import { ScrollArea } from '../ui/scroll-area'
 
 export function CategoryAssociatedProductsTable() {
 	const { category } = useCategory()
+	const [_, setSearchParams] = useSearchParams()
+
+	//We clean up search params when the component is mounted in case we are coming from the inventory page
+	useEffect(() => {
+		setSearchParams(new URLSearchParams())
+	}, [])
+
 	return (
 		<Card className="w-full">
 			<CardHeader className="flex flex-col gap-2">
@@ -57,7 +63,7 @@ export function CategoryAssociatedProductsTable() {
 			</CardHeader>
 			{category.products.length ? (
 				<ScrollArea className="relative  h-[calc(20rem)]  border-b p-6  pt-0 ">
-					 {/* <ScrollArea className="relative h-[calc(100%-14rem)]  border-b p-6  pt-0 ">  */}
+					{/* <ScrollArea className="relative h-[calc(100%-14rem)]  border-b p-6  pt-0 ">  */}
 					<Table>
 						<TableHeader className="sticky top-0 z-20 overflow-clip rounded-md bg-secondary">
 							<TableRow>
@@ -130,7 +136,7 @@ export function CategoryAssociatedProductsTable() {
 					</Table>
 				</ScrollArea>
 			) : (
-				<div className="flex p-9 w-full flex-col items-center justify-center gap-2 text-balance rounded-sm border border-dashed bg-card text-muted-foreground">
+				<div className="flex w-full flex-col items-center justify-center gap-2 text-balance rounded-sm border border-dashed bg-card p-9 text-muted-foreground">
 					<Icon name="exclamation-circle" size="xl" />
 					<p>No existen productos registrados en esta categoría.</p>
 				</div>
