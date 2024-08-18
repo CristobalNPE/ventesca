@@ -1,11 +1,13 @@
-import { type Connection, type Password, type User } from '@prisma/client'
+import { getDefaultCategory } from '#app/services/categories/categories-queries.server.ts'
+import { getDefaultSupplier } from '#app/services/suppliers/suppliers-queries.server.ts'
+import { type Password, type User } from '@prisma/client'
 import { redirect } from '@remix-run/node'
 import bcrypt from 'bcryptjs'
 import { Authenticator } from 'remix-auth'
 import { safeRedirect } from 'remix-utils/safe-redirect'
 import { connectionSessionStorage, providers } from './connections.server.ts'
 import { prisma } from './db.server.ts'
-import { combineHeaders, downloadFile, generateHexColor } from './misc.tsx'
+import { combineHeaders } from './misc.tsx'
 import { type ProviderUser } from './providers/provider.ts'
 import { authSessionStorage } from './session.server.ts'
 
@@ -62,7 +64,7 @@ export async function requireUserId(
 		redirectTo =
 			redirectTo === null
 				? null
-				: redirectTo ?? `${requestUrl.pathname}${requestUrl.search}`
+				: (redirectTo ?? `${requestUrl.pathname}${requestUrl.search}`)
 		const loginParams = redirectTo ? new URLSearchParams({ redirectTo }) : null
 		const loginRedirect = ['/login', loginParams?.toString()]
 			.filter(Boolean)
@@ -176,12 +178,8 @@ export async function signup({
 	})
 
 	//create default supplier and category
-	await getDefaultSupplier({
-		name: name ?? username,
-		email,
-		businessId: session.user.businessId,
-	})
-	await getDefaultCategory({ businessId: session.user.businessId })
+	await getDefaultSupplier(session.user.businessId)
+	await getDefaultCategory(session.user.businessId)
 
 	const { id, expirationDate } = session
 	return { id, expirationDate }
@@ -305,64 +303,3 @@ export async function verifyUserPassword(
 
 // 	return { id: userWithPassword.id }
 // }
-
-//!MOVE THIS OUT OF HERE?
-
-export async function getDefaultCategory({
-	businessId,
-}: {
-	businessId: string
-}) {
-	const defaultCategory = await prisma.category.findFirst({
-		where: { businessId, isEssential: true },
-	})
-
-	if (defaultCategory) {
-		return defaultCategory
-	}
-
-	return await prisma.category.create({
-		data: {
-			colorCode: generateHexColor(),
-			code: 0,
-			name: 'General',
-			description:
-				'Productos que no pertenecen a una categoría específica, o se encuentran sin clasificar.',
-			business: { connect: { id: businessId } },
-			isEssential: true,
-		},
-	})
-}
-
-export async function getDefaultSupplier({
-	businessId,
-	name,
-	email,
-}: {
-	businessId: string
-	name: string
-	email: string
-}) {
-	const defaultSupplier = await prisma.supplier.findFirst({
-		where: { businessId, isEssential: true },
-	})
-
-	if (defaultSupplier) {
-		return defaultSupplier
-	}
-
-	return await prisma.supplier.create({
-		data: {
-			code: 0,
-			rut: 'Sin Datos',
-			name,
-			address: 'Sin Datos',
-			city: 'Sin Datos',
-			fantasyName: `Proveedor Propio`,
-			phone: 'Sin Datos',
-			email,
-			business: { connect: { id: businessId } },
-			isEssential: true,
-		},
-	})
-}
