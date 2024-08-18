@@ -27,7 +27,7 @@ export function ErrorList({
 	if (!errorsToRender?.length) return null
 	return (
 		<ul id={id} className="flex flex-col gap-1">
-			{errorsToRender.map(e => (
+			{errorsToRender.map((e) => (
 				<li key={e} className="text-[10px] text-foreground-destructive">
 					{e}
 				</li>
@@ -95,8 +95,10 @@ export function StyledField({
 				)}
 			>
 				<div className="flex  items-center gap-3 ">
-					<Icon name={icon} size="md" />
-					<div className=' w-full text-sm'>
+					<div className="flex aspect-square w-12 shrink-0 items-center justify-center rounded-md border">
+						<Icon name={icon} size="lg" className="text-muted-foreground" />
+					</div>
+					<div className=" w-full text-sm">
 						<Label
 							className="text-center text-muted-foreground "
 							htmlFor={id}
@@ -108,7 +110,7 @@ export function StyledField({
 							aria-invalid={errorId ? true : undefined}
 							aria-describedby={errorId}
 							{...inputProps}
-							className="flex  w-full items-center justify-center  leading-none"
+							className="flex h-7 font-semibold w-full items-center justify-center  leading-none px-1 bg-secondary   "
 						/>
 					</div>
 				</div>
@@ -264,15 +266,15 @@ export function CheckboxField({
 					aria-invalid={errorId ? true : undefined}
 					aria-describedby={errorId}
 					checked={input.value === checkedValue}
-					onCheckedChange={state => {
+					onCheckedChange={(state) => {
 						input.change(state.valueOf() ? checkedValue : '')
 						buttonProps.onCheckedChange?.(state)
 					}}
-					onFocus={event => {
+					onFocus={(event) => {
 						input.focus()
 						buttonProps.onFocus?.(event)
 					}}
-					onBlur={event => {
+					onBlur={(event) => {
 						input.blur()
 						buttonProps.onBlur?.(event)
 					}}
