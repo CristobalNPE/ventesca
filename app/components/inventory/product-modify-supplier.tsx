@@ -65,7 +65,7 @@ export function ModifySupplierSelect({
 				{
 					intent: updateProductSupplierActionIntent,
 					productId: product.id,
-					categoryId: supplierId.value,
+					supplierId: supplierId.value,
 				},
 				{ method: 'POST', action: '/inventory/edit' },
 			)
