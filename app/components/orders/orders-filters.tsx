@@ -10,6 +10,7 @@ import { allTimePeriods, timePeriodNames } from '#app/utils/time-periods.ts'
 import {
 	FilterSelect,
 	RemoveFiltersButton,
+	ResponsiveFilterWrapper,
 	SortDirectionButton,
 } from '../filters'
 import { FILTER_PARAMS } from '#app/utils/params.ts'
@@ -43,7 +44,7 @@ export function OrdersFilters({
 	}
 
 	return (
-		<div className="flex  w-fit flex-wrap justify-center gap-4 rounded-md bg-secondary/40 p-1 shadow-sm">
+		<ResponsiveFilterWrapper>
 			<RemoveFiltersButton resetSelectValues={resetSelectValues} />
 			<FilterSelect
 				label="Estado"
@@ -90,6 +91,6 @@ export function OrdersFilters({
 				sortDirection={sortDirection}
 				onChange={setSortDirection}
 			/>
-		</div>
+		</ResponsiveFilterWrapper>
 	)
 }
