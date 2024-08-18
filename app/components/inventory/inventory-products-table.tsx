@@ -23,14 +23,10 @@ import { ScrollArea } from '../ui/scroll-area'
 import { InventoryFilters } from './inventory-filters'
 import { InventorySearchBar } from './inventory-search-bar'
 
-
-
-
 export function InventoryProductsTable() {
-	const { products, totalProducts, allCategories } =
-		useInventory()
+	const { products, totalProducts, allCategories, allSuppliers } = useInventory()
 	return (
-		<Card className="w-full">
+		<Card className="w-full ">
 			<CardHeader className="flex flex-col gap-2">
 				<div className="flex w-full items-center justify-between">
 					<CardTitle>Registro de productos</CardTitle>
@@ -43,7 +39,10 @@ export function InventoryProductsTable() {
 				</div>
 
 				<div className="flex flex-wrap items-center justify-center gap-2 ">
-					<InventoryFilters categories={allCategories} />
+					<InventoryFilters
+						categories={allCategories}
+						suppliers={allSuppliers}
+					/>
 					<div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-8 ">
 						<InventorySearchBar status="idle" autoSubmit />
 						<PaginationBar total={totalProducts} top={25} />
@@ -51,7 +50,7 @@ export function InventoryProductsTable() {
 				</div>
 			</CardHeader>
 			{products.length ? (
-				<ScrollArea className="relative h-[calc(100%-14rem)]  border-b p-6  pt-0 ">
+				<ScrollArea className="relative border-b   p-6 pt-0  sm:h-[calc(100%-14rem)] ">
 					<Table>
 						<TableHeader className="sticky top-0 z-20 overflow-clip rounded-md bg-secondary">
 							<TableRow>
@@ -64,7 +63,7 @@ export function InventoryProductsTable() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{products.map(product => (
+							{products.map((product) => (
 								<TableRow className="group" key={product.id}>
 									<TableCell className=" h-full overflow-hidden p-0">
 										<LinkWithParams
