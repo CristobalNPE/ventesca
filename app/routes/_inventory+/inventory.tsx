@@ -42,6 +42,8 @@ import {
 	inventoryHasActiveProducts,
 } from '#app/services/inventory/product-queries.server.ts'
 import { parseInventoryUrlParams } from '#app/utils/inventory/inventory-params.ts'
+import { getBusinessCategories } from '#app/services/categories/categories-queries.server.ts'
+import { getBusinessSuppliers } from '#app/services/suppliers/suppliers-queries.server.ts'
 
 export const LOW_STOCK_CHANGE_FOR_CONFIG = '5'
 
@@ -53,11 +55,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		request.url,
 	)
 
-	const allCategoriesPromise = prisma.category.findMany({
-		where: { businessId },
-		select: { id: true, name: true },
-	})
-
 	const [
 		products,
 		totalProducts,
@@ -66,6 +63,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSeller,
 		mostProfit,
 		allCategories,
+		allSuppliers,
 		hasActiveProducts,
 	] = await Promise.all([
 		getProducts({
@@ -85,7 +83,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		),
 		getBestSellingProduct(businessId),
 		getMostProfitProduct(businessId),
-		allCategoriesPromise,
+		getBusinessCategories(businessId),
+		getBusinessSuppliers(businessId),
 		inventoryHasActiveProducts(businessId),
 	])
 
@@ -97,6 +96,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		bestSeller,
 		mostProfit,
 		allCategories,
+		allSuppliers,
 		hasActiveProducts: hasActiveProducts !== null,
 	})
 }
@@ -125,7 +125,7 @@ export default function InventoryRoute() {
 				actions={isAdmin && <InventoryOptions />}
 			>
 				<main className="flex h-full  flex-col gap-4">
-					<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row">
+					<div className="flex w-full flex-1 flex-col gap-4  xl:h-[48rem] xl:flex-row ">
 						<div className="flex h-full w-full flex-1 flex-col-reverse gap-4  xl:flex-row-reverse ">
 							<InventoryStats />
 							<InventoryProductsTable />
