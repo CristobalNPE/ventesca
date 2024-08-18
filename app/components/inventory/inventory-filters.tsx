@@ -20,18 +20,25 @@ import { SortDirection } from '#app/types/SortDirection.ts'
 import {
 	FilterSelect,
 	RemoveFiltersButton,
+	ResponsiveFilterWrapper,
 	SortDirectionButton,
 } from '../filters'
 import { FILTER_PARAMS } from '#app/utils/params.ts'
 
 export function InventoryFilters({
 	categories,
+	suppliers,
 }: {
 	categories: Pick<Category, 'id' | 'name'>[]
+	suppliers: Pick<Supplier, 'id' | 'fantasyName'>[]
 }) {
 	const [stockFilter, setStockFilter] = useFilter(FILTER_PARAMS.STOCK, 'all')
 	const [categoryFilter, setCategoryFilter] = useFilter(
 		FILTER_PARAMS.CATEGORY,
+		'all',
+	)
+	const [supplierFilter, setSupplierFilter] = useFilter(
+		FILTER_PARAMS.SUPPLIER,
 		'all',
 	)
 	const [statusFilter, setStatusFilter] = useFilter(FILTER_PARAMS.STATUS, 'all')
@@ -40,13 +47,14 @@ export function InventoryFilters({
 	const resetSelectValues = () => {
 		setStockFilter('all')
 		setCategoryFilter('all')
+		setSupplierFilter('all')
 		setStatusFilter('all')
 		setSortBy('name')
 		setSortDirection(SortDirection.ASC)
 	}
 
 	return (
-		<div className="flex w-fit flex-wrap items-center justify-center gap-4 rounded-md bg-secondary/40 p-1 shadow-sm">
+		<ResponsiveFilterWrapper>
 			<RemoveFiltersButton resetSelectValues={resetSelectValues} />
 			<FilterSelect
 				label="Stock"
@@ -65,6 +73,16 @@ export function InventoryFilters({
 				options={categories.map((category) => ({
 					value: category.id,
 					label: category.name,
+				}))}
+				topOption={{ value: 'all', label: 'Sin Filtros' }}
+			/>
+			<FilterSelect
+				label="Proveedor"
+				filter={supplierFilter}
+				setFilter={setSupplierFilter}
+				options={suppliers.map((supplier) => ({
+					value: supplier.id,
+					label: supplier.fantasyName,
 				}))}
 				topOption={{ value: 'all', label: 'Sin Filtros' }}
 			/>
@@ -94,6 +112,6 @@ export function InventoryFilters({
 				sortDirection={sortDirection}
 				onChange={setSortDirection}
 			/>
-		</div>
+		</ResponsiveFilterWrapper>
 	)
 }

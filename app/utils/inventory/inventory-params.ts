@@ -6,6 +6,7 @@ export type ProductFilters = {
 	searchTerm?: string | null
 	stockFilter?: string | null
 	categoryFilter?: string | null
+	supplierFilter?: string | null
 	statusFilter?: string | null
 }
 
@@ -30,6 +31,7 @@ export function parseInventoryUrlParams(url: string) {
 		searchTerm: urlObj.searchParams.get('search') ?? '',
 		stockFilter: urlObj.searchParams.get(FILTER_PARAMS.STOCK),
 		categoryFilter: urlObj.searchParams.get(FILTER_PARAMS.CATEGORY),
+		supplierFilter: urlObj.searchParams.get(FILTER_PARAMS.SUPPLIER),
 		statusFilter: urlObj.searchParams.get(FILTER_PARAMS.STATUS),
 	}
 
