@@ -99,7 +99,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const { productId, code, name, cost } = submission.value
 
-	prisma.$transaction(async tx => {
+	await prisma.$transaction(async tx => {
 		const updatedProduct = await tx.product.update({
 			where: { id: productId },
 			data: { code, name, cost },
@@ -114,8 +114,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	return redirectWithToast(`/inventory/${productId}`, {
 		type: 'success',
-		title: 'Producto modificado',
-		description: 'Detalles del producto modificados con éxito.',
+		title: 'Producto actualizado',
+		description: 'El producto ha sido modificado con éxito.',
 	})
 }
 
