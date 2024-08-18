@@ -10,23 +10,22 @@ import {
 	type LoaderFunctionArgs,
 	redirectDocument,
 } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 
 import { CategoryCard } from '#app/components/categories/category-card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { useIsUserAdmin } from '#app/utils/user.ts'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
 	createCategoryActionIntent,
 	CreateCategoryDialog,
 	CreateCategorySchema,
-} from './__new-category.tsx'
-import { SearchBar } from '#app/components/SearchBar.js'
-import { CategorySearchBar } from '#app/components/categories/category-search-bar.tsx'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Input } from '#app/components/ui/input.tsx'
-import { Category } from '@prisma/client'
-import { Icon } from '#app/components/ui/icon.js'
+} from '#app/components/categories/category-create.tsx'
+import { redirectWithToast } from '#app/utils/toast.server.js'
+import { Button } from '#app/components/ui/button.js'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -41,6 +40,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			name: true,
 			description: true,
 			_count: { select: { products: true } },
+		},
+		orderBy: {
+			code: 'asc',
 		},
 	})
 
@@ -63,12 +65,10 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function CategoriesRoute() {
-	const isAdmin = useIsUserAdmin()
-
 	const { categories } = useLoaderData<typeof loader>()
 	const [searchQuery, setSearchQuery] = useState('')
 	const searchInputRef = useRef<HTMLInputElement>(null)
-	
+
 	const filteredCategories = useMemo(() => {
 		return categories.filter(
 			(category) =>
@@ -86,7 +86,7 @@ export default function CategoriesRoute() {
 	return (
 		<ContentLayout
 			title={`Categorías • ${categories.length} ${categories.length === 1 ? 'registrada' : 'registradas'}`}
-			actions={isAdmin && <CreateCategoryDialog />}
+			actions={<CategoriesActions />}
 		>
 			{/* TODO: Add filters*/}
 			<div className="mb-8 flex items-center justify-center">
@@ -129,6 +129,28 @@ export default function CategoriesRoute() {
 	)
 }
 
+function CategoriesActions() {
+	const isAdmin = useIsUserAdmin()
+	return (
+		<>
+			{isAdmin && (
+				<>
+					<Button variant="outline" size="sm" asChild>
+						<Link
+							unstable_viewTransition
+							prefetch="intent"
+							to="transfer-products"
+						>
+							<Icon name="transfer">Transferir productos</Icon>
+						</Link>
+					</Button>
+					<CreateCategoryDialog />
+				</>
+			)}
+		</>
+	)
+}
+
 async function createCategoryAction(formData: FormData, businessId: string) {
 	const submission = await parseWithZod(formData, {
 		schema: CreateCategorySchema.superRefine(async (data, ctx) => {
@@ -168,5 +190,8 @@ async function createCategoryAction(formData: FormData, businessId: string) {
 		},
 	})
 
-	return redirectDocument(`/categories/${createdCategory.id}`)
+	return redirectWithToast(`/categories/${createdCategory.id}`, {
+		title: 'Categoría creada',
+		description: `La categoría '${name}' ha sido creada exitosamente.`,
+	})
 }
