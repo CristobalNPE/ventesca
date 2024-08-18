@@ -11,8 +11,6 @@ export function LinkWithOrigin({
 }: LinkWithOriginProps) {
 	const { pathname, search } = useLocation()
 
-	console.log(`✨ LinkWithOrigin: ${pathname}`)
-
 	return (
 		<LinkWithParams
 			{...props}
