@@ -1,114 +1,114 @@
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Card, CardContent, CardHeader } from '#app/components/ui/card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { Input } from '#app/components/ui/input.tsx'
+import { LinkWithParams } from '#app/components/ui/link-params.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { cn } from '#app/utils/misc.tsx'
 import { type Supplier } from '@prisma/client'
-import { Label } from '@radix-ui/react-label'
 import {
 	json,
 	type LoaderFunctionArgs,
 	type SerializeFrom,
 } from '@remix-run/node'
-import {
-	Link,
-	Outlet,
-	useLoaderData,
-	useLocation,
-	Form,
-	useSearchParams,
-	useSubmit,
-} from '@remix-run/react'
+import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { format as formatRut } from '@validatecl/rut'
-import { useId } from 'react'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
-import { Spacer } from '#app/components/spacer.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '#app/components/ui/card.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { Input } from '#app/components/ui/input.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { StatusButton } from '#app/components/ui/status-button.tsx'
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '#app/components/ui/table.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn , useDebounce, useIsPending } from '#app/utils/misc.tsx'
+import { useMemo, useState } from 'react'
 
-
-import { userHasRole, useUser } from '#app/utils/user.ts'
+import { getBusinessSuppliers } from '#app/services/suppliers/suppliers-queries.server.ts'
+import { useIsUserAdmin, useUser } from '#app/utils/user.ts'
+import { LinkWithOrigin } from '#app/components/ui/link-origin.tsx'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
 	const businessId = await getBusinessId(userId)
 
-	const suppliers = await prisma.supplier.findMany({
-		where: { businessId },
-		select: { id: true, rut: true, fantasyName: true },
-	})
+	const suppliers = await getBusinessSuppliers(businessId)
 
 	return json({ suppliers })
 }
 
 export default function SuppliersRoute() {
-	const user = useUser()
-	const isAdmin = userHasRole(user, 'Administrador')
-
 	const { suppliers } = useLoaderData<typeof loader>()
 
 	return (
-		<ContentLayout title='Proveedores' limitHeight>
-			<main className=" h-full">
-				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
-					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-						{isAdmin ? (
-							<Button asChild className="flex items-center gap-2">
-								<Link to={'new'}>
-									<Icon name="plus" />
-									<span>Registrar nuevo Proveedor</span>
-								</Link>
-							</Button>
-						) : null}
-						<SuppliersCard suppliers={suppliers} />
-					</div>
-					<div className="lg:col-span-2">
-						<Outlet />
-					</div>
+		<ContentLayout
+			limitHeight
+			title={`Proveedores • ${suppliers.length} ${suppliers.length === 1 ? 'registrado' : 'registrados'}`}
+			actions={<SuppliersActions />}
+		>
+			<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
+				<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+					<SuppliersCard suppliers={suppliers} />
 				</div>
-			</main>
+				<div className="lg:col-span-2">
+					<Outlet />
+				</div>
+			</div>
 		</ContentLayout>
+	)
+}
+
+function SuppliersActions() {
+	const isAdmin = useIsUserAdmin()
+	return (
+		<>
+			{isAdmin && (
+				<Button asChild size="sm" className="flex items-center gap-2">
+					<LinkWithOrigin to={'new'} unstable_viewTransition>
+						<Icon name="plus" />
+						<span>Registrar nuevo Proveedor</span>
+					</LinkWithOrigin>
+				</Button>
+			)}
+		</>
 	)
 }
 
 function SuppliersCard({
 	suppliers,
 }: {
-	suppliers: SerializeFrom<Pick<Supplier, 'id' | 'rut' | 'fantasyName'>>[]
+	suppliers: SerializeFrom<
+		Pick<Supplier, 'id' | 'code' | 'rut' | 'fantasyName'>
+	>[]
 }) {
+	const [searchQuery, setSearchQuery] = useState('')
 
+	const filteredSuppliers = useMemo(() => {
+		return suppliers.filter(
+			(supplier) =>
+				supplier.fantasyName
+					.toLowerCase()
+					.includes(searchQuery.toLowerCase().trim()) ||
+				supplier.rut.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+		)
+	}, [suppliers, searchQuery])
 
 	return (
-		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
+		<Card className="h-fit">
 			<CardHeader className="sticky top-0 z-10 mb-1 flex gap-3 bg-card px-7">
-				<CardTitle>Proveedores registrados</CardTitle>
-				<CardDescription>
-					Actualmente existen {suppliers.length} proveedores registrados en
-					sistema.
-				</CardDescription>
-				<SupplierSearchBar status={'idle'} />
+				<div className="relative">
+					<Input
+						autoFocus
+						className="w-full pr-[3rem] "
+						type="text"
+						placeholder="Buscar proveedor"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					<Icon
+						name="magnifying-glass"
+						className="absolute bottom-1/2 right-4 translate-y-1/2 transform"
+					/>
+				</div>
 			</CardHeader>
 			<CardContent className="flex flex-col gap-1 ">
-				{suppliers.map(supplier => (
-					<LinkWithParams
+				{filteredSuppliers.map((supplier) => (
+					<LinkWithOrigin
 						key={supplier.id}
 						prefetch={'intent'}
+						unstable_viewTransition
 						className={({ isActive }) =>
 							cn(
 								'flex flex-wrap items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
@@ -118,74 +118,21 @@ function SuppliersCard({
 						preserveSearch
 						to={supplier.id}
 					>
-						<span className="flex-1 text-nowrap font-semibold">
-							{formatRut(supplier.rut)}
+						<span className="flex items-center text-nowrap font-semibold">
+							#{supplier.code.toString().padStart(3, '0')}{' '}
+							<Icon name="dot" size="lg" className="shrink-0" />
 						</span>
 
-						<span className="w-[15rem] text-nowrap  text-start  text-muted-foreground">
+						<span className="flex-1 text-nowrap font-semibold">
+							{formatRut(supplier.rut) ?? supplier.rut}
+						</span>
+
+						<span className="text-nowrap  text-start  text-muted-foreground">
 							{supplier.fantasyName}
 						</span>
-					</LinkWithParams>
+					</LinkWithOrigin>
 				))}
 			</CardContent>
 		</Card>
 	)
 }
-function SupplierSearchBar({
-	status,
-	autoFocus = false,
-	autoSubmit = false,
-}: {
-	status: 'idle' | 'pending' | 'success' | 'error'
-
-	autoFocus?: boolean
-	autoSubmit?: boolean
-}) {
-	const id = useId()
-	const [searchParams] = useSearchParams()
-	const submit = useSubmit()
-	const isSubmitting = useIsPending({
-		formMethod: 'GET',
-		formAction: '/suppliers',
-	})
-
-	const handleFormChange = useDebounce((form: HTMLFormElement) => {
-		submit(form)
-	}, 400)
-
-	return (
-		<Form
-			method="GET"
-			action="/suppliers"
-			className="flex flex-wrap items-center justify-center gap-1"
-			onChange={e => autoSubmit && handleFormChange(e.currentTarget)}
-		>
-			<div className="flex-1">
-				<Label htmlFor={id} className="sr-only">
-					Buscar
-				</Label>
-				<Input
-					type="text"
-					name="search"
-					id={id}
-					defaultValue={searchParams.get('search') ?? ''}
-					placeholder="Búsqueda"
-					className=" [&::-webkit-inner-spin-button]:appearance-none"
-					autoFocus={autoFocus}
-				/>
-			</div>
-			<div>
-				<StatusButton
-					type="submit"
-					status={isSubmitting ? 'pending' : status}
-					className="flex w-full items-center justify-center"
-					size="sm"
-				>
-					<Icon name="magnifying-glass" size="md" />
-					<span className="sr-only">Buscar</span>
-				</StatusButton>
-			</div>
-		</Form>
-	)
-}
-
