@@ -65,7 +65,7 @@ export function CreateCategoryDialog() {
 			<AlertDialogTrigger asChild>
 				<Button size={"sm"} className="flex w-full items-center gap-2">
 					<Icon name="plus" />
-					<span>Registrar Nueva Categoría</span>
+					<span>Registrar nueva Categoría</span>
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>
