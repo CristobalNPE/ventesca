@@ -1,23 +1,21 @@
 import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { Button } from '#app/components/ui/button.tsx'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
-import { type Product } from '@prisma/client'
 import {
 	json,
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Link, MetaFunction, useLoaderData } from '@remix-run/react'
-import { endOfWeek, startOfWeek, subWeeks } from 'date-fns'
-import { z } from 'zod'
+import { MetaFunction, Outlet, useLoaderData } from '@remix-run/react'
+import { endOfWeek, startOfWeek } from 'date-fns'
 
-import { CategoryAssociatedProductsTable } from '#app/components/categories/category-associated-products-table.tsx'
-import { CategoryDetails } from '#app/components/categories/category-details.tsx'
 import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { MetricCard } from '#app/components/metric-card.js'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { CategoryProvider } from '#app/context/categories/CategoryContext.tsx'
+import {
+	CategoryProvider,
+	useCategory,
+} from '#app/context/categories/CategoryContext.tsx'
 import {
 	getCategoryProfitAnalytics,
 	getCategoryTotalPriceAndCost,
@@ -25,20 +23,17 @@ import {
 } from '#app/services/categories/category-analytics.server.ts'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import { formatCurrency } from '#app/utils/misc.js'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
 import { useIsUserAdmin } from '#app/utils/user.ts'
-import { OrderStatus } from '../../types/orders/order-status.ts'
+
+import { CategoryAssociatedProductsTable } from '#app/components/categories/category-associated-products-table.tsx'
 import {
 	DeleteCategory,
 	deleteCategoryActionIntent,
 	DeleteCategorySchema,
-} from './__delete-category.tsx'
-import {
-	editCategoryActionIntent,
-	EditCategorySchema,
-} from './__edit-category.tsx'
-import { formatCurrency } from '#app/utils/misc.js'
+} from '#app/components/categories/category-delete.tsx'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -103,27 +98,23 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	switch (intent) {
 		case deleteCategoryActionIntent: {
-			return await deleteCategoryAction(formData)
-		}
-		case editCategoryActionIntent: {
-			return await editCategoryAction(formData, businessId)
+			return await deleteCategoryAction({ formData, businessId })
 		}
 	}
 }
 
 export default function CategoryRoute() {
-	const isAdmin = useIsUserAdmin()
 	const loaderData = useLoaderData<typeof loader>()
 
 	return (
-		<ContentLayout
-			title={loaderData.category.name}
-			actions={isAdmin && <CategoryActions />}
-		>
-			<CategoryProvider data={loaderData}>
+		<CategoryProvider data={loaderData}>
+			<ContentLayout
+				title={loaderData.category.name}
+				actions={<CategoryActions />}
+			>
 				<main className="grid gap-4">
 					<section className="grid gap-4 lg:grid-cols-2">
-						<CategoryDetails />
+						<Outlet />
 						<aside className="flex flex-col justify-start gap-4">
 							{loaderData.mostSoldData &&
 							loaderData.mostSoldData?.totalQuantitySold > 0 ? (
@@ -131,7 +122,11 @@ export default function CategoryRoute() {
 									title={loaderData.mostSoldData.mostSoldProduct.name}
 									description="Producto mas vendido esta semana."
 									value={loaderData.mostSoldData.totalQuantitySold.toString()}
-									subText={loaderData.mostSoldData.totalQuantitySold === 1 ? 'unidad vendida' : 'unidades vendidas'}
+									subText={
+										loaderData.mostSoldData.totalQuantitySold === 1
+											? 'unidad vendida'
+											: 'unidades vendidas'
+									}
 									icon="medal"
 								/>
 							) : (
@@ -163,38 +158,30 @@ export default function CategoryRoute() {
 					</section>
 					<CategoryAssociatedProductsTable />
 				</main>
-			</CategoryProvider>
-		</ContentLayout>
+			</ContentLayout>
+		</CategoryProvider>
 	)
 }
 
 function CategoryActions() {
-	return (
-		<>
-			<ChangeItemsCategory />
-			<DeleteCategory id={''} numberOfItems={0} />
-		</>
-	)
+	const isAdmin = useIsUserAdmin()
+	const { category } = useCategory()
+	const canDelete = isAdmin && !category.isEssential
+
+	return <>{canDelete && <DeleteCategory />}</>
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return [{ title: `Categorías: ${data?.category.name} | Ventesca` }]
 }
 
-function ChangeItemsCategory() {
-	return (
-		<Button asChild size="sm" variant="outline" className="h-8 gap-1">
-			<Link target="_blank" reloadDocument to={``}>
-				<Icon name="transfer" className="h-3.5 w-3.5" />
-				<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-					Transferir artículos
-				</span>
-			</Link>
-		</Button>
-	)
-}
-
-async function deleteCategoryAction(formData: FormData) {
+async function deleteCategoryAction({
+	formData,
+	businessId,
+}: {
+	formData: FormData
+	businessId: string
+}) {
 	const submission = parseWithZod(formData, {
 		schema: DeleteCategorySchema,
 	})
@@ -209,56 +196,40 @@ async function deleteCategoryAction(formData: FormData) {
 	const { categoryId } = submission.value
 
 	const category = await prisma.category.findFirst({
-		select: { id: true, description: true },
+		select: { id: true, name: true, products: true },
 		where: { id: categoryId },
+	})
+	const defaultCategory = await prisma.category.findFirst({
+		where: { isEssential: true, businessId },
 	})
 
 	invariantResponse(category, 'Category not found', { status: 404 })
+	invariantResponse(defaultCategory, 'Default category not found', {
+		status: 404,
+	})
 
-	await prisma.category.delete({ where: { id: category.id } })
+	await prisma.$transaction(async (tx) => {
+		//Move all products to general category
+		await tx.product.updateMany({
+			where: { categoryId: category.id },
+			data: { categoryId: defaultCategory.id },
+		})
+
+		await tx.category.delete({ where: { id: category.id } })
+	})
+
+	const description =
+		category.products.length === 0
+			? `Categoría "${category.name}" eliminada.`
+			: category.products.length === 1
+				? `Categoría "${category.name}" eliminada. Producto '${category.products[0]!.name}' movido a '${defaultCategory.name}'`
+				: `Categoría "${category.name}" eliminada. ${category.products.length} productos movidos a '${defaultCategory.name}'`
 
 	return redirectWithToast(`/categories`, {
 		type: 'success',
 		title: 'Categoría eliminada',
-		description: `Categoría "${category.description}" ha sido eliminada con éxito.`,
+		description,
 	})
-}
-
-async function editCategoryAction(formData: FormData, businessId: string) {
-	const submission = await parseWithZod(formData, {
-		schema: EditCategorySchema.superRefine(async (data, ctx) => {
-			const categoryByCode = await prisma.category.findFirst({
-				select: { id: true, code: true },
-				where: { businessId, code: data.code },
-			})
-
-			if (categoryByCode && categoryByCode.id !== data.categoryId) {
-				ctx.addIssue({
-					path: ['code'],
-					code: z.ZodIssueCode.custom,
-					message: 'El código ya existe.',
-				})
-			}
-		}),
-
-		async: true,
-	})
-
-	if (submission.status !== 'success') {
-		return json(
-			{ result: submission.reply() },
-			{ status: submission.status === 'error' ? 400 : 200 },
-		)
-	}
-
-	const { description, code, categoryId } = submission.value
-
-	await prisma.category.update({
-		where: { id: categoryId },
-		data: { code, description },
-	})
-
-	return json({ result: submission.reply() })
 }
 
 export function ErrorBoundary() {
