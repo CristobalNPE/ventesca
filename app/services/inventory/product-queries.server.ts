@@ -26,7 +26,13 @@ export function getProducts({
 	pagination: PaginationOptions
 	sortConfig: Prisma.ProductOrderByWithRelationInput
 }) {
-	const { searchTerm, stockFilter, categoryFilter, statusFilter } = filters
+	const {
+		searchTerm,
+		stockFilter,
+		categoryFilter,
+		statusFilter,
+		supplierFilter,
+	} = filters
 	const { $top, $skip } = pagination
 
 	const searchTermIsCode = searchTerm && !isNaN(parseInt(searchTerm))
@@ -35,6 +41,7 @@ export function getProducts({
 		isDeleted: false,
 		...(stockFilter && { stock: { lte: Number.parseInt(stockFilter) } }),
 		...(categoryFilter && { categoryId: categoryFilter }),
+		...(supplierFilter && { supplierId: supplierFilter }),
 		...(searchTerm &&
 			(searchTermIsCode
 				? { code: searchTerm }
