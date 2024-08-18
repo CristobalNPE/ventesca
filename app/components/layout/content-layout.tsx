@@ -28,7 +28,8 @@ export function ContentLayout({
 			<div
 				className={cn(
 					'min-h-[calc(100dvh_-_56px)] px-4 pb-6 pt-6 sm:px-6 ',
-					limitHeight && 'h-[calc(100dvh_-_56px)]',
+					limitHeight && 'h-[calc(100dvh_-_56px)] overflow-y-auto', //!Any mistakes in layout, check this
+					// limitHeight && 'h-[calc(100dvh_-_56px)]',
 					hideNavbarOnBigScreen && limitHeight && 'h-[100dvh]',
 				)}
 			>
