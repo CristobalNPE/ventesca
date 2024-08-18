@@ -1,3 +1,9 @@
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Card } from '#app/components/ui/card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { invariantResponse } from '@epic-web/invariant'
 import {
@@ -5,43 +11,23 @@ import {
 	json,
 	type LoaderFunctionArgs,
 } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
-import { format as formatRut } from '@validatecl/rut'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { DetailsCard } from '#app/components/details-card.tsx'
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '#app/components/ui/card.tsx'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '#app/components/ui/dropdown-menu.tsx'
-import { Icon, IconName } from '#app/components/ui/icon.tsx'
-import { ScrollArea } from '#app/components/ui/scroll-area.tsx'
-import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
+import { useLoaderData } from '@remix-run/react'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { redirectWithToast } from '#app/utils/toast.server.ts'
-import { userHasRole, useUser } from '#app/utils/user.ts'
-import { ItemDetailsSheet } from '../_inventory+/product-sheet.tsx'
+import { useIsUserAdmin, useUser } from '#app/utils/user.ts'
+
+import { AssociatedProductsCard } from '#app/components/suppliers/supplier-associated-products-card.tsx'
 import {
-	DELETE_SUPPLIER_KEY,
 	DeleteSupplier,
+	deleteSupplierActionIntent,
 	DeleteSupplierSchema,
-} from './__delete-supplier.tsx'
+} from '#app/components/suppliers/supplier-delete.tsx'
+import { SupplierDetails } from '#app/components/suppliers/supplier-details.tsx'
+import { TopSupplierProductsChart } from '#app/components/suppliers/supplier-top-products-chart.tsx'
+import { LinkWithOrigin } from '#app/components/ui/link-origin.tsx'
+import { SupplierProvider } from '#app/context/suppliers/SupplierContext.tsx'
+import { getDefaultSupplier } from '#app/services/suppliers/suppliers-queries.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -51,6 +37,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		where: { id: params.supplierId, businessId },
 		select: {
 			id: true,
+			code: true,
 			address: true,
 			rut: true,
 			name: true,
@@ -71,182 +58,60 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	await requireUserWithRole(request, 'Administrador')
-	// const businessId = await getBusinessId(userId)
+	const userId = await requireUserWithRole(request, 'Administrador')
+	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
 	const intent = formData.get('intent')
 	invariantResponse(intent, 'Intent should be defined.')
 	switch (intent) {
-		case DELETE_SUPPLIER_KEY: {
-			return await handleDeleteSupplier(formData)
+		case deleteSupplierActionIntent: {
+			return await deleteSupplierAction({ formData, businessId })
 		}
 	}
 }
 
 export default function SupplierRoute() {
-	const { supplier } = useLoaderData<typeof loader>()
+	const loaderData = useLoaderData<typeof loader>()
 	const user = useUser()
-	const isAdmin = userHasRole(user, 'Administrador')
+	const isAdmin = useIsUserAdmin()
+	const canModify = isAdmin && !loaderData.supplier.isEssential
 
 	return (
-		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
-			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
-				<div className="grid gap-0.5">
-					<CardTitle className="group flex items-center gap-2 text-lg">
-						<div className="flex gap-4 text-lg">
-							<span>{supplier?.fantasyName}</span>
-							<Badge
-								variant={'secondary'}
-								className="flex items-center justify-center gap-1"
-							>
-								<Icon className="shrink-0" name="id-badge-2" />
-								{formatRut(supplier.rut)}
-							</Badge>
-						</div>
-						<Button
-							size="icon"
-							variant="outline"
-							className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-						>
-							<Icon name="copy" className="h-3 w-3" />
-							<span className="sr-only">Copiar RUT proveedor</span>
-						</Button>
-					</CardTitle>
-					<CardDescription>
-						Fecha registro:
-						{format(new Date(supplier.createdAt), " dd' de 'MMMM', 'yyyy", {
-							locale: es,
-						})}
-					</CardDescription>
-				</div>
-
-				{isAdmin ? (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button size={'sm'} className="h-7 w-7" variant={'outline'}>
-								<Icon className="shrink-0" name="dots-vertical" />
-								<span className="sr-only">Opciones</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent className="flex flex-col gap-2 " align="end">
-							<DropdownMenuItem asChild>
-								<Button
-									asChild
-									size="sm"
-									variant="outline"
-									className="h-8 gap-1"
-								>
-									<Link to={'edit'}>
-										<Icon name="update" className="h-3.5 w-3.5" />
-										<span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-											Editar proveedor
-										</span>
-									</Link>
-								</Button>
-							</DropdownMenuItem>
-							<DropdownMenuItem asChild>
-								{/* <ChangeItemsCategory /> */}
-								{/* REPLACE WITH CHANGE ITEMS FROM PROVIDER IN MASS */}
-							</DropdownMenuItem>
-							{!supplier.isEssential ? (
-								<>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem asChild>
-										<DeleteSupplier
-											id={supplier.id}
-											numberOfItems={supplier.products.length}
-										/>
-									</DropdownMenuItem>
-								</>
-							) : null}
-						</DropdownMenuContent>
-					</DropdownMenu>
-				) : null}
-			</CardHeader>
-			<CardContent className="grid flex-1 gap-10 p-6 text-sm xl:grid-cols-5">
-				<div className="col-span-3 flex flex-col gap-4">
-					<DetailsCard
-						icon={'id'}
-						description={'ID'}
-						data={supplier.id.toUpperCase()}
-					/>
-					<DetailsCard
-						icon={'id-badge-2'}
-						description={'RUT'}
-						data={formatRut(supplier.rut)}
-					/>
-					<DetailsCard
-						icon={'user'}
-						description={'Representante'}
-						data={supplier.name}
-					/>
-					<DetailsCard
-						icon={'map'}
-						description={'Dirección'}
-						data={supplier.address}
-					/>
-					<DetailsCard
-						icon={'map-pin-filled'}
-						description={'Ciudad'}
-						data={supplier.city}
-					/>
-					<DetailsCard
-						icon={'phone'}
-						description={'Teléfono contacto'}
-						data={supplier.phone}
-					/>
-					<DetailsCard
-						icon={'envelope-closed'}
-						description={'Correo electrónico'}
-						data={supplier.email}
-					/>
-				</div>
-				<div className="col-span-2 flex flex-col gap-3">
-					<div className="font-semibold">
-						Productos asociados ( {supplier.products.length} )
+		<SupplierProvider data={loaderData}>
+			<main className="">
+				<section className="grid gap-4 xl:grid-cols-2 ">
+					<SupplierDetails />
+					<div className="flex flex-col gap-4">
+						{canModify && <ActionsCard />}
+						<AssociatedProductsCard />
+						<TopSupplierProductsChart />
 					</div>
-					<ScrollArea className="h-[34.7rem]">
-						<ul className="grid gap-3">
-							{supplier.products.map(product => (
-								<li
-									key={product.id}
-									className="flex items-center justify-between rounded-sm transition-colors duration-100 hover:bg-secondary"
-								>
-									<div className="flex w-full items-center justify-between gap-2">
-										<div className="flex items-center gap-2">
-											<ItemDetailsSheet itemId={product.id} />
-											<span className="w-[14rem] text-muted-foreground">
-												{product.name}
-											</span>
-										</div>
-										<div className="flex  min-w-[4rem]  items-center gap-1 rounded-sm border-l-2 px-1">
-											<Icon className="shrink-0" name="scan-barcode" />
-											<span>{product.code}</span>
-										</div>
-									</div>
-								</li>
-							))}
-						</ul>
-					</ScrollArea>
-				</div>
-			</CardContent>
-			<CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
-				<div className="text-xs text-muted-foreground">
-					Actualizada por ultima vez el{' '}
-					{format(
-						new Date(supplier.updatedAt),
-						"dd 'de' MMMM', 'yyyy' a las' hh:mm",
-						{
-							locale: es,
-						},
-					)}
-				</div>
-			</CardFooter>
+				</section>
+			</main>
+		</SupplierProvider>
+	)
+}
+
+function ActionsCard() {
+	return (
+		<Card className="flex h-fit flex-col gap-4 p-4 sm:flex-row">
+			<Button className="w-full" size={'sm'} asChild>
+				<LinkWithOrigin to={`edit`} unstable_viewTransition>
+					<Icon name="pencil-2">Modificar datos</Icon>
+				</LinkWithOrigin>
+			</Button>
+			<DeleteSupplier />
 		</Card>
 	)
 }
 
-async function handleDeleteSupplier(formData: FormData) {
+async function deleteSupplierAction({
+	formData,
+	businessId,
+}: {
+	formData: FormData
+	businessId: string
+}) {
 	const submission = parseWithZod(formData, {
 		schema: DeleteSupplierSchema,
 	})
@@ -261,18 +126,35 @@ async function handleDeleteSupplier(formData: FormData) {
 	const { supplierId } = submission.value
 
 	const supplier = await prisma.supplier.findFirst({
-		select: { id: true, fantasyName: true },
+		select: { id: true, fantasyName: true, products: true },
 		where: { id: supplierId },
 	})
 
+	const defaultSupplier = await getDefaultSupplier(businessId)
+
 	invariantResponse(supplier, 'Supplier not found', { status: 404 })
 
-	await prisma.supplier.delete({ where: { id: supplier.id } })
+	await prisma.$transaction(async (tx) => {
+		//Move all products to default supplier
+		await tx.product.updateMany({
+			where: { supplierId: supplier.id },
+			data: { supplierId: defaultSupplier.id },
+		})
+
+		await tx.supplier.delete({ where: { id: supplier.id } })
+	})
+
+	const description =
+		supplier.products.length === 0
+			? `Proveedor "${supplier.fantasyName}" eliminado.`
+			: supplier.products.length === 1
+				? `Proveedor "${supplier.fantasyName}" eliminado. Producto '${supplier.products[0]!.name}' movido a '${defaultSupplier.fantasyName}'`
+				: `Proveedor "${supplier.fantasyName}" eliminado. ${supplier.products.length} productos movidos a '${defaultSupplier.fantasyName}'`
 
 	return redirectWithToast(`/suppliers`, {
 		type: 'success',
 		title: 'Proveedor eliminado',
-		description: `Proveedor "${supplier.fantasyName}" ha sido eliminado con éxito.`,
+		description,
 	})
 }
 
