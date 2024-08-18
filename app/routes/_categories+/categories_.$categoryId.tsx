@@ -34,6 +34,7 @@ import {
 	deleteCategoryActionIntent,
 	DeleteCategorySchema,
 } from '#app/components/categories/category-delete.tsx'
+import { getDefaultCategory } from '#app/services/categories/categories-queries.server.js'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -68,8 +69,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	let startDate = new Date()
 
-	const currentWeekStartDate = startOfWeek(startDate)
-	const currentWeekEndDate = endOfWeek(startDate)
+	const currentWeekStartDate = startOfWeek(startDate, { weekStartsOn: 1 })
+	const currentWeekEndDate = endOfWeek(startDate, { weekStartsOn: 1 })
 
 	const mostSoldData = await getMostSoldProductInCategory({
 		categoryId: category.id,
@@ -131,7 +132,7 @@ export default function CategoryRoute() {
 								/>
 							) : (
 								<MetricCard
-									value="Sin datos de venta"
+									value="Sin datos de venta esta semana"
 									icon="exclamation-circle"
 								/>
 							)}
@@ -199,14 +200,9 @@ async function deleteCategoryAction({
 		select: { id: true, name: true, products: true },
 		where: { id: categoryId },
 	})
-	const defaultCategory = await prisma.category.findFirst({
-		where: { isEssential: true, businessId },
-	})
+	const defaultCategory = await getDefaultCategory(businessId)
 
 	invariantResponse(category, 'Category not found', { status: 404 })
-	invariantResponse(defaultCategory, 'Default category not found', {
-		status: 404,
-	})
 
 	await prisma.$transaction(async (tx) => {
 		//Move all products to general category

@@ -102,8 +102,8 @@ export async function getCategoryTotalPriceAndCost(categoryId: string) {
 
 export async function getCategoryProfitAnalytics(categoryId: string) {
 	let currentDate = new Date()
-	const currentWeekStart = startOfWeek(currentDate)
-	const currentWeekEnd = endOfWeek(currentDate)
+	const currentWeekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
+	const currentWeekEnd = endOfWeek(currentDate, { weekStartsOn: 1 })
 
 	const orders = await prisma.order.findMany({
 		where: {
