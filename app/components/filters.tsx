@@ -16,7 +16,16 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from './ui/tooltip'
-
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from './ui/drawer'
 
 export function FilterSelect({
 	label,
@@ -44,7 +53,7 @@ export function FilterSelect({
 					{topOption && (
 						<SelectItem value={topOption.value}>{topOption.label}</SelectItem>
 					)}
-					{options.map(option => (
+					{options.map((option) => (
 						<SelectItem key={option.value} value={option.value}>
 							{option.label}
 						</SelectItem>
@@ -120,5 +129,41 @@ export function SortDirectionButton({
 			/>
 			<span className="sr-only">Cambiar dirección de orden</span>
 		</Button>
+	)
+}
+
+export function ResponsiveFilterWrapper({
+	children,
+}: {
+	children: React.ReactNode
+}) {
+	return (
+		<>
+			<div className="hidden w-fit flex-wrap items-center justify-center gap-4 rounded-md bg-secondary/40 p-1 shadow-sm sm:flex">
+				{children}
+			</div>
+			<Drawer>
+				<DrawerTrigger className="my-2 block sm:hidden" asChild>
+					<Button className={'w-full'} variant={'secondary'} size={'sm'}>
+						<Icon name="filter" size={'sm'} />
+						<span className="sr-only">Mostrar filtros</span>
+					</Button>
+				</DrawerTrigger>
+				<DrawerContent>
+					<DrawerHeader>
+						<DrawerTitle>Filtros de búsqueda</DrawerTitle>
+						{/* <DrawerDescription>This action cannot be undone.</DrawerDescription> */}
+					</DrawerHeader>
+					<div className="flex flex-col items-center gap-4 p-6">{children}</div>
+					<DrawerFooter>
+						<DrawerClose>
+							<Button variant="secondary" className="w-full">
+								Aplicar filtros
+							</Button>
+						</DrawerClose>
+					</DrawerFooter>
+				</DrawerContent>
+			</Drawer>
+		</>
 	)
 }
