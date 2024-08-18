@@ -28,6 +28,7 @@ import { TopSupplierProductsChart } from '#app/components/suppliers/supplier-top
 import { LinkWithOrigin } from '#app/components/ui/link-origin.tsx'
 import { SupplierProvider } from '#app/context/suppliers/SupplierContext.tsx'
 import { getDefaultSupplier } from '#app/services/suppliers/suppliers-queries.server.ts'
+import { getSupplierTopSellingProducts } from '#app/services/suppliers/supplier-analytics.server.ts'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -54,7 +55,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	invariantResponse(supplier, 'Not Found', { status: 404 })
 
-	return json({ supplier })
+	const topSellingProducts = await getSupplierTopSellingProducts(supplier.id)
+
+	return json({ supplier, topSellingProducts })
 }
 
 export async function action({ request }: ActionFunctionArgs) {
