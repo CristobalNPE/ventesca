@@ -104,6 +104,7 @@ export async function getCategoryProfitAnalytics(categoryId: string) {
 	let currentDate = new Date()
 	const currentWeekStart = startOfWeek(currentDate)
 	const currentWeekEnd = endOfWeek(currentDate)
+
 	const orders = await prisma.order.findMany({
 		where: {
 			status: OrderStatus.FINISHED,
@@ -121,6 +122,11 @@ export async function getCategoryProfitAnalytics(categoryId: string) {
 			productOrders: {
 				select: {
 					profit: true,
+				},
+				where: {
+					productDetails: {
+						categoryId,
+					},
 				},
 			},
 		},
@@ -143,6 +149,8 @@ export async function getCategoryProfitAnalytics(categoryId: string) {
 			totalProfitLastWeek += orderProfit
 		}
 	}
+
+	console.log(totalProfit, totalProfitLastWeek)
 
 	return {
 		totalProfit,
