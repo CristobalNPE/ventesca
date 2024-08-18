@@ -36,11 +36,11 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 					<Link
 						to={`/users/${user.username}`}
 						// this is for progressive enhancement
-						onClick={e => e.preventDefault()}
+						onClick={(e) => e.preventDefault()}
 						className="ml-1   flex min-w-[3rem] shrink-0  items-center gap-3  px-4 lg:justify-start 2xl:ml-0   "
 					>
 						<img
-							className="aspect-square max-w-[2.5rem]  shrink-0 rounded-full bg-secondary ring-2 ring-primary/10  transition-all group-hover:scale-105 group-hover:ring-primary"
+							className="aspect-square max-w-[2.5rem]  shrink-0 rounded-full bg-secondary object-cover ring-2 ring-secondary   transition-all  group-hover:scale-105 group-hover:ring-primary"
 							alt={user.name ?? user.username}
 							src={getUserImgSrc(user.image?.id)}
 						/>
@@ -49,8 +49,8 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 								<span className="text-body-sm font-bold">
 									{user.name ?? user.username}
 								</span>
-								<span className="text-body-xs font-thin tracking-wide text-foreground/60">
-									{getUserRole(user.roles.map(rol => rol.name))}
+								<span className="text-body-xs font-semibold tracking-wide text-muted-foreground">
+									{getUserRole(user.roles.map((rol) => rol.name))}
 								</span>
 							</div>
 						)}
@@ -70,7 +70,7 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 					<DropdownMenuItem
 						asChild
 						// this prevents the menu from closing before the form submission is completed
-						onSelect={event => {
+						onSelect={(event) => {
 							event.preventDefault()
 							submit(formRef.current)
 						}}
