@@ -7,11 +7,16 @@ import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { SupplierInfoEditSchema } from './__supplier-editor'
+import { redirectWithToast } from '#app/utils/toast.server.js'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
 	const businessId = await getBusinessId(userId)
 	const formData = await request.formData()
+
+	//get full url from where the request came from
+	const referer = request.headers.get('Referer')
+	const isEdit = referer?.includes('edit')
 
 	const submission = await parseWithZod(formData, {
 		schema: SupplierInfoEditSchema.superRefine(async (data, ctx) => {
@@ -55,6 +60,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		select: { id: true },
 		where: { id: id ?? '__new_supplier__' },
 		create: {
+			code: await calculateSupplierCode(businessId),
 			rut: cleanedRut ?? rut,
 			name,
 			address,
@@ -75,5 +81,32 @@ export async function action({ request }: ActionFunctionArgs) {
 		},
 	})
 
-	return redirect(`/suppliers/${updatedSupplier.id}`)
+	if (isEdit) {
+		return redirectWithToast(`/suppliers/${updatedSupplier.id}`, {
+			type: 'success',
+			title: 'Proveedor actualizado',
+			description: 'El proveedor ha sido actualizado con éxito.',
+		})
+	}
+
+	return redirectWithToast(`/suppliers/${updatedSupplier.id}`, {
+		type: 'success',
+		title: 'Proveedor registrado',
+		description: 'El proveedor ha sido registrado con éxito.',
+	})
+}
+
+async function calculateSupplierCode(businessId: string) {
+	const lastSupplier = await prisma.supplier.findFirst({
+		orderBy: { createdAt: 'desc' },
+		where: { businessId },
+		select: { code: true },
+	})
+
+	if (!lastSupplier) return 1
+
+	const lastSupplierCode = lastSupplier.code
+	const nextSupplierCode = lastSupplierCode + 1
+
+	return nextSupplierCode
 }
