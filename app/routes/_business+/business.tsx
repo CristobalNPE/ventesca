@@ -30,6 +30,7 @@ import VentescaLogoLight from '#app/routes/_marketing+/logos/ventesca-light.png'
 import { getBusinessId, requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import {
+	cn,
 	formatCurrency,
 	getBusinessImgSrc,
 	useDoubleCheck,
@@ -38,7 +39,14 @@ import {
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { OrderStatus } from '../../types/orders/order-status'
 import { Icon } from '#app/components/ui/icon.tsx'
-import { Card } from '#app/components/ui/card.tsx'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import {
 	Dialog,
@@ -50,6 +58,7 @@ import {
 } from '#app/components/ui/dialog.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { MetricCard } from '#app/components/metric-card.js'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -60,7 +69,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	)
 
 	const submission = await parseWithZod(formData, {
-		schema: BusinessLogoFormSchema.transform(async data => {
+		schema: BusinessLogoFormSchema.transform(async (data) => {
 			if (data.intent === 'delete') return { intent: 'delete' }
 			if (data.photoFile.size <= 0) return z.NEVER
 			return {
@@ -88,7 +97,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		return redirect('/business')
 	}
 
-	await prisma.$transaction(async $prisma => {
+	await prisma.$transaction(async ($prisma) => {
 		await $prisma.businessLogoImage.deleteMany({ where: { businessId } })
 		await $prisma.business.update({
 			where: { id: businessId },
@@ -108,20 +117,40 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		where: { id: businessId },
 	})
 
+	const [productsCount, suppliersCount, categoriesCount, sellersCount] =
+		await Promise.all([
+			prisma.product.count({ where: { businessId } }),
+			prisma.supplier.count({ where: { businessId } }),
+			prisma.category.count({ where: { businessId } }),
+			prisma.user.count({
+				where: { businessId, roles: { some: { name: 'Vendedor' } } },
+			}),
+		])
+
 	return json({
+		productsCount,
+		suppliersCount,
+		categoriesCount,
+		sellersCount,
 		business,
 	})
 }
 
 export default function ProfileRoute() {
-	const { business } = useLoaderData<typeof loader>()
+	const {
+		business,
+		productsCount,
+		suppliersCount,
+		categoriesCount,
+		sellersCount,
+	} = useLoaderData<typeof loader>()
 
 	return (
-		<ContentLayout title='Detalles de la Empresa' limitHeight>
-			<div className="h-full">
-				<Spacer size="xl" />
-				<div className="container flex flex-col items-center  rounded-3xl bg-muted p-12">
-					<div className="relative w-52">
+		<ContentLayout title="Detalles de la Empresa" limitHeight>
+			<Spacer size="xl" />
+			<main className="grid gap-8 lg:grid-cols-2">
+				<div className="container flex flex-col items-center  rounded-3xl border bg-card p-12 shadow-sm ">
+					<div className="relative w-52 ">
 						<div className="absolute -top-40">
 							<div className="relative ">
 								<img
@@ -131,7 +160,7 @@ export default function ProfileRoute() {
 											: VentescaLogoDark
 									}
 									alt={business.name}
-									className="hidden h-52 w-52 rounded-full bg-primary object-cover dark:flex"
+									className="hidden h-52 w-52 rounded-full border-8 border-card bg-primary object-cover shadow-sm dark:flex "
 								/>
 								<img
 									src={
@@ -140,7 +169,7 @@ export default function ProfileRoute() {
 											: VentescaLogoLight
 									}
 									alt={business.name}
-									className="flex h-52 w-52 rounded-full bg-primary object-cover dark:hidden"
+									className="flex h-52 w-52 rounded-full border-8 border-card bg-primary object-cover shadow-sm dark:hidden"
 								/>
 								<ChangeBusinessLogoDialog logo={business.image} />
 							</div>
@@ -158,25 +187,24 @@ export default function ProfileRoute() {
 							})}
 						</p>
 						<Spacer size="3xs" />
-						<div className="text-center text-lg font-thin">
+						<div className="flex flex-col gap-4 text-center text-lg font-thin">
 							{business.address ? (
-								<div className=" flex items-center justify-center gap-2">
-									<Icon name="map-pin-filled" /> <span>{business.address}</span>
-								</div>
+								<Icon size="lg" name="map-pin-filled">
+									<span className="ml-2">{business.address}</span>
+								</Icon>
 							) : null}
 							{business.email ? (
-								<div className="flex items-center justify-center gap-2">
-									<Icon name="envelope-closed" /> <span>{business.email}</span>
-								</div>
+								<Icon size="lg" name="envelope-closed">
+									<span className="ml-2">{business.email}</span>
+								</Icon>
 							) : null}
 							{business.phone ? (
-								<div className="flex items-center justify-center gap-2">
-									<Icon name="phone" /> <span>{business.phone}</span>
-								</div>
+								<Icon size="lg" name="phone">
+									<span className="ml-2">{business.phone}</span>
+								</Icon>
 							) : null}
 						</div>
 						<Spacer size="3xs" />
-
 						<Button variant={'default'} size={'pill'} asChild>
 							<Link to="edit">
 								Modificar datos de la empresa{' '}
@@ -185,7 +213,97 @@ export default function ProfileRoute() {
 						</Button>
 					</div>
 				</div>
-			</div>
+				<section className="flex flex-col gap-4">
+					<div>
+						<MetricCard
+							className="rounded-b-none"
+							title="Categorías registradas"
+							value={categoriesCount}
+							icon="shapes"
+						/>
+						<Button
+							variant={'secondary'}
+							className="w-full rounded-t-none"
+							size={'pill'}
+							asChild
+						>
+							<Link to="/categories" prefetch="intent" unstable_viewTransition>
+								<Icon size="md" name="circle-plus">
+									Administrar categorías
+								</Icon>
+							</Link>
+						</Button>
+					</div>
+					<div>
+						<MetricCard
+							className="rounded-b-none"
+							title="Proveedores registrados"
+							value={suppliersCount}
+							icon="users"
+						/>
+						<Button
+							variant={'secondary'}
+							className="w-full rounded-t-none"
+							size={'pill'}
+							asChild
+						>
+							<Link to="/suppliers" prefetch="intent" unstable_viewTransition>
+								<Icon size="md" name="circle-plus">
+									Administrar proveedores
+								</Icon>
+							</Link>
+						</Button>
+					</div>
+					<div>
+						<MetricCard
+							className="rounded-b-none"
+							title="Productos registrados"
+							value={productsCount}
+							icon="package"
+						/>
+						<Button
+							variant={'secondary'}
+							className={cn(
+								'w-full rounded-t-none',
+								productsCount === 0 &&
+									'animate-pulse bg-primary text-primary-foreground hover:bg-primary',
+							)}
+							size={'pill'}
+							asChild
+						>
+							<Link to="/inventory" prefetch="intent" unstable_viewTransition>
+								<Icon size="md" name="circle-plus">
+									Administrar inventario
+								</Icon>
+							</Link>
+						</Button>
+					</div>
+					<div>
+						<MetricCard
+							className="rounded-b-none"
+							title="Vendedores registrados"
+							value={sellersCount}
+							icon="user-dollar"
+						/>
+						<Button
+							variant={'secondary'}
+							className={cn(
+								'w-full rounded-t-none',
+								sellersCount === 0 &&
+									'animate-pulse bg-primary text-primary-foreground hover:bg-primary',
+							)}
+							size={'pill'}
+							asChild
+						>
+							<Link to="/sellers" prefetch="intent" unstable_viewTransition>
+								<Icon size="md" name="circle-plus">
+									Administrar vendedores
+								</Icon>
+							</Link>
+						</Button>
+					</div>
+				</section>
+			</main>
 		</ContentLayout>
 	)
 }
@@ -199,9 +317,9 @@ const NewBusinessLogoSchema = z.object({
 	intent: z.literal('submit'),
 	photoFile: z
 		.instanceof(File)
-		.refine(file => file.size > 0, 'Se requiere una imagen')
+		.refine((file) => file.size > 0, 'Se requiere una imagen')
 		.refine(
-			file => file.size <= MAX_SIZE,
+			(file) => file.size <= MAX_SIZE,
 			'El tamaño de la imagen no puede ser mayor a 3MB',
 		),
 })
@@ -284,11 +402,11 @@ function ChangeBusinessLogoDialog({
 									className="peer sr-only"
 									required
 									tabIndex={newImageSrc ? -1 : 0}
-									onChange={e => {
+									onChange={(e) => {
 										const file = e.currentTarget.files?.[0]
 										if (file) {
 											const reader = new FileReader()
-											reader.onload = event => {
+											reader.onload = (event) => {
 												setNewImageSrc(event.target?.result?.toString() ?? null)
 											}
 											reader.readAsDataURL(file)
@@ -312,7 +430,7 @@ function ChangeBusinessLogoDialog({
 										pendingIntent === 'submit'
 											? 'pending'
 											: lastSubmissionIntent === 'submit'
-												? form.status ?? 'idle'
+												? (form.status ?? 'idle')
 												: 'idle'
 									}
 								>
@@ -338,7 +456,7 @@ function ChangeBusinessLogoDialog({
 											pendingIntent === 'delete'
 												? 'pending'
 												: lastSubmissionIntent === 'delete'
-													? form.status ?? 'idle'
+													? (form.status ?? 'idle')
 													: 'idle'
 										}
 									>
