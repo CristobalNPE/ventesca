@@ -38,6 +38,7 @@ export type IconName =
 	| "circle-dollar-sign"
 	| "circle-dot-dashed"
 	| "circle-percentage"
+	| "circle-plus"
 	| "circle-x"
 	| "clock-up"
 	| "clock"
