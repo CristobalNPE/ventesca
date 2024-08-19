@@ -26,7 +26,10 @@ import {
 import { SupplierDetails } from '#app/components/suppliers/supplier-details.tsx'
 import { TopSupplierProductsChart } from '#app/components/suppliers/supplier-top-products-chart.tsx'
 import { LinkWithOrigin } from '#app/components/ui/link-origin.tsx'
-import { SupplierProvider } from '#app/context/suppliers/SupplierContext.tsx'
+import {
+	SupplierProvider,
+	useSupplier,
+} from '#app/context/suppliers/SupplierContext.tsx'
 import { getDefaultSupplier } from '#app/services/suppliers/suppliers-queries.server.ts'
 import { getSupplierTopSellingProducts } from '#app/services/suppliers/supplier-analytics.server.ts'
 
@@ -76,8 +79,6 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function SupplierRoute() {
 	const loaderData = useLoaderData<typeof loader>()
 	const user = useUser()
-	const isAdmin = useIsUserAdmin()
-	const canModify = isAdmin && !loaderData.supplier.isEssential
 
 	return (
 		<SupplierProvider data={loaderData}>
@@ -85,7 +86,7 @@ export default function SupplierRoute() {
 				<section className="grid gap-4 xl:grid-cols-2 ">
 					<SupplierDetails />
 					<div className="flex flex-col gap-4">
-						{canModify && <ActionsCard />}
+						<ActionsCard />
 						<AssociatedProductsCard />
 						<TopSupplierProductsChart />
 					</div>
@@ -96,14 +97,19 @@ export default function SupplierRoute() {
 }
 
 function ActionsCard() {
+	const isAdmin = useIsUserAdmin()
+	const { supplier } = useSupplier()
+	const canDelete = isAdmin && !supplier.isEssential
 	return (
 		<Card className="flex h-fit flex-col gap-4 p-4 sm:flex-row">
-			<Button className="w-full" size={'sm'} asChild>
-				<LinkWithOrigin to={`edit`} unstable_viewTransition>
-					<Icon name="pencil-2">Modificar datos</Icon>
-				</LinkWithOrigin>
-			</Button>
-			<DeleteSupplier />
+			{isAdmin && (
+				<Button className="w-full" size={'sm'} asChild>
+					<LinkWithOrigin to={`edit`} unstable_viewTransition>
+						<Icon name="pencil-2">Modificar datos</Icon>
+					</LinkWithOrigin>
+				</Button>
+			)}
+			{canDelete && <DeleteSupplier />}
 		</Card>
 	)
 }
