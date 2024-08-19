@@ -166,7 +166,7 @@ export async function signup({
 							hash: hashedPassword,
 						},
 					},
-					business: { create: { name: `Empresa de ${name}` } },
+					business: { create: { name: `Empresa de ${username}` } },
 				},
 			},
 		},
