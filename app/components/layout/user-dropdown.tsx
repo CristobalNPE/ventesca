@@ -19,6 +19,10 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 	const user = useUser()
 	const submit = useSubmit()
 	const formRef = useRef<HTMLFormElement>(null)
+	const displayName =
+		(user.name || user.username).length > 17
+			? (user.name || user.username).slice(0, 17) + '...'
+			: user.name || user.username
 
 	const getUserRole = (roles: string[]) => {
 		if (roles.includes('Administrador')) return 'Administrador'
@@ -29,7 +33,7 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
-					className="group flex rounded p-0 hover:bg-transparent"
+					className="group flex rounded p-0 hover:bg-transparent "
 					asChild
 					variant="ghost"
 				>
@@ -46,9 +50,7 @@ export function UserDropdown({ isOpen }: UserDropdownProps) {
 						/>
 						{isOpen && (
 							<div className="flex  flex-col">
-								<span className="text-body-sm font-bold">
-									{user.name ?? user.username}
-								</span>
+								<span className="text-body-sm font-bold ">{displayName}</span>
 								<span className="text-body-xs font-semibold tracking-wide text-muted-foreground">
 									{getUserRole(user.roles.map((rol) => rol.name))}
 								</span>
