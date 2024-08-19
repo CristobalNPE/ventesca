@@ -1,5 +1,4 @@
-import { getFormProps, getInputProps , useForm } from '@conform-to/react'
-
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { useFetcher } from '@remix-run/react'
@@ -12,6 +11,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { cn } from '#app/utils/misc.tsx'
 import { useProductContext } from '../../context/inventory/ProductContext'
 import { type action } from '../../routes/_inventory+/inventory.edit'
+import { useSuccessToast } from '#app/hooks/useSuccessToast.js'
 
 const STOCK_MAX = 9999
 const STOCK_MIN = 0
@@ -54,7 +54,8 @@ export function ModifyStockDialog() {
 
 	const newStock = Number(fields.stock.value) || undefined
 	const shouldClose = fetcher.data?.result.status === 'success' && !isPending
-
+	
+	useSuccessToast({ fetcher, message: 'Stock actualizado' })
 	return (
 		<EditableMetricCard
 			shouldClose={shouldClose}
@@ -79,7 +80,7 @@ export function ModifyStockDialog() {
 				<input type="hidden" name="productId" value={product.id} />
 
 				<StyledField
-				className='items-center'
+					className="items-center"
 					icon={icon}
 					labelProps={{
 						children: `Nuevo stock`,
@@ -119,7 +120,7 @@ export function ModifyStockDialog() {
 				name="intent"
 				value={updateProductStockActionIntent}
 				variant="default"
-				status={isPending ? 'pending' : form.status ?? 'idle'}
+				status={isPending ? 'pending' : (form.status ?? 'idle')}
 				disabled={isPending}
 			>
 				<div className="flex items-center gap-1 ">

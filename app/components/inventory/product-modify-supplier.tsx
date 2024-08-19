@@ -1,5 +1,4 @@
-import { useInputControl , useForm } from '@conform-to/react'
-
+import { useInputControl, useForm } from '@conform-to/react'
 
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 
@@ -19,6 +18,7 @@ import {
 import { cn } from '#app/utils/misc.tsx'
 import { useProductContext } from '../../context/inventory/ProductContext'
 import { type action } from '../../routes/_inventory+/inventory.edit'
+import { useSuccessToast } from '#app/hooks/useSuccessToast.js'
 
 export const updateProductSupplierActionIntent = 'update-product-supplier'
 
@@ -72,6 +72,8 @@ export function ModifySupplierSelect({
 		}
 	}, [supplierId.value])
 
+	useSuccessToast({ fetcher, message: 'Proveedor actualizado' })
+
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="flex w-full  gap-2">
@@ -94,7 +96,7 @@ export function ModifySupplierSelect({
 					<SelectValue placeholder="" />
 				</SelectTrigger>
 				<SelectContent>
-					{suppliers.map(supplier => (
+					{suppliers.map((supplier) => (
 						<SelectItem key={supplier.id} value={supplier.id}>
 							{supplier.fantasyName}
 						</SelectItem>

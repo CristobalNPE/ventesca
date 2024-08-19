@@ -19,6 +19,7 @@ import {
 import { cn } from '#app/utils/misc.tsx'
 import { useProductContext } from '../../context/inventory/ProductContext'
 import { type action } from '../../routes/_inventory+/inventory.edit'
+import { useSuccessToast } from '#app/hooks/useSuccessToast.js'
 
 export const updateProductCategoryActionIntent = 'update-product-category'
 
@@ -71,6 +72,8 @@ export function ModifyCategorySelect({
 			)
 		}
 	}, [categoryId.value])
+
+	useSuccessToast({ fetcher, message: 'Categoría actualizada' })
 
 	return (
 		<div className="flex w-full flex-col gap-2">

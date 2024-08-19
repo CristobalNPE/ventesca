@@ -12,6 +12,7 @@ import { StatusButton } from '#app/components/ui/status-button.tsx'
 import { getProductStatus } from '#app/utils/inventory/product-status.js'
 import { useProductContext } from '../../context/inventory/ProductContext'
 import { type action } from '../../routes/_inventory+/inventory.edit'
+import { useSuccessToast } from '#app/hooks/useSuccessToast.js'
 
 export const updateProductStatusActionIntent = 'update-product-status'
 
@@ -41,6 +42,7 @@ export function ModifyStatusDialog() {
 
 	const shouldClose = fetcher.data?.result.status === 'success' && !isPending
 
+	useSuccessToast({ fetcher, message: 'Estado actualizado' })
 	return (
 		<EditableMetricCard
 			shouldClose={shouldClose}

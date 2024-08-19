@@ -23,6 +23,7 @@ import { prisma } from '#app/utils/db.server.ts'
 import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { useIsUserAdmin } from '#app/utils/user.ts'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -40,7 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		},
 	})
 
-	return json({ sellers: sellers.filter(seller => seller.id !== userId) })
+	return json({ sellers: sellers.filter((seller) => seller.id !== userId) })
 }
 
 export default function SellersRoute() {
@@ -48,15 +49,8 @@ export default function SellersRoute() {
 
 	return (
 		<ContentLayout
-			title="Vendedores"
-			actions={
-				<Button asChild className="flex items-center gap-2">
-					<Link to={'new'}>
-						<Icon name="user-plus" />
-						<span>Registrar nuevo vendedor</span>
-					</Link>
-				</Button>
-			}
+			title={`Vendedores • ${sellers.length} ${sellers.length === 1 ? 'registrado' : 'registrados'}`}
+			actions={<SellersActions />}
 		>
 			<main className=" h-full">
 				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
@@ -64,25 +58,9 @@ export default function SellersRoute() {
 						{sellers.length === 0 ? (
 							<div className="flex h-full flex-col items-center justify-center gap-4 rounded-sm border border-dashed text-muted-foreground">
 								<p>Sin vendedores registrados en sistema.</p>
-								<Button asChild className="flex items-center gap-2">
-									<Link to={'new'}>
-										<Icon name="user-plus" />
-										<span>Registrar nuevo vendedor</span>
-									</Link>
-								</Button>
 							</div>
 						) : (
 							<>
-								<Card>
-									<CardHeader>
-										<Button asChild className="flex items-center gap-2">
-											<Link to={'new'}>
-												<Icon name="user-plus" />
-												<span>Registrar nuevo vendedor</span>
-											</Link>
-										</Button>
-									</CardHeader>
-								</Card>
 								<SellersCard sellers={sellers} />
 							</>
 						)}
@@ -93,6 +71,23 @@ export default function SellersRoute() {
 				</div>
 			</main>
 		</ContentLayout>
+	)
+}
+
+function SellersActions() {
+	const isAdmin = useIsUserAdmin()
+
+	return (
+		<>
+			{isAdmin && (
+				<Button asChild className="flex items-center gap-2">
+					<Link to={'new'}>
+						<Icon name="user-plus" />
+						<span>Registrar nuevo vendedor</span>
+					</Link>
+				</Button>
+			)}
+		</>
 	)
 }
 
@@ -116,7 +111,7 @@ function SellersCard({
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="flex w-full flex-col gap-3">
-				{sellers.map(seller => (
+				{sellers.map((seller) => (
 					<LinkWithParams
 						key={seller.id}
 						prefetch={'intent'}

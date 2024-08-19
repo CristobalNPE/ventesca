@@ -16,6 +16,7 @@ import {
 import { cn, formatCurrency } from '#app/utils/misc.tsx'
 import { useProductContext } from '../../context/inventory/ProductContext'
 import { type action } from '../../routes/_inventory+/inventory.edit'
+import { useSuccessToast } from '#app/hooks/useSuccessToast.js'
 
 export const updateProductSellingPriceActionIntent =
 	'update-product-sellingPrice'
@@ -82,6 +83,8 @@ export function ModifySellingPriceDialog() {
 	)
 
 	const shouldClose = fetcher.data?.result.status === 'success' && !isPending
+
+	useSuccessToast({ fetcher, message: 'Precio de venta actualizado' })
 
 	return (
 		<EditableMetricCard
