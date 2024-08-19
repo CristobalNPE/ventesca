@@ -20,6 +20,7 @@ type MetricCardProps = {
 	value: string | number
 	icon: IconName
 	isNegative?: boolean
+	className?: string
 }
 
 // Base component
@@ -30,9 +31,10 @@ export function MetricCard({
 	subText,
 	icon,
 	isNegative,
+	className,
 }: MetricCardProps) {
 	return (
-		<Card className="grid h-full rounded-lg bg-background p-6 shadow-sm">
+		<Card className={cn("grid h-fit rounded-lg bg-background p-6 shadow-sm", className)}>
 			<div
 				className={cn(
 					'flex items-center justify-between gap-4 md:gap-2',
