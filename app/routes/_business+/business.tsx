@@ -176,7 +176,7 @@ export default function ProfileRoute() {
 						</div>
 					</div>
 					<Spacer size="sm" />
-					<div className="flex flex-col items-center ">
+					<div className="flex flex-col items-center flex-1 ">
 						<div className="flex flex-wrap items-center justify-center gap-4">
 							<h1 className="text-center text-h2">{business.name}</h1>
 						</div>
@@ -187,7 +187,7 @@ export default function ProfileRoute() {
 							})}
 						</p>
 						<Spacer size="3xs" />
-						<div className="flex flex-col gap-4 text-center text-lg font-thin">
+						<div className="flex flex-col gap-4 text-center text-lg font-thin ">
 							{business.address ? (
 								<Icon size="lg" name="map-pin-filled">
 									<span className="ml-2">{business.address}</span>
@@ -205,7 +205,7 @@ export default function ProfileRoute() {
 							) : null}
 						</div>
 						<Spacer size="3xs" />
-						<Button variant={'default'} size={'pill'} asChild>
+						<Button className='mt-auto' variant={'default'} size={'pill'} asChild>
 							<Link to="edit">
 								Modificar datos de la empresa{' '}
 								<Icon name="pencil-1" className="ml-2" />
