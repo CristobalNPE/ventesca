@@ -1,16 +1,18 @@
 import { ImportInventoryFromFileSchema } from '#app/components/inventory/inventory-import.tsx'
-import { ParsedProduct, parseExcelTemplate, validateParsedProduct, validateTemplate } from '#app/routes/resources+/inventory.template-generator.tsx'
 import {
-	getDefaultCategory,
-	getDefaultSupplier,
-} from '#app/utils/auth.server.ts'
+	ParsedProduct,
+	parseExcelTemplate,
+	validateParsedProduct,
+	validateTemplate,
+} from '#app/routes/resources+/inventory.template-generator.tsx'
+
 import { prisma } from '#app/utils/db.server.ts'
 import { parseWithZod } from '@conform-to/zod'
 import { type Product } from '@prisma/client'
 import { json } from '@remix-run/node'
 import { z } from 'zod'
-
-
+import { getDefaultCategory } from '../categories/categories-queries.server'
+import { getDefaultSupplier } from '../suppliers/suppliers-queries.server'
 
 export async function createProductsFromImport({
 	formData,
@@ -62,12 +64,8 @@ export async function createProductsFromImport({
 		where: { businessId },
 		select: { id: true, code: true },
 	})
-	const fallbackCategory = await getDefaultCategory({ businessId })
-	const fallbackSupplier = await getDefaultSupplier({
-		businessId,
-		email: '',
-		name: '',
-	})
+	const fallbackCategory = await getDefaultCategory(businessId)
+	const fallbackSupplier = await getDefaultSupplier(businessId)
 
 	const existingProductCodesOnly = await prisma.product.findMany({
 		where: { businessId, code: { in: productsReceived.map((p) => p.code) } },
