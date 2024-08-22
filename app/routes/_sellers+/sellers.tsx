@@ -24,6 +24,8 @@ import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
 
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { useIsUserAdmin } from '#app/utils/user.ts'
+import { useMemo, useState } from 'react'
+import { Input } from '#app/components/ui/input.js'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -50,27 +52,42 @@ export default function SellersRoute() {
 	return (
 		<ContentLayout
 			title={`Vendedores • ${sellers.length} ${sellers.length === 1 ? 'registrado' : 'registrados'}`}
-			actions={<SellersActions />}
+			actions={!!sellers.length && <SellersActions />}
 		>
-			<main className=" h-full">
-				<div className="grid h-[85dvh]  items-start gap-4 lg:grid-cols-3 ">
-					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
-						{sellers.length === 0 ? (
-							<div className="flex h-full flex-col items-center justify-center gap-4 rounded-sm border border-dashed text-muted-foreground">
-								<p>Sin vendedores registrados en sistema.</p>
-							</div>
-						) : (
-							<>
-								<SellersCard sellers={sellers} />
-							</>
-						)}
+			<div className="grid h-full  items-start gap-4 lg:grid-cols-3 ">
+				{!!sellers.length ? (
+					<div className="flex h-fit flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+						<SellersCard sellers={sellers} />
 					</div>
-					<div className="lg:col-span-2">
-						<Outlet />
-					</div>
+				) : (
+					<EmptySellers />
+				)}
+
+				<div className="lg:col-span-2">
+					<Outlet />
 				</div>
-			</main>
+			</div>
 		</ContentLayout>
+	)
+}
+
+function EmptySellers() {
+	const isAdmin = useIsUserAdmin()
+	return (
+		<div className="flex h-full flex-1 flex-col items-center justify-center gap-2 rounded-md bg-card lg:col-span-1">
+			<Icon name="user-dollar" className="h-16 w-16" />
+			<p className="text-center text-muted-foreground">
+				Aún no hay vendedores registrados
+			</p>
+			{isAdmin && (
+				<Button asChild className="flex items-center gap-2">
+					<Link to={'new'}>
+						<Icon name="user-plus" />
+						<span>Registrar nuevo vendedor</span>
+					</Link>
+				</Button>
+			)}
+		</div>
 	)
 }
 
@@ -101,21 +118,40 @@ function SellersCard({
 }: {
 	sellers: SerializeFrom<SellerDisplayData>[]
 }) {
+	const [searchQuery, setSearchQuery] = useState('')
+	const filteredSellers = useMemo(() => {
+		return sellers.filter(
+			(seller) =>
+				seller.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				seller.email?.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+		)
+	}, [sellers, searchQuery])
+
 	return (
-		<Card className="no-scrollbar relative  h-full flex-grow overflow-y-auto">
+		<Card className="no-scrollbar relative  h-fit flex-grow overflow-y-auto">
 			<CardHeader className="sticky top-0 z-10 bg-card px-7">
-				<CardTitle>Vendedores registrados</CardTitle>
-				<CardDescription>
-					Actualmente existen {sellers.length} vendedores registrados en
-					sistema.
-				</CardDescription>
+				<div className="relative">
+					<Input
+						autoFocus
+						className="w-full pr-[3rem]"
+						type="text"
+						placeholder="Buscar vendedor"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					<Icon
+						name="magnifying-glass"
+						className="absolute bottom-1/2 right-4 translate-y-1/2 transform"
+					/>
+				</div>
 			</CardHeader>
 			<CardContent className="flex w-full flex-col gap-3">
-				{sellers.map((seller) => (
+				{filteredSellers.map((seller) => (
 					<LinkWithParams
 						key={seller.id}
 						prefetch={'intent'}
 						preserveSearch
+						unstable_viewTransition
 						className={({ isActive }) =>
 							cn(
 								'flex flex-wrap items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
