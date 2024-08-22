@@ -49,6 +49,7 @@ import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { CardContentItem } from '#app/components/card-content-item.js'
 
 const DeleteSellerSessionSchema = z.object({
 	sessionId: z.string(),
@@ -109,7 +110,7 @@ export default function SellerRoute() {
 	const { seller } = useLoaderData<typeof loader>()
 
 	return (
-		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden">
+		<Card className="flex h-[85dvh]  flex-col overflow-hidden">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="flex items-center gap-5">
 					<img
@@ -137,71 +138,46 @@ export default function SellerRoute() {
 						{seller.roles[0]?.name}
 					</Badge>
 				</div>
-
-				{/* <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size={'sm'} className="h-7 w-7" variant={'outline'}>
-              <Icon className="shrink-0" name="dots-vertical" />
-              <span className="sr-only">Opciones</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="flex flex-col gap-2 " align="end">
-            <DropdownMenuItem asChild>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1"
-              >
-                <Link to={'edit'}>
-                  <Icon name="update" className="h-3.5 w-3.5" />
-                  <span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
-                    Editar proveedor
-                  </span>
-                </Link>
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <ChangeItemsCategory />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <DeleteSupplier
-                id={supplier.id}
-                numberOfItems={supplier.items.length}
-              />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
 			</CardHeader>
 			<CardContent className="grid flex-1 gap-10 p-6 text-sm xl:grid-cols-5">
 				<div className="col-span-3 flex flex-col gap-4">
-					<DetailsCard
+					<CardContentItem
 						icon={'id'}
-						description={'ID'}
-						data={seller.id.toUpperCase()}
+						title={'ID Vendedor'}
+						content={seller.id.toUpperCase()}
 					/>
-					{seller.name ? (
-						<DetailsCard
+					{seller.name && (
+						<CardContentItem
 							icon={'user'}
-							description={'Nombre'}
-							data={seller.name}
+							title={'Nombre'}
+							content={seller.name}
 						/>
-					) : null}
-					<DetailsCard
+					)}
+					<CardContentItem
 						icon={'id-badge-2'}
-						description={'Nombre de usuario'}
-						data={seller.username}
+						title={'Nombre de usuario'}
+						content={seller.username}
 					/>
-					<DetailsCard
+					<CardContentItem
 						icon={'envelope-closed'}
-						description={'Correo Electrónico'}
-						data={seller.email}
+						title={'Correo Electrónico'}
+						content={seller.email}
 					/>
-					<DetailsCard
+
+					<CardContentItem
+						icon={'cash-register'}
+						title={'Transacciones completadas'}
+						content={seller.isActive ? 'Activa' : 'Bloqueada'}
+					/>
+					<CardContentItem
+						icon={'currency-dollar'}
+						title={'Ganancias ingresadas'}
+						content={seller.isActive ? 'Activa' : 'Bloqueada'}
+					/>
+					<CardContentItem
 						icon={'laptop'}
-						description={'Estado de cuenta'}
-						data={seller.isActive ? 'Activa' : 'Bloqueada'}
+						title={'Estado de cuenta'}
+						content={seller.isActive ? 'Activa' : 'Bloqueada'}
 					/>
 				</div>
 				<div className="col-span-2 flex flex-col gap-3">
@@ -216,7 +192,7 @@ export default function SellerRoute() {
 							? 'Sesiones activas'
 							: 'Sin sesiones activas.'}
 					</p>
-					{seller.sessions.map(session => (
+					{seller.sessions.map((session) => (
 						<SessionInfoCard key={session.id} session={session} />
 					))}
 				</div>
@@ -307,7 +283,7 @@ function SessionInfoCard({
 								size={'icon'}
 								variant={dc.doubleCheck ? 'destructive' : 'default'}
 								status={
-									fetcher.state !== 'idle' ? 'pending' : form.status ?? 'idle'
+									fetcher.state !== 'idle' ? 'pending' : (form.status ?? 'idle')
 								}
 								className="flex h-7 w-7 items-center justify-center"
 							>
@@ -461,9 +437,14 @@ async function deleteSellerAccountAction(sellerId: string) {
 		where: { userId: sellerId },
 	})
 	await prisma.user.update({
-		data: { isActive: false, isDeleted: true },
+		data: {
+			isActive: false,
+			isDeleted: true,
+			username: `${sellerId}-DELETED`,
+			email: `${sellerId}-DELETED`,
+		},
 		where: { id: sellerId },
 	})
 
-	return redirect("/sellers")
+	return redirect('/sellers')
 }
