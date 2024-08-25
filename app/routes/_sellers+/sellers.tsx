@@ -1,31 +1,24 @@
+import { ContentLayout } from '#app/components/layout/content-layout.tsx'
+import { Badge } from '#app/components/ui/badge.tsx'
+import { Button } from '#app/components/ui/button.tsx'
+import { Card, CardContent, CardHeader } from '#app/components/ui/card.tsx'
+import { Icon } from '#app/components/ui/icon.tsx'
+import { getBusinessId } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.server.ts'
+import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
 import { type Role, type User, type UserImage } from '@prisma/client'
 import {
 	json,
 	type LoaderFunctionArgs,
 	type SerializeFrom,
 } from '@remix-run/node'
-import { Link, Outlet, useLoaderData, useLocation } from '@remix-run/react'
-import { ContentLayout } from '#app/components/layout/content-layout.tsx'
-import { Spacer } from '#app/components/spacer.tsx'
-import { Badge } from '#app/components/ui/badge.tsx'
-import { Button } from '#app/components/ui/button.tsx'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '#app/components/ui/card.tsx'
-import { Icon } from '#app/components/ui/icon.tsx'
-import { LinkWithParams } from '#app/components/ui/link-params.tsx'
-import { getBusinessId } from '#app/utils/auth.server.ts'
-import { prisma } from '#app/utils/db.server.ts'
-import { cn, getUserImgSrc } from '#app/utils/misc.tsx'
+import { Link, Outlet, useLoaderData } from '@remix-run/react'
 
+import { Input } from '#app/components/ui/input.js'
+import { LinkWithOrigin } from '#app/components/ui/link-origin.js'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
 import { useIsUserAdmin } from '#app/utils/user.ts'
 import { useMemo, useState } from 'react'
-import { Input } from '#app/components/ui/input.js'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -53,10 +46,11 @@ export default function SellersRoute() {
 		<ContentLayout
 			title={`Vendedores • ${sellers.length} ${sellers.length === 1 ? 'registrado' : 'registrados'}`}
 			actions={!!sellers.length && <SellersActions />}
+			limitHeight
 		>
-			<div className="grid h-full  items-start gap-4 lg:grid-cols-3 ">
+			<div className="grid h-[85dvh]   items-start gap-4 lg:grid-cols-3 ">
 				{!!sellers.length ? (
-					<div className="flex h-fit flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
+					<div className="flex h-full flex-1 flex-col gap-4 overflow-hidden lg:col-span-1">
 						<SellersCard sellers={sellers} />
 					</div>
 				) : (
@@ -97,11 +91,11 @@ function SellersActions() {
 	return (
 		<>
 			{isAdmin && (
-				<Button asChild className="flex items-center gap-2">
-					<Link to={'new'}>
+				<Button asChild size={"sm"} className="flex items-center gap-2">
+					<LinkWithOrigin unstable_viewTransition to={'new'}>
 						<Icon name="user-plus" />
 						<span>Registrar nuevo vendedor</span>
-					</Link>
+					</LinkWithOrigin>
 				</Button>
 			)}
 		</>
@@ -128,7 +122,7 @@ function SellersCard({
 	}, [sellers, searchQuery])
 
 	return (
-		<Card className="no-scrollbar relative  h-fit flex-grow overflow-y-auto">
+		<Card className="h-fit">
 			<CardHeader className="sticky top-0 z-10 bg-card px-7">
 				<div className="relative">
 					<Input
@@ -147,20 +141,20 @@ function SellersCard({
 			</CardHeader>
 			<CardContent className="flex w-full flex-col gap-3">
 				{filteredSellers.map((seller) => (
-					<LinkWithParams
+					<LinkWithOrigin
 						key={seller.id}
 						prefetch={'intent'}
 						preserveSearch
 						unstable_viewTransition
 						className={({ isActive }) =>
 							cn(
-								'flex flex-wrap items-center justify-between gap-2 rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
+								' flex flex-wrap items-center  justify-between gap-2 overflow-clip rounded-sm border-2 border-l-8 border-transparent border-b-secondary/30 border-l-secondary/80 p-2 text-sm transition-colors hover:bg-secondary ',
 								isActive && 'border-primary/10 bg-secondary',
 							)
 						}
 						to={seller.id}
 					>
-						<div className="flex items-center gap-4">
+						<div className="flex flex-wrap items-center gap-4  ">
 							<span className="sr-only">Detalles vendedor</span>
 							<img
 								className="h-8 w-8 shrink-0  rounded-full border object-cover  "
@@ -168,16 +162,16 @@ function SellersCard({
 								src={getUserImgSrc(seller.image?.id)}
 							/>
 
-							<div className="flex flex-col">
+							<div className="flex flex-col   ">
 								<span className="font-bold">{seller.name}</span>
-								<span className="text-muted-foreground">{seller.email}</span>
+								<span className="text-muted-foreground ">{seller.email}</span>
 							</div>
 						</div>
 
-						<div className="text-right">
+						<div className="ml-auto  text-right">
 							<Badge variant={'default'}>{seller.roles[0]?.name}</Badge>
 						</div>
-					</LinkWithParams>
+					</LinkWithOrigin>
 				))}
 			</CardContent>
 		</Card>
