@@ -15,8 +15,8 @@ import { es } from 'date-fns/locale'
 
 import { useId } from 'react'
 import { z } from 'zod'
-import { DetailsCard } from '#app/components/details-card.tsx'
 
+import { CardContentItem } from '#app/components/card-content-item.js'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -45,11 +45,11 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '#app/components/ui/tooltip.tsx'
+import { getSellerAnalytics } from '#app/services/sellers/seller-analytics.server.ts'
 import { getBusinessId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import { getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
+import { formatCurrency, getUserImgSrc, useDoubleCheck } from '#app/utils/misc.tsx'
 import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { CardContentItem } from '#app/components/card-content-item.js'
 
 const DeleteSellerSessionSchema = z.object({
 	sessionId: z.string(),
@@ -66,8 +66,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	invariantResponse(seller, 'Not found', { status: 404 })
 
+	const sellerAnalytics = await getSellerAnalytics({ sellerId: seller.id })
+
 	return json({
 		seller,
+		sellerAnalytics,
 	})
 }
 
@@ -107,10 +110,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export default function SellerRoute() {
-	const { seller } = useLoaderData<typeof loader>()
+	const { seller, sellerAnalytics } = useLoaderData<typeof loader>()
 
 	return (
-		<Card className="flex h-[85dvh]  flex-col overflow-hidden">
+		<Card className="flex sm:min-h-[85dvh]  flex-col ">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="flex items-center gap-5">
 					<img
@@ -139,8 +142,8 @@ export default function SellerRoute() {
 					</Badge>
 				</div>
 			</CardHeader>
-			<CardContent className="grid flex-1 gap-10 p-6 text-sm xl:grid-cols-5">
-				<div className="col-span-3 flex flex-col gap-4">
+			<CardContent className="grid flex-1 gap-10 p-6 text-sm sm:grid-cols-5 ">
+				<div className="flex flex-col gap-4 sm:col-span-3">
 					<CardContentItem
 						icon={'id'}
 						title={'ID Vendedor'}
@@ -164,28 +167,37 @@ export default function SellerRoute() {
 						content={seller.email}
 					/>
 
-					<CardContentItem
-						icon={'cash-register'}
-						title={'Transacciones completadas'}
-						content={seller.isActive ? 'Activa' : 'Bloqueada'}
-					/>
-					<CardContentItem
-						icon={'currency-dollar'}
-						title={'Ganancias ingresadas'}
-						content={seller.isActive ? 'Activa' : 'Bloqueada'}
-					/>
+					{sellerAnalytics && (
+						<>
+							<CardContentItem
+								icon={'cash-register'}
+								title={'Transacciones completadas'}
+								content={sellerAnalytics.totalTransactions}
+							/>
+							<CardContentItem
+								icon={'currency-dollar'}
+								title={'Ganancias ingresadas'}
+								content={formatCurrency(sellerAnalytics.profitGenerated)}
+							/>
+							<CardContentItem
+								icon={'clock'}
+								title={'Tiempo promedio de transacción'}
+								content={`${sellerAnalytics.averageTransactionTime} segundos`}
+							/>
+						</>
+					)}
 					<CardContentItem
 						icon={'laptop'}
 						title={'Estado de cuenta'}
 						content={seller.isActive ? 'Activa' : 'Bloqueada'}
 					/>
 				</div>
-				<div className="col-span-2 flex flex-col gap-3">
+				<div className="flex flex-col gap-3 sm:col-span-2 ">
 					<DeleteSellerAccount />
-					<Button variant={'outline'}>
+					{/* <Button variant={'outline'}>
 						<Icon className="mr-2" name="update" />
 						Modificar Datos
-					</Button>
+					</Button> */}
 					<ToggleBlockSellerAccount isUserActive={seller.isActive} />
 					<p>
 						{seller.sessions.length > 0
@@ -344,8 +356,8 @@ function ToggleBlockSellerAccount({ isUserActive }: { isUserActive: boolean }) {
 					variant={'outline'}
 					status={fetcher.state !== 'idle' ? 'pending' : 'idle'}
 					className="w-full "
+					iconName={'lock'}
 				>
-					<Icon className="mr-2" name="lock" />
 					<span>Bloquear Cuenta</span>
 				</StatusButton>
 			) : (
@@ -358,7 +370,6 @@ function ToggleBlockSellerAccount({ isUserActive }: { isUserActive: boolean }) {
 					className="w-full"
 					iconName={'lock-open'}
 				>
-					<Icon className="mr-2" name="lock-open" />
 					<span>Desbloquear Cuenta</span>
 				</StatusButton>
 			)}
@@ -398,8 +409,8 @@ function DeleteSellerAccount() {
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
 				<Button variant={'outline'}>
-					<Icon className="mr-2" name="trash" />
 					Eliminar Permanentemente
+					<Icon className="ml-2" name="trash" />
 				</Button>
 			</AlertDialogTrigger>
 			<AlertDialogContent>
@@ -421,8 +432,8 @@ function DeleteSellerAccount() {
 							variant={'destructive'}
 							status={fetcher.state !== 'idle' ? 'pending' : 'idle'}
 							className="w-full "
+							iconName={'trash'}
 						>
-							<Icon className="mr-2" name="lock" />
 							<span>Eliminar Permanentemente</span>
 						</StatusButton>
 					</fetcher.Form>
