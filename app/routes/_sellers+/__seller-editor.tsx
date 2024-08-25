@@ -1,10 +1,10 @@
+import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
-import { type User, type Supplier } from '@prisma/client'
+import { type User } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { Form, useActionData } from '@remix-run/react'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '#app/components/error-boundary.tsx'
 
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
@@ -51,7 +51,7 @@ export function SellerEditor({
 	})
 
 	return (
-		<Card className="flex h-[85dvh] animate-slide-left flex-col overflow-hidden ">
+		<Card className="flex h-[85dvh] flex-col overflow-hidden ">
 			<CardHeader className="flex flex-row items-start justify-between bg-muted/50">
 				<div className="grid gap-0.5">
 					<CardTitle className="group flex items-center gap-2 text-lg">
