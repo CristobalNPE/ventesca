@@ -16,6 +16,10 @@ export function formatCurrency(amountToFormat: number | null) {
 	return amount < 0 ? `-${formatted}` : formatted
 }
 
+export function formatPercentage(percentage: number) {
+	return `${percentage.toFixed(2)}%`
+}
+
 export function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1)
 }
