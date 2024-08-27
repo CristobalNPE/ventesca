@@ -1,10 +1,4 @@
 import {
-	CartesianGrid,
-	Line,
-	LineChart,
-	XAxis
-} from 'recharts'
-import {
 	Card,
 	CardContent,
 	CardDescription,
@@ -19,30 +13,53 @@ import {
 	ChartTooltipContent,
 } from '#app/components/ui/chart.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
-
-const line2ChartData = [
-	{ month: 'January', desktop: 186, mobile: 80 },
-	{ month: 'February', desktop: 305, mobile: 200 },
-	{ month: 'March', desktop: 237, mobile: 120 },
-	{ month: 'April', desktop: 73, mobile: 190 },
-	{ month: 'May', desktop: 209, mobile: 130 },
-	{ month: 'June', desktop: 214, mobile: 140 },
-]
+import { useAnalytics } from '#app/context/analytics/AnalyticsContext.tsx'
+import { capitalize, formatPercentage } from '#app/utils/misc.tsx'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { CartesianGrid, Line, LineChart, XAxis } from 'recharts'
 
 const line2ChartConfig = {
-	desktop: {
-		label: 'Desktop',
+	sales: {
+		label: 'Ventas',
 		color: 'hsl(var(--chart-1))',
 	},
-	mobile: {
-		label: 'Mobile',
+	returns: {
+		label: 'Devoluciones',
 		color: 'hsl(var(--chart-2))',
 	},
 } satisfies ChartConfig
 
 export function WeeklyTransactionsLineChart() {
+	const { dailyTransactionsForWeek } = useAnalytics()
+
+	const parsedData = dailyTransactionsForWeek.dailyTransactions.map(
+		(transaction) => ({
+			day: capitalize(format(transaction.day, 'EEEE', { locale: es })),
+			sales: transaction.sales,
+			returns: transaction.returns,
+		}),
+	)
+
+	const returnPercentage = dailyTransactionsForWeek.returnPercentage
+	const returnPercentageFormatted = formatPercentage(returnPercentage)
+	const formattedStartDate = format(
+		dailyTransactionsForWeek.weekStartDate,
+		'dd MMM',
+		{
+			locale: es,
+		},
+	)
+	const formattedEndDate = format(
+		dailyTransactionsForWeek.weekEndDate,
+		'dd MMM',
+		{
+			locale: es,
+		},
+	)
+
 	return (
-		<Card className='blur-sm'>
+		<Card className="">
 			<CardHeader>
 				<CardTitle>Transacciones esta semana</CardTitle>
 				<CardDescription>Ventas y devoluciones procesadas.</CardDescription>
@@ -51,7 +68,7 @@ export function WeeklyTransactionsLineChart() {
 				<ChartContainer config={line2ChartConfig}>
 					<LineChart
 						accessibilityLayer
-						data={line2ChartData}
+						data={parsedData}
 						margin={{
 							left: 12,
 							right: 12,
@@ -59,24 +76,24 @@ export function WeeklyTransactionsLineChart() {
 					>
 						<CartesianGrid vertical={false} />
 						<XAxis
-							dataKey="month"
+							dataKey="day"
 							tickLine={false}
 							axisLine={false}
 							tickMargin={8}
-							tickFormatter={value => value.slice(0, 3)}
+							tickFormatter={(value) => value.slice(0, 3)}
 						/>
 						<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
 						<Line
-							dataKey="desktop"
+							dataKey="sales"
 							type="monotone"
-							stroke="var(--color-desktop)"
+							stroke="var(--color-sales)"
 							strokeWidth={2}
 							dot={false}
 						/>
 						<Line
-							dataKey="mobile"
+							dataKey="returns"
 							type="monotone"
-							stroke="var(--color-mobile)"
+							stroke="var(--color-returns)"
 							strokeWidth={2}
 							dot={false}
 						/>
@@ -87,10 +104,12 @@ export function WeeklyTransactionsLineChart() {
 				<div className="flex w-full items-start gap-2 text-sm">
 					<div className="grid gap-2">
 						<div className="flex items-center gap-2 font-medium leading-none">
-							Porcentaje de devolución aproximado a 15.4% <Icon name='reset' className="h-4 w-4" />
+							Porcentaje de devolución aproximado de {returnPercentageFormatted}
+							<Icon name="reset" className="h-4 w-4" />
 						</div>
 						<div className="flex items-center gap-2 leading-none text-muted-foreground">
-							Mostrando transacciones durante la semana 12 - 19 Agosto.
+							Mostrando transacciones durante la semana {formattedStartDate} -{' '}
+							{formattedEndDate}.
 						</div>
 					</div>
 				</div>
