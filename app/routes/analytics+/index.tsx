@@ -42,7 +42,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		getDailyTransactionsForWeek({ businessId }),
 	])
 
-	console.table(dailyTransactionsForWeek)
 
 	return json({
 		numberOfCompletedOrders,
