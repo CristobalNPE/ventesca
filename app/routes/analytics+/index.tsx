@@ -6,18 +6,19 @@ import { TotalProfit } from '#app/components/analytics/total-profit-card.tsx'
 import { WeeklyTransactionsLineChart } from '#app/components/analytics/weekly-transactions-chart.tsx'
 import { ContentLayout } from '#app/components/layout/content-layout.tsx'
 import { AnalyticsProvider } from '#app/context/analytics/AnalyticsContext.tsx'
-import { getBusinessId } from '#app/utils/auth.server.ts'
-import { requireUserWithRole } from '#app/utils/permissions.server.ts'
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
 import {
 	getCompletedOrdersCount,
 	getDailyProfitsForWeek,
+	getDailyTransactionsForWeek,
 	getTopSellerStatsForWeek,
 	getTopSellingProducts,
 	getTotalProfits,
 	getWeeklyProfitsForMonth,
-} from './analytics-service.server'
+} from '#app/services/analytics/analytics-service.server.ts'
+import { getBusinessId } from '#app/utils/auth.server.ts'
+import { requireUserWithRole } from '#app/utils/permissions.server.ts'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserWithRole(request, 'Administrador')
@@ -30,6 +31,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		weeklyProfits,
 		topSellingProducts,
 		sellerStatsForWeek,
+		dailyTransactionsForWeek,
 	] = await Promise.all([
 		getCompletedOrdersCount(businessId),
 		getTotalProfits(businessId),
@@ -37,7 +39,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		getWeeklyProfitsForMonth({ businessId }),
 		getTopSellingProducts(businessId),
 		getTopSellerStatsForWeek({ businessId }),
+		getDailyTransactionsForWeek({ businessId }),
 	])
+
+	console.table(dailyTransactionsForWeek)
 
 	return json({
 		numberOfCompletedOrders,
@@ -46,6 +51,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		weeklyProfits,
 		topSellingProducts,
 		sellerStatsForWeek,
+		dailyTransactionsForWeek,
 	})
 }
 export default function Dashboard() {
